@@ -1,9 +1,9 @@
 <template>
   <div class="form-container">
     <h2>Editar estructura de ubicación {{ estructura.nombre_estructura_ubicacion }}</h2>
-    <form @submit.prevent="submitForm">
+    <form @submit.prevent="submitForm" class="form-grid">
       <div class="form-group">
-        <label for="terminal">Terminal</label>
+        <label for="terminal">Terminal:</label>
         <select v-model="estructura.terminal" required>
           <option v-for="terminal in terminales" :value="terminal.id" :key="terminal.id">
             {{ terminal.nombre_terminal }}
@@ -12,7 +12,7 @@
       </div>
 
       <div class="form-group">
-        <label for="tipo_estructura">Tipo de estructura</label>
+        <label for="tipo_estructura">Tipo de estructura:</label>
         <select v-model="estructura.tipo_estructura" required>
           <option v-for="tipo_estructura in tipos_estructuras" :value="tipo_estructura.id" :key="tipo_estructura.id">
             {{ tipo_estructura.nombre_tipo_estructura_ubicacion }}
@@ -21,7 +21,7 @@
       </div>
 
       <div class="form-group">
-        <label for="tipo_estructura">Estructura padre</label>
+        <label for="tipo_estructura">Estructura padre:</label>
         <select v-model="estructura.estructura_padre">
           <option v-for="estructura in estructuras" :value="estructura.id" :key="estructura.id">
             {{ estructura.nombre_estructura_ubicacion }}
@@ -30,30 +30,27 @@
       </div>
 
       <div class="form-group">
-        <label for="nombre_estructura_ubicacion">Nombre</label>
+        <label for="nombre_estructura_ubicacion">Nombre:</label>
         <input type="text" v-model="estructura.nombre_estructura_ubicacion" step="0.01" required />
       </div>
 
       <div class="form-group">
-        <label for="capacidad">Capacidad</label>
+        <label for="capacidad">Capacidad:</label>
         <input type="number" v-model="estructura.capacidad" step="0.01" required />
       </div>
 
       <div class="form-buttons">
-        <button type="button">
-          <router-link style="color:white;text-decoration:none" to="/EstructuraUbicacion">Cancelar</router-link>
-        </button>
-        <button type="submit">Aceptar</button>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+        <button>Aceptar</button>
       </div>
     </form>
   </div>
 </template>
 
 <style scoped>
-/* Estilos sin cambios */
 .form-container {
-  max-width: 450px;
-  margin: 50px;
+  max-width: 600px; /* Ajusta el ancho máximo del contenedor */
+  margin: 50px; /* Centra el contenedor */
   padding: 20px;
   background-color: #f9f9f9;
   border-radius: 8px;
@@ -67,41 +64,41 @@ h2 {
   font-size: 20px;
 }
 
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 4 columnas de igual tamaño */
+  gap: 15px; /* Espacio entre los elementos */
 }
 
 .form-group {
+  text-align: left;
+  width: 260px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  flex-direction: column;
+  gap: 5px;
   font-size: 13px;
 }
 
 label {
-  flex: 1;
-  text-align: right;
   font-weight: bold;
 }
 
-input,
-select {
-  flex: 2;
-  padding: 8px;
+input, select {
+  padding: 5px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
 
 .form-buttons {
+  grid-column: span 2; /* Los botones ocupan las 4 columnas */
   display: flex;
   justify-content: end;
   font-size: 15px;
+  margin-top: 20px;
 }
 
 button {
+  margin-left: 10px;
   padding: 5px 15px;
   border: none;
   border-radius: 5px;
@@ -145,6 +142,21 @@ export default {
   },
 
   methods: {
+    confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
     async getTerminales() {
       try {
         const response = await axios.get('/api/terminales/');

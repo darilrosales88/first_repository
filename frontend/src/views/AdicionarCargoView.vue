@@ -3,11 +3,11 @@
     <h2>Adicionar Cargo</h2>
     <form @submit.prevent="saveItem">
       <div class="form-group">
-        <label for="nombre"> Nombre:</label>
-        <input type="text" v-model="nombre_cargo" required />        
+        <label for="nombre"> Nombre:<span style="color: red;">*</span></label>
+        <input type="text" style="padding: 3px;" v-model="nombre_cargo" required />        
       </div>
       <div class="form-buttons">
-        <button type="button"><router-link style="color:white;text-decoration:none" to="/Cargos">Cancelar</router-link> </button>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
         <button>Aceptar</button>
       </div>
     </form>
@@ -66,6 +66,7 @@ font-size: 15px;
 }
 
 button {
+margin-left: 10px;
 padding: 5px 15px;
 border: none;
 border-radius: 5px;
@@ -99,14 +100,29 @@ data(){
 },
 
 methods:{
+  confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
   validateForm() {            
     // Expresión regular para el tipo de cargo
-    const nombre_cargoRegex = /^[A-Z][\w\sáéíóú]{2,18}$/;
+    const nombre_cargoRegex = /^[A-Z][\w\sáéíóú]{1,19}$/;
     let valid = true;
 
     // Validar el nombre del cargo
     if (!nombre_cargoRegex.test(this.nombre_cargo)) {
-      this.nombre_cargo_error = 'Este campo comienza con mayúscula, acepta letras minúsculas y espacios. Tamaño mínimo 3 caracteres y tamaño máximo 20 caracteres.';
+      this.nombre_cargo_error = 'Este campo comienza con mayúscula, acepta letras minúsculas y espacios. Tamaño mínimo 2 caracteres y tamaño máximo 20 caracteres.';
       valid = false;
     } else {
       this.nombre_cargo_error = null;

@@ -2,18 +2,18 @@
   <div class="form-container">
   <h2>Editar El tipo de equipo ferroviario {{ tipo_equipo_ferroviario.tipo_equipo }}</h2>
  
-  <form @submit.prevent="submitForm">
+  <form @submit.prevent="submitForm" class="form-grid">
     <div class="form-group">
         <label for="tipo_equipo">Tipo de equipo:</label>
         <select v-model="tipo_equipo_ferroviario.tipo_equipo" required>
-          <option v-for="equipo in t_equipo_options" :value="equipo.value" :key="equipo.value">
+          <option style="padding: 5px;" v-for="equipo in t_equipo_options" :value="equipo.value" :key="equipo.value">
             {{ equipo.text }}
           </option>
         </select>
       </div>
       <div class="form-group">
         <label for="tipo_carga">Tipo de carga:</label>
-        <select v-model="tipo_equipo_ferroviario.tipo_carga" required>
+        <select style="padding: 5px;" v-model="tipo_equipo_ferroviario.tipo_carga" required>
           <option v-for="carga in t_carga_options" :value="carga.value" :key="carga.value">
             {{ carga.text }}
           </option>
@@ -21,7 +21,7 @@
       </div>
       <div class="form-group">
         <label for="tipo_combustible">Tipo de combustible:</label>
-        <select v-model="tipo_equipo_ferroviario.tipo_combustible" required>
+        <select style="padding: 5px;" v-model="tipo_equipo_ferroviario.tipo_combustible" required>
           <option v-for="combustible in t_combustible_options" :value="combustible.value" :key="combustible.value">
             {{ combustible.text }}
           </option>
@@ -29,101 +29,100 @@
       </div>
   <div class="form-group">
     <label for="longitud">Longitud (ft):</label>
-    <input type="number" v-model="tipo_equipo_ferroviario.longitud" step="0.01" required />
+    <input type="number" style="padding: 3px;" v-model="tipo_equipo_ferroviario.longitud" step="0.01" required />
   </div>
   <div class="form-group">
     <label for="peso_neto_sin_carga">Peso neto sin carga (t):</label>
-    <input type="number" v-model="tipo_equipo_ferroviario.peso_neto_sin_carga" step="0.01" required />
+    <input type="number" style="padding: 3px;" v-model="tipo_equipo_ferroviario.peso_neto_sin_carga" step="0.01" required />
   </div>
   <div class="form-group">
     <label for="peso_maximo_con_carga">Peso máximo con carga (t):</label>
-    <input type="number" v-model="tipo_equipo_ferroviario.peso_maximo_con_carga" step="0.01" required />
+    <input type="number" style="padding: 3px;" v-model="tipo_equipo_ferroviario.peso_maximo_con_carga" step="0.01" required />
   </div>
   <div class="form-group">
     <label for="capacidad_cubica_maxima">Capacidad cúbica máxima (ft3):</label>
-    <input type="number" v-model="tipo_equipo_ferroviario.capacidad_cubica_maxima" step="0.01" required />
+    <input type="number" style="padding: 3px;" v-model="tipo_equipo_ferroviario.capacidad_cubica_maxima" step="0.01" required />
   </div>
   <div class="form-group">
     <label for="descripcion">Descripción:</label>
-    <input type="text" v-model="tipo_equipo_ferroviario.descripcion" required />
+    <input type="text" style="padding: 3px;" v-model="tipo_equipo_ferroviario.descripcion" required />
   </div>
  
-
   <div class="form-buttons">
-  <button type="button"><router-link style="color:white;text-decoration:none" to="/TipoEquipoFerro">Cancelar</router-link> </button>
-  <button>Aceptar</button>
-  </div>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+        <button>Aceptar</button>
+      </div>
   </form>
   </div>
   </template>
   <style scoped>
   .form-container {
-  max-width: 450px;
-  margin: 50px;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 600px; /* Ajusta el ancho máximo del contenedor */
+    margin: 50px; /* Centra el contenedor */
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
-
+  
   h2 {
-  font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  text-align: left;
-  margin-bottom: 20px;
-  font-size: 20px;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    text-align: left;
+    margin-bottom: 20px;
+    font-size: 20px;
   }
-
-  form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-
+  
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 4 columnas de igual tamaño */
+    gap: 15px; /* Espacio entre los elementos */
   }
-
+  
   .form-group {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 13px;
+    text-align: left;
+    width: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 14px;
   }
-
+  
   label {
-  flex: 1;
-  text-align: right;
-  font-weight: bold;
+    font-weight: bold;
   }
-
-  input,select {
-  flex: 2;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  
+  input, select {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
   }
-
+  
   .form-buttons {
-  display: flex;
-  justify-content: end;
-  font-size: 15px;
+    grid-column: span 2; /* Los botones ocupan las 4 columnas */
+    display: flex;
+    justify-content: end;
+    font-size: 15px;
+    margin-top: 20px;
   }
-
+  
   button {
-  padding: 5px 15px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: bold;
+    margin-left: 10px;
+    padding: 5px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
   }
-
+  
   button[type="button"] {
-  background-color: #007bff;
-  color: white;
+    background-color: #007bff;
+    color: white;
   }
-
+  
   button[type="submit"] {
-  margin-left: 15px;
-  background-color: #007bff;
-  color: white;
+    margin-left: 15px;
+    background-color: #007bff;
+    color: white;
   }
   </style>
 
@@ -175,6 +174,21 @@
           this.get_tipo_equipo_ferroviario()
           },
           methods:{
+            confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
                   validateForm() {                   
                          
                           let valid = true;

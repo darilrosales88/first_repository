@@ -26,7 +26,7 @@
         try {
           const userId = localStorage.getItem('userid');
           if (userId) {
-            const response = await axios.get(`/apiAdmin/user/${userId}/permissions-and-groups/`);
+            const response = await axios.get(`/api/user/${userId}/permissions-and-groups/`);
             this.user_autenticado = response.data.first_name;
           }
         } catch (error) {

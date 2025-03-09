@@ -1,40 +1,40 @@
 <template>
   <div class="form-container">
     <h2>Editar Entidad</h2>
-    <form @submit.prevent="updateItem">
+    <form @submit.prevent="updateItem" class="form-grid">
       <div class="form-group">
-        <label for="nombre">Nombre*:</label>
-        <input type="text" v-model="nombre" required />
+        <label for="nombre">Nombre:<span style="color: red;">*</span></label>
+        <input type="text" style="padding: 3px;" v-model="nombre" required />
       </div>
       <div class="form-group">
-        <label for="abreviatura">Abreviatura*:</label>
-        <input type="text" v-model="abreviatura" required />
+        <label for="abreviatura">Abreviatura:<span style="color: red;">*</span></label>
+        <input type="text" style="padding: 3px;" v-model="abreviatura" required />
       </div>
       <div class="form-group">
         <label for="codigo_reeup">Código REEUP:</label>
-        <input type="text" v-model="codigo_reeup" />
+        <input type="text" style="padding: 3px;" v-model="codigo_reeup" />
       </div>
       <div class="form-group">
-        <label for="osde_oace_organismo">OSDE/OACE u organismo*:</label>
-        <select id="osde_oace_organismo" v-model="osde_oace_organismo" required>
+        <label for="osde_oace_organismo">OSDE/OACE u organismo:<span style="color: red;">*</span></label>
+        <select id="osde_oace_organismo" style="padding: 5px;" v-model="osde_oace_organismo" required>
           <option v-for="item in osdeOaceOrganismoOptions" :key="item.id" :value="item.id">{{ item.nombre }}</option>
         </select>
       </div>
       <div class="form-group">
-        <label for="provincia">Provincia*:</label>
-        <select id="provincia" v-model="provincia" required>
+        <label for="provincia">Provincia:<span style="color: red;">*</span></label>
+        <select id="provincia" style="padding: 5px;" v-model="provincia" required>
           <option v-for="item in provinciaOptions" :key="item.id" :value="item.id">{{ item.nombre_provincia }}</option>
         </select>
       </div>
       <div class="form-group">
-        <label for="tipo_entidad">Tipo de entidad*:</label>
-        <select id="tipo_entidad" v-model="tipo_entidad" required>
+        <label for="tipo_entidad">Tipo de entidad:<span style="color: red;">*</span></label>
+        <select id="tipo_entidad" style="padding: 5px;" v-model="tipo_entidad" required>
           <option v-for="option in tipoEntidadOptions" :key="option.value" :value="option.value">{{ option.text }}</option>
         </select>
       </div>
       <div class="form-group">
         <label for="territorio">Territorio:</label>
-        <select id="territorio" v-model="territorio">
+        <select id="territorio" style="padding: 5px;" v-model="territorio">
           <option v-for="item in territoriosOptions" :key="item.id" :value="item.id">{{ item.nombre_territorio }}</option>
         </select>
       </div>
@@ -213,71 +213,72 @@ export default {
 </script>
 
 <style scoped>
-  .form-container {
-    max-width: 450px;
-    margin: 50px;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  h2 {
-    font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-    text-align: left;
-    margin-bottom: 20px;
-    font-size: 20px;
-  }
-  
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .form-group {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    font-size: 13px;
-  }
-  
-  label {
-    flex: 1;
-    text-align: right;
-    font-weight: bold;
-  }
-  
-  input, select {
-    flex: 2;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  
-  .form-buttons {
-    display: flex;
-    justify-content: end;
-    font-size: 15px;
-  }
-  
-  button {
-    padding: 5px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-  }
-  
-  button[type="button"] {
-    background-color: #007bff;
-    color: white;
-  }
-  
-  button[type="submit"] {
-    margin-left: 15px;
-    background-color: #007bff;
-    color: white;
-  }
+.form-container {
+  max-width: 600px; /* Ajusta el ancho máximo del contenedor */
+  margin: 50px; /* Centra el contenedor */
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  text-align: left;
+  margin-bottom: 20px;
+  font-size: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 4 columnas de igual tamaño */
+  gap: 15px; /* Espacio entre los elementos */
+}
+
+.form-group {
+  text-align: left;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 14px;
+}
+
+label {
+  font-weight: bold;
+}
+
+input, select {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.form-buttons {
+  grid-column: span 2; /* Los botones ocupan las 4 columnas */
+  display: flex;
+  justify-content: end;
+  font-size: 15px;
+  margin-top: 20px;
+}
+
+button {
+  margin-left: 10px;
+  padding: 5px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button[type="button"] {
+  background-color: #007bff;
+  color: white;
+}
+
+button[type="submit"] {
+  margin-left: 15px;
+  background-color: #007bff;
+  color: white;
+}
 </style>

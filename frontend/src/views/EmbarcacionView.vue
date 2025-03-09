@@ -1,7 +1,12 @@
 <template>
   <div>
-    <img style="width: 250px;" src="@/assets/Imagenes/mitrans.png">
-    <NavbarComponent />
+    <div style=" background-color: #003366; color: white; text-align: right;">
+      <h6>Bienvenido: </h6>
+    </div>  
+    <br />
+    <Navbar-Component />
+    <br />
+    <br />
 
     <div class="search-container">
       <form class="d-flex search-form" @submit.prevent="searchEmbarcacion">
@@ -14,70 +19,76 @@
           @input="handleSearchInput"
           style="width: 200px;"
         />
-        <button class="btn btn-outline-success btn-sm" type="submit">Buscar</button>
       </form>
-      <br>
     </div>
 
     <div class="create-button-container">
       <router-link v-if="hasGroup('Admin')" class="create-button" to="/AdicionarEmbarcacion">
-        Crear embarcación <i class="bi bi-plus-circle"></i>
+      <i class="bi bi-plus-circle large-icon"></i>
       </router-link>
     </div>
-    <br>
-
-    <div class="table-responsive">
+    <h6 style="margin-top: -31px; font-size: 19px;
+    margin-right: 560px;">Listado de embarcaciones:</h6>
+    <br />
+    <div class="table-container">
       <table class="table">
         <thead>
           <tr>
-            <th scope="col">No</th>
+            <th scope="col" v-if="showNoId">No</th>
             <th scope="col">Nombre</th>
             <th scope="col">Nacionalidad</th>
-            <th scope="col">Eslora</th>
-            <th scope="col">Manga</th>
-            <th scope="col">Calado máximo</th>
-            <th scope="col">Desplazamiento máximo</th>
+            <th scope="col" v-if="showNoId">Eslora</th>
+            <th scope="col" v-if="showNoId">Manga</th>
+            <th scope="col" v-if="showNoId">Calado máximo</th>
+            <th scope="col" v-if="showNoId">Desplazamiento máximo</th>
             <th scope="col">Tipo de embarcación</th>
             <th scope="col">Tipo de buque</th>
-            <th scope="col">Tipo de patana</th>
-            <th scope="col">IMO</th>
-            <th scope="col">Potencia</th>
+            <th scope="col" v-if="showNoId">Tipo de patana</th>
+            <th scope="col" v-if="showNoId">IMO</th>
+            <th scope="col" v-if="showNoId">Potencia</th>
             <th scope="col" v-if="hasGroup('Admin')">Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(item, index) in embarcacionesFiltradas" :key="item.id">
-            <th scope="row" style="background-color:white">{{ index + 1 }}</th>
+            <th scope="row" v-if="showNoId">{{ index + 1 }}</th>
             <td>{{ item.nombre_embarcacion }}</td>
             <td>{{ item.nacionalidad_name }}</td>
-            <td>{{ item.eslora }}</td>
-            <td>{{ item.manga }}</td>
-            <td>{{ item.calado_maximo }}</td>
-            <td>{{ item.desplazamiento_maximo }}</td>
+            <td v-if="showNoId">{{ item.eslora }}</td>
+            <td v-if="showNoId">{{ item.manga }}</td>
+            <td v-if="showNoId">{{ item.calado_maximo }}</td>
+            <td v-if="showNoId">{{ item.desplazamiento_maximo }}</td>
             <td>{{ getTipoEmbarcacionText(item.tipo_embarcacion) }}</td>
             <td>{{ getTipoBuqueText(item.tipo_buque) }}</td>
-            <td>{{ getTipoPatanaText(item.tipo_patana) }}</td>
-            <td>{{ getIMOText(item.imo) }}</td>
-            <td>{{ getPotenciaText(item.potencia) }}</td>
-            <td v-if="hasGroup('Admin')">
-              <button @click.prevent="confirmDelete(item.id)" class="btn btn-danger">
-                <i style="color:white" class="bi bi-trash"></i>
+            <td v-if="showNoId">{{ getTipoPatanaText(item.tipo_patana) }}</td>
+            <td v-if="showNoId">{{ item.imo }}</td>
+            <td v-if="showNoId">{{ item.potencia }}</td>
+            <td>
+              <button @click="toggleNoIdVisibility" class="btn btn-info btn-small btn-eye" 
+              v-html="showNoId ? '<i class=\'bi bi-eye-slash-fill\'></i>' : '<i class=\'bi bi-eye-fill\'></i>'">
               </button>
-              <button style="margin-left:10px" class="btn btn-warning">
+              <span v-if="hasGroup('Admin')">
+                <button  class="btn btn-warning btn-small">
                 <router-link :to="{name: 'EditarEmbarcacion', params: {id: item.id}}">
                   <i style="color:white" class="bi bi-pencil-square"></i>
                 </router-link>
               </button>
+              <button style="margin-left:10px" @click.prevent="confirmDelete(item.id)" class="btn btn-danger btn-small">
+                <i style="color:white" class="bi bi-trash"></i>
+              </button>
+              
+            </span>
             </td>
           </tr>
         </tbody>
       </table>
-    </div>
+    
 
     <!-- Mensaje cuando no hay resultados -->
     <h1 v-if="embarcacionesFiltradas.length === 0 && searchQuery">
       No existe ningún registro asociado a ese parámetro de búsqueda.
     </h1>
+  </div>
   </div>
 </template>
 
@@ -99,6 +110,7 @@ export default {
       debounceTimeout: null, // Timeout para el debounce
       userPermissions: [], // Permisos del usuario
       userGroups: [], // Grupos del usuario
+      showNoId: false,
     };
   },
   async created() {
@@ -106,6 +118,9 @@ export default {
     await this.getEmbarcaciones();
   },
   methods: {
+    toggleNoIdVisibility() {
+      this.showNoId = !this.showNoId; // Alternar la visibilidad de las columnas No e Id
+    },
     // Verifica si el usuario tiene un permiso específico
     hasPermission(permission) {
       return this.userPermissions.some(p => p.name === permission);
@@ -195,7 +210,7 @@ export default {
         patana: 'Patana',
         otros: 'Otros',
       };
-      return tipos_embarcaciones[value] || '-';
+      return tipos_embarcaciones[value] || 'Desconocido';
     },
     // Obtiene el texto asociado al valor del tipo de buque
     getTipoBuqueText(value) {
@@ -207,7 +222,7 @@ export default {
         buque_tanque: 'Buque tanque',
         buque_gases: 'Buque de gases',
       };
-      return tipos_buques[value] || '-';
+      return tipos_buques[value] || 'Desconocido';
     },
     // Obtiene el texto asociado al valor del tipo de patana
     getTipoPatanaText(value) {
@@ -217,54 +232,51 @@ export default {
         patana_comb: 'Patana de combustible',
         patana_ro_ro: 'Patana Ro Ro',
       };
-      return tipos_patanas[value] || '-';
+      return tipos_patanas[value] || 'Desconocido';
     },
-    // Obtiene el texto asociado al valor del tipo de patana
-    
-  getPotenciaText(value) {
-    // Si el valor es un número mayor que 0, devuelve el número
-    if ( value > 0) {
-      return value;
-    }
-    // En cualquier otro caso, devuelve el símbolo "-"
-    return '-';
-  },
-  getIMOText(value) {
-    // Si el valor es un número mayor que 0, devuelve el número
-    if ( value !=null && value !='') {
-      return value;
-    }
-    // En cualquier otro caso, devuelve el símbolo "-"
-    return '-';
-  },
-
   },
 };
 </script>
 
 
 <style scoped>
-/*para el placeholder del buscador */
+
 .search-container input::placeholder {
-  font-size: 12px; /* Tamaño de la fuente más pequeño */
-  color: #999;     /* Color del texto del placeholder */
-}
-.search-container {
-  padding: 10px;
+  font-size: 12px; 
+  color: #999;   
 }
 
-.search-form {
+body {
+  overflow: scroll;
+}
+
+.search-container {
   display: flex;
   justify-content: flex-end;
-  margin-left: auto;
+  margin-bottom: 5px;
 }
 
-@media (max-width: 768px) {
-  .search-form {
-    margin-left: auto;
-    margin-right: 10px;
-  }
+.table-container {
+  overflow-x: auto;
+  max-width: 100%;
 }
+.large-icon {
+  font-size: 1.7rem; /* Tamaño del ícono */
+}
+table {
+  width: 84%;
+  border-collapse: collapse;
+  margin-left: 190px;
+  margin-bottom: 20px;
+  font-size: 0.875rem;
+  min-width: 300px;
+}
+
+th, td {
+  padding: 0.15rem; /* Reducir el padding */
+  white-space: nowrap;
+}
+
 
 th {
   background-color: #f2f2f2;
@@ -275,6 +287,17 @@ th {
   font-weight: bold;
 }
 
+.btn-small {
+  padding: 0.25rem 0.45rem;
+  font-size: 0.875rem;
+}
+.btn-eye {
+  background-color: rgb(0, 71, 163);
+  margin-right: 10px;
+  color: white;
+  border: none;
+}
+
 .create-button-container {
   margin-top: -40px;
   text-align: left;
@@ -282,8 +305,8 @@ th {
 
 .create-button {
   text-decoration: none;
-  color: black;
-  padding-bottom: 2em;
+  color: green;
+  margin-left: 940px;
 }
 
 @media (max-width: 768px) {

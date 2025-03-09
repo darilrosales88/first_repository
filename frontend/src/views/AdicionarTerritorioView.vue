@@ -3,17 +3,17 @@
     <h2>Adicionar territorio</h2>
     <form @submit.prevent="saveItem">
       <div class="form-group">
-        <label for="nombre"> Nombre:</label>
-        <input type="text" v-model="nombre_territorio" required />
+        <label for="nombre"> Nombre:<span style="color: red;">*</span></label>
+        <input type="text" style="padding: 3px;" v-model="nombre_territorio" required />
       </div>
 
       <div class="form-group">
-        <label for="nombre"> Abreviatura:</label>
-        <input type="text" v-model="abreviatura" required />
+        <label for="nombre"> Abreviatura:<span style="color: red;">*</span></label>
+        <input type="text" style="padding: 3px;" v-model="abreviatura" required />
       </div>
 
       <div class="form-buttons">
-        <button type="button"><router-link style="color:white;text-decoration:none" to="/Territorio">Cancelar</router-link></button>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
         <button>Aceptar</button>
       </div>
     </form>
@@ -48,7 +48,7 @@ form {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 label {
@@ -72,6 +72,7 @@ select {
 }
 
 button {
+  margin-left: 10px;
   padding: 5px 15px;
   border: none;
   border-radius: 5px;
@@ -105,6 +106,21 @@ export default {
   },
 
   methods: {
+    confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
     validateForm() {
       const nombre_territorio_regex = /^[A-Z][\w\d\W]{2,99}$/;
       const abreviatura_regex = /^[\d\w\W\s]{3,20}$/;

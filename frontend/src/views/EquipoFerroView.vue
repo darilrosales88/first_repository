@@ -1,7 +1,11 @@
 <template>
-  <div>
-    <img style="width: 250px;" src="@/assets/Imagenes/mitrans.png" />
-    <NavbarComponent />
+<div>
+    <div style=" background-color: #003366; color: white; text-align: right;">
+      <h6>Bienvenido: </h6>
+    </div>  
+    <br />
+    <Navbar-Component />
+    <br />
     <br />
 
     <div class="search-container">
@@ -15,53 +19,55 @@
           @input="handleSearchInput"
           style="width: 200px;"
         />
-        <button class="btn btn-outline-success btn-sm" type="submit">Buscar</button>
       </form>
     </div>
 
     <div class="create-button-container">
-      <router-link
-        style="text-decoration:none; color:black; margin-right: 1330px;"
-        to="/AdicionarEquipo"
-        v-if="hasGroup('Admin')"
-      >
-        Crear equipo ferroviario <i class="bi bi-plus-circle"></i>
+      <router-link v-if="hasGroup('Admin')" class="create-button" to="AdicionarEquipo">
+        <i class="bi bi-plus-circle large-icon"></i>
       </router-link>
     </div>
+    <h6 style="margin-top: -31px; font-size: 19px;
+    margin-right: 520px;">Listado de equipos ferroviarios:</h6>
     <br />
 
-    <div class="table-responsive">
+    <div class="table-container">
       <table class="table">
         <thead>
           <tr>
-            <th scope="col">No</th>
+            <th scope="col" v-if="showNoId">No</th>
             <th scope="col">Tipo de equipo</th>
             <th scope="col">No. de identificación</th>
             <th scope="col">Territorio</th>
-            <th scope="col">Tipo de carga</th>
+            <th scope="col" v-if="showNoId">Tipo de carga</th>
             <th scope="col">Tipo de combustible</th>
-            <th scope="col">Peso</th>
+            <th scope="col" v-if="showNoId">Peso</th>
             <th scope="col" v-if="hasGroup('Admin')">Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(item, index) in equiposFiltrados" :key="item.id">
-            <th scope="row" style="background-color: white;">{{ index + 1 }}</th>
+            <th scope="row" v-if="showNoId">{{ index + 1 }}</th>
             <td>{{ item.tipo_equipo_name }}</td>
             <td>{{ item.numero_identificacion }}</td>
             <td>{{ item.territorio_name }}</td>
-            <td>{{ item.tipo_carga }}</td>
+            <td v-if="showNoId">{{ item.tipo_carga }}</td>
             <td>{{ item.tipo_combustible }}</td>
-            <td>{{ item.peso_maximo }}</td>
-            <td v-if="hasGroup('Admin')">
-              <button @click.prevent="confirmDelete(item.id)" class="btn btn-danger">
-                <i style="color:white" class="bi bi-trash"></i>
+            <td v-if="showNoId">{{ item.peso_maximo }}</td>
+            <td >
+              <button @click="toggleNoIdVisibility" class="btn btn-info btn-small btn-eye" 
+              v-html="showNoId ? '<i class=\'bi bi-eye-slash-fill\'></i>' : '<i class=\'bi bi-eye-fill\'></i>'">
               </button>
-              <button style="margin-left:10px" class="btn btn-warning">
-                <router-link :to="{name: 'EditarEquipo', params: {id: item.id}}">
-                  <i style="color:white" class="bi bi-pencil-square"></i>
-                </router-link>
-              </button>
+              <span v-if="hasGroup('Admin')">
+                <button class="btn btn-warning btn-small">
+                  <router-link :to="{name: 'EditarEquipo', params: {id:item.id}}">
+                    <i style="color:white" class="bi bi-pencil-square"></i>
+                  </router-link>
+                </button>
+                <button style="margin-left:10px" @click.prevent="confirmDelete(item.id)" class="btn btn-danger btn-small">
+                  <i style="color:white" class="bi bi-trash"></i>
+                </button>
+              </span>
             </td>
           </tr>
         </tbody>
@@ -93,6 +99,7 @@ export default {
       debounceTimeout: null, // Timeout para el debounce
       userPermissions: [], // Permisos del usuario
       userGroups: [], // Grupos del usuario
+      showNoId: false,
     };
   },
   async created() {
@@ -100,6 +107,9 @@ export default {
     await this.getEquipos();
   },
   methods: {
+    toggleNoIdVisibility() {
+      this.showNoId = !this.showNoId; // Alternar la visibilidad de las columnas No e Id
+    },
     // Verifica si el usuario tiene un permiso específico
     hasPermission(permission) {
       return this.userPermissions.some(p => p.name === permission);
@@ -186,21 +196,41 @@ export default {
 </script>
 
 <style scoped>
-.search-container {
-  padding: 10px;
+
+.search-container input::placeholder {
+  font-size: 12px; 
+  color: #999;   
 }
 
-.search-form {
+body {
+  overflow: scroll;
+}
+
+.search-container {
   display: flex;
   justify-content: flex-end;
-  margin-left: auto;
+  margin-bottom: 5px;
 }
 
-@media (max-width: 768px) {
-  .search-form {
-    margin-left: auto;
-    margin-right: 10px;
-  }
+.table-container {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.large-icon {
+  font-size: 1.7rem; /* Tamaño del ícono */
+}
+table {
+  width: 84%;
+  border-collapse: collapse;
+  margin-left: 190px;
+  margin-bottom: 20px;
+  font-size: 0.875rem;
+  min-width: 300px;
+}
+
+th, td {
+  padding: 0.15rem; /* Reducir el padding */
+  white-space: nowrap;
 }
 
 th {
@@ -212,6 +242,17 @@ th {
   font-weight: bold;
 }
 
+.btn-small {
+  padding: 0.25rem 0.45rem;
+  font-size: 0.875rem;
+}
+.btn-eye {
+  background-color: rgb(0, 71, 163);
+  margin-right: 10px;
+  color: white;
+  border: none;
+}
+
 .create-button-container {
   margin-top: -40px;
   text-align: left;
@@ -219,8 +260,8 @@ th {
 
 .create-button {
   text-decoration: none;
-  color: black;
-  padding-bottom: 2em;
+  color: green;
+  margin-left: 940px;
 }
 
 @media (max-width: 768px) {
@@ -228,10 +269,5 @@ th {
     text-align: left;
     margin-right: 0;
   }
-}
-/*para el placeholder del buscador */
-.search-container input::placeholder {
-  font-size: 12px; /* Tamaño de la fuente más pequeño */
-  color: #999;     /* Color del texto del placeholder */
 }
 </style>

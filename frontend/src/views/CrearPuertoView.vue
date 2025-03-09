@@ -1,17 +1,17 @@
 <template>
   <div class="form-container">
     <h2>Adicionar Puerto</h2>
-    <form @submit.prevent="saveItem">
+    <form @submit.prevent="saveItem" class="form-grid">
       <!-- Campo Nombre del Puerto -->
       <div class="form-group">
-        <label for="nombre_puerto">Nombre del Puerto:</label>
-        <input type="text" v-model="nombre_puerto" required />
+        <label for="nombre_puerto">Nombre del Puerto:<span style="color: red;">*</span></label>
+        <input type="text" style="padding: 3px;" v-model="nombre_puerto" required />
       </div>
 
       <!-- Campo País -->
       <div class="form-group">
-        <label for="pais">País:</label>
-        <select v-model="pais" required>
+        <label for="pais">País:<span style="color: red;">*</span></label>
+        <select v-model="pais" style="padding: 5px;" required>
           <option v-for="item in paisOptions" :key="item.id" :value="item.id">{{ item.nombre_pais }}</option>
         </select>
       </div>
@@ -19,7 +19,7 @@
       <!-- Campo Provincia -->
       <div class="form-group">
         <label for="provincia">Provincia:</label>
-        <select v-model="provincia">
+        <select v-model="provincia" style="padding: 5px;">
           <option v-for="item in provinciaOptions" :key="item.id" :value="item.id">{{ item.nombre_provincia }}</option>
         </select>
       </div>
@@ -27,7 +27,7 @@
       <!-- Campo Servicio Portuario -->
       <div class="form-group">
         <label for="servicio_portuario">Servicio Portuario:</label>
-        <select v-model="servicio_portuario">
+        <select v-model="servicio_portuario" style="padding: 5px;">
           <option v-for="item in servicioPortuarioOptions" :key="item.id" :value="item.id">{{ item.nombre_territorio }}</option>
         </select>
       </div>
@@ -35,21 +35,18 @@
       <!-- Campo Latitud -->
       <div class="form-group">
         <label for="latitud">Latitud:</label>
-        <input type="text" v-model="latitud" required />
+        <input type="text" style="padding: 3px;" v-model="latitud" required />
       </div>
 
       <!-- Campo Longitud -->
       <div class="form-group">
         <label for="longitud">Longitud:</label>
-        <input type="text" v-model="longitud" required />
+        <input type="text" style="padding: 3px;" v-model="longitud" required />
       </div>
 
-      <!-- Botones -->
       <div class="form-buttons">
-        <button type="button">
-          <router-link style="color: white; text-decoration: none" to="/Puertos">Cancelar</router-link>
-        </button>
-        <button type="submit">Aceptar</button>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+        <button>Aceptar</button>
       </div>
     </form>
   </div>
@@ -57,8 +54,8 @@
 
 <style scoped>
 .form-container {
-  max-width: 450px;
-  margin: 50px;
+  max-width: 600px; /* Ajusta el ancho máximo del contenedor */
+  margin: 50px; /* Centra el contenedor */
   padding: 20px;
   background-color: #f9f9f9;
   border-radius: 8px;
@@ -72,41 +69,41 @@ h2 {
   font-size: 20px;
 }
 
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 4 columnas de igual tamaño */
+  gap: 15px; /* Espacio entre los elementos */
 }
 
 .form-group {
+  text-align: left;
+  width: 260px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 13px;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 14px;
 }
 
 label {
-  flex: 1;
-  text-align: right;
   font-weight: bold;
 }
 
-input,
-select {
-  flex: 2;
-  padding: 8px;
+input, select {
+  padding: 5px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
 
 .form-buttons {
+  grid-column: span 2; /* Los botones ocupan las 4 columnas */
   display: flex;
   justify-content: end;
   font-size: 15px;
+  margin-top: 20px;
 }
 
 button {
+  margin-left: 10px;
   padding: 5px 15px;
   border: none;
   border-radius: 5px;
@@ -125,6 +122,7 @@ button[type="submit"] {
   color: white;
 }
 </style>
+
 
 <script>
 import Swal from 'sweetalert2';
@@ -148,6 +146,21 @@ export default {
     this.fetchOptions();
   },
   methods: {
+    confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
     validateForm() {
       const nombrePuertoRegex = /^[A-Z][a-zA-ZáéíóúÁÉÍÓÚñÑäëöüÄËÏÜ ]{2,99}$/;
       const latitudRegex = /^[\d\.]+$/;

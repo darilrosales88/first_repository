@@ -1,61 +1,73 @@
 <template>
-  <img style="width: 250px" src="@/assets/Imagenes/mitrans.png" />
-  <Navbar-Component />
-  <br />
-  <div class="search-container">
-    <form class="d-flex search-form" @submit.prevent="searchAtraque">
-      <input
-        class="form-control form-control-sm me-2"
-        type="search"
-        placeholder="nombre"
-        aria-label="Buscar"
-        v-model="searchQuery"
-        @input="handleSearchInput"
-        style="width: 200px;"
-      />
-      <button class="btn btn-outline-success btn-sm" type="submit">Buscar</button>
-    </form>
+  <div >
+    <div style=" background-color: #003366; color: white; text-align: right;">
+      <h6>Bienvenido:</h6>
+    </div>  
+    <br />
+    <Navbar-Component />
+    <br />
+    <br />
+    <div class="search-container">
+      <form class="d-flex search-form" @submit.prevent="searchAtraque">
+        <input
+          class="form-control form-control-sm me-2"
+          type="search"
+          placeholder="Nombre"
+          aria-label="Search"
+          v-model="searchQuery"
+          @input="handleSearchInput"
+          style="width: 200px;"
+        />
+      </form>
+    </div>
+    <div class="create-button-container">
+      <router-link v-if="hasGroup('Admin')" class="create-button" to="AdicionarAtraque">
+        <i class="bi bi-plus-circle large-icon"></i>
+      </router-link>
+    </div>
+    <h6 style="margin-top: -31px; font-size: 19px;
+    margin-right: 630px;">Listado de atraques:</h6>
+    <br />
+    <div class="table-container" >
+      <table class="table">
+        <thead>
+          <tr >
+            <th scope="col" v-if="showNoId">No</th>
+            <th scope="col" v-if="showNoId">Id</th>
+            <th  scope="col">Nombre</th>
+            <th scope="col">Terminal</th>
+            <th scope="col">Puerto</th>
+            <th scope="col" v-if="hasGroup('Admin')">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(item, index) in atraques" :key="item.id">
+            <td v-if="showNoId">{{ index + 1 }}</td>
+            <td v-if="showNoId">{{ item.id }}</td>
+            <td>{{ item.nombre_atraque }}</td>
+            <td>{{ item.puerto_name }}</td>
+            <td>{{ item.terminal_name }}</td>
+            <td >
+              <button @click="toggleNoIdVisibility" class="btn btn-info btn-small btn-eye" 
+              v-html="showNoId ? '<i class=\'bi bi-eye-slash-fill\'></i>' : '<i class=\'bi bi-eye-fill\'></i>'">
+              </button>
+              <span v-if="hasGroup('Admin')">
+                <button class="btn btn-warning btn-small">
+                  <router-link :to="{name: 'EditarAtraque', params: {id:item.id}}">
+                    <i style="color:white" class="bi bi-pencil-square"></i>
+                  </router-link>
+                </button>
+                <button style="margin-left:10px" @click.prevent="confirmDelete(item.id)" class="btn btn-danger btn-small">
+                  <i style="color:white" class="bi bi-trash"></i>
+                </button>
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h1 v-if="!busqueda_existente">No existe ningún registro asociado a ese parámetro de búsqueda.</h1>
+    </div>
   </div>
-  <div class="create-button-container">
-    <router-link class="create-button" to="AdicionarAtraque">
-      Crear atraque <i class="bi bi-plus-circle"></i>
-    </router-link>
-  </div>
-  <br />
-  <br />
-  <table class="table">
-    <thead>
-      <tr>
-        <th scope="col">No</th>
-        <th scope="col">Id</th>
-        <th scope="col">Nombre</th>
-        <th scope="col">Terminal</th>
-        <th scope="col">Puerto</th>
-        <th scope="col" v-if="hasGroup('Admin')">Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="(item, index) in atraques" :key="item.id">
-        <th scope="row" style="background-color: white;">{{ index + 1 }}</th>
-        <th scope="row" style="background-color: white;">{{ item.id }}</th>
-        <td>{{ item.nombre_atraque }}</td>
-        <td>{{ item.puerto_name }}</td>
-        <td>{{ item.terminal_name }}</td>
-        <td v-if="hasGroup('Admin')">
-          <button @click.prevent="confirmDelete(item.id)" class="btn btn-danger">
-            <i style="color:white" class="bi bi-trash"></i>
-          </button>
-          <button style="margin-left:10px" class="btn btn-warning">
-            <router-link :to="{name: 'EditarAtraque', params: {id:item.id}}">
-              <i style="color:white" class="bi bi-pencil-square"></i>
-            </router-link>
-          </button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <!-- Mensaje cuando no hay resultados -->
-  <h1 v-if="!busqueda_existente">No existe ningún registro asociado a ese parámetro de búsqueda.</h1>
 </template>
 
 <script>
@@ -79,6 +91,7 @@ export default {
       busqueda_existente: true, // Variable para controlar la visibilidad del <h1> de la busqueda
       userPermissions: [], // Almacenará los permisos del usuario
       userGroups: [], // Almacenará los grupos del usuario
+      showNoId: false,
     };
   },
   mounted() {
@@ -89,6 +102,9 @@ export default {
     await this.fetchUserPermissionsAndGroups();
   },
   methods: {
+    toggleNoIdVisibility() {
+      this.showNoId = !this.showNoId; // Alternar la visibilidad de las columnas No e Id
+    },
     // Verifica si el usuario tiene un permiso específico
     hasPermission(permission) {
       return this.userPermissions.some((p) => p.name === permission);
@@ -174,10 +190,10 @@ export default {
 </script>
 
 <style scoped>
-/*para el placeholder del buscador */
+
 .search-container input::placeholder {
-  font-size: 12px; /* Tamaño de la fuente más pequeño */
-  color: #999;     /* Color del texto del placeholder */
+  font-size: 12px; 
+  color: #999;   
 }
 
 body {
@@ -187,14 +203,30 @@ body {
 .search-container {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 20px;
+  margin-bottom: 5px;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 20px;
+.table-container {
+  overflow-x: auto;
+  max-width: 100%;
 }
+
+.large-icon {
+  font-size: 1.7rem; /* Tamaño del ícono */
+}
+table {
+  width: 84%;
+  border-collapse: collapse;
+  margin-left: 190px;
+  margin-bottom: 20px;
+  font-size: 0.875rem;
+}
+
+th, td {
+  padding: 0.15rem; /* Reducir el padding */
+  white-space: nowrap;
+}
+
 
 th {
   background-color: #f2f2f2;
@@ -205,6 +237,17 @@ th {
   font-weight: bold;
 }
 
+.btn-small {
+  padding: 0.25rem 0.45rem;
+  font-size: 0.875rem;
+}
+.btn-eye {
+  background-color: rgb(0, 71, 163);
+  margin-right: 10px;
+  color: white;
+  border: none;
+}
+
 .create-button-container {
   margin-top: -40px;
   text-align: left;
@@ -212,8 +255,8 @@ th {
 
 .create-button {
   text-decoration: none;
-  color: black;
-  padding-bottom: 2em;
+  color: green;
+  margin-left: 940px;
 }
 
 @media (max-width: 768px) {

@@ -1,31 +1,29 @@
 <template>
   <div class="form-container">
-    <h2>Editar unidad de medida {{ u_medida.unidad_medida }}</h2>
+    <h2>Editar unidad de medida: {{ u_medida.unidad_medida }}</h2>
     <form @submit.prevent="submitForm">
       <!-- Campo Magnitud -->
       <div class="form-group">
         <label for="magnitud">Magnitud:</label>
-        <input type="text" v-model="u_medida.magnitud" required />
+        <input type="text" style="padding: 3px;" v-model="u_medida.magnitud" required />
       </div>
 
       <!-- Campo Unidad de Medida -->
       <div class="form-group">
         <label for="unidad_medida">Unidad de medida:</label>
-        <input type="text" v-model="u_medida.unidad_medida" required />
+        <input type="text" style="padding: 3px;" v-model="u_medida.unidad_medida" required />
       </div>
 
       <!-- Campo Símbolo -->
       <div class="form-group">
         <label for="simbolo">Símbolo:</label>
-        <input type="text" v-model="u_medida.simbolo" required />
+        <input type="text" style="padding: 3px;" v-model="u_medida.simbolo" required />
       </div>
 
       <!-- Botones -->
       <div class="form-buttons">
-        <button type="button">
-          <router-link style="color: white; text-decoration: none" to="/UM">Cancelar</router-link>
-        </button>
-        <button type="submit">Aceptar</button>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+        <button>Aceptar</button>
       </div>
     </form>
   </div>
@@ -33,13 +31,14 @@
 
 <style scoped>
 .form-container {
-  max-width: 450px;
+  max-width: 300px;
   margin: 50px;
   padding: 20px;
   background-color: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
 
 h2 {
   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
@@ -55,23 +54,20 @@ form {
 }
 
 .form-group {
+  text-align: left;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 13px;
+  width: 260px;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 14px;
 }
 
 label {
-  flex: 1;
-  text-align: right;
   font-weight: bold;
 }
 
-input,
-select {
-  flex: 2;
-  padding: 8px;
+input, select {
+  padding: 5px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
@@ -83,6 +79,7 @@ select {
 }
 
 button {
+  margin-left: 10px;
   padding: 5px 15px;
   border: none;
   border-radius: 5px;
@@ -101,6 +98,7 @@ button[type="submit"] {
   color: white;
 }
 </style>
+
 
 <script>
 import axios from 'axios';
@@ -124,6 +122,21 @@ export default {
   },
 
   methods: {
+    confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
     validateForm() {
       const magnitud_u_m_regex = /^[A-Za-záíóúé][A-Za-záíóúé\s]{1,49}$/;
       const simbolo_regex = /^[\d\w]{1,3}$/;

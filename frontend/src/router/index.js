@@ -223,7 +223,7 @@ const routes = [
     }
   },
   {
-    path: '/EditarContenedor/:id/edit',
+    path: '/EditarContenedor/:id/',
     name: 'EditarContenedor',
     component: () => import('../views/EditarContenedorView.vue'),
     meta:{

@@ -1,8 +1,12 @@
 <template>
   <div>
-    <img style="width: 250px;" src="@/assets/Imagenes/mitrans.png">
-    <NavbarComponent />
-
+    <div style=" background-color: #003366; color: white; text-align: right;">
+      <h6>Bienvenido: </h6>
+    </div>  
+    <br />
+    <Navbar-Component />
+    <br />
+    <br />
     <div class="search-container">
       <form class="d-flex search-form" @submit.prevent="searchEmbalajes">
         <input
@@ -14,21 +18,17 @@
           @input="handleSearchInput"
           style="width: 200px;"
         />
-        <button class="btn btn-outline-success btn-sm" type="submit">Buscar</button>
       </form>
-      <br>
     </div>
-
-    <div style="margin-top: -4em;">
-      <br>
-      <router-link style="text-decoration:none; color:black; margin-right: 1330px;" to="/AdicionarTipoEmbalaje" v-if="hasGroup('Admin')">
-        Crear embalaje <i class="bi bi-plus-circle"></i>
+    <div class="create-button-container">
+      <router-link v-if="hasGroup('Admin')" class="create-button" to="AdicionarTipoEmbalaje">
+        <i class="bi bi-plus-circle large-icon"></i>
       </router-link>
-      <br>
     </div>
-
-    <br>
-
+    <h6 style="margin-top: -31px; font-size: 19px;
+    margin-right: 520px;">Listado de tipos de embalajes:</h6>
+    <br />
+    <div class="table-container">
     <table class="table">
       <thead>
         <tr>
@@ -42,38 +42,59 @@
           <th scope="row" style="background-color: white;">{{ (index + 1) }}</th>
           <td>{{ item.nombre_tipo_embalaje }}</td>
           <td v-if="hasGroup('Admin')">
-            <button @click.prevent="confirmDelete(item.id)" class="btn btn-danger">
-              <i style="color:white" class="bi bi-trash"></i>
-            </button>
-            <button style="margin-left:10px" class="btn btn-warning">
-              <router-link :to="{name: 'EditarTipoEmbalaje', params: {id:item.id}}">
-                <i style="color:white" class="bi bi-pencil-square"></i>
-              </router-link>
-            </button>
+            <button class="btn btn-warning btn-small">
+                  <router-link :to="{name: 'EditarTipoEmbalaje', params: {id:item.id}}">
+                    <i style="color:white" class="bi bi-pencil-square"></i>
+                  </router-link>
+                </button>
+                <button style="margin-left:10px" @click.prevent="confirmDelete(item.id)" class="btn btn-danger btn-small">
+                  <i style="color:white" class="bi bi-trash"></i>
+                </button>
           </td>
         </tr>
       </tbody>
     </table>
-  </div>
   <h1 v-if="!busqueda_existente">No existe ningún registro asociado a ese parámetro de búsqueda</h1>
+</div>
+</div>
 </template>
 
 <style scoped>
-.search-container {
-  padding: 10px;
+
+.search-container input::placeholder {
+  font-size: 12px; 
+  color: #999;   
 }
 
-.search-form {
+body {
+  overflow: scroll;
+}
+
+.search-container {
   display: flex;
   justify-content: flex-end;
-  margin-left: auto;
+  margin-bottom: 5px;
 }
 
-@media (max-width: 768px) {
-  .search-form {
-    margin-left: auto;
-    margin-right: 10px;
-  }
+.table-container {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.large-icon {
+  font-size: 1.7rem; /* Tamaño del ícono */
+}
+table {
+  width: 84%;
+  border-collapse: collapse;
+  margin-left: 190px;
+  margin-bottom: 20px;
+  font-size: 0.875rem;
+  min-width: 300px;
+}
+
+th, td {
+  padding: 0.15rem; /* Reducir el padding */
+  white-space: nowrap;
 }
 
 th {
@@ -85,6 +106,17 @@ th {
   font-weight: bold;
 }
 
+.btn-small {
+  padding: 0.25rem 0.45rem;
+  font-size: 0.875rem;
+}
+.btn-eye {
+  background-color: rgb(0, 71, 163);
+  margin-right: 10px;
+  color: white;
+  border: none;
+}
+
 .create-button-container {
   margin-top: -40px;
   text-align: left;
@@ -92,8 +124,8 @@ th {
 
 .create-button {
   text-decoration: none;
-  color: black;
-  padding-bottom: 2em;
+  color: green;
+  margin-left: 940px;
 }
 
 @media (max-width: 768px) {
@@ -102,13 +134,8 @@ th {
     margin-right: 0;
   }
 }
-
-/*para el placeholder del buscador */
-.search-container input::placeholder {
-  font-size: 12px; /* Tamaño de la fuente más pequeño */
-  color: #999;     /* Color del texto del placeholder */
-}
 </style>
+
 
 <script>
 import Swal from 'sweetalert2';

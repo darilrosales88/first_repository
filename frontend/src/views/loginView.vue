@@ -68,16 +68,16 @@
     </svg>
     <div class="container">
       <img
-        style="position: relative; padding-top: 3em; margin-right: 32em"
+        style="position: relative; padding-top: 3em; margin-right: 44em"
         src="../assets/Imagenes/logo.png"
       />
   
       <form
         @submit.prevent="submitForm"
-        style="margin-top: 3em; position: absolute"
+        style="margin-top: 2em; position: absolute"
         class="row row-cols-lg-auto g-3 align-items-center"
       >
-        <div style="margin-left: 2em;" class="col-12">
+        <div style="margin-left: 4em; " class="col-12">
           <label class="visually-hidden" for="inlineFormInputGroupUsername">Nombre de usuario</label>
           <div class="input-group">
             <div class="input-group-text">
@@ -87,6 +87,7 @@
               type="text"
               class="form-control"
               id="inlineFormInputGroupUsername"
+              style="width: 230px;"
               placeholder="Usuario"
               v-model="username"
               required
@@ -94,7 +95,7 @@
           </div>
         </div>
   
-        <div style="margin-left: 2em;" class="col-12">
+        <div style="margin-left: 5.3em; font-size: 12px;" class="col-12">
           <label class="visually-hidden" for="inlineFormInputGroupPassword">Contraseña</label>
           <div class="input-group">
             <div class="input-group-text">
@@ -104,6 +105,7 @@
               type="password"
               class="form-control"
               id="inlineFormInputGroupPassword"
+              style="font-size: 14px; width: 230px; "
               placeholder="Por favor, escriba su contraseña"
               v-model="password"
               required
@@ -113,11 +115,11 @@
   
         <div style="margin-left: 5em;" class="justify-content-end">
           <button
-            style="margin-left: 13em; width: 70%; margin-top: 2em"
+            style="margin-left: 3.3em; width: 80%; font-size: 14px; margin-top: 1em"
             class="btn btn-primary me-md-2 justify-content-end"
             type="submit"
           >
-            Loguearse <i class="bi bi-shield-lock"></i>
+          Iniciar Sesi&oacute;n  <i class="bi bi-shield-lock"></i>
           </button>
         </div>
       </form>
@@ -139,11 +141,11 @@ svg {
 
 .container {
   margin-top: 1em;
-  margin-left: 22em;
+  margin-left: 25em;
 }
 
 .container form {
-  width: 50%;
+  width: 30%;
 }
 
 </style>

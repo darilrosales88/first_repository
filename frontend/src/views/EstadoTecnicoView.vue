@@ -1,22 +1,34 @@
 <template>
-    <img style="width: 250px ;" src="@/assets/Imagenes/mitrans.png">
-  <Navbar-Component />
-  
-        <form class="d-flex" @submit.prevent="search_estado_tecnico" style="padding: 10px; margin-left: 75em;">
-            <input class="form-control form-control-sm me-2" type="search" placeholder="Search" aria-label="Search" v-model="searchQuery" @input="handleSearchInput" style="width: 200px;">
-            
-            
-            <button  class="btn btn-outline-success btn-sm"  type="submit">Buscar</button>
+  <div>
+   <div style=" background-color: #003366; color: white; text-align: right;">
+      <h6>Bienvenido: </h6>
+    </div>  
+    <br />
+    <Navbar-Component />
+    <br />
+    <br />
+    <div class="search-container">
+        <form class="d-flex search-form" @submit.prevent="search_estado_tecnico" >
+          <input 
+          class="form-control form-control-sm me-2" 
+          type="search" 
+          placeholder="Nombre" 
+          aria-label="Search" 
+          v-model="searchQuery" 
+          @input="handleSearchInput" 
+          style="width: 200px;"> 
         </form>
-      
-      <div style="margin-top: -4em;" >
-        <br>
-        <router-link style="text-decoration:none;  color:black;margin-right: 1330px;" to="/AdicionarEstadoTecnico" v-if="hasGroup('Admin')">Crear estado técnico <i class="bi bi-plus-circle"></i></router-link>
-  <br>  
       </div>
-  
-  <br>
-  
+      
+      <div class="create-button-container">
+      <router-link v-if="hasGroup('Admin')" class="create-button" to="AdicionarEstadoTecnico">
+        <i class="bi bi-plus-circle large-icon"></i>
+      </router-link>
+    </div>
+    <h6 style="margin-top: -31px; font-size: 19px;
+    margin-right: 540px;">Listado de estados tecnicos:</h6>
+    <br />
+    <div class="table-container">
   <table class="table">
   <thead>
     <tr>
@@ -33,42 +45,59 @@
       <td>{{ item.nombre_estado_tecnico }}</td>
 
       <td v-if="hasGroup('Admin')">
-            <button @click.prevent="confirmDelete(item.codigo_estado_tecnico)" class="btn btn-danger">
-              <i style="color: white" class="bi bi-trash"></i>
-            </button>
-            <button style="margin-left: 10px" class="btn btn-warning">
+        <button  class="btn btn-warning btn-small">
               <router-link :to="{ name: 'EditarEstadoTecnico', params: { id: item.codigo_estado_tecnico } }">
                 <i style="color: white" class="bi bi-pencil-square"></i>
               </router-link>
+            </button>
+            <button style="margin-left: 10px" @click.prevent="confirmDelete(item.codigo_estado_tecnico)" class="btn btn-danger btn-small">
+              <i style="color: white" class="bi bi-trash "></i>
             </button>
           </td>
     </tr>
   </tbody>
   </table>
   <h1 v-if="!busqueda_existente">No existe ningún registro asociado a ese parámetro de búsqueda</h1>
+</div>
+</div>
 </template>
 <style scoped>
-.search-container {
-  padding: 10px;
+
+.search-container input::placeholder {
+  font-size: 12px; 
+  color: #999;   
 }
 
-.search-form {
+body {
+  overflow: scroll;
+}
+
+.search-container {
   display: flex;
   justify-content: flex-end;
-  margin-left: auto;
+  margin-bottom: 5px;
 }
 
-@media (max-width: 768px) {
-  .search-form {
-    margin-left: auto;
-    margin-right: 10px;
-  }
+.table-container {
+  overflow-x: auto;
+  max-width: 100%;
 }
-</style>
+.large-icon {
+  font-size: 1.7rem; /* Tamaño del ícono */
+}
+table {
+  width: 84%;
+  border-collapse: collapse;
+  margin-left: 190px;
+  margin-bottom: 20px;
+  font-size: 0.875rem;
+  min-width: 300px;
+}
 
-
-<style scoped>
-
+th, td {
+  padding: 0.15rem; /* Reducir el padding */
+  white-space: nowrap;
+}
 
 th {
   background-color: #f2f2f2;
@@ -79,6 +108,17 @@ th {
   font-weight: bold;
 }
 
+.btn-small {
+  padding: 0.25rem 0.45rem;
+  font-size: 0.875rem;
+}
+.btn-eye {
+  background-color: rgb(0, 71, 163);
+  margin-right: 10px;
+  color: white;
+  border: none;
+}
+
 .create-button-container {
   margin-top: -40px;
   text-align: left;
@@ -86,8 +126,8 @@ th {
 
 .create-button {
   text-decoration: none;
-  color: black;
-  padding-bottom: 2em;
+  color: green;
+  margin-left: 940px;
 }
 
 @media (max-width: 768px) {
@@ -97,6 +137,7 @@ th {
   }
 }
 </style>
+
 
 <script>
   import Swal from 'sweetalert2'

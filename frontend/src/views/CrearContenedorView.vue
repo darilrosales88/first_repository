@@ -1,14 +1,14 @@
 <template>
   <div class="form-container">
     <h2>Adicionar contenedor</h2>
-    <form @submit.prevent="save_contenedor">
+    <form @submit.prevent="save_contenedor" class="form-grid">
       <div class="form-group">
-        <label for="id_contenedor">Id</label>
-        <input type="text" v-model="id_contenedor" required />
+        <label for="id_contenedor">Id:<span style="color: red;">*</span></label>
+        <input type="text" style="padding: 3px;" v-model="id_contenedor" required />
       </div>
 
       <div class="form-group">
-        <label for="tipo_contenedor">Tipo de contenedor:</label>
+        <label for="tipo_contenedor">Tipo de contenedor:<span style="color: red;">*</span></label>
         <select v-model="tipo_contenedor" required>
           <option v-for="t_contenedor in contenedores_options" :value="t_contenedor.value" :key="t_contenedor.value">
             {{ t_contenedor.text }}
@@ -17,7 +17,7 @@
       </div>
 
       <div class="form-group">
-        <label for="longitud">Longitud:</label>
+        <label for="longitud">Longitud:<span style="color: red;">*</span></label>
         <select v-model="longitud" required>
           <option v-for="longit in longitud_options" :value="longit.value" :key="longit.value">
             {{ longit.text }}
@@ -26,15 +26,13 @@
       </div>
 
       <div class="form-group">
-        <label for="codigo_iso">Código ISO</label>
-        <input type="text" v-model="codigo_iso" required />
+        <label for="codigo_iso">Código ISO:<span style="color: red;">*</span></label>
+        <input type="text" style="padding: 3px;" v-model="codigo_iso" required />
       </div>
 
       <div class="form-buttons">
-        <button type="button">
-          <router-link style="color:white;text-decoration:none" to="/contenedor">Cancelar</router-link>
-        </button>
-        <button type="submit">Aceptar</button>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+        <button>Aceptar</button>
       </div>
     </form>
   </div>
@@ -42,8 +40,8 @@
 
 <style scoped>
 .form-container {
-  max-width: 450px;
-  margin: 50px;
+  max-width: 600px; /* Ajusta el ancho máximo del contenedor */
+  margin: 50px; /* Centra el contenedor */
   padding: 20px;
   background-color: #f9f9f9;
   border-radius: 8px;
@@ -57,48 +55,41 @@ h2 {
   font-size: 20px;
 }
 
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 4 columnas de igual tamaño */
+  gap: 15px; /* Espacio entre los elementos */
 }
 
 .form-group {
+  text-align: left;
+  width: 260px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 13px;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 14px;
 }
 
 label {
-  flex: 1;
-  text-align: right;
   font-weight: bold;
 }
 
-input,
-select {
-  flex: 2;
-  padding: 8px;
+input, select {
+  padding: 5px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  color: #000;
-  background-color: #fff;
-}
-
-select option {
-  color: #000;
-  background-color: #fff;
 }
 
 .form-buttons {
+  grid-column: span 2; /* Los botones ocupan las 4 columnas */
   display: flex;
   justify-content: end;
   font-size: 15px;
+  margin-top: 20px;
 }
 
 button {
+  margin-left: 10px;
   padding: 5px 15px;
   border: none;
   border-radius: 5px;
@@ -151,6 +142,21 @@ export default {
   },
 
   methods: {
+    confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
     validateForm() {
       const id_contenedor_regex = /^[A-Z]{4}[0-9]{7}$/;
       const codigo_iso_regex = /^[0-9]{2}[A-Z]{1}[0-9]{1}$/;
@@ -158,19 +164,19 @@ export default {
 
       if (!id_contenedor_regex.test(this.id_contenedor)) {
         errorMessage +=
-          'El campo "Id" debe comenzar con cuatro letras mayúsculas seguidas de siete dígitos.<br>';
+          'El campo "Id" debe comenzar con cuatro letras mayúsculas seguidas de siete dígitos.\n';
       }
 
       if (!codigo_iso_regex.test(this.codigo_iso)) {
         errorMessage +=
-          'El campo "Código ISO" admite un formato de: 2 números + 1 letra mayúscula + 1 número; ejemplo: 22G1. <br>';
+          'El campo "Código ISO" debe comenzar con dos números, seguidos de una letra mayúscula y un número.\n';
       }
 
       if (errorMessage) {
         Swal.fire({
           icon: 'error',
           title: 'Error de validación',
-          html: errorMessage,
+          text: errorMessage,
         });
         return false; // Detener el envío del formulario
       }

@@ -4,21 +4,21 @@
     <form @submit.prevent="save_producto">
       <!-- Campo Código -->
       <div class="form-group">
-        <label for="codigo_producto">Código</label>
-        <input type="text" v-model="codigo_producto" step="0.01" required />
+        <label for="codigo_producto">Código:</label>
+        <input style="padding: 3px;" type="text" v-model="codigo_producto" step="0.01" required />
       </div>
 
       <!-- Campo Nombre -->
       <div class="form-group">
-        <label for="nombre_producto">Nombre</label>
-        <input type="text" v-model="nombre_producto" step="0.01" required />
+        <label for="nombre_producto">Nombre:<span style="color: red;">*</span></label>
+        <input style="padding: 3px;" type="text" v-model="nombre_producto" step="0.01" required />
       </div>
 
       <!-- Campo Tipo de Producto -->
       <div class="form-group">
-        <label for="tipo_producto">Tipo de producto:</label>
-        <select v-model="tipo_producto" required>
-          <option v-for="t_producto in t_producto_options" :value="t_producto.value" :key="t_producto.value">
+        <label for="tipo_producto">Tipo de producto:<span style="color: red;">*</span></label>
+        <select style="padding: 5px;" v-model="tipo_producto" required>
+          <option  v-for="t_producto in t_producto_options" :value="t_producto.value" :key="t_producto.value">
             {{ t_producto.text }}
           </option>
         </select>
@@ -26,31 +26,29 @@
 
       <!-- Campo Descripción -->
       <div class="form-group">
-        <label for="descripcion">Descripción</label>
-        <input type="textarea" v-model="descripcion" step="0.01" required />
+        <label for="descripcion">Descripción:</label>
+        <input style="padding: 3px;" type="textarea" v-model="descripcion" step="0.01" required />
       </div>
 
       <!-- Botones -->
       <div class="form-buttons">
-        <button type="button">
-          <router-link style="color:white;text-decoration:none" to="/Producto">Cancelar</router-link>
-        </button>
-        <button type="submit">Aceptar</button>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+        <button>Aceptar</button>
       </div>
     </form>
   </div>
 </template>
 
 <style scoped>
-/* Estilos sin cambios */
 .form-container {
-  max-width: 450px;
+  max-width: 300px;
   margin: 50px;
   padding: 20px;
   background-color: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
 
 h2 {
   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
@@ -66,31 +64,22 @@ form {
 }
 
 .form-group {
+  text-align: left;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 13px;
+  width: 260px;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 14px;
 }
 
 label {
-  flex: 1;
-  text-align: right;
   font-weight: bold;
 }
 
 input, select {
-  flex: 2;
-  padding: 8px;
+  padding: 5px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  color: #000;
-  background-color: #fff;
-}
-
-select option {
-  color: #000;
-  background-color: #fff;
 }
 
 .form-buttons {
@@ -100,6 +89,7 @@ select option {
 }
 
 button {
+  margin-left: 10px;
   padding: 5px 15px;
   border: none;
   border-radius: 5px;
@@ -139,6 +129,21 @@ export default {
     };
   },
   methods: {
+    confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
     validateForm() {
       const codigo_producto_regex = /^[\w\d\W ]{3,20}$/;
       const nombre_producto_regex = /^[A-Z][\w\d\W ]{3,100}$/;

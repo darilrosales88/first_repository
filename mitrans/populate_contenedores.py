@@ -1,6 +1,6 @@
 import random
 from django.core.management.base import BaseCommand
-from .models import nom_contenedor  # Asegúrate de importar tu modelo correctamente
+from .nomencladores.models import nom_contenedor  # Asegúrate de importar tu modelo correctamente
 
 class Command(BaseCommand):
     help = 'Genera 100 registros aleatorios para la tabla nom_contenedor'

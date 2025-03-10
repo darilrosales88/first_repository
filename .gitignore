@@ -28,3 +28,5 @@ pnpm-debug.log*
 *.sw?
 *.docx
 .deprecated
+PIU_MITRANS_2.0
+*.rar

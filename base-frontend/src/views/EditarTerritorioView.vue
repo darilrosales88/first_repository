@@ -4,17 +4,17 @@
     <form @submit.prevent="updateItem">
       <div class="form-group">
         <label for="nombre"> Nombre:</label>
-        <input type="text" v-model="nombre_territorio" required />
+        <input type="text" style="padding: 3px;" v-model="nombre_territorio" required />
       </div>
 
       <div class="form-group">
         <label for="nombre"> Abreviatura:</label>
-        <input type="text" v-model="abreviatura" required />
+        <input type="text" style="padding: 3px;" v-model="abreviatura" required />
       </div>
 
       <div class="form-buttons">
-        <button type="button"><router-link style="color:white;text-decoration:none" to="/Territorio">Cancelar</router-link></button>
-        <button type="submit">Actualizar</button>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+        <button>Aceptar</button>
       </div>
     </form>
   </div>
@@ -48,7 +48,7 @@ form {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 label {
@@ -72,6 +72,7 @@ select {
 }
 
 button {
+  margin-left: 10px;
   padding: 5px 15px;
   border: none;
   border-radius: 5px;
@@ -110,6 +111,21 @@ export default {
   },
 
   methods: {
+    confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
     async fetchItem() {
       try {
         const response = await axios.get(`/api/territorios/${this.id}/`);

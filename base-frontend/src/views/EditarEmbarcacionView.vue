@@ -1,15 +1,15 @@
 <template>
   <div class="form-container">
     <h2>Editar embarcación</h2>
-    <form @submit.prevent="update_embarcacion">
+    <form @submit.prevent="update_embarcacion"  class="form-grid">
       <div class="form-group">
-        <label for="nombre_embarcacion">Nombre</label>
-        <input type="text" v-model="nombre_embarcacion" required />
+        <label for="nombre_embarcacion">Nombre:<span style="color: red;">*</span></label>
+        <input type="text" style="padding: 3px;" v-model="nombre_embarcacion" required />
       </div>
 
       <div class="form-group">
-        <label for="nacionalidad">Nacionalidad</label>
-        <select v-model="nacionalidad" required>
+        <label for="nacionalidad">Nacionalidad:<span style="color: red;">*</span></label>
+        <select v-model="nacionalidad" style="padding: 5px;" required>
           <option v-for="nacionalidad in nationalities" :value="nacionalidad.id" :key="nacionalidad.id">
             {{ nacionalidad.nombre_pais }}
           </option>
@@ -17,28 +17,27 @@
       </div>
 
       <div class="form-group">
-        <label for="eslora">Eslora</label>
-        <input type="number" v-model="eslora" step="0.01" required />
+        <label for="eslora">Eslora:<span style="color: red;">*</span></label>
+        <input type="number" style="padding: 3px;" v-model="eslora" step="0.01" required />
       </div>
 
       <div class="form-group">
-        <label for="manga">Manga</label>
-        <input type="number" v-model="manga" step="0.01" required />
+        <label for="manga">Manga:<span style="color: red;">*</span></label>
+        <input type="number" style="padding: 3px;" v-model="manga" step="0.01" required />
+      </div>
+      <div class="form-group">
+        <label for="calado_maximo">Calado máximo:<span style="color: red;">*</span></label>
+        <input type="number" style="padding: 3px;" v-model="calado_maximo" step="0.01" required />
       </div>
 
       <div class="form-group">
-        <label for="calado_maximo">Calado máximo</label>
-        <input type="number" v-model="calado_maximo" step="0.01" required />
+        <label for="desplazamiento_maximo">Desplazamiento máximo:<span style="color: red;">*</span></label>
+        <input type="number" style="padding: 3px;" v-model="desplazamiento_maximo" step="0.01" required />
       </div>
 
       <div class="form-group">
-        <label for="desplazamiento_maximo">Desplazamiento máximo</label>
-        <input type="number" v-model="desplazamiento_maximo" step="0.01" required />
-      </div>
-
-      <div class="form-group">
-        <label for="tipo_embarcacion">Tipo de embarcación:</label>
-        <select v-model="tipo_embarcacion" required>
+        <label for="tipo_embarcacion">Tipo de embarcación:<span style="color: red;">*</span></label>
+        <select style="padding: 5px;" v-model="tipo_embarcacion" required>
           <option v-for="t_embarcacion in t_embarcacion_options" :value="t_embarcacion.value" :key="t_embarcacion.value">
             {{ t_embarcacion.text }}
           </option>
@@ -46,8 +45,8 @@
       </div>
 
       <div class="form-group" v-if="tipo_embarcacion === 'buque'">
-        <label for="tipo_buque">Tipo de buque:</label>
-        <select v-model="tipo_buque" required>
+        <label for="tipo_buque">Tipo de buque:<span style="color: red;">*</span></label>
+        <select style="padding: 5px;" v-model="tipo_buque" required>
           <option v-for="t_buque in t_buque_options" :value="t_buque.value" :key="t_buque.value">
             {{ t_buque.text }}
           </option>
@@ -55,8 +54,8 @@
       </div>
 
       <div class="form-group" v-if="tipo_embarcacion === 'patana'">
-        <label for="tipo_patana">Tipo de patana:</label>
-        <select v-model="tipo_patana">
+        <label for="tipo_patana">Tipo de patana:<span style="color: red;">*</span></label>
+        <select  style="padding: 5px;" v-model="tipo_patana">
           <option v-for="t_patana in t_patana_options" :value="t_patana.value" :key="t_patana.value">
             {{ t_patana.text }}
           </option>
@@ -64,20 +63,18 @@
       </div>
 
       <div class="form-group" v-if="tipo_embarcacion === 'buque'">
-        <label for="imo">IMO</label>
-        <input type="text" v-model="imo" />
+        <label for="imo">IMO:<span style="color: red;">*</span></label>
+        <input style="padding: 3px;" type="text" v-model="imo" required />
       </div>
 
       <div class="form-group" v-if="tipo_embarcacion === 'remolcador'">
-        <label for="potencia">Potencia</label>
-        <input type="number" v-model="potencia" step="0.01" />
+        <label for="potencia">Potencia:<span style="color: red;">*</span></label>
+        <input style="padding: 3px;" type="number" v-model="potencia" step="0.01" required />
       </div>
 
       <div class="form-buttons">
-        <button type="button">
-          <router-link style="color:white;text-decoration:none" to="/Embarcaciones">Cancelar</router-link>
-        </button>
-        <button type="submit">Actualizar</button>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+        <button>Actualizar</button>
       </div>
     </form>
   </div>
@@ -132,6 +129,21 @@ export default {
     this.loadEmbarcacionData(); // Cargar los datos de la embarcación a editar
   },
   methods: {
+    confirmCancel() {
+    Swal.fire({
+      title: '¿Está seguro de que quiere cancelar la operación?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      cancelButtonText: 'Cancelar', // Corregido: "cancelmButtonText" -> "cancelButtonText"
+      confirmButtonText: 'Aceptar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.history.back();
+      }
+    });
+  },
     validateForm() {
       const nombre_embarcacion_regex = /^[A-Z][A-Za-z ]{2,100}$/;
       const imo_regex = /^[A-Za-z]{3}[0-9]{7}$/;
@@ -234,8 +246,8 @@ export default {
 
 <style scoped>
 .form-container {
-  max-width: 450px;
-  margin: 50px;
+  max-width: 850px; /* Ajusta el ancho máximo del contenedor */
+  margin: 50px ; 
   padding: 20px;
   background-color: #f9f9f9;
   border-radius: 8px;
@@ -249,41 +261,41 @@ h2 {
   font-size: 20px;
 }
 
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 4 columnas de igual tamaño */
+  gap: 15px; /* Espacio entre los elementos */
 }
 
 .form-group {
+  text-align: left;
+  width: 260px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 13px;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 14px;
 }
 
 label {
-  flex: 1;
-  text-align: right;
   font-weight: bold;
 }
 
-input,
-select {
-  flex: 2;
-  padding: 8px;
+input, select {
+  padding: 5px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
 
 .form-buttons {
+  grid-column: span 3; /* Los botones ocupan las 4 columnas */
   display: flex;
   justify-content: end;
   font-size: 15px;
+  margin-top: 20px;
 }
 
 button {
+  margin-left: 10px;
   padding: 5px 15px;
   border: none;
   border-radius: 5px;

@@ -3,18 +3,18 @@
     <h2>Adicionar Incidencia</h2>
     <form @submit.prevent="save_incidencia">
       <div class="form-group">
-        <label for="codigo_incidencia">Código de Incidencia</label>
-        <input type="text" v-model="codigo_incidencia" required />
+        <label for="codigo_incidencia">Código de Incidencia:<span style="color: red;">*</span></label>
+        <input type="text" style="padding: 3px;" v-model="codigo_incidencia" required />
       </div>
 
       <div class="form-group">
-        <label for="nombre_incidencia">Nombre</label>
-        <input type="text" v-model="nombre_incidencia" required />
+        <label for="nombre_incidencia">Nombre:<span style="color: red;">*</span></label>
+        <input type="text" style="padding: 3px;" v-model="nombre_incidencia" required />
       </div>
 
       <div class="form-group">
-        <label for="tipo_imputable">Tipo Imputable</label>
-        <select v-model="tipo_imputable" required>
+        <label for="tipo_imputable">Tipo Imputable:</label>
+        <select style="padding: 5px;" v-model="tipo_imputable" required>
           <option value="-">-</option>
           <option value="imputables_buque">Imputables al buque</option>
           <option value="imputables_puerto">Imputables al puerto</option>
@@ -36,15 +36,15 @@
 </template>
 
 <style scoped>
-/* Estilos sin cambios */
 .form-container {
-  max-width: 450px;
+  max-width: 300px;
   margin: 50px;
   padding: 20px;
   background-color: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
 
 h2 {
   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
@@ -60,32 +60,22 @@ form {
 }
 
 .form-group {
+  text-align: left;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 13px;
+  width: 260px;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 14px;
 }
 
 label {
-  flex: 1;
-  text-align: right;
   font-weight: bold;
 }
 
-input,
-select {
-  flex: 2;
-  padding: 8px;
+input, select {
+  padding: 5px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  color: #000;
-  background-color: #fff;
-}
-
-select option {
-  color: #000;
-  background-color: #fff;
 }
 
 .form-buttons {
@@ -95,6 +85,7 @@ select option {
 }
 
 button {
+  margin-left: 10px;
   padding: 5px 15px;
   border: none;
   border-radius: 5px;
@@ -114,6 +105,7 @@ button[type="submit"] {
 }
 </style>
 
+
 <script>
 import axios from 'axios';
 import Swal from 'sweetalert2';
@@ -128,6 +120,21 @@ export default {
     };
   },
   methods: {
+    confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
     validateForm() {
       const codigo_incidencia_regex = /^[\w\d\W ]{2,5}$/;
       const nombre_incidencia_regex = /^[\w\d\W ]{3,100}$/;

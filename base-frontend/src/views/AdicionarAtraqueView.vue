@@ -1,15 +1,15 @@
 <template>
   <div class="form-container">
-    <h2>Crear atraque</h2>
+    <h2>Adicionar atraque:</h2>
     <form @submit.prevent="saveAtraque">
       <div class="form-group">
-        <label for="nombre_atraque">Nombre</label>
-        <input type="text" v-model="nombre_atraque" step="0.01" required />
+        <label for="nombre_atraque">Nombre:<span style="color: red;">*</span></label>
+        <input type="text" style="padding: 3px;" v-model="nombre_atraque" step="0.01" required />
       </div>
 
       <div class="form-group">
-        <label for="puerto">Puerto</label>
-        <select v-model="puerto" required>
+        <label for="puerto">Puerto:<span style="color: red;">*</span></label>
+        <select style="padding: 5px;" v-model="puerto" required>
           <option v-for="puerto in puertos" :value="puerto.id" :key="puerto.id">
             {{ puerto.nombre_puerto }}
           </option>
@@ -17,8 +17,8 @@
       </div>
 
       <div class="form-group">
-        <label for="terminal">Terminal:</label>
-        <select v-model="terminal" required>
+        <label for="terminal">Terminal:<span style="color: red;">*</span></label>
+        <select style="padding: 5px;" v-model="terminal" required>
           <option v-for="terminal in terminales" :value="terminal.id" :key="terminal.id">
             {{ terminal.nombre_terminal }}
           </option>
@@ -26,7 +26,7 @@
       </div>
 
       <div class="form-buttons">
-        <button type="button"><router-link style="color:white;text-decoration:none" to="/atraques">Cancelar</router-link> </button>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
         <button>Aceptar</button>
       </div>
     </form>
@@ -35,74 +35,74 @@
 
 <style scoped>
 .form-container {
-max-width: 450px;
-margin: 50px;
-padding: 20px;
-background-color: #f9f9f9;
-border-radius: 8px;
-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 300px;
+  margin: 50px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+
 h2 {
-font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-text-align: left;
-margin-bottom: 20px;
-font-size: 20px;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  text-align: left;
+  margin-bottom: 20px;
+  font-size: 20px;
 }
 
 form {
-display: flex;
-flex-direction: column;
-gap: 15px;
-
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 .form-group {
-display: flex;
-align-items: center;
-justify-content: space-between;
-gap: 10px;
-font-size: 13px;
+  text-align: left;
+  display: flex;
+  width: 260px;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 14px;
 }
 
 label {
-flex: 1;
-text-align: right;
-font-weight: bold;
+  font-weight: bold;
 }
 
-input,select {
-flex: 2;
-padding: 8px;
-border: 1px solid #ccc;
-border-radius: 4px;
+input, select {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 .form-buttons {
-display: flex;
-justify-content: end;
-font-size: 15px;
+  display: flex;
+  justify-content: end;
+  font-size: 15px;
 }
 
 button {
-padding: 5px 15px;
-border: none;
-border-radius: 5px;
-cursor: pointer;
-font-weight: bold;
+  margin-left: 10px;
+  padding: 5px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
 }
 
 button[type="button"] {
-background-color: #007bff;
-color: white;
+  background-color: #007bff;
+  color: white;
 }
 
 button[type="submit"] {
-margin-left: 15px;
-background-color: #007bff;
-color: white;
+  margin-left: 15px;
+  background-color: #007bff;
+  color: white;
 }
 </style>
+
 
 <script>
 import axios from 'axios';
@@ -127,6 +127,21 @@ export default {
   },
 
   methods: {
+    confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
     validateForm() {
       const nombre_atraque_regex = /^[A-Z][A-Za-z ]{2,99}$/;
       let errorMessage = '';

@@ -444,10 +444,10 @@ class nom_equipo_ferroviario_filter(filters.FilterSet):
     #     return queryset.filter(tipo_equipo__icontains = value)
     
     class Meta:
-  #Esto lo modifique yo
+  
         model : nom_equipo_ferroviario    
         fields:{
-            'id_tipo_equipo_territorio',
+            'id_tipo_equipo_territorio':['icontains'],
         }
 
 class nom_equipo_ferroviario_serializer(serializers.ModelSerializer):

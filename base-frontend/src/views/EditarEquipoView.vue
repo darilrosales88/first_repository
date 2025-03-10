@@ -1,11 +1,11 @@
 <template>
   <div class="form-container">
     <h2>Editar Equipo Ferroviario</h2>
-    <form @submit.prevent="update_equipo_ferroviario">
+    <form @submit.prevent="update_equipo_ferroviario" class="form-grid">
       <!-- Tipo de equipo -->
       <div class="form-group">
-        <label for="tipo_equipo">Tipo de equipo (tipo de equipo - tipo de carga - peso max. con carga)</label>
-        <select v-model="tipo_equipo" required>
+        <label for="tipo_equipo">Tipo de equipo:<span style="color: red;">*</span></label>
+        <select style="padding: 5px;" v-model="tipo_equipo" required>
           <option v-for="tef in tipos_equipos" :key="tef.id" :value="tef.id">{{ tef.tipo_equipo_name }} - {{ tef.tipo_carga_name }} - {{tef.peso_maximo_con_carga}}</option>
         </select>
       </div>
@@ -13,14 +13,14 @@
 
       <!-- Número de identificación -->
       <div class="form-group">
-        <label for="numero_identificacion">Número de identificación</label>
-        <input type="text" v-model="numero_identificacion" required />
+        <label for="numero_identificacion">Número de identificación:<span style="color: red;">*</span></label>
+        <input style="padding: 3px;" type="text" v-model="numero_identificacion" required />
       </div>
 
       <!-- Territorio -->
       <div class="form-group">
-        <label for="territorio">Territorio</label>
-        <select v-model="territorio" required>
+        <label for="territorio">Territorio:<span style="color: red;">*</span></label>
+        <select style="padding: 5px;" v-model="territorio" required>
           <option value="-">-</option>
           <option value="oriente">Oriente</option>
           <option value="centro">Centro</option>
@@ -31,27 +31,25 @@
       <!-- Tipo de carga -->
       <div class="form-group">
         <label for="tipo_carga">Tipo de carga</label>
-        <input type="text" v-model="tipo_carga" disabled />
+        <input style="padding: 3px;" type="text" v-model="tipo_carga" disabled />
       </div>
 
       <!-- Tipo de combustible -->
       <div class="form-group">
         <label for="tipo_combustible">Tipo de combustible</label>
-        <input type="text" v-model="tipo_combustible" disabled />
+        <input style="padding: 3px;" type="text" v-model="tipo_combustible" disabled />
       </div>
 
       <!-- Peso máximo -->
       <div class="form-group">
         <label for="peso_maximo">Peso máximo (t)</label>
-        <input type="number" v-model="peso_maximo" step="0.01" disabled />
+        <input style="padding: 3px;" type="number" v-model="peso_maximo" step="0.01" disabled />
       </div>
 
       <!-- Botones -->
       <div class="form-buttons">
-        <button type="button">
-          <router-link style="color:white;text-decoration:none" to="/EquipoFerro">Cancelar</router-link>
-        </button>
-        <button type="submit">Actualizar</button>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+        <button>Aceptar</button>
       </div>
     </form>
   </div>
@@ -80,6 +78,21 @@ export default {
     await this.getEquipoFerroviario(id); // Obtener el equipo ferroviario por su ID
   },
   methods: {
+    confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
     // Obtener los tipos de equipos ferroviarios
     async getTiposEquipos() {
       try {
@@ -182,10 +195,9 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos sin cambios */
 .form-container {
-  max-width: 450px;
-  margin: 50px;
+  max-width: 690px; /* Ajusta el ancho máximo del contenedor */
+  margin: 50px; /* Centra el contenedor */
   padding: 20px;
   background-color: #f9f9f9;
   border-radius: 8px;
@@ -199,48 +211,41 @@ h2 {
   font-size: 20px;
 }
 
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 4 columnas de igual tamaño */
+  gap: 15px; /* Espacio entre los elementos */
 }
 
 .form-group {
+  text-align: left;
+  width: 320px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 13px;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 14px;
 }
 
 label {
-  flex: 1;
-  text-align: right;
   font-weight: bold;
 }
 
-input,
-select {
-  flex: 2;
-  padding: 8px;
+input, select {
+  padding: 5px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  color: #000;
-  background-color: #fff;
-}
-
-select option {
-  color: #000;
-  background-color: #fff;
 }
 
 .form-buttons {
+  grid-column: span 2; /* Los botones ocupan las 4 columnas */
   display: flex;
   justify-content: end;
   font-size: 15px;
+  margin-top: 20px;
 }
 
 button {
+  margin-left: 10px;
   padding: 5px 15px;
   border: none;
   border-radius: 5px;
@@ -255,7 +260,7 @@ button[type="button"] {
 
 button[type="submit"] {
   margin-left: 15px;
-  background-color: #28a745;
+  background-color: #007bff;
   color: white;
 }
 </style>

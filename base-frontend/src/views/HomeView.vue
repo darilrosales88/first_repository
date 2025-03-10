@@ -1,7 +1,5 @@
 <template>
   <nav class="navbar" style="background-color: #003366; height: 100vh;">
-    
-    
     <!-- Lista de elementos del menú -->
     <ul class="navbar-nav" style="margin-bottom:10em">
       <!-- Enlaces del menú -->
@@ -11,19 +9,15 @@
         </a>
         <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownSeguridad">
           <li><router-link class="dropdown-item" to="/Usuarios">Usuarios</router-link></li>
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-            <li><router-link class="dropdown-item" to="/groups">Grupos</router-link></li>
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-            <li><router-link class="dropdown-item" to="/Trazas">Trazas</router-link></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><router-link class="dropdown-item" to="/groups">Grupos</router-link></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><router-link class="dropdown-item" to="/Trazas">Trazas</router-link></li>
         </ul>
       </li>
 
-        <!-- Más enlaces -->
-        <li class="nav-item dropdown">
+      <!-- Más enlaces -->
+      <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownNomencladores" role="button" data-bs-toggle="dropdown" aria-expanded="false">
           <i class="bi bi-list-task"></i> <span>Nomencladores</span>
         </a>
@@ -119,12 +113,12 @@
           </ul>
         </li>
 
-        <!-- Más enlaces -->
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bi bi-file-earmark-text"></i> <span class="d-lg-inline d-none">Partes</span>
-          </a>
-          <ul class="dropdown-menu dropdown-menu-dark w-100 scrollable-menu" aria-labelledby="navbarDropdown">
+         <!-- Más enlaces -->
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-file-earmark-text"></i> <span class="d-lg-inline d-none">Partes</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark w-100 scrollable-menu" aria-labelledby="navbarDropdown">
             <li><a class="dropdown-item" href="#">GEMAR</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="#">EMCARGA</a></li>
@@ -147,14 +141,12 @@
           </ul>
         </li>
 
-      <li class="nav-item">
+        <li class="nav-item">
         <a class="nav-link">
           <i class="bi bi-file-earmark-bar-graph"></i> <span>Reportes</span>
         </a>
       </li>
     </ul>
-    
-
     <!-- Botón de cerrar sesión -->
     <div class="logout-link">
       <a class="nav-link" @click="logout">
@@ -164,7 +156,6 @@
   </nav>
 </template>
 
-
 <style scoped>
 /* Estilos para la barra de navegación */
 .navbar {
@@ -172,60 +163,10 @@
   height: 100vh; /* Ocupa toda la altura de la pantalla */
   position: fixed; /* Fija la barra en la pantalla */
   top: 0;
-  left: 0;
+  left: 0%;
   padding: 0;
   background-color: #003366; /* Azul oscuro */
   transition: width 0.3s ease; /* Transición suave para el ancho */
-}
-
-/* Barra de búsqueda */
-.search-container {
-  padding: 10px;
-  margin: 10px;
-}
-
-.search-form .input-group {
-  width: 100%;
-}
-
-.search-form {
-  display: flex;
-  align-items: center;
-  background-color: white; /* Fondo blanco */
-  border-radius: 50px; /* Forma ovalada */
-  padding: 5px 10px;
-  transition: box-shadow 0.3s ease; /* Transición suave para el efecto hover */
-}
-
-.search-form:hover {
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8); /* Iluminación blanca */
-}
-
-.search-form .form-control {
-  background-color: transparent;
-  border: none;
-  color: #000; /* Texto negro */
-  box-shadow: none;
-  flex-grow: 1; /* Ocupa el espacio disponible */
-}
-
-.search-form .form-control:focus {
-  outline: none;
-}
-
-.search-icon {
-  color: #000; /* Color negro para el ícono */
-  transition: color 0.3s ease;
-}
-
-.search-icon:hover {
-  color: gray; /* Color gris al pasar el cursor */
-}
-
-
-
-.navbar-nav .nav-item{
-  margin-top:-6em;
 }
 
 /* Estilos para pantallas pequeñas */
@@ -234,66 +175,41 @@
     width: 80px; /* Ancho reducido para pantallas pequeñas */
   }
 
-  .search-container {
-    display: none; /* Ocultar barra de búsqueda */
-  }
-
-  .search-icon-mobile {
-    display: block; /* Mostrar ícono de búsqueda */
-  }
-
-  .navbar-nav .nav-link span {
-    display: none; /* Ocultar texto en pantallas pequeñas */
-  }
-
   .navbar-nav .nav-link i {
     font-size: 1.5rem; /* Tamaño de los íconos */
   }
-
-  /* Ajustes para los submenús en pantallas pequeñas */
-  .dropdown-menu {
-    position: absolute;
-    left: 100%; /* Mostrar submenús al lado del elemento padre */
-    top: 0;
-    margin-left: 0;
-    border-radius: 0;
-    max-height: 200px; /* Altura máxima antes de mostrar el scroll */
-    overflow-y: auto; /* Habilitar scroll vertical */
-    background-color: #003366; /* Fondo azul oscuro */
-    border: 1px solid #555; /* Borde gris */
-    min-width: 200px; /* Ancho mínimo para los submenús */
-  }
-
-  
-
   .dropdown-menu li:hover {
     background-color: #555; /* Fondo gris al pasar el cursor */
   }
 }
 
 /* Estilos adicionales */
-.navbar-nav .nav-item {
+.nav-item {
+  position: relative;
   margin: 0.5rem 0; /* Separación entre elementos */
-  margin-left: 1em;
-  text-align: center; /* Centrar texto */
-  position: relative; /* Necesario para posicionar los submenús */
+  display:inline;
 }
 
-.navbar-nav .nav-link:hover,
-.dropdown-item:hover {
-  color: #fff !important; /* Efecto hover blanco */
+.navbar-nav .nav-link {
+  color: white !important; /* Color blanco */
+  font-weight: bold; /* Texto más grueso */
+  transition: color 0.3s ease; /* Transición suave para el cambio de color */
+}
+
+/* Efecto hover para cambiar el color a naranja */
+.navbar-nav .nav-link:hover {
+  color: #ff8c42 !important; /* Color naranja */
 }
 
 .dropdown-menu {
-  position: absolute; /* Mostrar fuera de la barra */
-  margin-left:23px;
-  left: 100%; /* Posicionar al lado del elemento padre */
+ margin-left: -12px;
+  width: 200px;
   top: 0;
+  padding: 0;
   background-color: #003366; /* Azul oscuro */
   border: 1px solid #555; /* Borde gris */
-  max-height: 200px; /* Altura máxima antes de mostrar el scroll */
+  max-height: 230px; /* Altura máxima antes de mostrar el scroll */
   overflow-y: auto; /* Habilitar scroll vertical */
-  min-width: 200px; /* Ancho mínimo para los submenús */
 }
 
 .dropdown-menu::-webkit-scrollbar {
@@ -309,27 +225,37 @@
   background-color: #444; /* Color de fondo del scroll */
 }
 
-
-
 .logout-text {
-    display: none;
-  }
+  display: inline; /* Mostrar el texto "Cerrar sesión" */
+  color: white; /* Color blanco */
+}
 
-  .logout-link .nav-link i {
-    font-size: 1.5rem; /* Tamaño del ícono */
-  }
+.logout-link .nav-link i {
+  font-size: 1.7rem; /* Tamaño del ícono */
+}
 
 .logout-link {
   cursor: pointer;
   color: #fff !important;
   transition: color 0.3s ease;
   position: fixed;
-  bottom: 1rem;
-  left: 1rem;
+  bottom: 0.3rem;
+  left: 0.6rem;
+  font-size: 1.1rem; 
+  font-weight: bold;
 }
 
 .logout-link:hover {
   color: #ff8c42 !important;
+}
+
+.home {
+  position: relative;
+  font-size: 1.7rem;
+}
+
+.home-icon {
+  color: white; /* Color blanco para el ícono de Home */
 }
 </style>
  

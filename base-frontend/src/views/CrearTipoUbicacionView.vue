@@ -3,14 +3,12 @@
     <h2>Crear Tipo de Estructura de Ubicación</h2>
     <form @submit.prevent="createTipoEstructuraUbicacion">
       <div class="form-group">
-        <label for="nombre">Nombre*:</label>
-        <input type="text" id="nombre" v-model="nombre_tipo_estructura_ubicacion" required />
+        <label for="nombre">Nombre:<span style="color: red;">*</span></label>
+        <input type="text" style="padding: 3px;" id="nombre" v-model="nombre_tipo_estructura_ubicacion" required />
       </div>
       <div class="form-buttons">
-        <button type="button">
-          <router-link style="color: white; text-decoration: none" to="/TipoEstructuraUbicacion">Cancelar</router-link>
-        </button>
-        <button type="submit">Aceptar</button>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+        <button>Aceptar</button>
       </div>
     </form>
   </div>
@@ -68,6 +66,7 @@ select {
 }
 
 button {
+  margin-left: 10px;
   padding: 5px 15px;
   border: none;
   border-radius: 5px;
@@ -101,6 +100,21 @@ export default {
   },
 
   methods: {
+    confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
     // Validar el formulario
     validateForm() {
       const nombre_tipo_estructura_ubicacion_regex = /^[A-Z][a-zA-Záéíóe ]{4,99}$/; // Ajustado para mínimo 5 caracteres

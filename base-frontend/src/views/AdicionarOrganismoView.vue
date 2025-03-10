@@ -1,42 +1,40 @@
 <template>
   <div class="form-container">
-    <h2>Adicionar OSDE/OACE u Organismo</h2>
+    <h2>Adicionar OSDE/OACE u Organismo:</h2>
     <form @submit.prevent="save_osde_oace_organismo">
       <div class="form-group">
-        <label for="nombre">Nombre</label>
-        <input type="text" v-model="nombre" required />
+        <label for="nombre">Nombre:<span style="color: red;">*</span></label>
+        <input type="text" style="padding: 3px;" v-model="nombre" required />
       </div>
 
       <div class="form-group">
-        <label for="abreviatura">Abreviatura</label>
-        <input type="text" v-model="abreviatura" required />
+        <label for="abreviatura">Abreviatura:<span style="color: red;">*</span></label>
+        <input type="text" style="padding: 3px;" v-model="abreviatura" required />
       </div>
 
       <div class="form-group">
         <label for="codigo_reeup">Código REEUP</label>
-        <input type="number" v-model="codigo_reeup" />
+        <input type="number" style="padding: 3px;" v-model="codigo_reeup" />
       </div>
 
       <div class="form-buttons">
-        <button type="button">
-          <router-link style="color:white;text-decoration:none" to="/Organismos">Cancelar</router-link>
-        </button>
-        <button type="submit">Aceptar</button>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+        <button>Aceptar</button>
       </div>
     </form>
   </div>
 </template>
 
 <style scoped>
-/* Estilos sin cambios */
 .form-container {
-  max-width: 450px;
+  max-width: 300px;
   margin: 50px;
   padding: 20px;
   background-color: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
 
 h2 {
   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
@@ -52,32 +50,22 @@ form {
 }
 
 .form-group {
+  text-align: left;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 13px;
+  width: 260px;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 14px;
 }
 
 label {
-  flex: 1;
-  text-align: right;
   font-weight: bold;
 }
 
-input,
-select {
-  flex: 2;
-  padding: 8px;
+input, select {
+  padding: 5px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  color: #000;
-  background-color: #fff;
-}
-
-select option {
-  color: #000;
-  background-color: #fff;
 }
 
 .form-buttons {
@@ -87,6 +75,7 @@ select option {
 }
 
 button {
+  margin-left: 10px;
   padding: 5px 15px;
   border: none;
   border-radius: 5px;
@@ -120,6 +109,21 @@ export default {
     };
   },
   methods: {
+    confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
     validateForm() {
       const nombre_regex = /^[A-Z][\w\d\W]{2,99}$/;
       const abreviatura_regex = /^[A-ZÁÉÍÓÚ]{1}[A-Za-zÁÉÍÓÚáéíóú\s]{2,19}$/;

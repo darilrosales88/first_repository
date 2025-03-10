@@ -4,26 +4,23 @@
     <form @submit.prevent="save_maniobra">
       <!-- Campo Nombre de la Maniobra -->
       <div class="form-group">
-        <label for="nombre_maniobra">Nombre</label>
-        <input type="text" v-model="nombre_maniobra" required />
+        <label for="nombre_maniobra">Nombre:<span style="color: red;">*</span></label>
+        <input style="padding: 3px;" type="text" v-model="nombre_maniobra" required />
       </div>
 
       <!-- Campo Tipo de Maniobra -->
       <div class="form-group">
-        <label for="tipo_maniobra">Tipo:</label>
-        <select v-model="tipo_maniobra" required>
+        <label for="tipo_maniobra">Tipo:<span style="color: red;">*</span></label>
+        <select style="padding: 5px;" v-model="tipo_maniobra" required>
           <option v-for="t_maniobra in t_maniobra_options" :value="t_maniobra.value" :key="t_maniobra.value">
             {{ t_maniobra.text }}
           </option>
         </select>
       </div>
 
-      <!-- Botones -->
       <div class="form-buttons">
-        <button type="button">
-          <router-link style="color: white; text-decoration: none" to="/TipoManiobra">Cancelar</router-link>
-        </button>
-        <button type="submit">Aceptar</button>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+        <button>Aceptar</button>
       </div>
     </form>
   </div>
@@ -57,7 +54,7 @@ form {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 label {
@@ -88,6 +85,7 @@ select option {
 }
 
 button {
+  margin-left: 10px;
   padding: 5px 15px;
   border: none;
   border-radius: 5px;
@@ -124,6 +122,21 @@ export default {
     };
   },
   methods: {
+    confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
     validateForm() {
       const nombre_maniobra_regex = /^[A-Z][\w\s]{1,99}$/;
 

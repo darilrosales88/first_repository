@@ -3,14 +3,12 @@
     <h2>Adicionar tipo de embalaje</h2>
     <form @submit.prevent="saveItem">
       <div class="form-group">
-        <label for="nombre"> Nombre:</label>
-        <input type="text" v-model="nombre_tipo_embalaje" required />
+        <label for="nombre"> Nombre:<span style="color: red;">*</span></label>
+        <input type="text" style="padding: 3px;" v-model="nombre_tipo_embalaje" required />
       </div>
       <div class="form-buttons">
-        <button type="button">
-          <router-link style="color:white;text-decoration:none" to="/TipoEmbalaje">Cancelar</router-link>
-        </button>
-        <button type="submit">Aceptar</button>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+        <button>Aceptar</button>
       </div>
     </form>
   </div>
@@ -45,7 +43,7 @@ form {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 label {
@@ -69,6 +67,7 @@ select {
 }
 
 button {
+  margin-left: 10px;
   padding: 5px 15px;
   border: none;
   border-radius: 5px;
@@ -100,6 +99,21 @@ export default {
   },
 
   methods: {
+    confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
     validateForm() {
       // Expresión regular para el nombre del tipo de embalaje
       const nombre_tipo_embalaje_regex = /^[A-Z][\w\s]{1,99}$/;

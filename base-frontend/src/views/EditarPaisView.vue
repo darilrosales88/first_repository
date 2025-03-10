@@ -1,23 +1,21 @@
 <template>
     <div class="form-container">
-      <h2>Editar país</h2>
+      <h2>Editar país:</h2>
       <form @submit.prevent="saveItem">
         <div class="form-group">
           <label for="nacionalidad">Nacionalidad:</label>
-          <input type="text" v-model="nacionalidad" required />
+          <input type="text" style="padding: 3px;" v-model="nacionalidad" required />
         </div>
   
         <div class="form-group">
           <label for="nombre_pais">País:</label>
-          <input type="text" v-model="nombre_pais" required />
+          <input type="text" style="padding: 3px;" v-model="nombre_pais" required />
         </div>
   
         <div class="form-buttons">
-          <button type="button">
-            <router-link style="color: white; text-decoration: none;" to="/Paises">Cancelar</router-link>
-          </button>
-          <button type="submit">Aceptar</button>
-        </div>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+        <button>Aceptar</button>
+      </div>
       </form>
     </div>
   </template>
@@ -75,6 +73,7 @@
   }
   
   button {
+    margin-left: 10px;
     padding: 5px 15px;
     border: none;
     border-radius: 5px;
@@ -109,6 +108,21 @@ export default {
     this.getPais();
   },
   methods: {
+    confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
     async getPais() {
       const pais_id = this.$route.params.id;
       try {

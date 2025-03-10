@@ -1159,6 +1159,18 @@ def verificar_codigo_reeup(request):
 
     existe = nom_entidades.objects.filter(codigo_reeup=codigo_reeupp).exists()
     return Response({"exists": existe})#retorna un booleano
+
+#retorna solo las entidades cuyo tipo sean de acceso comercial o de ccd
+class entidades_acceso_comercial_ccdView(APIView):
+    def get(self, request):
+        # Filtrar las entidades cuyo tipo_entidad sea "acceso_comercial" o "CCD"
+        entidades = nom_entidades.objects.filter(tipo_entidad__in=['acceso_comercial', 'ccd'])
+        
+        # Serializar los datos
+        serializer = nom_entidades_serializer(entidades, many=True)
+        
+        # Devolver la respuesta
+        return Response(serializer.data, status=status.HTTP_200_OK)
 #/*********************************************************************************************************************************************
 class nom_destino_view_set(viewsets.ModelViewSet):
     queryset = nom_destino.objects.all()
@@ -1339,6 +1351,18 @@ class nom_tipo_equipo_ferroviario_view_set(viewsets.ModelViewSet):
         )
 
         return super().list(request, *args, **kwargs)
+
+#retorna solo las entidades cuyo tipo sean de acceso comercial o de ccd
+class tipo_equipo_ferroviario_no_locomotora(APIView):
+    def get(self, request):
+        # Excluir los tipos de equipos ferroviarios cuyo tipo sea "locomotora"
+        tipos_equipos = nom_tipo_equipo_ferroviario.objects.exclude(tipo_equipo='locomotora')
+        
+        # Serializar los datos
+        serializer = nom_tipo_equipo_ferroviario_serializer(tipos_equipos, many=True)
+        
+        # Devolver la respuesta
+        return Response(serializer.data, status=status.HTTP_200_OK)
 #/*********************************************************************************************************************************************
 class nom_embarcacion_view_set(viewsets.ModelViewSet):
     queryset = nom_embarcacion.objects.all().order_by('-id')  # Definir el queryset

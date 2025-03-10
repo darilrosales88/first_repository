@@ -1,25 +1,23 @@
 <template>
   <div class="form-container">
-    <h2>Crear Destino</h2>
+    <h2>Adicionar Destino:</h2>
     <form @submit.prevent="createDestino">
       <div class="form-group">
-        <label for="cliente">Cliente*:</label>
-        <select id="cliente" v-model="cliente" required>
-          <option value="">-Seleccione-</option>
+        <label for="cliente">Cliente:<span style="color: red;">*</span></label>
+        <select id="cliente" style="padding: 5px;" v-model="cliente" required>
+          <option value="" >-Seleccione-</option>
           <option v-for="item in clienteOptions" :key="item.id" :value="item.id">
             {{ item.nombre }}
           </option>
         </select>
       </div>
       <div class="form-group">
-        <label for="destino">Destino*:</label>
-        <input type="text" id="destino" v-model="destino" required />
+        <label for="destino">Destino:<span style="color: red;">*</span></label>
+        <input type="text" style="padding: 3px;" id="destino" v-model="destino" required />
       </div>
       <div class="form-buttons">
-        <button type="button">
-          <router-link style="color: white; text-decoration: none" to="/Destino">Cancelar</router-link>
-        </button>
-        <button type="submit">Aceptar</button>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+        <button>Aceptar</button>
       </div>
     </form>
   </div>
@@ -53,7 +51,7 @@ form {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 label {
@@ -77,6 +75,7 @@ select {
 }
 
 button {
+  margin-left: 10px;
   padding: 5px 15px;
   border: none;
   border-radius: 5px;
@@ -108,7 +107,7 @@ export default {
       cliente: "",
       clienteOptions: [],
       destino: "",
-      errores: "",
+      errores:''
     };
   },
 
@@ -117,69 +116,58 @@ export default {
   },
 
   methods: {
-    // Validar el formulario
+    confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
     validateForm() {
-      this.errores = "";
+      this.errores='';
       const destino_regex = /^[A-Z]{1}[\d\w\W ]{2,99}$/;
-
+      
       let valid = true;
 
       if (this.cliente === "") {
-        this.errores += "Debe seleccionar un cliente.<br>";
+        this.errores += 'Debe seleccionar un cliente.<br>';
         valid = false;
       }
 
       if (!destino_regex.test(this.destino)) {
-        this.errores +=
-          "El destino debe comenzar con mayúscula seguido de letras, números y caracteres especiales. Tamaño mínimo: 3 caracteres. Tamaño máximo: 100 caracteres.";
+       this.errores += 'El destino debe comenzar con mayúscula seguido de letras, números y caracteres especiales. Tamaño mínimo: 3 caracteres. Tamaño máximo: 100 caracteres.';
         valid = false;
       }
 
       return valid;
     },
 
-    // Obtener la lista de clientes
     async getClientes() {
       try {
-        const response = await axios.get("/api/entidades/");
+        const response = await axios.get('/api/entidades/');
         this.clienteOptions = response.data;
       } catch (error) {
-        console.error("Error al obtener los clientes:", error);
+        console.error('Error al obtener los clientes:', error);
       }
     },
 
-    // Verificar si el destino ya existe
-    async doesDestinoExist() {
-      try {
-        const response = await axios.get("/api/destinos/verificar-existencia/", {
-          params: {
-            cliente: this.cliente,
-            destino: this.destino,
-          },
-        });
-        return response.data.exists; // ese exists es la variable declarada en la funcion verificar_destino en el views.py
-      } catch (error) {
-        console.error("Error al verificar el destino:", error);
-        return false; // En caso de error, asumimos que no existe
-      }
-    },
-
-    // Crear un nuevo destino
     async createDestino() {
       if (!this.validateForm()) {
-        Swal.fire("Errores en la entrada de datos", this.errores, "error");
+        Swal.fire('Errores en la entrada de datos', this.errores, 'error');
         return; // Si la validación falla, no enviar el formulario
-      }
-
-      // Verificar si el destino ya existe
-      if (await this.doesDestinoExist()) {
-        Swal.fire("Error", "El destino ya existe para el cliente seleccionado.", "error");
-        return;
       }
 
       const payload = {
         cliente: this.cliente,
-        destino: this.destino,
+        destino: this.destino
       };
 
       try {
@@ -188,19 +176,9 @@ export default {
         this.$router.push("/Destino");
       } catch (error) {
         console.error("Error al crear el destino:", error);
-
-        // Manejar errores específicos del backend
-        if (error.response && error.response.status === 400 && error.response.data.errors) {
-          const mensajesErrores = error.response.data.errors.map((err) => err.message).join("<br>");
-          Swal.fire("Error", mensajesErrores, "error");
-        } else if (error.response && error.response.status === 409) {
-          // Código 409 para conflicto de datos duplicados
-          Swal.fire("Error", "El destino ya existe para el cliente seleccionado.", "error");
-        } else {
-          Swal.fire("Error", "Hubo un error al crear el destino.", "error");
-        }
+        Swal.fire("Error", "Hubo un error al crear el destino.", "error");
       }
-    },
-  },
+    }
+  }
 };
 </script>

@@ -1,41 +1,39 @@
 <template>
   <div class="form-container">
-    <h2>Editar Provincia</h2>
+    <h2>Editar Provincia:</h2>
     <form @submit.prevent="saveItem">
       <div class="form-group">
-        <label for="codigo">Código:*</label>
-        <input type="text" v-model="codigo" required />
+        <label for="codigo">Código:<span style="color: red;">*</span></label>
+        <input  type="text" style="padding: 3px;" v-model="codigo" required />
       </div>
       <div class="form-group">
-        <label for="nombre">Nombre*:</label>
-        <input type="text" v-model="nombre_provincia" required />
+        <label for="nombre">Nombre:<span style="color: red;">*</span></label>
+        <input type="text" style="padding: 3px;" v-model="nombre_provincia" required />
       </div>
       <div class="form-group">
-        <label for="pais">País*:</label>
-        <select id="pais" v-model="pais" required>
+        <label for="pais">País:<span style="color: red;">*</span></label>
+        <select style="padding: 5px;" id="pais" v-model="pais" required>
           <option v-for="item in selectedPais" :key="item.id" :value="item.id">{{ item.nombre_pais }}</option>
         </select>
       </div>
       <div class="form-buttons">
-        <button type="button">
-          <router-link style="color:white;text-decoration:none" to="/Provincia">Cancelar</router-link>
-        </button>
-        <button type="submit">Guardar Cambios</button>
+        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+        <button>Aceptar</button>
       </div>
     </form>
   </div>
 </template>
 
 <style scoped>
-/* Estilos sin cambios */
 .form-container {
-  max-width: 450px;
+  max-width: 300px;
   margin: 50px;
   padding: 20px;
   background-color: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
 
 h2 {
   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
@@ -51,23 +49,20 @@ form {
 }
 
 .form-group {
+  text-align: left;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 13px;
+  width: 260px;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 14px;
 }
 
 label {
-  flex: 1;
-  text-align: right;
   font-weight: bold;
 }
 
-input,
-select {
-  flex: 2;
-  padding: 8px;
+input, select {
+  padding: 5px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
@@ -79,6 +74,7 @@ select {
 }
 
 button {
+  margin-left: 10px;
   padding: 5px 15px;
   border: none;
   border-radius: 5px;
@@ -123,6 +119,21 @@ export default {
   },
 
   methods: {
+    confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
     // Obtener los datos de la provincia a editar
     async getProvincia() {
       this.provinciaId = this.$route.params.id; // Obtener el ID de la provincia desde la URL

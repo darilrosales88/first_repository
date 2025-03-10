@@ -63,7 +63,7 @@ class vagon_cargado_descargado(models.Model):
     origen = models.CharField(max_length=40)
     tipo_equipo_ferroviario = models.ForeignKey(nom_tipo_equipo_ferroviario, on_delete=models.CASCADE)
     estado = models.CharField(choices=ESTADO_CHOICES, max_length = 50)    
-    operacion = models.CharField(choices=OPERACION_CHOICES, editable=False, max_length = 50)
+    operacion = models.CharField(choices=OPERACION_CHOICES, editable=True, max_length = 50)
     plan_diario_carga_descarga = models.IntegerField()
     real_carga_descarga = models.IntegerField(default = 0, editable=False)
     tipo_destino = models.CharField(choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)

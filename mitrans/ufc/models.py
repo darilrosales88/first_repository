@@ -1,6 +1,8 @@
 from django.db import models
 from nomencladores.models import nom_puerto,nom_tipo_equipo_ferroviario,nom_producto,nom_tipo_embalaje,nom_unidad_medida
 
+
+
 #productos asociados a vagones cargados/descargados
 class productos_vagones_cargados_descargados(models.Model):
     TIPO_PROD_CHOICES = [
@@ -80,4 +82,15 @@ class vagon_cargado_descargado(models.Model):
         return f"Vagón {self.id} - {self.get_estado_display()}"
 
 
+class en_trenes(models.Model):
     
+    TIPO_EQUIPO_CHOICES=nom_tipo_equipo_ferroviario.t_equipo
+    locomotoras =nom_tipo_equipo_ferroviario.objects.filter(tipo_equipo="locomotora")
+    
+    locomotora=models.ForeignKey(nom_tipo_equipo_ferroviario, on_delete=models.CASCADE)
+    
+    
+    
+    
+    
+    pass

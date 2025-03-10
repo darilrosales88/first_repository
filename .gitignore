@@ -18,7 +18,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-#new
+#newss
 # Editor directories and files
 .idea
 .vscode

@@ -105,9 +105,10 @@ class en_trenes(models.Model):
         limit_choices_to={'tipo_equipo': 'locomotora'},
         verbose_name="Locomotora asignada",
         help_text="Seleccione una locomotora.",
+        related_name="trenes_locomotora",
     )
 
-    tipo_equipo=models.ForeignKey(nom_tipo_equipo_ferroviario, choices=TIPO_EQUIPO_CHOICES ,on_delete=models.CASCADE)
+    tipo_equipo=models.ForeignKey(nom_tipo_equipo_ferroviario, choices=TIPO_EQUIPO_CHOICES ,on_delete=models.CASCADE, related_name="trenes_tipo_equipo")
     estado = models.CharField(choices=ESTADO_CHOICES, max_length = 50)
     producto = models.ForeignKey(productos_vagones_cargados_descargados, on_delete=models.CASCADE)
     

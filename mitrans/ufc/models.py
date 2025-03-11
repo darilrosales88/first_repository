@@ -97,7 +97,7 @@ class en_trenes(models.Model):
     ]
 
   
-  
+  #Cuando vayas a crear varias instancias con la misma ForeignKey hay que agregar "related_name"
   
     locomotora = models.ForeignKey(
         nom_tipo_equipo_ferroviario,
@@ -109,17 +109,17 @@ class en_trenes(models.Model):
     )
 
     tipo_equipo=models.ForeignKey(nom_tipo_equipo_ferroviario, choices=TIPO_EQUIPO_CHOICES ,on_delete=models.CASCADE, related_name="trenes_tipo_equipo")
-    estado = models.CharField(choices=ESTADO_CHOICES, max_length = 50)
+    estado = models.CharField(default="" ,choices=ESTADO_CHOICES, max_length = 50)
     producto = models.ForeignKey(productos_vagones_cargados_descargados, on_delete=models.CASCADE)
     
     
-    tipo_origen = models.CharField(choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
-    origen = models.CharField(max_length=40)
+    tipo_origen = models.CharField(default="",choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
+    origen = models.CharField(default='',max_length=40)
     
-    tipo_destino = models.CharField(choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
-    destino = models.CharField(max_length=40)
+    tipo_destino = models.CharField(default="",choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
+    destino = models.CharField(default='',max_length=40)
     
-    cantidad_vagones=models.IntegerField(verbose_name="Cantidad de vagones")
+    cantidad_vagones=models.IntegerField(default=1,verbose_name="Cantidad de vagones")
     
     observaciones = models.TextField(
         verbose_name="Observaciones",

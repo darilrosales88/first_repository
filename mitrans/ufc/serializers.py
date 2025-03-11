@@ -111,12 +111,11 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
         
 #-------------------------********************------------EN_TRENES--------------------***************-----------------************    
 class en_trenes_serializer(serializers.ModelSerializer):
-    tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
-    tipo_equipo_ferroviario_name = serializers.ReadOnlyField(source='tipo_equipo_ferroviario.get_tipo_equipo_display')
-    estado_name = serializers.ReadOnlyField(source='get_estado_display')
-    tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
+   # tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
+   # estado_name = serializers.ReadOnlyField(source='get_estado_display')
+   # tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
     producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')
-   
+   # tipo_equipo_name=serializers.ReadOnlyField(source='get_tipo_equipo_display')
    
    
    
@@ -125,18 +124,18 @@ class en_trenes_serializer(serializers.ModelSerializer):
         fields = (
             'id', 
             'tipo_origen', 
-            'tipo_origen_name', 
+           # 'tipo_origen_name', 
             'origen', 
-            'tipo_equipo_ferroviario', 
-            'tipo_equipo_ferroviario_name', 
+            'tipo_equipo', 
+          #  'tipo_equipo_name',
             'estado', 
-            'estado_name',  
+          #  'estado_name',  
             'tipo_destino', 
-            'tipo_destino_name', 
+           # 'tipo_destino_name', 
             'destino', 
             'producto', 
-            'producto_name'
+            'producto_name',
+            'cantidad_vagones',
+            'observaciones',
         )
-        extra_kwargs = {
-            'observaciones': {'allow_null': True},
-        }
+       

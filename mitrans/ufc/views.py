@@ -31,7 +31,7 @@ class IsUFCPermission(permissions.BasePermission):
 class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
     queryset = vagon_cargado_descargado.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = vagon_cargado_descargado_serializer
-    permission_classes = [IsUFCPermission] 
+   # permission_classes = [IsUFCPermission] 
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -115,7 +115,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
 class productos_vagones_cargados_descargados_view_set(viewsets.ModelViewSet):
     queryset = productos_vagones_cargados_descargados.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = productos_vagones_cargados_descargados_serializer
-    permission_classes = [IsUFCPermission]
+   # permission_classes = [IsUFCPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -200,7 +200,7 @@ class productos_vagones_cargados_descargados_view_set(viewsets.ModelViewSet):
 class en_trenes_view_set(viewsets.ModelViewSet):
     queryset = en_trenes.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = en_trenes_serializer
-    permission_classes = [IsUFCPermission]
+  #  permission_classes = [IsUFCPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()

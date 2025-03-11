@@ -108,7 +108,7 @@ class en_trenes(models.Model):
         related_name="trenes_locomotora",
     )
 
-    tipo_equipo=models.ForeignKey(nom_tipo_equipo_ferroviario ,on_delete=models.CASCADE, related_name="trenes_tipo_equipo")
+    tipo_equipo=models.CharField(default="",choices=nom_tipo_equipo_ferroviario.t_equipo, max_length=50)
     estado = models.CharField(default="" ,choices=ESTADO_CHOICES, max_length = 50)
     producto = models.ForeignKey(productos_vagones_cargados_descargados,default="", on_delete=models.CASCADE)
     

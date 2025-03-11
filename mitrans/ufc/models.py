@@ -98,7 +98,7 @@ class en_trenes(models.Model):
 
   
   #Cuando vayas a crear varias instancias con la misma ForeignKey hay que agregar "related_name"
-  
+  #Agregar "default" en los campos que tengan el parametro "choise"
     locomotora = models.ForeignKey(
         nom_tipo_equipo_ferroviario,
         on_delete=models.CASCADE,
@@ -108,9 +108,9 @@ class en_trenes(models.Model):
         related_name="trenes_locomotora",
     )
 
-    tipo_equipo=models.ForeignKey(nom_tipo_equipo_ferroviario, choices=TIPO_EQUIPO_CHOICES ,on_delete=models.CASCADE, related_name="trenes_tipo_equipo")
+    tipo_equipo=models.ForeignKey(nom_tipo_equipo_ferroviario, default="",choices=TIPO_EQUIPO_CHOICES ,on_delete=models.CASCADE, related_name="trenes_tipo_equipo")
     estado = models.CharField(default="" ,choices=ESTADO_CHOICES, max_length = 50)
-    producto = models.ForeignKey(productos_vagones_cargados_descargados, on_delete=models.CASCADE)
+    producto = models.ForeignKey(productos_vagones_cargados_descargados,default="", on_delete=models.CASCADE)
     
     
     tipo_origen = models.CharField(default="",choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)

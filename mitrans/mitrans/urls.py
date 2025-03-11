@@ -32,7 +32,7 @@ urlpatterns = [
     #Administracion, gestion de usuarios y sus roles
     path('apiAdmin/', include('Administracion.urls')), 
     #aplicacion de UFC
-    path('apiUFC/', include('ufc.urls')),   
+    path('ufc/', include('ufc.urls')),   
 ]
 
 if settings.DEBUG:

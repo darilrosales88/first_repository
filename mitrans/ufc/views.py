@@ -21,8 +21,9 @@ from django.db.models import Q
 # Verifica si el usuario tiene el rol "ufc"
 class IsUFCPermission(permissions.BasePermission):
     def has_permission(self, request, view):
+        ROLES_PERMITIDO=['ufc','admin']
         # Asume que el rol del usuario está almacenado en un campo llamado 'role'
-        return request.user.role == 'ufc' or request.user.role=='admin' 
+        return request.user.role in ROLES_PERMITIDO
 
 
 
@@ -31,7 +32,7 @@ class IsUFCPermission(permissions.BasePermission):
 class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
     queryset = vagon_cargado_descargado.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = vagon_cargado_descargado_serializer
-   # permission_classes = [IsUFCPermission] 
+    permission_classes = [IsUFCPermission] 
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -115,7 +116,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
 class productos_vagones_cargados_descargados_view_set(viewsets.ModelViewSet):
     queryset = productos_vagones_cargados_descargados.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = productos_vagones_cargados_descargados_serializer
-   # permission_classes = [IsUFCPermission]
+    permission_classes = [IsUFCPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -200,7 +201,7 @@ class productos_vagones_cargados_descargados_view_set(viewsets.ModelViewSet):
 class en_trenes_view_set(viewsets.ModelViewSet):
     queryset = en_trenes.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = en_trenes_serializer
-  #  permission_classes = [IsUFCPermission]
+    permission_classes = [IsUFCPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()

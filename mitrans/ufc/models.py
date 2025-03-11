@@ -81,16 +81,57 @@ class vagon_cargado_descargado(models.Model):
     def __str__(self):
         return f"Vagón {self.id} - {self.get_estado_display()}"
 
-
+#Modelo para representar en_trenes
 class en_trenes(models.Model):
     
+    TIPO_ORIGEN_DESTINO_CHOICES = [
+        ('puerto', 'Puerto'),
+        ('ac_ccd', 'Acceso comercial/CCD'),
+    ]
+    
     TIPO_EQUIPO_CHOICES=nom_tipo_equipo_ferroviario.t_equipo
-    locomotoras =nom_tipo_equipo_ferroviario.objects.filter(tipo_equipo="locomotora")
     
-    locomotora=models.ForeignKey(nom_tipo_equipo_ferroviario, on_delete=models.CASCADE)
+    ESTADO_CHOICES = [
+        ('vacio', 'Vacío'),
+        ('cargado', 'Cargado'),
+    ]
+
+  
+  #Cuando vayas a crear varias instancias con la misma ForeignKey hay que agregar "related_name"
+  #Agregar "default" en los campos que tengan el parametro "choise"
+    locomotora = models.ForeignKey(
+        nom_tipo_equipo_ferroviario,
+        on_delete=models.CASCADE,
+        limit_choices_to={'tipo_equipo': 'locomotora'},
+        verbose_name="Locomotora asignada",
+        help_text="Seleccione una locomotora.",
+        related_name="trenes_locomotora",
+    )
+
+    tipo_equipo=models.CharField(default="",choices=nom_tipo_equipo_ferroviario.t_equipo, max_length=50)
+    estado = models.CharField(default="" ,choices=ESTADO_CHOICES, max_length = 50)
+    producto = models.ForeignKey(productos_vagones_cargados_descargados,default="", on_delete=models.CASCADE)
     
     
+    tipo_origen = models.CharField(default="",choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
+    origen = models.CharField(default='',max_length=40)
     
+    tipo_destino = models.CharField(default="",choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
+    destino = models.CharField(default='',max_length=40)
     
+    cantidad_vagones=models.IntegerField(default=1,verbose_name="Cantidad de vagones")
     
-    pass
+    observaciones = models.TextField(
+        verbose_name="Observaciones",
+        help_text="Ingrese observaciones adicionales. Admite letras, números y caracteres especiales.",
+        blank=True,  # Permite que el campo esté vacío
+        null=True,   # Permite valores nulos en la base de datos
+    )
+    
+    class Meta:
+        verbose_name = "Tren"
+        verbose_name_plural="Trenes"
+         
+    
+    def __str__(self):
+        return f"En trenes {self.id} - {self.get_estado_display()}"

@@ -4,7 +4,7 @@ from django_filters import rest_framework as filters
 
 from django.db.models import Q
 from nomencladores.models import nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_tipo_equipo_ferroviario
-from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados 
+from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados, en_trenes
 
 
 
@@ -108,3 +108,34 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
         extra_kwargs = {
             'causas_incumplimiento': {'allow_null': True},
         }
+        
+#-------------------------********************------------EN_TRENES--------------------***************-----------------************    
+class en_trenes_serializer(serializers.ModelSerializer):
+   # tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
+   # estado_name = serializers.ReadOnlyField(source='get_estado_display')
+   # tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
+    producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')
+   # tipo_equipo_name=serializers.ReadOnlyField(source='get_tipo_equipo_display')
+   
+   
+   
+    class Meta:
+        model = en_trenes
+        fields = (
+            'id', 
+            'tipo_origen', 
+           # 'tipo_origen_name', 
+            'origen', 
+            'tipo_equipo', 
+          #  'tipo_equipo_name',
+            'estado', 
+          #  'estado_name',  
+            'tipo_destino', 
+           # 'tipo_destino_name', 
+            'destino', 
+            'producto', 
+            'producto_name',
+            'cantidad_vagones',
+            'observaciones',
+        )
+       

@@ -1,0 +1,1 @@
+Que sentido tiene que en el endpoint de trenes se especifique el id de la locomotora y despues el tipo de equipo ferroviario

@@ -267,7 +267,7 @@ export default {
                 <p><strong>Entidad:</strong> ${user.entidad_name}</p>
                 <p><strong>Cargo:</strong> ${user.cargo_name}</p>
                 <p><strong>Grupos Asignados:</strong> ${gruposAsignados}</p>
-                <p><strong>Rol asignado</strong> ${user.role}</p>
+                <p><strong>Rol Asignado:</strong> ${user.role}</p>
                 <p><strong>Permisos Asignados:</strong> ${permisosAsignados}</p>
             </div>
         `,

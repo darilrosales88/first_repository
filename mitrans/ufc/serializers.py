@@ -115,7 +115,7 @@ class en_trenes_serializer(serializers.ModelSerializer):
    # estado_name = serializers.ReadOnlyField(source='get_estado_display')
    # tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
     producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')
-   # tipo_equipo_name=serializers.ReadOnlyField(source='get_tipo_equipo_display')
+    tipo_equipo_name=serializers.ReadOnlyField(source='get_tipo_equipo_display')
    
    
    
@@ -126,8 +126,9 @@ class en_trenes_serializer(serializers.ModelSerializer):
             'tipo_origen', 
            # 'tipo_origen_name', 
             'origen', 
+            'locomotora',
             'tipo_equipo', 
-          #  'tipo_equipo_name',
+            'tipo_equipo_name',
             'estado', 
           #  'estado_name',  
             'tipo_destino', 

@@ -154,6 +154,7 @@ class UserCreateView(APIView):
         password = request.data.get('password')
         entidad_id = request.data.get('entidad')
         cargo_id = request.data.get('cargo')
+        role=request.data.get('role')
         groups = request.data.get('groups', [])
         permissions = request.data.get('permissions', [])
 
@@ -168,7 +169,8 @@ class UserCreateView(APIView):
             last_name=last_name,
             password=password,
             entidad=entidad,
-            cargo=cargo
+            cargo=cargo,
+            role=role
         )
 
         if groups:
@@ -206,6 +208,7 @@ def obtener_usuario(request, user_id):
             },
             'email': user.email,
             'groups': [{'id': g.id, 'name': g.name} for g in grupos],
+            'role':user.role,
             'user_permissions': [{'id': p.id, 'name': p.name} for p in permisos],
         }
         return Response(data, status=status.HTTP_200_OK)

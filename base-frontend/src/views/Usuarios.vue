@@ -1,22 +1,39 @@
 <template>
   <div>
-    <img style="width: 250px;" src="@/assets/Imagenes/mitrans.png">
+    <img style="width: 250px" src="@/assets/Imagenes/mitrans.png" />
     <Navbar-Component />
 
-    <form class="d-flex" @submit.prevent="search_user" style="padding: 10px; margin-left: 75em;">
-      <input class="form-control form-control-sm me-2" type="search" placeholder="Search" aria-label="Search" v-model="searchQuery" @input="handleSearchInput" style="width: 200px;">
-      <button class="btn btn-outline-success btn-sm" type="submit">Search</button>
+    <form
+      class="d-flex"
+      @submit.prevent="search_user"
+      style="padding: 10px; margin-left: 75em"
+    >
+      <input
+        class="form-control form-control-sm me-2"
+        type="search"
+        placeholder="Search"
+        aria-label="Search"
+        v-model="searchQuery"
+        @input="handleSearchInput"
+        style="width: 200px"
+      />
+      <button class="btn btn-outline-success btn-sm" type="submit">
+        Search
+      </button>
     </form>
 
-    <div style="margin-top: -4em;">
-      <br>
-      <router-link style="text-decoration:none; color:black; margin-right: 1330px;" to="/AdicionarUsuario">
+    <div style="margin-top: -4em">
+      <br />
+      <router-link
+        style="text-decoration: none; color: black; margin-right: 1330px"
+        to="/AdicionarUsuario"
+      >
         Crear usuario <i class="bi bi-plus-circle"></i>
       </router-link>
-      <br>
+      <br />
     </div>
 
-    <br>
+    <br />
 
     <table class="table">
       <thead>
@@ -32,23 +49,32 @@
       </thead>
       <tbody>
         <tr v-for="(item, index) in usuarios" :key="item.id">
-          <th scope="row" style="background-color: white;">{{ (index + 1) }}</th>
+          <th scope="row" style="background-color: white">{{ index + 1 }}</th>
           <td>{{ item.first_name }}</td>
           <td>{{ item.last_name }}</td>
           <td>{{ item.username }}</td>
           <td>{{ item.email }}</td>
           <td>{{ item.entidad_name }}</td>
           <td>
-            <button @click.prevent="confirmDelete(item.id)" class="btn btn-danger">
-              <i style="color:white" class="bi bi-trash"></i>
+            <button
+              @click.prevent="confirmDelete(item.id)"
+              class="btn btn-danger"
+            >
+              <i style="color: white" class="bi bi-trash"></i>
             </button>
-            <button style="margin-left:10px" class="btn btn-warning">
-              <router-link :to="{name: 'EditarUsuario', params: {id:item.id}}">
-                <i style="color:white" class="bi bi-pencil-square"></i>
+            <button style="margin-left: 10px" class="btn btn-warning">
+              <router-link
+                :to="{ name: 'EditarUsuario', params: { id: item.id } }"
+              >
+                <i style="color: white" class="bi bi-pencil-square"></i>
               </router-link>
             </button>
-            <button style="margin-left:10px" class="btn btn-info" @click="openUserDetailsModal(item)">
-              <i style="color:white" class="bi bi-eye"></i>
+            <button
+              style="margin-left: 10px"
+              class="btn btn-info"
+              @click="openUserDetailsModal(item)"
+            >
+              <i style="color: white" class="bi bi-eye"></i>
             </button>
           </td>
         </tr>
@@ -58,8 +84,6 @@
 </template>
 
 <style scoped>
-
-
 th {
   background-color: #f2f2f2;
 }
@@ -105,21 +129,21 @@ th {
 </style>
 
 <script>
-import Swal from 'sweetalert2';
-import axios from 'axios';
-import NavbarComponent from '@/components/NavbarComponent.vue';
+import Swal from "sweetalert2";
+import axios from "axios";
+import NavbarComponent from "@/components/NavbarComponent.vue";
 
 export default {
-  name: 'Usuarios',
+  name: "Usuarios",
   components: {
     NavbarComponent,
   },
   data() {
     return {
       usuarios: [],
-      gruposDisponibles: [],  // Lista de grupos disponibles
-      permisosDisponibles: [],  // Lista de permisos disponibles
-      searchQuery: '',
+      gruposDisponibles: [], // Lista de grupos disponibles
+      permisosDisponibles: [], // Lista de permisos disponibles
+      searchQuery: "",
       debounceTimeout: null,
     };
   },
@@ -130,52 +154,54 @@ export default {
   },
   methods: {
     async get_usuarios() {
-      this.$store.commit('setIsLoading', true);
+      this.$store.commit("setIsLoading", true);
       try {
-        const response = await axios.get('/apiAdmin/users/');
+        const response = await axios.get("/apiAdmin/users/");
         this.usuarios = response.data;
       } catch (error) {
         console.error(error);
       } finally {
-        this.$store.commit('setIsLoading', false);
+        this.$store.commit("setIsLoading", false);
       }
     },
     async fetchGroups() {
-              try {
-                  const response = await axios.get('/apiAdmin/groups/');
-                  this.gruposDisponibles = response.data;
-              } catch (error) {
-                  console.error('Error al obtener los grupos:', error);
-              }
-          },
-          async fetchPermisosDisponibles() {
-              try {
-                  const response = await axios.get('/apiAdmin/permisos/');
-                  this.permisosDisponibles = response.data;
-              } catch (error) {
-                  console.error('Error al obtener los permisos:', error);
-              }
-          },
-      
-    async search_user() {
-      this.$store.commit('setIsLoading', true);
       try {
-        const response = await axios.get(`/apiAdmin/users/?username=${this.searchQuery}`);
+        const response = await axios.get("/apiAdmin/groups/");
+        this.gruposDisponibles = response.data;
+      } catch (error) {
+        console.error("Error al obtener los grupos:", error);
+      }
+    },
+    async fetchPermisosDisponibles() {
+      try {
+        const response = await axios.get("/apiAdmin/permisos/");
+        this.permisosDisponibles = response.data;
+      } catch (error) {
+        console.error("Error al obtener los permisos:", error);
+      }
+    },
+
+    async search_user() {
+      this.$store.commit("setIsLoading", true);
+      try {
+        const response = await axios.get(
+          `/apiAdmin/users/?username=${this.searchQuery}`
+        );
         this.usuarios = response.data;
       } catch (error) {
         console.error(error);
       } finally {
-        this.$store.commit('setIsLoading', false);
+        this.$store.commit("setIsLoading", false);
       }
     },
     confirmDelete(id) {
       Swal.fire({
-        title: '¿Estás seguro?',
-        text: '¡No podrás revertir esta acción!',
-        icon: 'warning',
+        title: "¿Estás seguro?",
+        text: "¡No podrás revertir esta acción!",
+        icon: "warning",
         showCancelButton: true,
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar',
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
         reverseButtons: true,
       }).then((result) => {
         if (result.isConfirmed) {
@@ -192,36 +218,46 @@ export default {
     async delete_unidad(id) {
       try {
         await axios.delete(`/apiAdmin/users/${id}/`);
-        this.usuarios = this.usuarios.filter(usuario => usuario.id !== id);
-        Swal.fire('Eliminado!', 'El usuario se ha eliminado exitosamente.', 'success');
+        this.usuarios = this.usuarios.filter((usuario) => usuario.id !== id);
+        Swal.fire(
+          "Eliminado!",
+          "El usuario se ha eliminado exitosamente.",
+          "success"
+        );
       } catch (error) {
-        console.error('Error al eliminar el usuario:', error);
-        Swal.fire('Error', 'Hubo un error al eliminar el usuario.', 'error');
+        console.error("Error al eliminar el usuario:", error);
+        Swal.fire("Error", "Hubo un error al eliminar el usuario.", "error");
       }
     },
     openUserDetailsModal(user) {
-    // Mapear IDs de grupos a nombres
-    const gruposAsignados = user.groups && user.groups.length > 0
-        ? user.groups
-            .map(groupId => {
-                const grupo = this.gruposDisponibles.find(g => g.id === groupId);
-                return grupo ? grupo.name : 'Desconocido';
-            })
-            .join(', ')
-        : 'Ninguno';
+      // Mapear IDs de grupos a nombres
+      const gruposAsignados =
+        user.groups && user.groups.length > 0
+          ? user.groups
+              .map((groupId) => {
+                const grupo = this.gruposDisponibles.find(
+                  (g) => g.id === groupId
+                );
+                return grupo ? grupo.name : "Desconocido";
+              })
+              .join(", ")
+          : "Ninguno";
 
-    // Mapear IDs de permisos a nombres
-    const permisosAsignados = user.user_permissions && user.user_permissions.length > 0
-        ? user.user_permissions
-            .map(permisoId => {
-                const permiso = this.permisosDisponibles.find(p => p.id === permisoId);
-                return permiso ? permiso.name : 'Desconocido';
-            })
-            .join(', ')
-        : 'Ninguno';
+      // Mapear IDs de permisos a nombres
+      const permisosAsignados =
+        user.user_permissions && user.user_permissions.length > 0
+          ? user.user_permissions
+              .map((permisoId) => {
+                const permiso = this.permisosDisponibles.find(
+                  (p) => p.id === permisoId
+                );
+                return permiso ? permiso.name : "Desconocido";
+              })
+              .join(", ")
+          : "Ninguno";
 
-    Swal.fire({
-        title: 'Detalles del Usuario',
+      Swal.fire({
+        title: "Detalles del Usuario",
         html: `
             <div style="text-align: left;">
                 <p><strong>Nombre:</strong> ${user.first_name}</p>
@@ -231,17 +267,18 @@ export default {
                 <p><strong>Entidad:</strong> ${user.entidad_name}</p>
                 <p><strong>Cargo:</strong> ${user.cargo_name}</p>
                 <p><strong>Grupos Asignados:</strong> ${gruposAsignados}</p>
+                <p><strong>Rol Asignado:</strong> ${user.role}</p>
                 <p><strong>Permisos Asignados:</strong> ${permisosAsignados}</p>
             </div>
         `,
-        width: '600px',
+        width: "600px",
         customClass: {
-            popup: 'custom-swal-popup',
-            title: 'custom-swal-title',
-            htmlContainer: 'custom-swal-html',
+          popup: "custom-swal-popup",
+          title: "custom-swal-title",
+          htmlContainer: "custom-swal-html",
         },
-    });
-},
+      });
+    },
   },
 };
 </script>

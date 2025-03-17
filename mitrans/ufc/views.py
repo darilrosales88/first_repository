@@ -199,20 +199,22 @@ class productos_vagones_cargados_descargados_view_set(viewsets.ModelViewSet):
     
 #/********************************************************EN_TRENES*********************************************************************
 class en_trenes_view_set(viewsets.ModelViewSet):
-    queryset = en_trenes.objects.all().order_by('-id')  # Definir el queryset
+    queryset = en_trenes.objects.all() # Definir el queryset
     serializer_class = en_trenes_serializer
     permission_classes = [IsUFCPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        search_term = self.request.query_params.get('origen_destino', None)
 
-        search = self.request.query_params.get('producto_contenido', None)
-
-        if search is not None:
-            #filtrado por origen y por tipo de equipo ferroviario
-            queryset = queryset.filter( Q(producto__icontains=search) | Q(contenido__icontains=search) 
-            )
-
+        if search_term:
+            # Filtra por coincidencia en cualquiera de los campos
+            queryset = queryset.select_related('producto').filter(
+            Q(origen__icontains=search_term) |
+            Q(destino__icontains=search_term)|
+            Q(producto__producto__nombre_producto__icontains=search_term)
+            
+)
         return queryset
 
     def create(self, request, *args, **kwargs):

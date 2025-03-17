@@ -640,6 +640,14 @@ const routes = [
       requireLogin: true,
     },
   },
+  {
+    path: "/AdicionarVagon",
+    name: "AdicionarVagon",
+    component: () => import("../views/AdicionarEnTren.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
 ];
 
 const router = createRouter({

@@ -4,7 +4,7 @@ from django_filters import rest_framework as filters
 
 from django.db.models import Q
 from nomencladores.models import nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_tipo_equipo_ferroviario
-from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados, en_trenes
+from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados, en_trenes,nom_equipo_ferroviario
 
 
 
@@ -110,6 +110,24 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
         }
         
 #-------------------------********************------------EN_TRENES--------------------***************-----------------************    
+
+class en_trenes_filter(filters.FilterSet):
+    origen_destino_producto = filters.CharFilter(method='filter_by_origen_destino_producto_trenes',lookup_expr = 'icontains')
+
+    #filtrado por origen,destino y descripcion del producto
+    def filter_by_origen_destino_producto_trenes(self,queryset,value):        
+        return  queryset.filter(origen_en_trenes__icontains = value) | queryset.filter(destino_en_trenes_exact = value)
+    
+    class Meta:
+  
+        model : en_trenes    
+        fields:{
+            'origen_destino_producto':['icontains'],
+        }
+
+
+
+
 class en_trenes_serializer(serializers.ModelSerializer):
    # tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
    # estado_name = serializers.ReadOnlyField(source='get_estado_display')
@@ -127,6 +145,7 @@ class en_trenes_serializer(serializers.ModelSerializer):
            # 'tipo_origen_name', 
             'origen', 
             'locomotora',
+            'numero_identificacion_locomotora',
             'tipo_equipo', 
             'tipo_equipo_name',
             'estado', 
@@ -139,4 +158,12 @@ class en_trenes_serializer(serializers.ModelSerializer):
             'cantidad_vagones',
             'observaciones',
         )
-       
+        filterset_class=en_trenes_filter
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+        
+        # Filtra las opciones del campo locomotora
+            if 'locomotora' in self.fields:
+                self.fields['locomotora'].queryset = nom_equipo_ferroviario.objects.filter(
+                tipo_equipo__tipo_equipo='locomotora'
+            )

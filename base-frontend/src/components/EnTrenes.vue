@@ -3,19 +3,32 @@
     <button @click="toggleContentVisibility" class="btn btn-primary">
       <h2>En Trenes</h2>
     </button>
+
     <div v-if="showContent">
-      <div class="search-container" style="padding-left: 80%">
-        <form class="d-flex search-form" @submit.prevent="search_producto">
-          <input
-            class="form-control form-control-sm me-2"
-            type="search"
-            placeholder="origen"
-            aria-label="Search"
-            v-model="searchQuery"
-            @input="handleSearchInput"
-            style="width: 200px"
-          />
-        </form>
+      <div class="d-flex" style="padding: 1%">
+        <div class="create-button-container">
+          <router-link
+            v-if="hasPermission"
+            class="create-button"
+            to="AdicionarVagon"
+          >
+            <i class="bi bi-plus-circle large-icon"></i>
+          </router-link>
+        </div>
+
+        <div class="search-container" style="padding-left: 10%">
+          <form class="d-flex search-form" @submit.prevent="search_producto">
+            <input
+              class="form-control form-control-sm me-2"
+              type="search"
+              placeholder="Origen, Destino, Producto"
+              aria-label="Search"
+              v-model="searchQuery"
+              @input="handleSearchInput"
+              style="width: 200px"
+            />
+          </form>
+        </div>
       </div>
       <div class="table-container" style="padding-left: 15%">
         <table class="table">
@@ -23,7 +36,7 @@
             <tr>
               <th scope="col" v-if="showNoId">No</th>
               <th scope="col">No</th>
-              <th scope="col">ID_locomotora</th>
+              <th scope="col">Código_locomotora</th>
               <th scope="col">Tipo</th>
               <th scope="col">Estado</th>
               <th scope="col">Producto</th>
@@ -39,7 +52,7 @@
               <th scope="row" style="background-color: white">
                 {{ index + 1 }}
               </th>
-              <td>{{ tren.locomotora }}</td>
+              <td>{{ tren.numero_identificacion_locomotora }}</td>
               <td>{{ tren.tipo_equipo }}</td>
               <!-- nacionalidad_name esta declarado en el serializador -->
               <td>{{ tren.estado }}</td>
@@ -98,6 +111,8 @@ export default {
       en_trenes: [],
       user_role: "",
       searchQuery: "",
+      debounceTimeout: null, // Añadido aquí
+      busqueda_existente: true,
       userPermissions: [], // Almacenará los permisos del usuario
       userGroups: [], // Almacenará los grupos del usuario
       showContent: false,
@@ -157,13 +172,13 @@ export default {
       this.$store.commit("setIsLoading", true);
       try {
         const response = await axios.get(
-          `/ufc/en-trenes/?nombre_p=${this.searchQuery}`
+          `/ufc/en-trenes/?origen_destino=${this.searchQuery}`
         );
-        this.paises = response.data;
+        this.en_trenes = response.data;
         // Actualiza busqueda_existente basado en el resultado
         this.busqueda_existente = this.paises.length > 0;
       } catch (error) {
-        console.error("Error al buscar el pais:", error);
+        console.error("Error al buscar trenes", error);
         this.busqueda_existente = false;
       }
       this.$store.commit("setIsLoading", false);
@@ -172,7 +187,7 @@ export default {
     handleSearchInput() {
       clearTimeout(this.debounceTimeout);
       this.debounceTimeout = setTimeout(() => {
-        this.searchPaises();
+        this.searchTrenes();
       }, 300);
     },
     async delete_tren(id) {
@@ -210,3 +225,11 @@ export default {
   },
 };
 </script>
+
+<style>
+.create-button {
+  text-decoration: none;
+  color: green;
+  margin-left: 940px;
+}
+</style>

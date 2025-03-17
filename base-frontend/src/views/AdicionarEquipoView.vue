@@ -4,22 +4,36 @@
     <form @submit.prevent="save_equipo_ferroviario" class="form-grid">
       <!-- Tipo de equipo -->
       <div class="form-group">
-        <label for="tipo_equipo">Tipo de equipo:<span style="color: red;">*</span></label>
-        <select style="padding: 5px;" v-model="tipo_equipo" required>
-          <option v-for="tef in tipos_equipos" :key="tef.id" :value="tef.id">{{ tef.tipo_equipo_name }} - {{ tef.tipo_carga_name }} - {{tef.peso_maximo_con_carga}}</option>
+        <label for="tipo_equipo"
+          >Tipo de equipo:<span style="color: red">*</span></label
+        >
+        <select style="padding: 5px" v-model="tipo_equipo" required>
+          <option v-for="tef in tipos_equipos" :key="tef.id" :value="tef.id">
+            {{ tef.tipo_equipo_name }} - {{ tef.tipo_carga_name }} -
+            {{ tef.peso_maximo_con_carga }}
+          </option>
         </select>
-      </div>      
+      </div>
 
       <!-- Número de identificación -->
       <div class="form-group">
-        <label for="numero_identificacion">Número de identificación:<span style="color: red;">*</span></label>
-        <input style="padding: 3px;" type="text" v-model="numero_identificacion" required />
+        <label for="numero_identificacion"
+          >Número de identificación:<span style="color: red">*</span></label
+        >
+        <input
+          style="padding: 3px"
+          type="text"
+          v-model="numero_identificacion"
+          required
+        />
       </div>
 
       <!-- Territorio -->
       <div class="form-group">
-        <label for="territorio">Territorio:<span style="color: red;">*</span></label>
-        <select style="padding: 5px;" v-model="territorio" required>
+        <label for="territorio"
+          >Territorio:<span style="color: red">*</span></label
+        >
+        <select style="padding: 5px" v-model="territorio" required>
           <option value="-">-</option>
           <option value="oriente">Oriente</option>
           <option value="centro">Centro</option>
@@ -30,24 +44,41 @@
       <!-- Tipo de carga -->
       <div class="form-group">
         <label for="tipo_carga">Tipo de carga</label>
-        <input style="padding: 3px;" type="text" v-model="tipo_carga" disabled />
+        <input style="padding: 3px" type="text" v-model="tipo_carga" disabled />
       </div>
 
       <!-- Tipo de combustible -->
       <div class="form-group">
         <label for="tipo_combustible">Tipo de combustible</label>
-        <input style="padding: 3px;" type="text" v-model="tipo_combustible" disabled />
+        <input
+          style="padding: 3px"
+          type="text"
+          v-model="tipo_combustible"
+          disabled
+        />
       </div>
 
       <!-- Peso máximo -->
       <div class="form-group">
         <label for="peso_maximo">Peso máximo (t)</label>
-        <input style="padding: 3px;" type="number" v-model="peso_maximo" step="0.01" disabled />
+        <input
+          style="padding: 3px"
+          type="number"
+          v-model="peso_maximo"
+          step="0.01"
+          disabled
+        />
       </div>
 
       <!-- Botones -->
       <div class="form-buttons">
-        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+        <button
+          type="button"
+          @click="confirmCancel"
+          style="color: white; text-decoration: none"
+        >
+          Cancelar
+        </button>
         <button>Aceptar</button>
       </div>
     </form>
@@ -55,19 +86,19 @@
 </template>
 
 <script>
-import axios from 'axios';
-import Swal from 'sweetalert2';
+import axios from "axios";
+import Swal from "sweetalert2";
 
 export default {
-  name: 'CrearEquipoFerroviario',
+  name: "CrearEquipoFerroviario",
   data() {
     return {
-      tipo_equipo: '',
-      numero_identificacion: '',
-      territorio: '-',
-      tipo_carga: '',
-      tipo_combustible: '',
-      peso_maximo: '',
+      tipo_equipo: "",
+      numero_identificacion: "",
+      territorio: "-",
+      tipo_carga: "",
+      tipo_combustible: "",
+      peso_maximo: "",
       tipos_equipos: [], // Almacenará los tipos de equipos ferroviarios
     };
   },
@@ -76,34 +107,37 @@ export default {
   },
   methods: {
     confirmCancel() {
-    Swal.fire({
-    title: '¿Está seguro de que quiere cancelar la operación?',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    cancelmButtonText: 'Cancelar',
-    confirmButtonText: 'Aceptar'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      window.history.back();
-    }
-  });
-},
+      Swal.fire({
+        title: "¿Está seguro de que quiere cancelar la operación?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        cancelmButtonText: "Cancelar",
+        confirmButtonText: "Aceptar",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.history.back();
+        }
+      });
+    },
     // Obtener los tipos de equipos ferroviarios
     async getTiposEquipos() {
       try {
-        const response = await axios.get('/api/tipos_equipos/');
+        const response = await axios.get("/api/tipos_equipos/");
         this.tipos_equipos = response.data;
       } catch (error) {
-        console.error('Error al obtener los tipos de equipos ferroviarios:', error);
+        console.error(
+          "Error al obtener los tipos de equipos ferroviarios:",
+          error
+        );
       }
     },
 
     // Validar el formulario
     validateForm() {
       const numero_identificacion_regex = /^[\d\w\W\s]{3,10}$/; // Acepta letras, números y caracteres especiales (3-10 caracteres)
-      let errorMessage = '';
+      let errorMessage = "";
 
       if (!numero_identificacion_regex.test(this.numero_identificacion)) {
         errorMessage +=
@@ -112,8 +146,8 @@ export default {
 
       if (errorMessage) {
         Swal.fire({
-          icon: 'error',
-          title: 'Error de validación',
+          icon: "error",
+          title: "Error de validación",
           text: errorMessage,
         });
         return false; // Detener el envío del formulario
@@ -138,12 +172,20 @@ export default {
       };
 
       try {
-        await axios.post('/api/equipos_ferroviarios/', data);
-        Swal.fire('Agregado!', 'El equipo ferroviario ha sido añadido exitosamente.', 'success');
-        this.$router.push('/EquipoFerro');
+        await axios.post("/api/equipos_ferroviarios/", data);
+        Swal.fire(
+          "Agregado!",
+          "El equipo ferroviario ha sido añadido exitosamente.",
+          "success"
+        );
+        this.$router.push("/EquipoFerro");
       } catch (error) {
-        console.error('Error al agregar el equipo ferroviario:', error);
-        Swal.fire('Error', 'Hubo un error al agregar el equipo ferroviario.', 'error');
+        console.error("Error al agregar el equipo ferroviario:", error);
+        Swal.fire(
+          "Error",
+          "Hubo un error al agregar el equipo ferroviario.",
+          "error"
+        );
       }
     },
   },
@@ -152,7 +194,9 @@ export default {
     tipo_equipo(newVal) {
       if (newVal) {
         // Buscar el tipo de equipo seleccionado en la lista de tipos_equipos
-        const selectedTipoEquipo = this.tipos_equipos.find(tef => tef.id === newVal);
+        const selectedTipoEquipo = this.tipos_equipos.find(
+          (tef) => tef.id === newVal
+        );
         if (selectedTipoEquipo) {
           // Actualizar los campos automáticamente
           this.tipo_carga = selectedTipoEquipo.tipo_carga_name;
@@ -176,7 +220,7 @@ export default {
 }
 
 h2 {
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
   text-align: left;
   margin-bottom: 20px;
   font-size: 20px;
@@ -201,7 +245,8 @@ label {
   font-weight: bold;
 }
 
-input, select {
+input,
+select {
   padding: 5px;
   border: 1px solid #ccc;
   border-radius: 4px;

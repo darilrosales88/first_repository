@@ -1,5 +1,5 @@
 from django.db import models
-from nomencladores.models import nom_puerto,nom_tipo_equipo_ferroviario,nom_producto,nom_tipo_embalaje,nom_unidad_medida
+from nomencladores.models import nom_puerto,nom_tipo_equipo_ferroviario,nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_equipo_ferroviario
 
 
 
@@ -100,14 +100,18 @@ class en_trenes(models.Model):
   #Cuando vayas a crear varias instancias con la misma ForeignKey hay que agregar "related_name"
   #Agregar "default" en los campos que tengan el parametro "choise"
     locomotora = models.ForeignKey(
-        nom_tipo_equipo_ferroviario,
+        nom_equipo_ferroviario,
         on_delete=models.CASCADE,
-        limit_choices_to={'tipo_equipo': 'locomotora'},
         verbose_name="Locomotora asignada",
         help_text="Seleccione una locomotora.",
         related_name="trenes_locomotora",
     )
-
+    numero_identificacion_locomotora = models.CharField(
+        max_length=10,
+        verbose_name="Número de identificación de la locomotora",
+        blank=True,
+        null=True,
+    )
     tipo_equipo=models.CharField(default="",choices=nom_tipo_equipo_ferroviario.t_equipo, max_length=50)
     estado = models.CharField(default="" ,choices=ESTADO_CHOICES, max_length = 50)
     producto = models.ForeignKey(productos_vagones_cargados_descargados,default="", on_delete=models.CASCADE)
@@ -127,11 +131,15 @@ class en_trenes(models.Model):
         blank=True,  # Permite que el campo esté vacío
         null=True,   # Permite valores nulos en la base de datos
     )
-    
+    def save(self, *args, **kwargs):
+        # Llenar el campo numero_identificacion_locomotora con el valor de la locomotora relacionada
+        if self.locomotora:
+            self.numero_identificacion_locomotora = self.locomotora.numero_identificacion
+        super().save(*args, **kwargs)
     class Meta:
         verbose_name = "Tren"
         verbose_name_plural="Trenes"
          
     
     def __str__(self):
-        return f"En trenes {self.id} - {self.get_estado_display()}"
+        return f"En trenes {self.id} -{self.numero_identificacion_locomotora}- {self.get_estado_display()}"

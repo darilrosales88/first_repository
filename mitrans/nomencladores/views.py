@@ -1273,15 +1273,18 @@ class nom_tipo_equipo_ferroviario_view_set(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-
+        
         # Filtrado por tipo de equipo, descripcion y tipo_combustible
-        search = self.request.query_params.get('busqueda_tipo_equipo__tipo_carga', None)
+        search = self.request.query_params.get('tipo_equipo_tipo_carga', None)
 
         if search is not None: #preguntamos si la variable search no está vacía
 
           #si no lo está el queryset es alguna coincidencia con el campo descripcion, 
           #tipo de equipo, o exactamente el valor del campo tipo_combustible
-            queryset = queryset.filter(tipo_equipo__icontains=search) | queryset.filter(tipo_carga__icontains=search)
+            queryset = queryset.filter(
+            Q(tipo_equipo__icontains=search) |
+            Q(tipo_carga__icontains=search)
+            )
 
         return queryset
 
@@ -1459,9 +1462,9 @@ class nom_equipo_ferroviario_view_set(viewsets.ModelViewSet):
 
         if search is not None:
 
-            queryset = queryset.filter( Q(tipo_equipo_name__icontains=search) | Q(territorio_name__icontains=search) | Q(numero_identificacion__icontains=search)
+            queryset = queryset.select_related('tipo_equipo').filter(Q(tipo_equipo__tipo_equipo__icontains=search) |Q(territorio__icontains=search) | Q(numero_identificacion__icontains=search)
             )
-
+        #Fixed bug para buscar locomotoras cuando se usa select_related('campo_asociado_a_ForeignKEY')
         return queryset
     
     def create(self, request, *args, **kwargs):

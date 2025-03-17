@@ -4,10 +4,10 @@
     <Navbar-Component />
     <div class="wrap" style="margin-top: 1%">
       <br />
-      <ul class="grid" style="">
+      <ul class="grid">
         <li>
           <router-link class="dropdown-item" to="InformeOperativo">
-            <button v-if="hasGroup('Admin')" class="btn btn-primary">
+            <button v-if="hasPermission" class="btn btn-primary">
               Informe Operativo &nbsp;<i class="bi bi-plus-circle"></i>
             </button>
           </router-link>
@@ -16,7 +16,7 @@
           <button
             to="TipoEmbalaje"
             @click="openAddEmbarcacionModal"
-            v-if="hasGroup('Admin')"
+            v-if="hasPermission"
             class="btn btn-primary"
           >
             CCD por Producto &nbsp;<i class="bi bi-plus-circle"></i>
@@ -72,8 +72,12 @@ export default {
   },
 
   methods: {
-    hasPermission(permission) {
-      return this.userPermissions.some((p) => p.name === permission);
+    hasPermission() {
+      if (this.user_role === "role") {
+        return true;
+      } else {
+        return this.user_role === "admin";
+      }
     },
     hasGroup(group) {
       return this.userGroups.some((g) => g.name === group);

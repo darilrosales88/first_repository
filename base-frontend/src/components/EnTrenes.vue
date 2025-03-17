@@ -56,7 +56,7 @@
               <td>{{ tren.tipo_equipo }}</td>
               <!-- nacionalidad_name esta declarado en el serializador -->
               <td>{{ tren.estado }}</td>
-              <td>{{ tren.producto_name }}</td>
+              <td>{{ tren.producto.producto_name }}</td>
               <td>{{ tren.cantidad_vagones }}</td>
               <td>{{ tren.origen }}</td>
               <td>{{ tren.destino }}</td>

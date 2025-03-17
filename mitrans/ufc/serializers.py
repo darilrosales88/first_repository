@@ -4,7 +4,7 @@ from django_filters import rest_framework as filters
 
 from django.db.models import Q
 from nomencladores.models import nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_tipo_equipo_ferroviario
-from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados, en_trenes,nom_equipo_ferroviario
+from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados, en_trenes,nom_equipo_ferroviario, producto_en_vagon
 
 
 
@@ -132,7 +132,7 @@ class en_trenes_serializer(serializers.ModelSerializer):
    # tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
    # estado_name = serializers.ReadOnlyField(source='get_estado_display')
    # tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
-    producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')
+    producto_name = serializers.ReadOnlyField(source='producto.producto_en_vagon.producto.nombre_producto')
     tipo_equipo_name=serializers.ReadOnlyField(source='get_tipo_equipo_display')
    
    
@@ -167,3 +167,35 @@ class en_trenes_serializer(serializers.ModelSerializer):
                 self.fields['locomotora'].queryset = nom_equipo_ferroviario.objects.filter(
                 tipo_equipo__tipo_equipo='locomotora'
             )
+                
+                
+class producto_vagon_serializer(serializers.ModelSerializer):
+   # tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
+   # estado_name = serializers.ReadOnlyField(source='get_estado_display')
+   # tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
+    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
+    producto_codigo = serializers.ReadOnlyField(source='producto.codigo_producto')
+    tipo_embalaje_name=serializers.ReadOnlyField(source='tipo_embalaje.nombre_tipo_embalaje')
+    unidad_medida_name=serializers.ReadOnlyField(source='unidad_medida.unidad_medida')
+   
+    class Meta:
+        model = producto_en_vagon
+        fields = (
+            'id', 
+           'producto',
+           'producto_name',
+           'producto_codigo',
+           'tipo_embalaje',
+           'tipo_embalaje_name',
+           'unidad_medida',
+           'unidad_medida_name',
+           'producto',
+           'cantidad',
+           'contiene',
+        )
+        filterset_class=en_trenes_filter
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+        
+  
+    

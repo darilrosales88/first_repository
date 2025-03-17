@@ -1,7 +1,7 @@
 <template>
-  <Navbar-Component />
+  <div class="card">
   <div class="container mt-5" style="padding-left: 20%">
-    <h2 class="mb-4">Nuevo registro de vagón</h2>
+    <h2 class="mb-4">Nuevo registro de producto en vagón/h2>
     <form @submit.prevent="submitForm">
       <div class="row">
         <!-- Columna 1 -->
@@ -235,6 +235,7 @@
       </div>
     </form>
   </div>
+</div>
 </template>
 
 <style scoped>

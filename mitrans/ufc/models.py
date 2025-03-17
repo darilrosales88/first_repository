@@ -4,6 +4,33 @@ from nomencladores.models import nom_puerto,nom_tipo_equipo_ferroviario,nom_prod
 
 
 #productos asociados a vagones cargados/descargados
+
+class producto_en_vagon(models.Model):
+   
+    ESTADO_CHOICES = [
+        ('vacio', 'Vacío'),
+        ('lleno', 'Lleno'),
+    ]
+    CONTIENE_CHOICES = [
+        ('alimentos', 'Alimentos'),
+        ('prod_varios', 'Productos Varios'),
+    ]
+   
+   
+    producto = models.ForeignKey(nom_producto, on_delete=models.CASCADE)
+    tipo_embalaje = models.ForeignKey(nom_tipo_embalaje, on_delete=models.CASCADE)
+    unidad_medida = models.ForeignKey(nom_unidad_medida, on_delete=models.CASCADE)
+    cantidad = models.IntegerField()
+    contiene=models.CharField(choices=ESTADO_CHOICES, null=True, blank=True, max_length=20)
+    
+    class Meta:
+        verbose_name = "Producto en vagon"
+        verbose_name_plural = "Producto en vagones"
+        #unique_together = [['cliente', 'destino']] 
+
+    
+    def __str__(self):
+        return f"tipo de producto {self.get_contiene_display()} - {self.producto.nombre_producto}"
 class productos_vagones_cargados_descargados(models.Model):
     TIPO_PROD_CHOICES = [
         ('producto', 'Producto'),
@@ -114,7 +141,7 @@ class en_trenes(models.Model):
     )
     tipo_equipo=models.CharField(default="",choices=nom_tipo_equipo_ferroviario.t_equipo, max_length=50)
     estado = models.CharField(default="" ,choices=ESTADO_CHOICES, max_length = 50)
-    producto = models.ForeignKey(productos_vagones_cargados_descargados,default="", on_delete=models.CASCADE)
+    producto = models.ForeignKey(producto_en_vagon,default='', on_delete=models.CASCADE)
     
     
     tipo_origen = models.CharField(default="",choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
@@ -143,3 +170,5 @@ class en_trenes(models.Model):
     
     def __str__(self):
         return f"En trenes {self.id} -{self.numero_identificacion_locomotora}- {self.get_estado_display()}"
+
+

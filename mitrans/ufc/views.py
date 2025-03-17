@@ -3,10 +3,10 @@
 from rest_framework import viewsets,generics,permissions
 
 #importacion de modelos
-from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados,en_trenes
+from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados,en_trenes,producto_en_vagon
 
 #importacion de serializadores asociados a los modelos
-from .serializers import vagon_cargado_descargado_filter,vagon_cargado_descargado_serializer
+from .serializers import vagon_cargado_descargado_filter,vagon_cargado_descargado_serializer,producto_vagon_serializer
 from .serializers import producto_vagon_cargado_descargado_filter,productos_vagones_cargados_descargados_serializer,en_trenes_serializer
 
 from Administracion.models import Auditoria
@@ -278,6 +278,95 @@ class en_trenes_view_set(viewsets.ModelViewSet):
         Auditoria.objects.create(
             usuario=request.user if request.user.is_authenticated else None,
             accion="Visualizar lista de formularios en trenes",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return super().list(request, *args, **kwargs)
+
+
+
+class producto_vagon_view_set(viewsets.ModelViewSet):
+    queryset = producto_en_vagon.objects.all() # Definir el queryset
+    serializer_class = producto_vagon_serializer
+    permission_classes = [IsUFCPermission]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_term = self.request.query_params.get('buscar_producto', None)
+
+        if search_term:
+            # Filtra por coincidencia en cualquiera de los campos
+            queryset = queryset.select_related('producto').filter(
+            Q(id__icontains=search_term) |
+            Q(tpo_embalaje__icontains=search_term)|
+            Q(producto__producto__nombre_producto__icontains=search_term)|
+            Q(producto__producto__codigo_producto__icontains=search_term)
+            
+)
+        return queryset
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        objeto_producto_en_vagon = serializer.save()
+
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            direccion_ip=direccion_ip,
+            accion=f"Insertado formulario en trenes: {objeto_producto_en_vagon.id}",
+            navegador=navegador,
+        )
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        objeto_producto_en_vagon = serializer.save()
+
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            direccion_ip=direccion_ip,
+            accion=f"Modificar formulario producto en vagon: {objeto_producto_en_vagon.id}",
+            navegador=navegador,
+        )
+
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        id_objeto_en_trenes = instance.id
+
+        # Registrar la acción en el modelo de Auditoria antes de eliminar
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            direccion_ip=direccion_ip,
+            accion=f"Eliminar formulario producto en vagon {id_objeto_en_trenes}",
+            navegador=navegador,
+        )
+
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def list(self, request, *args, **kwargs):
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de formularios productos en vagon",
             direccion_ip=direccion_ip,
             navegador=navegador,
         )

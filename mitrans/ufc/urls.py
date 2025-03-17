@@ -1,6 +1,6 @@
 from rest_framework import routers
 #importamos las vistas
-from .views import vagon_cargado_descargado_view_set,productos_vagones_cargados_descargados_view_set , en_trenes_view_set
+from .views import vagon_cargado_descargado_view_set,productos_vagones_cargados_descargados_view_set , en_trenes_view_set, producto_vagon_view_set
 
 
 
@@ -18,6 +18,7 @@ router = routers.DefaultRouter()
 router.register('vagones-cargados-descargados',vagon_cargado_descargado_view_set,basename='vagones_cargados_descargados')
 router.register('productos-vagones-cargados-descargados',productos_vagones_cargados_descargados_view_set,basename='productos-vagones-cargados-descargados')
 router.register('en-trenes',en_trenes_view_set, basename='en-trenes' )
+router.register('producto-vagon',producto_vagon_view_set, basename='producto-vagon' )
 #ahora declaramos el urlpatterns y lo igualamos a la propiedad urls de la variable creada de tipo routers
 # Ahora combinamos las rutas manuales con las del router
 urlpatterns += router.urls

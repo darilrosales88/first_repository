@@ -1,239 +1,335 @@
 <template>
   <Navbar-Component />
+  <Producto-Vagones />
   <div class="container mt-5" style="padding-left: 20%">
-    <h2 class="mb-4">Nuevo registro de vagón</h2>
-    <form @submit.prevent="submitForm">
-      <div class="row">
-        <!-- Columna 1 -->
-        <div class="col-md-6">
-          <!-- Campo: locomotora -->
-          <div class="mb-3">
-            <label for="locomotora" class="form-label"
-              >Locomotora<span style="color: red">*</span></label
-            >
-            <select
-              class="form-select"
-              v-model="formData.locomotora"
-              id="locomotora"
-              name="Locomotora"
-              required
-            >
-              <option
-                v-for="locomotora in locomotoras"
-                :key="locomotora.id"
-                :value="locomotora.id"
+    <div class="row mb-4">
+      <h2 class="mb-4">Nuevo registro de vagón</h2>
+      <form @submit.prevent="submitForm">
+        <div class="row">
+          <!-- Columna 1 -->
+          <div class="col-md-6">
+            <!-- Campo: locomotora -->
+            <div class="mb-3">
+              <label for="locomotora" class="form-label"
+                >Locomotora<span style="color: red">*</span></label
               >
-                {{ locomotora.id }}-{{ locomotora.numero_identificacion }} -
-                {{ locomotora.tipo_equipo_name }}
-              </option>
-            </select>
+              <select
+                class="form-select"
+                v-model="formData.locomotora"
+                id="locomotora"
+                name="Locomotora"
+                required
+              >
+                <option
+                  v-for="locomotora in locomotoras"
+                  :key="locomotora.id"
+                  :value="locomotora.id"
+                >
+                  {{ locomotora.id }}-{{ locomotora.numero_identificacion }} -
+                  {{ locomotora.tipo_equipo_name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Campo: tipo_origen -->
+            <div class="mb-3">
+              <label for="tipo_origen" class="form-label">Tipo de Origen</label>
+              <select
+                class="form-select"
+                v-model="formData.tipo_origen"
+                id="tipo_origen"
+                name="tipo_origen"
+              >
+                <option value="ac_ccd">Acceso Comercial</option>
+                <option value="puerto">Puerto</option>
+              </select>
+            </div>
+
+            <!-- Campo: origen -->
+            <div class="mb-3">
+              <label for="origen" class="form-label">Origen</label>
+              <select
+                v-if="formData.tipo_origen !== 'puerto'"
+                class="form-select"
+                v-model="formData.origen"
+                id="origen"
+                name="origen"
+              >
+                <option
+                  v-for="entidad in entidades"
+                  :key="entidad.id"
+                  :value="entidad.nombre"
+                >
+                  {{ entidad.id }}-{{ entidad.nombre }}
+                </option>
+              </select>
+
+              <select
+                v-else
+                class="form-select"
+                v-model="formData.origen"
+                id="origen"
+                name="origen"
+              >
+                <option
+                  v-for="puerto in puertos"
+                  :key="puerto.id"
+                  :value="puerto.nombre_puerto"
+                >
+                  {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Campo: tipo_equipo -->
+            <div class="mb-3">
+              <label for="tipo_equipo" class="form-label"
+                >Tipo de Equipo<span style="color: red">*</span></label
+              >
+              <select
+                @click="buscarEquipos"
+                class="form-select"
+                v-model="formData.tipo_equipo"
+                id="tipo_equipo"
+                name="tipo_equipo"
+                required
+              >
+                <option
+                  v-for="equipo in equipos"
+                  :key="equipo.id"
+                  :value="equipo.id"
+                >
+                  {{ equipo.id }}-{{ equipo.tipo_equipo_name }}-
+                  {{ equipo.tipo_carga_name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Campo: estado -->
+            <div class="mb-3">
+              <label for="estado" class="form-label"
+                >Estado <span style="color: red">*</span></label
+              >
+              <select
+                class="form-select"
+                v-model="formData.estado"
+                id="estado"
+                name="estado"
+                required
+              >
+                <option value="cargado">Cargado</option>
+                <option value="vacio">Vacio</option>
+              </select>
+            </div>
+
+            <!-- Campo: Vagon No ID -->
+            <div class="mb-3">
+              <label for="equipo_vagon" class="form-label"
+                >Vagon No ID <span style="color: red">*</span></label
+              >
+              <select
+                class="form-select"
+                v-model="formData.equipo_vagon"
+                id="equipo_vagon"
+                name="equipo_vagon"
+                required
+                @click="onVagonChange"
+              >
+                <option v-for="item in equipos_vagones" :value="item.id">
+                  {{ item.id }}-{{ item.numero_identificacion }}
+                </option>
+              </select>
+            </div>
           </div>
 
-          <!-- Campo: tipo_origen -->
-          <div class="mb-3">
-            <label for="tipo_origen" class="form-label">Tipo de Origen</label>
+          <!--   <div class="mb-3">
+            <label for="equipo_id" class="form-label">Vagon No ID</label>
             <select
+              @click="buscarEquipos"
               class="form-select"
-              v-model="formData.tipo_origen"
-              id="tipo_origen"
-              name="tipo_origen"
-            >
-              <option value="ac_ccd">Acceso Comercial</option>
-              <option value="puerto">Puerto</option>
-            </select>
-          </div>
-
-          <!-- Campo: origen -->
-          <div class="mb-3">
-            <label for="origen" class="form-label">Origen</label>
-            <select
-              v-if="formData.tipo_origen !== 'puerto'"
-              class="form-select"
-              v-model="formData.origen"
-              id="origen"
-              name="origen"
+              v-model="formData.equipo_vagon"
+              id="equipo_vagon"
+              name="equipo_vagon"
             >
               <option
-                v-for="entidad in entidades"
-                :key="entidad.id"
-                :value="entidad.nombre"
+                v-for="equipo_vagon in equipos_vagones"
+                :value="equipo_vagon.id"
               >
-                {{ entidad.id }}-{{ entidad.nombre }}
+                {{ equipo_vagon.id }}-{{ equipo_vagon.numero_identificacion }}
               </option>
             </select>
+          </div> -->
 
-            <select
-              v-else
-              class="form-select"
-              v-model="formData.origen"
-              id="origen"
-              name="origen"
-            >
-              <option
-                v-for="puerto in puertos"
-                :key="puerto.id"
-                :value="puerto.nombre_puerto"
+          <!-- Columna 2 -->
+          <div class="col-md-6">
+            <!-- Campo: tipo_destino -->
+            <div class="mb-3">
+              <label for="tipo_destino" class="form-label"
+                >Tipo de Destino <span style="color: red">*</span></label
               >
-                {{ puerto.id }}- {{ puerto.nombre_puerto }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Campo: tipo_equipo -->
-          <div class="mb-3">
-            <label for="tipo_equipo" class="form-label"
-              >Tipo de Equipo<span style="color: red">*</span></label
-            >
-            <select
-              class="form-select"
-              v-model="formData.tipo_equipo"
-              id="equipo"
-              name="equipo"
-              required
-            >
-              <option
-                v-for="equipo in equipos"
-                :key="equipo.id"
-                :value="equipo.tipo_equipo"
+              <select
+                class="form-select"
+                v-model="formData.tipo_destino"
+                id="tipo_destino"
+                name="tipo_destino"
+                required
               >
-                {{ equipo.id }}-{{ equipo.tipo_equipo_name }}-{{
-                  equipo.tipo_carga
-                }}
-              </option>
-            </select>
-          </div>
+                <option value="ac_ccd">Acceso Comercial</option>
+                <option value="puerto">Puerto</option>
+              </select>
+            </div>
 
-          <!-- Campo: estado -->
-          <div class="mb-3">
-            <label for="estado" class="form-label"
-              >Estado <span style="color: red">*</span></label
-            >
-            <select
-              class="form-select"
-              v-model="formData.estado"
-              id="estado"
-              name="estado"
-              required
-            >
-              <option value="cargado">Cargado</option>
-              <option value="vacio">Vacio</option>
-            </select>
+            <!-- Campo: destino -->
+            <div class="mb-3">
+              <label for="destino" class="form-label">Destino</label>
+              <select
+                v-if="formData.tipo_destino !== 'puerto'"
+                class="form-select"
+                v-model="formData.destino"
+                id="destino"
+                name="destino"
+              >
+                <option
+                  v-for="entidad in entidades"
+                  :key="entidad.id"
+                  :value="entidad.nombre"
+                >
+                  {{ entidad.id }}-{{ entidad.nombre }}
+                </option>
+              </select>
+
+              <select
+                v-else
+                class="form-select"
+                v-model="formData.destino"
+                id="destino"
+                name="destino"
+              >
+                <option
+                  v-for="puerto in puertos"
+                  :key="puerto.id"
+                  :value="puerto.nombre_puerto"
+                >
+                  {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Campo: producto -->
+            <div class="mb-3">
+              <label for="producto" class="form-label"
+                >Producto<button
+                  class="create-button ms-2"
+                  @click="abrirModalAgregarProducto"
+                >
+                  <i class="bi bi-plus-circle large-icon"></i></button
+              ></label>
+              <select
+                v-if="formData.estado === 'cargado'"
+                class="form-select"
+                v-model="formData.producto"
+                id="producto"
+                name="producto"
+              >
+                <option v-for="producto in productos" :value="producto.id">
+                  {{ producto.id }}-{{ producto.producto_name }} -{{
+                    producto.producto_codigo
+                  }}-{{ producto.tipo_embalaje_name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Campo: cantidad_vagones -->
+            <div class="mb-3">
+              <label for="cantidad_vagones" class="form-label"
+                >Cantidad de Vagones</label
+              >
+              <input
+                type="number"
+                class="form-control"
+                v-model="formData.cantidad_vagones"
+                id="cantidad_vagones"
+                name="cantidad_vagones"
+              />
+            </div>
+
+            <!-- Campo: observaciones -->
+            <div class="mb-3">
+              <label for="observaciones" class="form-label"
+                >Observaciones <span style="color: red">*</span></label
+              >
+              <textarea
+                class="form-control"
+                v-model="formData.observaciones"
+                id="observaciones"
+                name="observaciones"
+                rows="3"
+                required
+              ></textarea>
+            </div>
           </div>
         </div>
 
-        <!-- Columna 2 -->
-        <div class="col-md-6">
-          <!-- Campo: tipo_destino -->
-          <div class="mb-3">
-            <label for="tipo_destino" class="form-label"
-              >Tipo de Destino <span style="color: red">*</span></label
-            >
-            <select
-              class="form-select"
-              v-model="formData.tipo_destino"
-              id="tipo_destino"
-              name="tipo_destino"
-              required
-            >
-              <option value="ac_ccd">Acceso Comercial</option>
-              <option value="puerto">Puerto</option>
-            </select>
-          </div>
-
-          <!-- Campo: destino -->
-          <div class="mb-3">
-            <label for="destino" class="form-label">Destino</label>
-            <select
-              v-if="formData.tipo_destino !== 'puerto'"
-              class="form-select"
-              v-model="formData.destino"
-              id="destino"
-              name="destino"
-            >
-              <option
-                v-for="entidad in entidades"
-                :key="entidad.id"
-                :value="entidad.nombre"
-              >
-                {{ entidad.id }}-{{ entidad.nombre }}
-              </option>
-            </select>
-
-            <select
-              v-else
-              class="form-select"
-              v-model="formData.destino"
-              id="destino"
-              name="destino"
-            >
-              <option
-                v-for="puerto in puertos"
-                :key="puerto.id"
-                :value="puerto.nombre_puerto"
-              >
-                {{ puerto.id }}- {{ puerto.nombre_puerto }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Campo: producto -->
-          <div class="mb-3">
-            <label for="producto" class="form-label"
-              >Producto<button
-                class="create-button ms-2"
-                @click="abrirModalAgregarProducto"
-              >
-                <i class="bi bi-plus-circle large-icon"></i></button
-            ></label>
-            <select
-              v-if="formData.estado === 'cargado'"
-              class="form-select"
-              v-model="formData.producto"
-              id="producto"
-              name="producto"
-            >
-              <option v-for="producto in productos" :value="producto.id">
-                {{ producto.id }}-{{ producto.nombre_producto }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Campo: cantidad_vagones -->
-          <div class="mb-3">
-            <label for="cantidad_vagones" class="form-label"
-              >Cantidad de Vagones</label
-            >
-            <input
-              type="number"
-              class="form-control"
-              v-model="formData.cantidad_vagones"
-              id="cantidad_vagones"
-              name="cantidad_vagones"
-            />
-          </div>
-
-          <!-- Campo: observaciones -->
-          <div class="mb-3">
-            <label for="observaciones" class="form-label"
-              >Observaciones <span style="color: red">*</span></label
-            >
-            <textarea
-              class="form-control"
-              v-model="formData.observaciones"
-              id="observaciones"
-              name="observaciones"
-              rows="3"
-              required
-            ></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- Botón de envío -->
+        <!-- Botón de envío -->
+      </form>
       <div class="text-center">
-        <button type="submit" class="btn btn-primary">Guardar</button>
+        <button @click="agregarVagon" class="btn btn-primary">
+          Agregar Vagon
+        </button>
+        <button @click="submitForm" class="btn btn-primary">Guardar</button>
+        <button @click="volverEnTren" class="btn btn-secondary">Volver</button>
       </div>
-    </form>
+    </div>
+
+    <!-- Segunda fila: Lista de vagones -->
+    <div class="row">
+      <div class="col-md-12">
+        <h3>Vagones agregados</h3>
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th>No. ID en trenes</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(vagon, index) in vagonesAgregados" :key="index">
+              <td>{{ index + 1 }}</td>
+              <td>
+                {{ vagon["datos"]["equipo_vagon"] }}-{{ vagon["vagon_id"] }}
+              </td>
+              <td>
+                <button
+                  class="btn btn-danger btn-sm"
+                  @click="eliminarVagon(index)"
+                >
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Validación de cantidad de vagones -->
+        <div v-if="vagonesAgregados.length < formData.cantidad_vagones">
+          <p class="text-warning">
+            Faltan
+            {{ formData.cantidad_vagones - vagonesAgregados.length }} vagones
+            por agregar.
+          </p>
+        </div>
+        <div v-else-if="vagonesAgregados.length === formData.cantidad_vagones">
+          <p class="text-success">Todos los vagones han sido agregados.</p>
+        </div>
+        <div v-else>
+          <p class="text-danger">
+            Se han agregado más vagones de los permitidos. Por favor, elimina
+            los excedentes.
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -319,7 +415,7 @@ import Swal from "sweetalert2";
 import NavbarComponent from "@/components/NavbarComponent.vue";
 
 export default {
-  name: "AdicionarAtraqueView",
+  name: "AdicionarEnTren",
   components: {
     NavbarComponent,
   },
@@ -336,24 +432,35 @@ export default {
         producto: "",
         cantidad_vagones: 0,
         observaciones: "",
-        puerto: "",
-        entidad: "",
+        equipo_vagon: "",
       },
-      productos: [], // Almacena las terminales obtenidas
-      equipos: [], // Almacena los puertos obtenidos
+      productos: [],
+      equipos: [],
+      equipos_vagones: [],
       locomotoras: [],
       puertos: [],
       entidades: [],
+      vagonesAgregados: [],
+      numeroIdentificacionSeleccionado: null,
     };
   },
 
   mounted() {
     // Llama al método para obtener los puertos
+    const savedFormData = localStorage.getItem("formData");
+    const savedVagones = localStorage.getItem("vagonesAgregados");
+    if (savedVagones) {
+      this.vagonesAgregados = JSON.parse(savedVagones);
+    }
+    if (savedFormData) {
+      this.formData = JSON.parse(savedFormData);
+    }
     this.getProductos();
     this.getEquipos();
     this.getLocomotoras();
     this.getEntidades();
     this.getPuertos();
+    this.buscarEquipos();
   },
 
   methods: {
@@ -372,20 +479,7 @@ export default {
         }
       });
     },
-    async submitForm() {
-      try {
-        await axios.post("/ufc/en-trenes/", this.formData);
-        Swal.fire(
-          "Agregado!",
-          "El formulario sido añadido exitosamente.",
-          "success"
-        );
-      } catch (error) {
-        console.error("Error al agregar el formulario:", error);
-        Swal.fire("Error", "Hubo un error al agregar el formulario.", "error");
-      }
-      this.resetForm;
-    },
+
     resetForm() {
       // Restablece los valores del formulario
       this.formData = {
@@ -399,10 +493,72 @@ export default {
         producto: "",
         cantidad_vagones: 0,
         observaciones: "",
-        puerto: "",
-        entidad: "",
+        equipo_vagon: "",
       };
+      this.vagonesAgregados = [];
+
+      // Restablecer el número de identificación seleccionado
+      this.numeroIdentificacionSeleccionado = null;
+
+      // Opcional: Limpiar el localStorage si es necesario
+      localStorage.removeItem("vagonesAgregados");
+      localStorage.removeItem("formData");
     },
+
+    async submitForm() {
+      const vagonesJson = localStorage.getItem("vagonesAgregados");
+      if (vagonesJson) {
+        const vagones = JSON.parse(vagonesJson);
+        for (const vagon in vagones) {
+          console.log(vagon["datos"]);
+        }
+        try {
+          for (const vagon of vagones) {
+            // Acceder a los datos del vagón
+            await axios.post("/ufc/en-trenes/", vagon.datos); // Enviar los datos al servidor
+          }
+          Swal.fire(
+            "Agregado!",
+            "El formulario sido añadido exitosamente.",
+            "success"
+          );
+        } catch (error) {
+          console.error("Error al agregar el formulario:", error);
+          Swal.fire(
+            "Error",
+            "Hubo un error al agregar el formulario.",
+            "error"
+          );
+        }
+
+        this.resetForm();
+      } else {
+        Swal.fire("Error", "No hay vagones para agregar", "error");
+      }
+    },
+
+    onVagonChange(event) {
+      // Obtener el ID seleccionado
+      const selectedId = this.formData.equipo_vagon;
+
+      // Buscar el objeto correspondiente en equipos_vagones
+      const selectedVagon = this.equipos_vagones.find(
+        (vagon) => vagon.id === selectedId
+      );
+
+      // Guardar el número de identificación en una variable
+      if (selectedVagon) {
+        this.numeroIdentificacionSeleccionado =
+          selectedVagon.numero_identificacion;
+        console.log(
+          "Número de identificación seleccionado:",
+          this.numeroIdentificacionSeleccionado
+        );
+      } else {
+        this.numeroIdentificacionSeleccionado = null;
+      }
+    },
+
     async getLocomotoras() {
       try {
         const response = await axios.get(
@@ -419,6 +575,19 @@ export default {
       }
     },
 
+    async buscarEquipos() {
+      try {
+        const peticion =
+          "/api/equipos_ferroviarios/?id_tipo_equipo_territorio=" +
+          this.formData.tipo_equipo;
+        const response = await axios.get(peticion);
+        this.equipos_vagones = response.data;
+      } catch (error) {
+        console.error("Error al obtener los equipos:", error);
+        Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
+      }
+    },
+
     async getEntidades() {
       try {
         const response = await axios.get("/api/entidades/");
@@ -427,6 +596,10 @@ export default {
         console.error("Error al obtener las entidades:", error);
         Swal.fire("Error", "Hubo un error al obtener las entidades.", "error");
       }
+    },
+    volverEnTren() {
+      // Redirige a la vista "AdicionarProductoVagon"
+      this.$router.push({ name: "InformeOperativo" });
     },
 
     async getPuertos() {
@@ -451,12 +624,53 @@ export default {
 
     async getProductos() {
       try {
-        const response = await axios.get("/api/productos/");
+        const response = await axios.get("/ufc/producto-vagon/");
         this.productos = response.data;
       } catch (error) {
         console.error("Error al obtener los productos:", error);
         Swal.fire("Error", "Hubo un error al obtener los productos.", "error");
       }
+    },
+    abrirModalAgregarProducto() {
+      // Redirige a la vista "AdicionarProductoVagon"
+      localStorage.setItem("formData", JSON.stringify(this.formData));
+      this.$router.push({ name: "AdicionarProductoVagon" });
+    },
+
+    agregarVagon() {
+      // Validar que no se exceda la cantidad máxima de vagones
+      if (this.vagonesAgregados.length >= this.formData.cantidad_vagones) {
+        Swal.fire(
+          "Error",
+          "Ya has agregado la cantidad máxima de vagones permitida.",
+          "error"
+        );
+        return;
+      }
+      const datosVagon = JSON.parse(JSON.stringify(this.formData));
+      // Agregar un nuevo vagón basado en los datos seleccionados
+      const nuevoVagon = {
+        datos: datosVagon,
+        vagon_id: this.numeroIdentificacionSeleccionado,
+      };
+
+      this.vagonesAgregados.push(nuevoVagon);
+
+      Swal.fire("Éxito", "Vagón agregado correctamente.", "success");
+      localStorage.setItem(
+        "vagonesAgregados",
+        JSON.stringify(this.vagonesAgregados)
+      );
+    },
+
+    eliminarVagon(index) {
+      // Eliminar un vagón de la lista
+      this.vagonesAgregados.splice(index, 1);
+      localStorage.setItem(
+        "vagonesAgregados",
+        JSON.stringify(this.vagonesAgregados)
+      );
+      Swal.fire("Éxito", "Vagón eliminado correctamente.", "success");
     },
 
     validateForm() {

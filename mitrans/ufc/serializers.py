@@ -132,10 +132,10 @@ class en_trenes_serializer(serializers.ModelSerializer):
    # tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
    # estado_name = serializers.ReadOnlyField(source='get_estado_display')
    # tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
-    producto_name = serializers.ReadOnlyField(source='producto.producto_en_vagon.producto.nombre_producto')
-    tipo_equipo_name=serializers.ReadOnlyField(source='get_tipo_equipo_display')
-   
-   
+    producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')
+    tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
+    equipo_carga_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_carga_display')
+    equipo_vagon_id=serializers.ReadOnlyField(source='equipo_vagon.numero_identificacion')
    
     class Meta:
         model = en_trenes
@@ -148,6 +148,9 @@ class en_trenes_serializer(serializers.ModelSerializer):
             'numero_identificacion_locomotora',
             'tipo_equipo', 
             'tipo_equipo_name',
+            'equipo_carga_name',
+            'equipo_vagon',
+            'equipo_vagon_id',
             'estado', 
           #  'estado_name',  
             'tipo_destino', 
@@ -177,7 +180,7 @@ class producto_vagon_serializer(serializers.ModelSerializer):
     producto_codigo = serializers.ReadOnlyField(source='producto.codigo_producto')
     tipo_embalaje_name=serializers.ReadOnlyField(source='tipo_embalaje.nombre_tipo_embalaje')
     unidad_medida_name=serializers.ReadOnlyField(source='unidad_medida.unidad_medida')
-   
+    
     class Meta:
         model = producto_en_vagon
         fields = (
@@ -192,6 +195,7 @@ class producto_vagon_serializer(serializers.ModelSerializer):
            'producto',
            'cantidad',
            'contiene',
+           'estado'
         )
         filterset_class=en_trenes_filter
         def __init__(self, *args, **kwargs):

@@ -212,7 +212,8 @@ class en_trenes_view_set(viewsets.ModelViewSet):
             queryset = queryset.select_related('producto').filter(
             Q(origen__icontains=search_term) |
             Q(destino__icontains=search_term)|
-            Q(producto__producto__nombre_producto__icontains=search_term)
+            Q(producto__producto__nombre_producto__icontains=search_term)|
+            Q(numero_identificacion_locomotora__icontains=search_term)
             
 )
         return queryset
@@ -300,8 +301,8 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
             queryset = queryset.select_related('producto').filter(
             Q(id__icontains=search_term) |
             Q(tpo_embalaje__icontains=search_term)|
-            Q(producto__producto__nombre_producto__icontains=search_term)|
-            Q(producto__producto__codigo_producto__icontains=search_term)
+            Q(producto__nombre_producto__icontains=search_term)|
+            Q(producto___codigo_producto__icontains=search_term)
             
 )
         return queryset

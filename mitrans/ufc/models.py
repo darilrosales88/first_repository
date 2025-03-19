@@ -21,7 +21,8 @@ class producto_en_vagon(models.Model):
     tipo_embalaje = models.ForeignKey(nom_tipo_embalaje, on_delete=models.CASCADE)
     unidad_medida = models.ForeignKey(nom_unidad_medida, on_delete=models.CASCADE)
     cantidad = models.IntegerField()
-    contiene=models.CharField(choices=ESTADO_CHOICES, null=True, blank=True, max_length=20)
+    estado=models.CharField(choices=ESTADO_CHOICES, null=True, blank=True, max_length=20)
+    contiene=models.CharField(choices=CONTIENE_CHOICES, null=True, blank=True, max_length=20)
     
     class Meta:
         verbose_name = "Producto en vagon"
@@ -139,7 +140,7 @@ class en_trenes(models.Model):
         blank=True,
         null=True,
     )
-    tipo_equipo=models.CharField(default="",choices=nom_tipo_equipo_ferroviario.t_equipo, max_length=50)
+    tipo_equipo=models.ForeignKey(nom_tipo_equipo_ferroviario, on_delete=models.CASCADE,default="", max_length=50)
     estado = models.CharField(default="" ,choices=ESTADO_CHOICES, max_length = 50)
     producto = models.ForeignKey(producto_en_vagon,default='', on_delete=models.CASCADE)
     
@@ -149,9 +150,8 @@ class en_trenes(models.Model):
     
     tipo_destino = models.CharField(default="",choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
     destino = models.CharField(default='',max_length=40)
-    
     cantidad_vagones=models.IntegerField(default=1,verbose_name="Cantidad de vagones")
-    
+    equipo_vagon=models.ForeignKey(nom_equipo_ferroviario, on_delete=models.CASCADE)
     observaciones = models.TextField(
         verbose_name="Observaciones",
         help_text="Ingrese observaciones adicionales. Admite letras, números y caracteres especiales.",
@@ -171,4 +171,12 @@ class en_trenes(models.Model):
     def __str__(self):
         return f"En trenes {self.id} -{self.numero_identificacion_locomotora}- {self.get_estado_display()}"
 
+""" 
+class vagon_tren(models.Model):
+    tren = models.ForeignKey(en_trenes, on_delete=models.CASCADE, related_name='vagones')
+    equipo_ferroviario=models.ForeignKey(nom_equipo_ferroviario,on_delete=models.CASCADE,related_name='equipo')
+    
+    # Otros campos del vagón, por ejemplo:
 
+    def __str__(self):
+        return f"Locomotora {self.tren.locomotora} - equipo {self.equipo_ferroviario})" """

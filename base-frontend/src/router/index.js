@@ -648,6 +648,14 @@ const routes = [
       requireLogin: true,
     },
   },
+  {
+    path: "/AdicionarProductoVagon",
+    name: "AdicionarProductoVagon",
+    component: () => import("../views/AdicionarProductoVagon.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
 ];
 
 const router = createRouter({

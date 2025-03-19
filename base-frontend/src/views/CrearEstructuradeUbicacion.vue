@@ -1,129 +1,147 @@
 <template>
-  <div class="form-container">
-    <h2>Adicionar estructura de ubicación</h2>
-    <form @submit.prevent="save_estructura" class="form-grid">
-      <div class="form-group">
-        <label for="terminal">Terminal:<span style="color: red;">*</span></label>
-        <select style="padding: 5px;" v-model="terminal" required>
-          <option v-for="terminal in terminales" :value="terminal.id" :key="terminal.id">
-            {{ terminal.nombre_terminal }}
-          </option>
-        </select>
-      </div>
+  <div>
+    <Navbar-Component />
+    
+    <div class="form-container">
+      <h3>Adicionar estructura de ubicación</h3>
+      <form @submit.prevent="save_estructura" class="form-grid">
+        <!-- Campo Terminal -->
+        
+        <div class="mb-3">
+          <label for="terminal" class="form-label">Terminal:<span style="color: red;">*</span></label>
+          <select class="form-control" id="terminal" v-model="terminal" required>
+            <option v-for="terminal in terminales" :value="terminal.id" :key="terminal.id">
+              {{ terminal.nombre_terminal }}
+            </option>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label for="tipo_estructura">Tipo de estructura:<span style="color: red;">*</span></label>
-        <select style="padding: 5px;" v-model="tipo_estructura" required>
-          <option v-for="tipo_estructura in tipos_estructuras" :value="tipo_estructura.id" :key="tipo_estructura.id">
-            {{ tipo_estructura.nombre_tipo_estructura_ubicacion }}
-          </option>
-        </select>
-      </div>
+        <!-- Campo Tipo de Estructura -->
+        <div class="mb-3">
+          <label for="tipo_estructura" class="form-label">Tipo de estructura:<span style="color: red;">*</span></label>
+          <select class="form-control" id="tipo_estructura" v-model="tipo_estructura" required>
+            <option v-for="tipo_estructura in tipos_estructuras" :value="tipo_estructura.id" :key="tipo_estructura.id">
+              {{ tipo_estructura.nombre_tipo_estructura_ubicacion }}
+            </option>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label for="tipo_estructura">Estructura padre:</label>
-        <select style="padding: 5px;" v-model="estructura_padre">
-          <option v-for="estructura in estructuras" :value="estructura.id" :key="estructura.id">
-            {{ estructura.nombre_estructura_ubicacion }}
-          </option>
-        </select>
-      </div>
+        <!-- Campo Estructura Padre -->
+        <div class="mb-3">
+          <label for="estructura_padre" class="form-label">Estructura padre:</label>
+          <select class="form-control" id="estructura_padre" v-model="estructura_padre">
+            <option v-for="estructura in estructuras" :value="estructura.id" :key="estructura.id">
+              {{ estructura.nombre_estructura_ubicacion }}
+            </option>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label for="nombre_estructura_ubicacion">Nombre:<span style="color: red;">*</span></label>
-        <input type="text" style="padding: 3px;" v-model="nombre_estructura_ubicacion" step="0.01" required />
-      </div>
+        <!-- Campo Nombre de la Estructura -->
+        <div class="mb-3">
+          <label for="nombre_estructura_ubicacion" class="form-label">Nombre:<span style="color: red;">*</span></label>
+          <input type="text" class="form-control" id="nombre_estructura_ubicacion" v-model="nombre_estructura_ubicacion" required />
+        </div>
 
-      <div class="form-group">
-        <label for="capacidad">Capacidad:<span style="color: red;">*</span></label>
-        <input style="padding: 3px;" type="number" v-model="capacidad" step="0.01" required />
-      </div>
+        <!-- Campo Capacidad -->
+        <div class="mb-3">
+          <label for="capacidad" class="form-label">Capacidad:<span style="color: red;">*</span></label>
+          <input type="number" class="form-control" id="capacidad" v-model="capacidad" step="0.01" required />
+        </div>
 
-      <div class="form-buttons">
-        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
-        <button>Aceptar</button>
-      </div>
-    </form>
+        <!-- Botones -->
+        <div class="form-buttons">
+          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button type="submit">Aceptar</button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.form-container {
-  max-width: 600px; /* Ajusta el ancho máximo del contenedor */
-  margin: 50px; /* Centra el contenedor */
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+body {
+  background-color: #F2F2F2;
 }
 
-h2 {
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+.form-container {
+  max-width: 680px; /* Ajusta el ancho máximo del contenedor */
+  margin: 20px; /* Centra el formulario */
+  padding: 20px;
+  margin-left: 220px;
+  border-radius: 8px;
+  background-color: rgb(245, 245, 245);
+}
+
+h3 {
   text-align: left;
   margin-bottom: 20px;
-  font-size: 20px;
+  font-size: 18px;
+}
+
+.form-label {
+  font-size: 14px;
+  text-align: left;
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 4 columnas de igual tamaño */
+  grid-template-columns: repeat(3, 1fr); /* 2 columnas de igual tamaño */
   gap: 15px; /* Espacio entre los elementos */
 }
 
-.form-group {
-  text-align: left;
-  width: 260px;
+.mb-3 {
+  width: 200px;
   display: flex;
   flex-direction: column;
   gap: 5px;
-  font-size: 13px;
 }
 
-label {
-  font-weight: bold;
-}
-
-input, select {
-  padding: 5px;
+.form-control {
+  padding: 1px 0px; /* Padding reducido */
+  height: 25px; /* Altura reducida */
+  font-size: 14px; /* Tamaño de fuente reducido */
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 .form-buttons {
-  grid-column: span 2; /* Los botones ocupan las 4 columnas */
+  grid-column: span 3; /* Los botones ocupan las 2 columnas */
   display: flex;
-  justify-content: end;
-  font-size: 15px;
+  justify-content: flex-end;
+  font-size: 14px;
   margin-top: 20px;
 }
 
 button {
   margin-left: 10px;
-  padding: 5px 15px;
+  padding: 6px 15px; /* Padding reducido */
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
+  font-size: 14px; /* Tamaño de fuente reducido */
 }
 
 button[type="button"] {
-  background-color: #007bff;
+  background-color: gray;
   color: white;
 }
 
 button[type="submit"] {
-  margin-left: 15px;
   background-color: #007bff;
   color: white;
 }
 </style>
-
 <script>
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import NavbarComponent from '@/components/NavbarComponent.vue';
 
 export default {
   name: 'CrearEstructuradeUbicacion',
+  components: {
+    NavbarComponent,
+  },
   data() {
     return {
       terminales: [], // Almacena las terminales obtenidas

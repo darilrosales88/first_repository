@@ -1,123 +1,141 @@
 <template>
-  <div class="form-container">
-    <h2>Adicionar Puerto</h2>
-    <form @submit.prevent="saveItem" class="form-grid">
-      <!-- Campo Nombre del Puerto -->
-      <div class="form-group">
-        <label for="nombre_puerto">Nombre del Puerto:<span style="color: red;">*</span></label>
-        <input type="text" style="padding: 3px;" v-model="nombre_puerto" required />
-      </div>
+  <div>
+    <Navbar-Component />
+    
+    <div class="form-container">
+      <h3>Adicionar Puerto</h3>
+      <form @submit.prevent="saveItem" class="form-grid">
+        <!-- Campo Nombre del Puerto -->
+       
+        <div class="mb-3">
+          <label for="nombre_puerto" class="form-label">Nombre del Puerto:<span style="color: red;">*</span></label>
+          <input type="text" class="form-control" id="nombre_puerto" v-model="nombre_puerto" required />
+        </div>
 
-      <!-- Campo País -->
-      <div class="form-group">
-        <label for="pais">País:<span style="color: red;">*</span></label>
-        <select v-model="pais" style="padding: 5px;" required>
-          <option v-for="item in paisOptions" :key="item.id" :value="item.id">{{ item.nombre_pais }}</option>
-        </select>
-      </div>
+        <!-- Campo País -->
+        <div class="mb-3">
+          <label for="pais" class="form-label">País:<span style="color: red;">*</span></label>
+          <select class="form-control" id="pais" v-model="pais" required>
+            <option v-for="item in paisOptions" :key="item.id" :value="item.id">{{ item.nombre_pais }}</option>
+          </select>
+        </div>
 
-      <!-- Campo Provincia -->
-      <div class="form-group">
-        <label for="provincia">Provincia:</label>
-        <select v-model="provincia" style="padding: 5px;">
-          <option v-for="item in provinciaOptions" :key="item.id" :value="item.id">{{ item.nombre_provincia }}</option>
-        </select>
-      </div>
+        <!-- Campo Provincia -->
+        <div class="mb-3">
+          <label for="provincia" class="form-label">Provincia:</label>
+          <select class="form-control" id="provincia" v-model="provincia">
+            <option v-for="item in provinciaOptions" :key="item.id" :value="item.id">{{ item.nombre_provincia }}</option>
+          </select>
+        </div>
 
-      <!-- Campo Servicio Portuario -->
-      <div class="form-group">
-        <label for="servicio_portuario">Servicio Portuario:</label>
-        <select v-model="servicio_portuario" style="padding: 5px;">
-          <option v-for="item in servicioPortuarioOptions" :key="item.id" :value="item.id">{{ item.nombre_territorio }}</option>
-        </select>
-      </div>
+        <!-- Campo Servicio Portuario -->
+        <div class="mb-3">
+          <label for="servicio_portuario" class="form-label">Servicio Portuario:</label>
+          <select class="form-control" id="servicio_portuario" v-model="servicio_portuario">
+            <option v-for="item in servicioPortuarioOptions" :key="item.id" :value="item.id">{{ item.nombre_territorio }}</option>
+          </select>
+        </div>
 
-      <!-- Campo Latitud -->
-      <div class="form-group">
-        <label for="latitud">Latitud:</label>
-        <input type="text" style="padding: 3px;" v-model="latitud" required />
-      </div>
+        <!-- Campo Latitud -->
+        <div class="mb-3">
+          <label for="latitud" class="form-label">Latitud:</label>
+          <input type="text" class="form-control" id="latitud" v-model="latitud" required />
+        </div>
 
-      <!-- Campo Longitud -->
-      <div class="form-group">
-        <label for="longitud">Longitud:</label>
-        <input type="text" style="padding: 3px;" v-model="longitud" required />
-      </div>
+        <!-- Campo Longitud -->
+        <div class="mb-3">
+          <label for="longitud" class="form-label">Longitud:</label>
+          <input type="text" class="form-control" id="longitud" v-model="longitud" required />
+        </div>
 
-      <div class="form-buttons">
-        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
-        <button>Aceptar</button>
-      </div>
-    </form>
+        <!-- Botones -->
+        <div class="form-buttons">
+          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button type="submit">Aceptar</button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.form-container {
-  max-width: 600px; /* Ajusta el ancho máximo del contenedor */
-  margin: 50px; /* Centra el contenedor */
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+body {
+  background-color: #F2F2F2;
 }
 
-h2 {
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+.form-container {
+  max-width: 670px; /* Ancho reducido */
+  margin: 20px ; /* Centra el formulario */
+  padding: 20px;
+  margin-left: 220px;
+  background-color: rgb(245, 245, 245);
+  border-radius: 8px;
+ 
+}
+
+h3 {
   text-align: left;
   margin-bottom: 20px;
-  font-size: 20px;
+  font-size: 18px;
 }
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 4 columnas de igual tamaño */
-  gap: 15px; /* Espacio entre los elementos */
-}
-
-.form-group {
+.form-label{
+  font-size: 14px;
   text-align: left;
-  width: 260px;
+}
+form {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  font-size: 14px;
+  gap: 15px;
 }
 
-label {
-  font-weight: bold;
+.form-row {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 2 columnas de igual tamaño */
+  gap: 15px; /* Espacio entre los elementos */
+}
+.mb-3 {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
 }
 
-input, select {
-  padding: 5px;
+.form-control {
+  padding: 1px 0px; /* Padding reducido */
+  height: 25px; /* Altura reducida */
+  font-size: 14px; /* Tamaño de fuente reducido */
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 .form-buttons {
-  grid-column: span 2; /* Los botones ocupan las 4 columnas */
+  grid-column: span 3; /* Los botones ocupan las 2 columnas */
   display: flex;
-  justify-content: end;
-  font-size: 15px;
+  justify-content: flex-end;
+  font-size: 14px;
   margin-top: 20px;
 }
 
 button {
   margin-left: 10px;
-  padding: 5px 15px;
+  padding: 6px 15px; /* Padding reducido */
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
+  font-size: 14px; /* Tamaño de fuente reducido */
 }
 
 button[type="button"] {
-  background-color: #007bff;
+  background-color: gray;
   color: white;
 }
 
 button[type="submit"] {
-  margin-left: 15px;
   background-color: #007bff;
   color: white;
 }
@@ -127,8 +145,12 @@ button[type="submit"] {
 <script>
 import Swal from 'sweetalert2';
 import axios from 'axios';
+import NavbarComponent from '@/components/NavbarComponent.vue';
 
 export default {
+  components: {
+    NavbarComponent,
+  },
   data() {
     return {
       nombre_puerto: '',

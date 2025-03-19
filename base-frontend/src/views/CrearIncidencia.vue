@@ -1,117 +1,138 @@
 <template>
-  <div class="form-container">
-    <h2>Adicionar Incidencia</h2>
-    <form @submit.prevent="save_incidencia">
-      <div class="form-group">
-        <label for="codigo_incidencia">Código de Incidencia:<span style="color: red;">*</span></label>
-        <input type="text" style="padding: 3px;" v-model="codigo_incidencia" required />
-      </div>
+  <div>
+    <Navbar-Component />
+    
+    <div class="form-container">
+      <h3>Adicionar Incidencia</h3>
+      <form @submit.prevent="save_incidencia">
+        <!-- Campo Código de Incidencia -->
+        <div class="form-row">
+        <div class="mb-3">
+          <label for="codigo_incidencia" class="form-label">Código de Incidencia:<span style="color: red;">*</span></label>
+          <input type="text" class="form-control" id="codigo_incidencia" v-model="codigo_incidencia" required />
+        </div>
 
-      <div class="form-group">
-        <label for="nombre_incidencia">Nombre:<span style="color: red;">*</span></label>
-        <input type="text" style="padding: 3px;" v-model="nombre_incidencia" required />
-      </div>
+        <!-- Campo Nombre de la Incidencia -->
+        <div class="mb-3">
+          <label for="nombre_incidencia" class="form-label">Nombre:<span style="color: red;">*</span></label>
+          <input type="text" class="form-control" id="nombre_incidencia" v-model="nombre_incidencia" required />
+        </div>
 
-      <div class="form-group">
-        <label for="tipo_imputable">Tipo Imputable:</label>
-        <select style="padding: 5px;" v-model="tipo_imputable" required>
-          <option value="-">-</option>
-          <option value="imputables_buque">Imputables al buque</option>
-          <option value="imputables_puerto">Imputables al puerto</option>
-          <option value="imputables_receptor">Imputables al receptor</option>
-          <option value="imputables_otras_causas">Imputables a otras causas</option>
-          <option value="imputables_imp_exp">Imputables al importador / exportador</option>
-          <option value="imputables_aut_portuarias">Imputables a las autoridades portuarias</option>
-        </select>
-      </div>
-
-      <div class="form-buttons">
-        <button type="button">
-          <router-link style="color:white;text-decoration:none" to="/Incidencias">Cancelar</router-link>
-        </button>
-        <button type="submit">Aceptar</button>
-      </div>
-    </form>
+        <!-- Campo Tipo Imputable -->
+        <div class="mb-3">
+          <label for="tipo_imputable" class="form-label">Tipo Imputable:</label>
+          <select class="form-control" id="tipo_imputable" v-model="tipo_imputable" required>
+            <option value="-">-</option>
+            <option value="imputables_buque">Imputables al buque</option>
+            <option value="imputables_puerto">Imputables al puerto</option>
+            <option value="imputables_receptor">Imputables al receptor</option>
+            <option value="imputables_otras_causas">Imputables a otras causas</option>
+            <option value="imputables_imp_exp">Imputables al importador / exportador</option>
+            <option value="imputables_aut_portuarias">Imputables a las autoridades portuarias</option>
+          </select>
+        </div>
+</div>
+        <!-- Botones -->
+        <div class="form-buttons">
+          <button type="button">
+            <router-link style="color:white;text-decoration:none" to="/Incidencias">Cancelar</router-link>
+          </button>
+          <button type="submit">Aceptar</button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.form-container {
-  max-width: 300px;
-  margin: 50px;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+body {
+  background-color: #F2F2F2;
 }
 
+.form-container {
+  max-width: 600px; /* Ancho reducido */
+  margin: 20px ; /* Centra el formulario */
+  padding: 20px;
+  margin-left: 220px;
+  background-color: rgb(245, 245, 245);
+  border-radius: 8px;
+ 
+}
 
-h2 {
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+h3 {
   text-align: left;
   margin-bottom: 20px;
-  font-size: 20px;
+  font-size: 18px;
 }
-
+.form-label{
+  font-size: 14px;
+  text-align: left;
+}
 form {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
-.form-group {
-  text-align: left;
+.form-row {
   display: flex;
-  width: 260px;
+  flex-direction: row;
+  gap: 15px;
+}
+
+.mb-3 {
+  width: 200px;
+  display: flex;
   flex-direction: column;
-  gap: 5px;
-  font-size: 14px;
 }
 
-label {
-  font-weight: bold;
-}
-
-input, select {
-  padding: 5px;
+.form-control {
+  padding: 1px 0px; /* Padding reducido */
+  height: 25px; /* Altura reducida */
+  font-size: 14px; /* Tamaño de fuente reducido */
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 .form-buttons {
   display: flex;
-  justify-content: end;
-  font-size: 15px;
+  justify-content: flex-end;
+  font-size: 14px;
 }
 
 button {
   margin-left: 10px;
-  padding: 5px 15px;
+  padding: 6px 15px; /* Padding reducido */
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
+  font-size: 14px; /* Tamaño de fuente reducido */
 }
 
 button[type="button"] {
-  background-color: #007bff;
+  background-color: gray;
   color: white;
 }
 
 button[type="submit"] {
-  margin-left: 15px;
   background-color: #007bff;
   color: white;
 }
 </style>
 
 
+
 <script>
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import NavbarComponent from '@/components/NavbarComponent.vue';
 
 export default {
   name: 'CrearIncidencia',
+  components: {
+    NavbarComponent,
+  },
   data() {
     return {
       codigo_incidencia: '',

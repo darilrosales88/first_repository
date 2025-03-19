@@ -1,20 +1,26 @@
 <template>
+  <div>
+    <Navbar-Component />
+    
     <div class="form-container">
-      <h2>Editar Incidencia</h2>
-      <form @submit.prevent="update_incidencia">
-        <div class="form-group">
-          <label for="codigo_incidencia">Código de Incidencia:</label>
-          <input type="text" style="padding: 3px;" v-model="codigo_incidencia" required />
+      <h3 style="color: #002A68;">Editar Incidencia</h3>
+      <form @submit.prevent="update_incidencia" class="form-grid">
+        <!-- Campo Código de Incidencia -->
+        <div class="mb-3">
+          <label for="codigo_incidencia" class="form-label">Código de Incidencia:<span style="color: red;">*</span></label>
+          <input type="text" class="form-control" id="codigo_incidencia" v-model="codigo_incidencia" required />
         </div>
-  
-        <div class="form-group">
-          <label for="nombre_incidencia">Nombre:</label>
-          <input type="text" style="padding: 3px;" v-model="nombre_incidencia" required />
+
+        <!-- Campo Nombre de Incidencia -->
+        <div class="mb-3">
+          <label for="nombre_incidencia" class="form-label">Nombre:<span style="color: red;">*</span></label>
+          <input type="text" class="form-control" id="nombre_incidencia" v-model="nombre_incidencia" required />
         </div>
-  
-        <div class="form-group">
-          <label for="tipo_imputable">Tipo Imputable:</label>
-          <select style="padding: 5px;" v-model="tipo_imputable" required>
+
+        <!-- Campo Tipo Imputable -->
+        <div class="mb-3">
+          <label for="tipo_imputable" class="form-label">Tipo Imputable:<span style="color: red;">*</span></label>
+          <select class="form-control" id="tipo_imputable" v-model="tipo_imputable" required>
             <option value="-">-</option>
             <option value="imputables_buque">Imputables al buque</option>
             <option value="imputables_puerto">Imputables al puerto</option>
@@ -24,31 +30,41 @@
             <option value="imputables_aut_portuarias">Imputables a las autoridades portuarias</option>
           </select>
         </div>
-  
+
+        <!-- Botones -->
         <div class="form-buttons">
-        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
-        <button>Aceptar</button>
-      </div>
+          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button type="submit">Aceptar</button>
+        </div>
       </form>
     </div>
-  </template>
-  
-  <style scoped>
-.form-container {
-  max-width: 300px;
-  margin: 50px;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  </div>
+</template>
+
+<style scoped>
+body {
+  background-color: #F2F2F2;
 }
 
+.form-container {
+  max-width: 680px; /* Ancho reducido */
+  margin: 20px; /* Centra el formulario */
+  padding: 20px;
+  margin-left: 220px;
+  background-color: rgb(245, 245, 245);
+  border-radius: 8px;
+ 
+}
 
-h2 {
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+h3 {
   text-align: left;
   margin-bottom: 20px;
-  font-size: 20px;
+  font-size: 18px;
+}
+
+.form-label {
+  font-size: 14px;
+  text-align: left;
 }
 
 form {
@@ -57,47 +73,57 @@ form {
   gap: 15px;
 }
 
-.form-group {
-  text-align: left;
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 2 columnas de igual tamaño */
+  gap: 15px; /* Espacio entre los elementos */
+}
+
+.mb-3 {
+  width: 200px;
   display: flex;
-  width: 260px;
   flex-direction: column;
   gap: 5px;
-  font-size: 14px;
 }
 
-label {
-  font-weight: bold;
-}
-
-input, select {
-  padding: 5px;
+.form-control {
+  padding: 1px 0px; /* Padding reducido */
+  height: 25px; /* Altura reducida */
+  font-size: 14px; /* Tamaño de fuente reducido */
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 2px;
+  color: #000; /* Asegura que el texto sea negro */
+  background-color: #fff; /* Asegura que el fondo sea blanco */
+}
+
+select option {
+  color: #000; /* Asegura que el texto de las opciones sea negro */
+  background-color: #fff; /* Asegura que el fondo de las opciones sea blanco */
 }
 
 .form-buttons {
+  grid-column: span 3; /* Los botones ocupan las 2 columnas */
   display: flex;
-  justify-content: end;
-  font-size: 15px;
+  justify-content: flex-end;
+  font-size: 14px;
 }
 
 button {
   margin-left: 10px;
-  padding: 5px 15px;
+  padding: 6px 15px; /* Padding reducido */
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
+  font-size: 14px; /* Tamaño de fuente reducido */
 }
 
 button[type="button"] {
-  background-color: #007bff;
+  background-color: gray;
   color: white;
 }
 
 button[type="submit"] {
-  margin-left: 15px;
   background-color: #007bff;
   color: white;
 }
@@ -107,9 +133,13 @@ button[type="submit"] {
   <script>
   import axios from 'axios';
   import Swal from 'sweetalert2';
-  
+  import NavbarComponent from '@/components/NavbarComponent.vue';
+
   export default {
     name: 'EditarIncidencia',
+    components: {
+    NavbarComponent,
+  },
     data() {
       return {
         codigo_incidencia: '',

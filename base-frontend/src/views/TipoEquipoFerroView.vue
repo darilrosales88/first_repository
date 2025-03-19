@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div style=" background-color: #003366; color: white; text-align: right;">
+    <div style=" background-color: #002A68; color: white; text-align: right;">
       <h6>Bienvenido: </h6>
     </div>  
     <br />
@@ -9,6 +9,8 @@
     <br />
 <div class="search-container">
       <form class="d-flex search-form" @submit.prevent="search_tipo_equipo">
+        <div class="input-container">
+          <i class="bi bi-search"></i>
         <input
           class="form-control form-control-sm me-2"
           type="search"
@@ -16,8 +18,9 @@
           aria-label="Buscar"
           v-model="searchQuery"
           @input="handleSearchInput"
-          style="width: 200px;"
+          style="width: 200px; padding-left: 5px;margin-top: -70px;" 
         />
+      </div>
       </form>
     </div>
     <div class="create-button-container">
@@ -25,48 +28,46 @@
         <i class="bi bi-plus-circle large-icon"></i>
       </router-link>
     </div>
-    <h6 style="margin-top: -31px; font-size: 19px;
-    margin-right: 440px;">Listado de tipos de equipos ferroviarios:</h6>
+    <h3 style="margin-top: -33px; font-size: 18px;
+    margin-right: 440px;color: #002A68;">Listado de tipos de equipos ferroviarios</h3>
     <br />
     <div class="table-container">
 <table class="table">
 <thead>
   <tr>
-    <th scope="col" v-if="showNoId">No</th>
     <th scope="col">Tipo de equipo</th>
     <th scope="col">Tipo de carga</th>
-    <th scope="col" v-if="showNoId">Tipo de combustible</th>
-    <th scope="col" v-if="showNoId">Longitud</th>
-    <th scope="col" v-if="showNoId">Peso neto sin carga</th>
-    <th scope="col" v-if="showNoId">Peso máximo con carga</th>
-    <th scope="col" v-if="showNoId">Capacidad cúbica máxima</th>
+    <th scope="col">Tipo de combustible</th>
+    <th scope="col">Longitud</th>
+    <th scope="col">Peso neto sin carga</th>
+    <th scope="col">Peso máximo con carga</th>
+    <th scope="col">Capacidad cúbica máxima</th>
     <th scope="col">Descripción</th>
     <th scope="col" v-if="hasGroup('Admin')">Acciones</th>
   </tr>
 </thead>
 <tbody>
-  <tr v-for="(item, index) in tipos_equipos" :key="item.id">
-    <th v-if="showNoId" scope="row" style="background-color: white;">{{ (index + 1) }}</th>
+  <tr v-for="(item) in tipos_equipos" :key="item.id">
     <td>{{ getTipoEquipoText(item.tipo_equipo) }}</td>
     <td>{{ getTipoCargaText( item.tipo_carga) }}</td>
-    <td v-if="showNoId">{{ getTipoCombustibleText(item.tipo_combustible )}}</td>
-    <td v-if="showNoId">{{ item.longitud }}</td>
-    <td v-if="showNoId">{{ item.peso_neto_sin_carga }}</td>
-    <td v-if="showNoId">{{ item.peso_maximo_con_carga }}</td>
-    <td v-if="showNoId">{{ item.capacidad_cubica_maxima }}</td>
+    <td >{{ getTipoCombustibleText(item.tipo_combustible )}}</td>
+    <td >{{ item.longitud }}</td>
+    <td >{{ item.peso_neto_sin_carga }}</td>
+    <td >{{ item.peso_maximo_con_carga }}</td>
+    <td >{{ item.capacidad_cubica_maxima }}</td>
     <td>{{ item.descripcion }}</td>
     <td >
-              <button @click="toggleNoIdVisibility" class="btn btn-info btn-small btn-eye" 
+              <button @click="openTipoEquipoFerroDetailsModal(item)" class="btn btn-info btn-small btn-eye" 
               v-html="showNoId ? '<i class=\'bi bi-eye-slash-fill\'></i>' : '<i class=\'bi bi-eye-fill\'></i>'">
               </button>
               <span v-if="hasGroup('Admin')">
                 <button class="btn btn-warning btn-small">
                   <router-link :to="{name: 'EditarTipoEquipoFerro', params: {id:item.id}}">
-                    <i style="color:white" class="bi bi-pencil-square"></i>
+                    <i style="color:black" class="bi bi-pencil-square"></i>
                   </router-link>
                 </button>
-                <button style="margin-left:10px" @click.prevent="confirmDelete(item.id)" class="btn btn-danger btn-small">
-                  <i style="color:white" class="bi bi-trash"></i>
+                <button  @click.prevent="confirmDelete(item.id)" class="btn btn-danger btn-small">
+                  <i  class="bi bi-trash"></i>
                 </button>
               </span>
             </td>
@@ -81,7 +82,7 @@
 <style scoped>
 
 .search-container input::placeholder {
-  font-size: 12px; 
+  font-size: 14px; 
   color: #999;   
 }
 
@@ -99,6 +100,19 @@ body {
   overflow-x: auto;
   max-width: 100%;
 }
+.input-container {
+  position: relative;
+  display: inline-block;
+}
+
+.input-container .bi {
+  position: absolute;
+  left: 180px;
+  color: #999;
+  margin-top: -55px;
+  transform: translateY(-50%);
+  pointer-events: none; /* Para que el ícono no interfiera con el clic en el input */
+}
 .large-icon {
   font-size: 1.7rem; /* Tamaño del ícono */
 }
@@ -106,9 +120,8 @@ table {
   width: 84%;
   border-collapse: collapse;
   margin-left: 190px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   font-size: 0.875rem;
-  min-width: 300px;
 }
 
 th, td {
@@ -116,28 +129,43 @@ th, td {
   white-space: nowrap;
 }
 
+
 th {
   background-color: #f2f2f2;
 }
 
 .btn {
   cursor: pointer;
-  font-weight: bold;
 }
 
 .btn-small {
-  padding: 0.25rem 0.45rem;
-  font-size: 0.875rem;
+  font-size: 22px; /* Aumenta el tamaño del ícono */
+  color: black;
+  margin-right: 5px;
+  outline: none; /* Elimina el borde de foco */
+  border: none;
+  background: none; /* Elimina el fondo */
+  padding: 0; /* Elimina el padding para que solo se vea el ícono */
 }
 .btn-eye {
-  background-color: rgb(0, 71, 163);
-  margin-right: 10px;
-  color: white;
+  font-size: 22px; /* Aumenta el tamaño del ícono */
+  margin-right: 5px;
+  outline: none; /* Elimina el borde de foco */
   border: none;
+  background: none; /* Elimina el fondo */
+  padding: 0; /* Elimina el padding para que solo se vea el ícono */
+}
+.btn:hover {
+  background: none; /* Asegura que no haya fondo al hacer hover */
+}
+
+.btn:focus {
+  outline: none; /* Elimina el borde de foco al hacer clic */
+  box-shadow: none; /* Elimina cualquier sombra de foco en algunos navegadores */
 }
 
 .create-button-container {
-  margin-top: -40px;
+  margin-top: -80px;
   text-align: left;
 }
 
@@ -154,6 +182,7 @@ th {
   }
 }
 </style>
+
 
 
 <script>
@@ -324,6 +353,50 @@ export default {
       };
       return tiposCombustible[value] || 'Desconocido';
     },
+    openTipoEquipoFerroDetailsModal(TipoEquipoFerro) {
+    // Mapear IDs de grupos a nombres
+    const gruposAsignados = TipoEquipoFerro.groups && TipoEquipoFerro.groups.length > 0
+        ? TipoEquipoFerro.groups
+            .map(groupId => {
+                const grupo = this.gruposDisponibles.find(g => g.id === groupId);
+                return grupo ? grupo.name : 'Desconocido';
+            })
+            .join(', ')
+        : 'Ninguno';
+
+    // Mapear IDs de permisos a nombres
+    const permisosAsignados = TipoEquipoFerro.TipoEquipoFerro_permissions && 
+    TipoEquipoFerro.TipoEquipoFerro_permissions.length > 0 
+    ? TipoEquipoFerro.TipoEquipoFerro_permissions
+            .map(permisoId => {
+                const permiso = this.permisosDisponibles.find(p => p.id === permisoId);
+                return permiso ? permiso.name : 'Desconocido';
+            })
+            .join(', ')
+        : 'Ninguno';
+
+    Swal.fire({
+        title: 'Detalles del Atraque',
+        html: `
+            <div style="text-align: left;">
+                <p><strong>Tipo de equipo:</strong> ${TipoEquipoFerro.tipo_equipo}</p>
+                <p><strong>Tipo de carga:</strong> ${TipoEquipoFerro.tipo_carga}</p>
+                <p><strong>Tipo de combustible:</strong> ${TipoEquipoFerro.tipo_combustible}</p>
+                 <p><strong>Logitud:</strong> ${TipoEquipoFerro.longitud}</p>
+                <p><strong>Peso neto sin carga:</strong> ${TipoEquipoFerro.peso_neto_sin_carga}</p>
+                <p><strong>Peso máximo con carga:</strong> ${TipoEquipoFerro.peso_maximo_con_carga}</p>
+                 <p><strong>Capacidad cúbica máxima:</strong> ${TipoEquipoFerro.capacidad_cubica_maxima}</p>
+                <p><strong>Descripción:</strong> ${TipoEquipoFerro.descripcion}</p>
+            </div>
+        `,
+        width: '600px',
+        customClass: {
+            popup: 'custom-swal-popup',
+            title: 'custom-swal-title',
+            htmlContainer: 'custom-swal-html',
+        },
+    });
+},
   },
 };
 </script>

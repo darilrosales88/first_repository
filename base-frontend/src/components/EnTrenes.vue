@@ -76,7 +76,9 @@
                     class="btn btn-warning bt n-small"
                     style="margin-left: 3%"
                   >
-                    <router-link>
+                    <router-link
+                      :to="{ name: 'EditarEnTren', params: { id: tren.id } }"
+                    >
                       <i style="color: white" class="bi bi-pencil-square"></i>
                     </router-link>
                   </button>

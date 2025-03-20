@@ -199,10 +199,11 @@ class productos_vagones_cargados_descargados_view_set(viewsets.ModelViewSet):
     
 #/********************************************************EN_TRENES*********************************************************************
 class en_trenes_view_set(viewsets.ModelViewSet):
-    queryset = en_trenes.objects.all() # Definir el queryset
+    queryset = en_trenes.objects.all().order_by('-id') # Definir el queryset
     serializer_class = en_trenes_serializer
     permission_classes = [IsUFCPermission]
-
+    ordering_fields = ['id'] 
+    ordering = ['-id']  # Orden por defecto (descendente por id)
     def get_queryset(self):
         queryset = super().get_queryset()
         search_term = self.request.query_params.get('origen_destino', None)

@@ -1,2 +1,8 @@
 #Que sentido tiene que en el endpoint de trenes se especifique el id de la locomotora y despues el tipo de equipo ferroviario
 #Los productos del formulario mio de entrenes_ son los productos cargados descargados , o son los productos normales
+
+
+----------
+-Listar los trenes en orden descendente
+-En el campo de introduccion del producto cuando se quiera agregar que se vea en un modal.
+-Cambiar el listar "Locomotora"

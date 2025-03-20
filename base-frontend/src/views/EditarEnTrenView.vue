@@ -3,7 +3,7 @@
   <Producto-Vagones />
   <div class="container mt-5" style="padding-left: 20%">
     <div class="row mb-4">
-      <h2 class="mb-4">Nuevo registro de vagón</h2>
+      <h2 class="mb-4">Editar vagón</h2>
       <form @submit.prevent="submitForm">
         <div class="row">
           <!-- Columna 1 -->
@@ -133,7 +133,6 @@
                 id="equipo_vagon"
                 name="equipo_vagon"
                 required
-                @click="onVagonChange"
               >
                 <option v-for="item in equipos_vagones" :value="item.id">
                   {{ item.id }}-{{ item.numero_identificacion }}
@@ -240,18 +239,6 @@
             </div>
 
             <!-- Campo: cantidad_vagones -->
-            <div class="mb-3">
-              <label for="cantidad_vagones" class="form-label"
-                >Cantidad de Vagones</label
-              >
-              <input
-                type="number"
-                class="form-control"
-                v-model="formData.cantidad_vagones"
-                id="cantidad_vagones"
-                name="cantidad_vagones"
-              />
-            </div>
 
             <!-- Campo: observaciones -->
             <div class="mb-3">
@@ -273,63 +260,12 @@
         <!-- Botón de envío -->
       </form>
       <div class="text-center">
-        <button @click="agregarVagon" class="btn btn-primary">
-          Agregar Vagon
-        </button>
         <button @click="submitForm" class="btn btn-primary">Guardar</button>
         <button @click="volverEnTren" class="btn btn-secondary">Volver</button>
       </div>
     </div>
 
     <!-- Segunda fila: Lista de vagones -->
-    <div class="row">
-      <div class="col-md-12">
-        <h3>Vagones agregados</h3>
-        <table class="table table-striped">
-          <thead>
-            <tr>
-              <th>No.</th>
-              <th>No. ID en trenes</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(vagon, index) in vagonesAgregados" :key="index">
-              <td>{{ index + 1 }}</td>
-              <td>
-                {{ vagon["datos"]["equipo_vagon"] }}-{{ vagon["vagon_id"] }}
-              </td>
-              <td>
-                <button
-                  class="btn btn-danger btn-sm"
-                  @click="eliminarVagon(index)"
-                >
-                  Eliminar
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- Validación de cantidad de vagones -->
-        <div v-if="vagonesAgregados.length < formData.cantidad_vagones">
-          <p class="text-warning">
-            Faltan
-            {{ formData.cantidad_vagones - vagonesAgregados.length }} vagones
-            por agregar.
-          </p>
-        </div>
-        <div v-else-if="vagonesAgregados.length === formData.cantidad_vagones">
-          <p class="text-success">Todos los vagones han sido agregados.</p>
-        </div>
-        <div v-else>
-          <p class="text-danger">
-            Se han agregado más vagones de los permitidos. Por favor, elimina
-            los excedentes.
-          </p>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -430,7 +366,6 @@ export default {
         tipo_destino: "ac_ccd",
         destino: "",
         producto: "",
-        cantidad_vagones: 0,
         observaciones: "",
         equipo_vagon: "",
       },
@@ -440,8 +375,7 @@ export default {
       locomotoras: [],
       puertos: [],
       entidades: [],
-      vagonesAgregados: [],
-      numeroIdentificacionSeleccionado: null,
+      vagon: [],
     };
   },
 
@@ -453,6 +387,7 @@ export default {
     this.getEntidades();
     this.getPuertos();
     this.buscarEquipos();
+    this.getTren();
   },
 
   methods: {
@@ -483,49 +418,53 @@ export default {
         tipo_destino: "ac_ccd",
         destino: "",
         producto: "",
-        cantidad_vagones: 0,
         observaciones: "",
         equipo_vagon: "",
       };
-      this.vagonesAgregados = [];
 
       // Restablecer el número de identificación seleccionado
-      this.numeroIdentificacionSeleccionado = null;
 
       // Opcional: Limpiar el localStorage si es necesario
-      localStorage.removeItem("vagonesAgregados");
-      localStorage.removeItem("formData");
+    },
+    async getTren() {
+      this.$store.commit("setIsLoading", true);
+      const vagon_id = this.$route.params.id;
+      try {
+        const response = await axios.get(`/ufc/en-trenes/${vagon_id}/`);
+        this.vagon = response.data;
+        this.formData = {
+          locomotora: this.vagon["locomotora"],
+          tipo_origen: this.vagon["tipo_origen"],
+          origen: this.vagon["origen"],
+          tipo_equipo: this.vagon["tipo_equipo"],
+          estado: this.vagon["estado"],
+          tipo_destino: this.vagon["tipo_destino"],
+          destino: this.vagon["destino"],
+          producto: this.vagon["producto"],
+          observaciones: this.vagon["observaciones"],
+          equipo_vagon: this.vagon["equipo_vagon"],
+        };
+        console.log(formData);
+      } catch (error) {
+        console.error("Error al obtener el vagon:", error);
+      }
+      this.$store.commit("setIsLoading", false);
     },
 
     async submitForm() {
-      const vagonesJson = localStorage.getItem("vagonesAgregados");
-      if (vagonesJson) {
-        const vagones = JSON.parse(vagonesJson);
-        for (const vagon in vagones) {
-          console.log(vagon["datos"]);
-        }
-        try {
-          for (const vagon of vagones) {
-            // Acceder a los datos del vagón
-            await axios.post("/ufc/en-trenes/", vagon.datos); // Enviar los datos al servidor
-          }
-          Swal.fire(
-            "Agregado!",
-            "El formulario sido añadido exitosamente.",
-            "success"
-          );
-        } catch (error) {
-          console.error("Error al agregar el formulario:", error);
-          Swal.fire(
-            "Error",
-            "Hubo un error al agregar el formulario.",
-            "error"
-          );
-        }
+      try {
+        // Acceder a los datos del vagón
+        const vagon_id = this.$route.params.id;
+        await axios.patch(`/ufc/en-trenes/${vagon_id}/`, this.formData); // Enviar los datos al servidor
 
-        this.resetForm();
-      } else {
-        Swal.fire("Error", "No hay vagones para agregar", "error");
+        Swal.fire(
+          "Agregado!",
+          "El formulario sido añadido exitosamente.",
+          "success"
+        );
+      } catch (error) {
+        console.error("Error al agregar el formulario:", error);
+        Swal.fire("Error", "Hubo un error al agregar el formulario.", "error");
       }
     },
 
@@ -591,7 +530,7 @@ export default {
     },
     volverEnTren() {
       // Redirige a la vista "AdicionarProductoVagon"
-      this.$router.push({ name: "InformeOperativo" });
+      this.$router.go(-1);
     },
 
     async getPuertos() {
@@ -629,32 +568,6 @@ export default {
       this.$router.push({ name: "AdicionarProductoVagon" });
     },
 
-    agregarVagon() {
-      // Validar que no se exceda la cantidad máxima de vagones
-      if (this.vagonesAgregados.length >= this.formData.cantidad_vagones) {
-        Swal.fire(
-          "Error",
-          "Ya has agregado la cantidad máxima de vagones permitida.",
-          "error"
-        );
-        return;
-      }
-      const datosVagon = JSON.parse(JSON.stringify(this.formData));
-      // Agregar un nuevo vagón basado en los datos seleccionados
-      const nuevoVagon = {
-        datos: datosVagon,
-        vagon_id: this.numeroIdentificacionSeleccionado,
-      };
-
-      this.vagonesAgregados.push(nuevoVagon);
-
-      Swal.fire("Éxito", "Vagón agregado correctamente.", "success");
-      localStorage.setItem(
-        "vagonesAgregados",
-        JSON.stringify(this.vagonesAgregados)
-      );
-    },
-
     eliminarVagon(index) {
       // Eliminar un vagón de la lista
       this.vagonesAgregados.splice(index, 1);
@@ -667,7 +580,6 @@ export default {
 
     validateForm() {
       const nombre_atraque_regex = /^[A-Z][A-Za-z ]{2,99}$/;
-
       let errorMessage = "";
 
       if (!nombre_atraque_regex.test(this.nombre_atraque)) {

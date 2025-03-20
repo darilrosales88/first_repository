@@ -256,6 +256,14 @@ const routes = [
     },
   },
   {
+    path: "/EditarEnTren/:id/edit",
+    name: "EditarEnTren",
+    component: () => import("../views/EditarEnTrenView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
     path: "/Embarcaciones",
     name: "Embarcaciones",
     component: () => import("../views/EmbarcacionView.vue"),

@@ -1,43 +1,60 @@
 <template>
-  <div class="form-container">
-    <h2>Adicionar Destino:</h2>
-    <form @submit.prevent="createDestino">
-      <div class="form-group">
-        <label for="cliente">Cliente:<span style="color: red;">*</span></label>
-        <select id="cliente" style="padding: 5px;" v-model="cliente" required>
-          <option value="" >-Seleccione-</option>
-          <option v-for="item in clienteOptions" :key="item.id" :value="item.id">
-            {{ item.nombre }}
-          </option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="destino">Destino:<span style="color: red;">*</span></label>
-        <input type="text" style="padding: 3px;" id="destino" v-model="destino" required />
-      </div>
-      <div class="form-buttons">
-        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
-        <button>Aceptar</button>
-      </div>
-    </form>
+  <div>
+    <Navbar-Component />
+    
+    <div class="form-container">
+      <h2>Adicionar Destino:</h2>
+      <form @submit.prevent="createDestino">
+        <div class="form-row">
+          <div class="mb-3">
+            <label for="cliente" class="form-label">Cliente:<span style="color: red;">*</span></label>
+            <select class="form-control" id="cliente" v-model="cliente" required>
+              <option value="">-Seleccione-</option>
+              <option v-for="item in clienteOptions" :key="item.id" :value="item.id">
+                {{ item.nombre }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="destino" class="form-label">Destino:<span style="color: red;">*</span></label>
+            <input type="text" class="form-control" id="destino" v-model="destino" required />
+          </div>
+        </div>
+
+        <div class="form-buttons">
+          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button type="submit">Aceptar</button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
 <style scoped>
+body {
+  background-color: #F2F2F2;
+}
+
 .form-container {
-  max-width: 450px;
-  margin: 50px;
+  max-width: 600px; /* Ancho reducido */
+  margin: 20px; /* Centra el formulario */
   padding: 20px;
-  background-color: #f9f9f9;
+  margin-left: 220px;
+  background-color: rgb(245, 245, 245);
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  
 }
 
 h2 {
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
   text-align: left;
   margin-bottom: 20px;
-  font-size: 20px;
+  font-size: 18px;
+}
+
+.form-label {
+  font-size: 14px;
+  text-align: left;
 }
 
 form {
@@ -46,50 +63,48 @@ form {
   gap: 15px;
 }
 
-.form-group {
+.form-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 14px;
+  flex-direction: row;
+  gap: 15px;
 }
 
-label {
-  flex: 1;
-  text-align: right;
-  font-weight: bold;
+.mb-3 {
+  width: 200px; /* Ajuste para que ocupe el ancho completo */
+  display: flex;
+  flex-direction: column;
 }
 
-input,
-select {
-  flex: 2;
-  padding: 8px;
+.form-control {
+  padding: 1px 0px; /* Padding reducido */
+  height: 25px; /* Altura reducida */
+  font-size: 14px; /* Tamaño de fuente reducido */
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 .form-buttons {
   display: flex;
-  justify-content: end;
-  font-size: 15px;
+  justify-content: flex-end;
+  font-size: 14px;
 }
 
 button {
   margin-left: 10px;
-  padding: 5px 15px;
+  padding: 6px 15px; /* Padding reducido */
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
+  font-size: 14px; /* Tamaño de fuente reducido */
 }
 
 button[type="button"] {
-  background-color: #007bff;
+  background-color: gray;
   color: white;
 }
 
 button[type="submit"] {
-  margin-left: 15px;
   background-color: #007bff;
   color: white;
 }
@@ -98,10 +113,13 @@ button[type="submit"] {
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
+import NavbarComponent from '@/components/NavbarComponent.vue';
 
 export default {
   name: "CrearDestinoView",
-
+  components: {
+    NavbarComponent,
+  },
   data() {
     return {
       cliente: "",

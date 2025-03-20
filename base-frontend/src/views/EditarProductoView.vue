@@ -1,119 +1,155 @@
 <template>
-  <div class="form-container">
-    <h2>Editar producto {{ producto.nombre_producto }}</h2>
-    <form @submit.prevent="submitForm">
+  <div>
+    <Navbar-Component />
+    
+    <div class="form-container">
+      <h3 style="color: #002A68;">Editar producto {{ producto.nombre_producto }}</h3>
+      <form @submit.prevent="submitForm" class="form-grid">
+        <!-- Campo Código del Producto -->
+        <div class="mb-3">
+          <label for="codigo_producto" class="form-label">Código:<span style="color: red;">*</span></label>
+          <input type="text" class="form-control" id="codigo_producto" v-model="producto.codigo_producto" required />
+          <p v-if="codigo_producto_error" class="help is-danger">{{ codigo_producto_error }}</p>
+        </div>
 
-  <div class="form-group">
-    <label for="codigo_producto">Código:</label>
-    <input style="padding: 3px;" type="text" v-model="producto.codigo_producto" required />    
-    <p v-if="codigo_producto_error" class="help is-danger">{{ codigo_producto_error }}</p>
+        <!-- Campo Nombre del Producto -->
+        <div class="mb-3">
+          <label for="nombre" class="form-label">Nombre:<span style="color: red;">*</span></label>
+          <input type="text" class="form-control" id="nombre" v-model="producto.nombre_producto" required />
+          <p v-if="nombre_producto_error" class="help is-danger">{{ nombre_producto_error }}</p>
+        </div>
+
+        <!-- Campo Tipo de Producto -->
+        <div class="mb-3">
+          <label for="tipo_producto" class="form-label">Tipo de producto:<span style="color: red;">*</span></label>
+          <select class="form-control" id="tipo_producto" v-model="producto.tipo_producto" required>
+            <option v-for="t_producto in t_producto_options" :value="t_producto.value" :key="t_producto.value">
+              {{ t_producto.text }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Campo Descripción -->
+        <div class="mb-3">
+          <label for="descripcion" class="form-label">Descripción:<span style="color: red;">*</span></label>
+          <input type="text" class="form-control" id="descripcion" v-model="producto.descripcion" required />
+          <p v-if="descripcion_error" class="help is-danger">{{ descripcion_error }}</p>
+        </div>
+
+        <!-- Botones -->
+        <div class="form-buttons">
+          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button type="submit">Aceptar</button>
+        </div>
+      </form>
+    </div>
   </div>
+</template>
 
-  <div class="form-group">
-    <label for="nombre">Nombre:</label>
-    <input style="padding: 3px;" type="text" v-model="producto.nombre_producto" required />    
-    <p v-if="nombre_producto_error" class="help is-danger">{{ nombre_producto_error }}</p>
-  </div>
+<style scoped>
+body {
+  background-color: #F2F2F2;
+}
 
-  <div class="form-group">
-    <label for="tipo_producto">Tipo de producto:</label>
-    <select style="padding: 5px;" v-model="producto.tipo_producto" required>
-      <option v-for="t_producto in t_producto_options" :value="t_producto.value" :key="t_producto.value">
-        {{ t_producto.text }}
-      </option>
-    </select>
-  </div>
+.form-container {
+  max-width: 680px; /* Ancho reducido */
+  margin: 20px; /* Centra el formulario */
+  padding: 20px;
+  margin-left: 220px;
+  background-color: rgb(245, 245, 245);
+  border-radius: 8px;
+  
+}
 
-  <div class="form-group">
-    <label for="nombre_producto">Descripción:</label>
-    <input style="padding: 3px;" type="text" v-model="producto.descripcion" required />    
-    <p v-if="descripcion_error" class="help is-danger">{{ descripcion_error }}</p>
-  </div>  
+h3 {
+  text-align: left;
+  margin-bottom: 20px;
+  font-size: 18px;
+}
 
-  <div class="form-buttons">
-        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
-        <button>Aceptar</button>
-      </div>
-  </form>
-  </div>
-  </template>
-  <style scoped>
-  .form-container {
-    max-width: 300px;
-    margin: 50px;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  
-  h2 {
-    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-    text-align: left;
-    margin-bottom: 20px;
-    font-size: 20px;
-  }
-  
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .form-group {
-    text-align: left;
-    display: flex;
-    width: 260px;
-    flex-direction: column;
-    gap: 5px;
-    font-size: 14px;
-  }
-  
-  label {
-    font-weight: bold;
-  }
-  
-  input, select {
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  
-  .form-buttons {
-    display: flex;
-    justify-content: end;
-    font-size: 15px;
-  }
-  
-  button {
-    margin-left: 10px;
-    padding: 5px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-  }
-  
-  button[type="button"] {
-    background-color: #007bff;
-    color: white;
-  }
-  
-  button[type="submit"] {
-    margin-left: 15px;
-    background-color: #007bff;
-    color: white;
-  }
-  </style>
+.form-label {
+  font-size: 14px;
+  text-align: left;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 2 columnas de igual tamaño */
+  gap: 15px; /* Espacio entre los elementos */
+}
+
+.mb-3 {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-control {
+  padding: 1px 0px; /* Padding reducido */
+  height: 25px; /* Altura reducida */
+  font-size: 14px; /* Tamaño de fuente reducido */
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  color: #000; /* Asegura que el texto sea negro */
+  background-color: #fff; /* Asegura que el fondo sea blanco */
+}
+
+select option {
+  color: #000; /* Asegura que el texto de las opciones sea negro */
+  background-color: #fff; /* Asegura que el fondo de las opciones sea blanco */
+}
+
+.form-buttons {
+  grid-column: span 3; /* Los botones ocupan las 2 columnas */
+  display: flex;
+  justify-content: flex-end;
+  font-size: 14px;
+}
+
+button {
+  margin-left: 10px;
+  padding: 6px 15px; /* Padding reducido */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px; /* Tamaño de fuente reducido */
+}
+
+button[type="button"] {
+  background-color: gray;
+  color: white;
+}
+
+button[type="submit"] {
+  background-color: #007bff;
+  color: white;
+}
+
+.help.is-danger {
+  color: red;
+  font-size: 12px;
+  margin-top: 5px;
+}
+</style>
 
   <script>
   import axios from 'axios';
 import Swal from 'sweetalert2';
+import NavbarComponent from '@/components/NavbarComponent.vue';
 
 export default {
   name: 'EditarProductoView',
-
+  components: {
+    NavbarComponent,
+  },
   data() {
     return {      
       producto: {}, 

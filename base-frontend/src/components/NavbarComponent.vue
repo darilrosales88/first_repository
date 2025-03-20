@@ -1,5 +1,19 @@
 <template>
-  <nav class="navbar" style="background-color: #003366; height: 100vh">
+  <nav class="navbar" style="background-color: #002a69; height: 100vh">
+    <div class="logo-container">
+      <img
+        class="logo"
+        style="
+          position: relative;
+          width: 146px;
+          height: 100px;
+          margin-top: -215px;
+          margin-left: 24px;
+        "
+        src="../assets/Imagenes/mitranslogo.jpg"
+        alt="Logo"
+      />
+    </div>
     <!-- Lista de elementos del menú -->
     <ul class="navbar-nav">
       <div class="home">
@@ -70,13 +84,13 @@
           </li>
           <li><hr class="dropdown-divider" /></li>
           <li>
-            <router-link class="dropdown-item" to="Destino"
+            <router-link class="dropdown-item" to="/Destino"
               >Destinos</router-link
             >
           </li>
           <li><hr class="dropdown-divider" /></li>
           <li>
-            <router-link class="dropdown-item" to="Embarcaciones"
+            <router-link class="dropdown-item" to="/Embarcaciones"
               >Embarcaciones</router-link
             >
           </li>
@@ -90,13 +104,13 @@
           </li>
           <li><hr class="dropdown-divider" /></li>
           <li>
-            <router-link class="dropdown-item" to="EstadoTecnico"
+            <router-link class="dropdown-item" to="/EstadoTecnico"
               >Estados técnicos</router-link
             >
           </li>
           <li><hr class="dropdown-divider" /></li>
           <li>
-            <router-link class="dropdown-item" to="EstructuraUbicacion"
+            <router-link class="dropdown-item" to="/EstructuraUbicacion"
               >Estructuras de ubicación</router-link
             >
           </li>
@@ -108,13 +122,15 @@
           </li>
           <li><hr class="dropdown-divider" /></li>
           <li>
-            <a class="dropdown-item" href="Organismos">OSDE/OACE u organismo</a>
+            <a class="dropdown-item" href="/Organismos"
+              >OSDE/OACE u organismo</a
+            >
           </li>
           <li><hr class="dropdown-divider" /></li>
           <li><a class="dropdown-item" href="/Paises">Países</a></li>
           <li><hr class="dropdown-divider" /></li>
           <li>
-            <router-link class="dropdown-item" to="Producto"
+            <router-link class="dropdown-item" to="/Producto"
               >Productos</router-link
             >
           </li>
@@ -122,13 +138,13 @@
           <li><a class="dropdown-item" href="/Provincia">Provincias</a></li>
           <li><hr class="dropdown-divider" /></li>
           <li>
-            <router-link class="dropdown-item" to="Puertos"
+            <router-link class="dropdown-item" to="/Puertos"
               >Puertos</router-link
             >
           </li>
           <li><hr class="dropdown-divider" /></li>
           <li>
-            <router-link class="dropdown-item" to="Terminal"
+            <router-link class="dropdown-item" to="/Terminal"
               >Terminales</router-link
             >
           </li>
@@ -150,13 +166,13 @@
           </li>
           <li><hr class="dropdown-divider" /></li>
           <li>
-            <router-link class="dropdown-item" to="TipoEstructuraUbicacion"
+            <router-link class="dropdown-item" to="/TipoEstructuraUbicacion"
               >Tipos de estructuras de ubicacion</router-link
             >
           </li>
           <li><hr class="dropdown-divider" /></li>
           <li>
-            <router-link class="dropdown-item" to="TipoManiobra"
+            <router-link class="dropdown-item" to="/TipoManiobra"
               >Tipos de maniobras</router-link
             >
           </li>
@@ -194,9 +210,7 @@
           <li><hr class="dropdown-divider" /></li>
           <li><a class="dropdown-item" href="#">ENOC</a></li>
           <li><hr class="dropdown-divider" /></li>
-          <li>
-            <router-link class="dropdown-item" to="ParteUfc">UFC</router-link>
-          </li>
+          <li><a class="dropdown-item" href="#">UFC</a></li>
           <li><hr class="dropdown-divider" /></li>
           <li><a class="dropdown-item" href="#">GEA</a></li>
           <li><hr class="dropdown-divider" /></li>
@@ -235,7 +249,7 @@
   top: 0;
   left: 0%;
   padding: 0;
-  background-color: #003366; /* Azul oscuro */
+  background-color: #002d69; /* Azul oscuro */
   transition: width 0.3s ease; /* Transición suave para el ancho */
 }
 
@@ -271,15 +285,30 @@
   color: #ff8c42 !important; /* Color naranja */
 }
 
+/* Estilos para los dropdowns */
+.nav-item.dropdown {
+  position: relative; /* Asegura que el dropdown esté posicionado relativamente al nav-item */
+}
+
 .dropdown-menu {
-  margin-left: -12px;
-  width: 200px;
-  top: 0;
-  padding: 0;
+  position: absolute; /* Posicionamiento absoluto para evitar que mueva otros elementos */
+  left: 100%; /* Coloca el dropdown a la derecha del nav-item */
+  top: 0; /* Alinea el dropdown con la parte superior del nav-item */
+  margin-left: 0; /* Elimina el margen izquierdo */
+  width: 200px; /* Ancho fijo */
   background-color: #003366; /* Azul oscuro */
   border: 1px solid #555; /* Borde gris */
   max-height: 230px; /* Altura máxima antes de mostrar el scroll */
   overflow-y: auto; /* Habilitar scroll vertical */
+  z-index: 1000; /* Asegura que el dropdown esté por encima de otros elementos */
+}
+
+/* Ajustes para pantallas pequeñas */
+@media (max-width: 992px) {
+  .dropdown-menu {
+    left: auto; /* Restablece la posición */
+    right: 100%; /* Coloca el dropdown a la izquierda del nav-item */
+  }
 }
 
 .dropdown-menu::-webkit-scrollbar {
@@ -320,6 +349,7 @@
 }
 
 .home {
+  margin-top: -300px;
   position: relative;
   font-size: 1.7rem;
 }

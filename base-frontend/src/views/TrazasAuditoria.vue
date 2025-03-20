@@ -87,36 +87,7 @@
 </style>
 
 
-<style scoped>
 
-
-th {
-  background-color: #f2f2f2;
-}
-
-.btn {
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.create-button-container {
-  margin-top: -40px;
-  text-align: left;
-}
-
-.create-button {
-  text-decoration: none;
-  color: black;
-  padding-bottom: 2em;
-}
-
-@media (max-width: 768px) {
-  .create-button-container {
-    text-align: left;
-    margin-right: 0;
-  }
-}
-</style>
 <script>
 import axios from 'axios';
 import NavbarComponent from '@/components/NavbarComponent.vue';

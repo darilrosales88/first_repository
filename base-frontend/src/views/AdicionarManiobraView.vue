@@ -1,115 +1,124 @@
 <template>
-  <div class="form-container">
-    <h2>Adicionar tipo de maniobra portuaria</h2>
-    <form @submit.prevent="save_maniobra">
-      <!-- Campo Nombre de la Maniobra -->
-      <div class="form-group">
-        <label for="nombre_maniobra">Nombre:<span style="color: red;">*</span></label>
-        <input style="padding: 3px;" type="text" v-model="nombre_maniobra" required />
-      </div>
+  <div>
+    <Navbar-Component />
+    
+    <div class="form-container">
+      <h3>Adicionar tipo de maniobra portuaria</h3>
+      <form @submit.prevent="save_maniobra">
+        <!-- Campo Nombre de la Maniobra -->
+        <div class="form-row">
+        <div class="mb-3">
+          <label for="nombre_maniobra" class="form-label">Nombre:<span style="color: red;">*</span></label>
+          <input type="text" class="form-control" id="nombre_maniobra" v-model="nombre_maniobra" required />
+        </div>
 
-      <!-- Campo Tipo de Maniobra -->
-      <div class="form-group">
-        <label for="tipo_maniobra">Tipo:<span style="color: red;">*</span></label>
-        <select style="padding: 5px;" v-model="tipo_maniobra" required>
-          <option v-for="t_maniobra in t_maniobra_options" :value="t_maniobra.value" :key="t_maniobra.value">
-            {{ t_maniobra.text }}
-          </option>
-        </select>
+        <!-- Campo Tipo de Maniobra -->
+        <div class="mb-3">
+          <label for="tipo_maniobra" class="form-label">Tipo:<span style="color: red;">*</span></label>
+          <select class="form-control" id="tipo_maniobra" v-model="tipo_maniobra" required>
+            <option v-for="t_maniobra in t_maniobra_options" :value="t_maniobra.value" :key="t_maniobra.value">
+              {{ t_maniobra.text }}
+            </option>
+          </select>
+        </div>
       </div>
-
-      <div class="form-buttons">
-        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
-        <button>Aceptar</button>
-      </div>
-    </form>
+        <!-- Botones -->
+        <div class="form-buttons">
+          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button type="submit">Aceptar</button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.form-container {
-  max-width: 450px;
-  margin: 50px;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+body {
+  background-color: #F2F2F2;
 }
 
-h2 {
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+.form-container {
+  max-width: 600px; /* Ancho reducido */
+  margin: 20px ; /* Centra el formulario */
+  padding: 20px;
+  margin-left: 220px;
+  background-color: rgb(245, 245, 245);
+  border-radius: 8px;
+ 
+}
+
+h3 {
   text-align: left;
   margin-bottom: 20px;
-  font-size: 20px;
+  font-size: 18px;
 }
-
+.form-label{
+  font-size: 14px;
+  text-align: left;
+}
 form {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
-.form-group {
+.form-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 14px;
+  flex-direction: row;
+  gap: 15px;
 }
 
-label {
-  flex: 1;
-  text-align: right;
-  font-weight: bold;
+.mb-3 {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
 }
 
-input,
-select {
-  flex: 2;
-  padding: 8px;
+.form-control {
+  padding: 1px 0px; /* Padding reducido */
+  height: 25px; /* Altura reducida */
+  font-size: 14px; /* Tamaño de fuente reducido */
   border: 1px solid #ccc;
-  border-radius: 4px;
-  color: #000; /* Asegura que el texto sea negro */
-  background-color: #fff; /* Asegura que el fondo sea blanco */
-}
-
-select option {
-  color: #000; /* Asegura que el texto de las opciones sea negro */
-  background-color: #fff; /* Asegura que el fondo de las opciones sea blanco */
+  border-radius: 2px;
 }
 
 .form-buttons {
   display: flex;
-  justify-content: end;
-  font-size: 15px;
+  justify-content: flex-end;
+  font-size: 14px;
 }
 
 button {
   margin-left: 10px;
-  padding: 5px 15px;
+  padding: 6px 15px; /* Padding reducido */
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
+  font-size: 14px; /* Tamaño de fuente reducido */
 }
 
 button[type="button"] {
-  background-color: #007bff;
+  background-color: gray;
   color: white;
 }
 
 button[type="submit"] {
-  margin-left: 15px;
   background-color: #007bff;
   color: white;
 }
 </style>
 
+
 <script>
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import NavbarComponent from '@/components/NavbarComponent.vue';
 
 export default {
+  components: {
+    NavbarComponent,
+  },
   name: 'AdicionarManiobraView',
   data() {
     return {

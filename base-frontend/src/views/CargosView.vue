@@ -1,6 +1,6 @@
 <template>
    <div>
-    <div style=" background-color: #003366; color: white; text-align: right;">
+    <div style=" background-color:  #002A68; color: white; text-align: right;">
       <h6>Bienvenido: </h6>
     </div>  
     <br />
@@ -9,6 +9,8 @@
     <br />
     <div class="search-container">
       <form class="d-flex search-form" @submit.prevent="searchAtraque">
+        <div class="input-container">
+          <i class="bi bi-search"></i>
         <input
           class="form-control form-control-sm me-2"
           type="search"
@@ -16,8 +18,9 @@
           aria-label="Search"
           v-model="searchQuery"
           @input="handleSearchInput"
-          style="width: 200px;"
+          style="width: 200px; padding-left: 5px;margin-top: -70px;" 
         />
+      </div>
       </form>
     </div>
     <div class="create-button-container">
@@ -25,31 +28,34 @@
        <i class="bi bi-plus-circle large-icon"></i>
       </router-link>
     </div>
-    <h6 style="margin-top: -31px; font-size: 19px;
-    margin-right: 630px;">Listado de cargos:</h6>
+    <h3 style="margin-top: -33px; font-size: 18px;
+    margin-right: 630px;color: #002A68;">Listado de cargos</h3>
     <br />
     <div class="table-container">
     <table class="table">
       <thead>
         <tr>
-          <th scope="col">No</th>
           <th scope="col">Cargo</th>
           <th scope="col" v-if="hasGroup('Admin')">Acciones</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(item, index) in cargos" :key="item.id">
-          <th scope="row" style="background-color:white">{{ index + 1 }}</th>
+        <tr v-for="(item) in cargos" :key="item.id">
           <td>{{ item.nombre_cargo }}</td>
-          <td v-if="hasGroup('Admin')">
-            <button @click.prevent="confirmDelete(item.id)" class="btn btn-danger btn-small">
-              <i style="color: white" class="bi bi-trash"></i>
-            </button>
-            <button style="margin-left: 10px" class="btn btn-warning  btn-small">
+          <td >
+            <button @click="openCargoDetailsModal(item)" class="btn btn-info btn-small btn-eye" 
+              v-html="showNoId ? '<i class=\'bi bi-eye-slash-fill\'></i>' : '<i class=\'bi bi-eye-fill\'></i>'">
+              </button>
+              <span v-if="hasGroup('Admin')">
+                <button  class="btn btn-warning  btn-small">
               <router-link :to="{ name: 'EditarCargo', params: { id: item.id } }">
-                <i style="color: white" class="bi bi-pencil-square"></i>
+                <i style="color: black"  class="bi bi-pencil-square"></i>
               </router-link>
             </button>
+            <button class="btn btn-danger btn-small">
+              <i  class="bi bi-trash"></i>
+            </button>
+          </span>
           </td>
         </tr>
       </tbody>
@@ -185,16 +191,54 @@ export default {
         Swal.fire("Error", "Hubo un error al eliminar el cargo.", "error");
       }
     },
+    openCargoDetailsModal(Cargo) {
+    // Mapear IDs de grupos a nombres
+    const gruposAsignados = Cargo.groups && Cargo.groups.length > 0
+        ? Cargo.groups
+            .map(groupId => {
+                const grupo = this.gruposDisponibles.find(g => g.id === groupId);
+                return grupo ? grupo.name : 'Desconocido';
+            })
+            .join(', ')
+        : 'Ninguno';
+
+    // Mapear IDs de permisos a nombres
+    const permisosAsignados = Cargo.Cargo_permissions && Cargo.Cargo_permissions.length > 0
+        ? Cargo.Cargo_permissions
+            .map(permisoId => {
+                const permiso = this.permisosDisponibles.find(p => p.id === permisoId);
+                return permiso ? permiso.name : 'Desconocido';
+            })
+            .join(', ')
+        : 'Ninguno';
+
+    Swal.fire({
+        title: 'Detalles del Cargo',
+        html: `
+            <div style="text-align: left;">
+                <p><strong>Cargo:</strong> ${Cargo.nombre_cargo}</p>
+               
+                <p><strong>Grupos Asignados:</strong> ${gruposAsignados}</p>
+                <p><strong>Permisos Asignados:</strong> ${permisosAsignados}</p>
+            </div>
+        `,
+        width: '600px',
+        customClass: {
+            popup: 'custom-swal-popup',
+            title: 'custom-swal-title',
+            htmlContainer: 'custom-swal-html',
+        },
+    });
+},
   },
 };
 </script>
 
 <style scoped>
 
-/*para el placeholder del buscador */
 .search-container input::placeholder {
-  font-size: 12px; /* Tamaño de la fuente más pequeño */
-  color: #999;     /* Color del texto del placeholder */
+  font-size: 14px; 
+  color: #999;   
 }
 
 body {
@@ -211,6 +255,19 @@ body {
   overflow-x: auto;
   max-width: 100%;
 }
+.input-container {
+  position: relative;
+  display: inline-block;
+}
+
+.input-container .bi {
+  position: absolute;
+  left: 180px;
+  color: #999;
+  margin-top: -55px;
+  transform: translateY(-50%);
+  pointer-events: none; /* Para que el ícono no interfiera con el clic en el input */
+}
 .large-icon {
   font-size: 1.7rem; /* Tamaño del ícono */
 }
@@ -218,9 +275,8 @@ table {
   width: 84%;
   border-collapse: collapse;
   margin-left: 190px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   font-size: 0.875rem;
-  min-width: 300px;
 }
 
 th, td {
@@ -228,22 +284,43 @@ th, td {
   white-space: nowrap;
 }
 
+
 th {
   background-color: #f2f2f2;
 }
 
 .btn {
   cursor: pointer;
-  font-weight: bold;
 }
 
 .btn-small {
-  padding: 0.25rem 0.45rem;
-  font-size: 0.875rem;
+  font-size: 22px; /* Aumenta el tamaño del ícono */
+  color: black;
+  margin-right: 5px;
+  outline: none; /* Elimina el borde de foco */
+  border: none;
+  background: none; /* Elimina el fondo */
+  padding: 0; /* Elimina el padding para que solo se vea el ícono */
+}
+.btn-eye {
+  font-size: 22px; /* Aumenta el tamaño del ícono */
+  margin-right: 5px;
+  outline: none; /* Elimina el borde de foco */
+  border: none;
+  background: none; /* Elimina el fondo */
+  padding: 0; /* Elimina el padding para que solo se vea el ícono */
+}
+.btn:hover {
+  background: none; /* Asegura que no haya fondo al hacer hover */
+}
+
+.btn:focus {
+  outline: none; /* Elimina el borde de foco al hacer clic */
+  box-shadow: none; /* Elimina cualquier sombra de foco en algunos navegadores */
 }
 
 .create-button-container {
-  margin-top: -40px;
+  margin-top: -80px;
   text-align: left;
 }
 

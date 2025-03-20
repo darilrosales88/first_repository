@@ -1,137 +1,171 @@
 <template>
-  <div class="form-container">
-    <h2>Adicionar tipo de equipo ferroviario</h2>
-    <form @submit.prevent="saveTipoEquipo" class="form-grid">
-      <div class="form-group">
-        <label for="tipo_equipo">Tipo de equipo:<span style="color: red;">*</span></label>
-        <select style="padding: 5px;" v-model="tipo_equipo" required>
-          <option v-for="equipo in t_equipo_options" :value="equipo.value" :key="equipo.value">
-            {{ equipo.text }}
-          </option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="tipo_carga">Tipo de carga:<span style="color: red;">*</span></label>
-        <select style="padding: 5px;" v-model="tipo_carga" required>
-          <option v-for="carga in t_carga_options" :value="carga.value" :key="carga.value">
-            {{ carga.text }}
-          </option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="tipo_combustible">Tipo de combustible:<span style="color: red;">*</span></label>
-        <select style="padding: 5px;" v-model="tipo_combustible" required>
-          <option v-for="combustible in t_combustible_options" :value="combustible.value" :key="combustible.value">
-            {{ combustible.text }}
-          </option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="longitud">Longitud (ft):</label>
-        <input style="padding: 3px;" type="number" v-model="longitud" step="0.01" required />
-      </div>
-      <div class="form-group">
-        <label for="peso_neto_sin_carga">Peso neto sin carga (t):</label>
-        <input style="padding: 3px;" type="number" v-model="peso_neto_sin_carga" step="0.01" required />
-      </div>
-      <div class="form-group">
-        <label for="peso_maximo_con_carga">Peso máximo con carga (t):</label>
-        <input style="padding: 3px;" type="number" v-model="peso_maximo_con_carga" step="0.01" required />
-      </div>
-      <div class="form-group">
-        <label for="capacidad_cubica_maxima">Capacidad cúbica máxima (ft3):</label>
-        <input style="padding: 3px;" type="number" v-model="capacidad_cubica_maxima" step="0.01" required />
-      </div>
-      <div class="form-group">
-        <label for="descripcion">Descripción:</label>
-        <input style="padding: 3px;" type="text" v-model="descripcion" required />
-      </div>
-      <!-- Botones -->
-      <div class="form-buttons">
-        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
-        <button>Aceptar</button>
-      </div>
-    </form>
+  <div>
+    <Navbar-Component />
+    
+    <div class="form-container">
+      <h2>Adicionar tipo de equipo ferroviario</h2>
+      <form @submit.prevent="saveTipoEquipo" class="form-grid">
+        <!-- Campo Tipo de Equipo -->
+        <div class="mb-3">
+          <label for="tipo_equipo" class="form-label">Tipo de equipo:<span style="color: red;">*</span></label>
+          <select class="form-control" id="tipo_equipo" v-model="tipo_equipo" required>
+            <option v-for="equipo in t_equipo_options" :value="equipo.value" :key="equipo.value">
+              {{ equipo.text }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Campo Tipo de Carga -->
+        <div class="mb-3">
+          <label for="tipo_carga" class="form-label">Tipo de carga:<span style="color: red;">*</span></label>
+          <select class="form-control" id="tipo_carga" v-model="tipo_carga" required>
+            <option v-for="carga in t_carga_options" :value="carga.value" :key="carga.value">
+              {{ carga.text }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Campo Tipo de Combustible -->
+        <div class="mb-3">
+          <label for="tipo_combustible" class="form-label">Tipo de combustible:<span style="color: red;">*</span></label>
+          <select class="form-control" id="tipo_combustible" v-model="tipo_combustible" required>
+            <option v-for="combustible in t_combustible_options" :value="combustible.value" :key="combustible.value">
+              {{ combustible.text }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Campo Longitud -->
+        <div class="mb-3">
+          <label for="longitud" class="form-label">Longitud (ft):</label>
+          <input type="number" class="form-control" id="longitud" v-model="longitud" step="0.01" required />
+        </div>
+
+        <!-- Campo Peso Neto Sin Carga -->
+        <div class="mb-3">
+          <label for="peso_neto_sin_carga" class="form-label">Peso neto sin carga (t):</label>
+          <input type="number" class="form-control" id="peso_neto_sin_carga" v-model="peso_neto_sin_carga" step="0.01" required />
+        </div>
+
+        <!-- Campo Peso Máximo con Carga -->
+        <div class="mb-3">
+          <label for="peso_maximo_con_carga" class="form-label">Peso máximo con carga (t):</label>
+          <input type="number" class="form-control" id="peso_maximo_con_carga" v-model="peso_maximo_con_carga" step="0.01" required />
+        </div>
+
+        <!-- Campo Capacidad Cúbica Máxima -->
+        <div class="mb-3">
+          <label for="capacidad_cubica_maxima" class="form-label">Capacidad cúbica máxima (ft3):</label>
+          <input type="number" class="form-control" id="capacidad_cubica_maxima" v-model="capacidad_cubica_maxima" step="0.01" required />
+        </div>
+
+        <!-- Campo Descripción -->
+        <div class="mb-3">
+          <label for="descripcion" class="form-label">Descripción:</label>
+          <input type="text" class="form-control" id="descripcion" v-model="descripcion" required />
+        </div>
+
+        <!-- Botones -->
+        <div class="form-buttons">
+          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button type="submit">Aceptar</button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
 <style scoped>
+body {
+  background-color: #F2F2F2;
+}
+
 .form-container {
-  max-width: 600px; /* Ajusta el ancho máximo del contenedor */
-  margin: 50px; /* Centra el contenedor */
+  max-width: 680px; /* Ajusta el ancho máximo del contenedor */
+  margin: 20px; /* Centra el formulario */
   padding: 20px;
-  background-color: #f9f9f9;
+  margin-left: 220px;
+  background-color: rgb(245, 245, 245);
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  
 }
 
 h2 {
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
   text-align: left;
   margin-bottom: 20px;
-  font-size: 20px;
+  font-size: 18px;
+}
+
+.form-label {
+  font-size: 14px;
+  text-align: left;
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 4 columnas de igual tamaño */
+  grid-template-columns: repeat(3, 1fr); /* 3 columnas de igual tamaño */
   gap: 15px; /* Espacio entre los elementos */
 }
 
-.form-group {
-  text-align: left;
-  width: 260px;
+.mb-3 {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  font-size: 14px;
 }
 
-label {
-  font-weight: bold;
-}
-
-input, select {
-  padding: 5px;
+.form-control {
+  padding: 1px 0px; /* Padding reducido */
+  height: 25px; /* Altura reducida */
+  font-size: 14px; /* Tamaño de fuente reducido */
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 2px;
+  color: #000; /* Asegura que el texto sea negro */
+  background-color: #fff; /* Asegura que el fondo sea blanco */
+}
+
+select option {
+  color: #000; /* Asegura que el texto de las opciones sea negro */
+  background-color: #fff; /* Asegura que el fondo de las opciones sea blanco */
 }
 
 .form-buttons {
-  grid-column: span 2; /* Los botones ocupan las 4 columnas */
+  grid-column: span 3; /* Los botones ocupan las 3 columnas */
   display: flex;
-  justify-content: end;
-  font-size: 15px;
+  justify-content: flex-end;
+  font-size: 14px;
   margin-top: 20px;
 }
 
 button {
   margin-left: 10px;
-  padding: 5px 15px;
+  padding: 6px 15px; /* Padding reducido */
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
+  font-size: 14px; /* Tamaño de fuente reducido */
 }
 
 button[type="button"] {
-  background-color: #007bff;
+  background-color: gray;
   color: white;
 }
 
 button[type="submit"] {
-  margin-left: 15px;
   background-color: #007bff;
   color: white;
 }
 </style>
 
-
 <script>
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import NavbarComponent from '@/components/NavbarComponent.vue';
 
 export default {
+  components: {
+    NavbarComponent,
+  },
   data() {
     return {
       tipo_equipo: '',

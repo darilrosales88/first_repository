@@ -1,104 +1,138 @@
 <template>
-  <div class="form-container">
-  <h2>Editar estado técnico {{ estado_tecnico.nombre_estado_tecnico }}</h2>
-  <form @submit.prevent="submitForm">
+  <div>
+    <Navbar-Component />
+    
+    <div class="form-container">
+      <h3 style="color: #002A68;">Editar estado técnico {{ estado_tecnico.nombre_estado_tecnico }}</h3>
+      <form @submit.prevent="submitForm" class="form-grid">
+        <!-- Campo Código -->
+        <div class="mb-3">
+          <label for="código" class="form-label">Código:<span style="color: red;">*</span></label>
+          <input type="text" class="form-control" id="código" v-model="estado_tecnico.codigo_estado_tecnico" required />
+          <p v-if="codigo_estado_tecnico_error" class="help is-danger">{{ codigo_estado_tecnico_error }}</p>
+        </div>
 
-  <div class="form-group">
-  <label for="código"> Código:</label>
-  <input style="padding: 3px;" type="text" v-model="estado_tecnico.codigo_estado_tecnico" required />
-  <p v-if="codigo_estado_tecnico_error" class="help is-danger">{{ codigo_estado_tecnico_error }}</p>
-  </div>
-  
-  <div class="form-group">
-  <label for="nombre"> Nombre:</label>
-  <input style="padding: 3px;" type="text" v-model="estado_tecnico.nombre_estado_tecnico" required />
-  <p v-if="nombre_estado_tecnico_error" class="help is-danger">{{ nombre_estado_tecnico_error }}</p>
-  </div>
+        <!-- Campo Nombre -->
+        <div class="mb-3">
+          <label for="nombre" class="form-label">Nombre:<span style="color: red;">*</span></label>
+          <input type="text" class="form-control" id="nombre" v-model="estado_tecnico.nombre_estado_tecnico" required />
+          <p v-if="nombre_estado_tecnico_error" class="help is-danger">{{ nombre_estado_tecnico_error }}</p>
+        </div>
 
-  <div class="form-buttons">
-        <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
-        <button>Aceptar</button>
-      </div>
-  </form>
+        <!-- Botones -->
+        <div class="form-buttons">
+          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button type="submit">Aceptar</button>
+        </div>
+      </form>
+    </div>
   </div>
-  </template>
-  <style scoped>
-  .form-container {
-  max-width: 450px;
-  margin: 50px;
+</template>
+
+<style scoped>
+body {
+  background-color: #F2F2F2;
+}
+
+.form-container {
+  max-width: 600px; /* Ancho reducido */
+  margin: 20px; /* Centra el formulario */
   padding: 20px;
-  background-color: #f9f9f9;
+  margin-left: 220px;
+  background-color: rgb(245, 245, 245);
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
+}
 
-  h2 {
-  font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+h3 {
   text-align: left;
   margin-bottom: 20px;
-  font-size: 20px;
-  }
+  font-size: 18px;
+}
 
-  form {
+.form-label {
+  font-size: 14px;
+  text-align: left;
+}
+
+form {
+  
   display: flex;
   flex-direction: column;
   gap: 15px;
+}
 
-  }
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 2 columnas de igual tamaño */
+  gap: 15px; /* Espacio entre los elementos */
+}
 
-  .form-group {
+.mb-3 {
+  width: 200px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 13px;
-  }
+  flex-direction: column;
+  gap: 5px;
+}
 
-  label {
-  flex: 1;
-  text-align: right;
-  font-weight: bold;
-  }
-
-  input,select {
-  flex: 2;
-  padding: 8px;
+.form-control {
+  padding: 1px 0px; /* Padding reducido */
+  height: 25px; /* Altura reducida */
+  font-size: 14px; /* Tamaño de fuente reducido */
   border: 1px solid #ccc;
-  border-radius: 4px;
-  }
+  border-radius: 2px;
+  color: #000; /* Asegura que el texto sea negro */
+  background-color: #fff; /* Asegura que el fondo sea blanco */
+}
 
-  .form-buttons {
+select option {
+  color: #000; /* Asegura que el texto de las opciones sea negro */
+  background-color: #fff; /* Asegura que el fondo de las opciones sea blanco */
+}
+
+.form-buttons {
+  grid-column: span 3; /* Los botones ocupan las 3 columnas */
   display: flex;
-  justify-content: end;
-  font-size: 15px;
-  }
+  justify-content: flex-end;
+  font-size: 14px;
+}
 
-  button {
+button {
   margin-left: 10px;
-  padding: 5px 15px;
+  padding: 6px 15px; /* Padding reducido */
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
-  }
+  font-size: 14px; /* Tamaño de fuente reducido */
+}
 
-  button[type="button"] {
+button[type="button"] {
+  background-color: gray;
+  color: white;
+}
+
+button[type="submit"] {
   background-color: #007bff;
   color: white;
-  }
+}
 
-  button[type="submit"] {
-  margin-left: 15px;
-  background-color: #007bff;
-  color: white;
-  }
-  </style>
+.help.is-danger {
+  color: red;
+  font-size: 12px;
+  margin-top: 5px;
+}
+</style>
 
   <script>
   import axios from 'axios';
   import Swal from 'sweetalert2'
+  import NavbarComponent from '@/components/NavbarComponent.vue';
+
   export default {
           name: 'EditarEstadoTecnico',
+          components: {
+    NavbarComponent,
+  },
 
           data(){
           return{      

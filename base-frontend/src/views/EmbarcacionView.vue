@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div style=" background-color: #003366; color: white; text-align: right;">
+    <div style=" background-color: #002A68; color: white; text-align: right;">
       <h6>Bienvenido: </h6>
     </div>  
     <br />
@@ -10,6 +10,8 @@
 
     <div class="search-container">
       <form class="d-flex search-form" @submit.prevent="searchEmbarcacion">
+        <div class="input-container">
+          <i class="bi bi-search"></i>
         <input
           class="form-control form-control-sm me-2"
           type="search"
@@ -17,8 +19,9 @@
           aria-label="Buscar"
           v-model="searchQuery"
           @input="handleSearchInput"
-          style="width: 200px;"
+          style="width: 200px; padding-left: 5px;margin-top: -70px;" 
         />
+      </div>
       </form>
     </div>
 
@@ -27,68 +30,64 @@
       <i class="bi bi-plus-circle large-icon"></i>
       </router-link>
     </div>
-    <h6 style="margin-top: -31px; font-size: 19px;
-    margin-right: 560px;">Listado de embarcaciones:</h6>
+    <h3 style="margin-top: -33px; font-size: 18px;
+    margin-right: 560px;color: #002A68;">Listado de embarcaciones</h3>
     <br />
     <div class="table-container">
       <table class="table">
         <thead>
           <tr>
-            <th scope="col" v-if="showNoId">No</th>
             <th scope="col">Nombre</th>
             <th scope="col">Nacionalidad</th>
-            <th scope="col" v-if="showNoId">Eslora</th>
-            <th scope="col" v-if="showNoId">Manga</th>
-            <th scope="col" v-if="showNoId">Calado máximo</th>
-            <th scope="col" v-if="showNoId">Desplazamiento máximo</th>
+            <th scope="col">Eslora</th>
+            <th scope="col" >Manga</th>
+            <th scope="col" >Calado máximo</th>
+            <th scope="col" >Desplazamiento máximo</th>
             <th scope="col">Tipo de embarcación</th>
             <th scope="col">Tipo de buque</th>
-            <th scope="col" v-if="showNoId">Tipo de patana</th>
-            <th scope="col" v-if="showNoId">IMO</th>
-            <th scope="col" v-if="showNoId">Potencia</th>
+            <th scope="col" >Tipo de patana</th>
+            <th scope="col" >IMO</th>
+            <th scope="col" >Potencia</th>
             <th scope="col" v-if="hasGroup('Admin')">Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(item, index) in embarcacionesFiltradas" :key="item.id">
-            <th scope="row" v-if="showNoId">{{ index + 1 }}</th>
+          <tr v-for="(item) in embarcacionesFiltradas" :key="item.id">
             <td>{{ item.nombre_embarcacion }}</td>
             <td>{{ item.nacionalidad_name }}</td>
-            <td v-if="showNoId">{{ item.eslora }}</td>
-            <td v-if="showNoId">{{ item.manga }}</td>
-            <td v-if="showNoId">{{ item.calado_maximo }}</td>
-            <td v-if="showNoId">{{ item.desplazamiento_maximo }}</td>
+            <td >{{ item.eslora }}</td>
+            <td >{{ item.manga }}</td>
+            <td >{{ item.calado_maximo }}</td>
+            <td >{{ item.desplazamiento_maximo }}</td>
             <td>{{ getTipoEmbarcacionText(item.tipo_embarcacion) }}</td>
             <td>{{ getTipoBuqueText(item.tipo_buque) }}</td>
-            <td v-if="showNoId">{{ getTipoPatanaText(item.tipo_patana) }}</td>
-            <td v-if="showNoId">{{ item.imo }}</td>
-            <td v-if="showNoId">{{ item.potencia }}</td>
+            <td >{{ getTipoPatanaText(item.tipo_patana) }}</td>
+            <td >{{ item.imo }}</td>
+            <td >{{ item.potencia }}</td>
             <td>
-              <button @click="toggleNoIdVisibility" class="btn btn-info btn-small btn-eye" 
+              <button @click="openEmbarcacionDetailsModal(item)" class="btn btn-info btn-small btn-eye" 
               v-html="showNoId ? '<i class=\'bi bi-eye-slash-fill\'></i>' : '<i class=\'bi bi-eye-fill\'></i>'">
               </button>
               <span v-if="hasGroup('Admin')">
                 <button  class="btn btn-warning btn-small">
                 <router-link :to="{name: 'EditarEmbarcacion', params: {id: item.id}}">
-                  <i style="color:white" class="bi bi-pencil-square"></i>
+                  <i style="color:black" class="bi bi-pencil-square"></i>
                 </router-link>
               </button>
-              <button style="margin-left:10px" @click.prevent="confirmDelete(item.id)" class="btn btn-danger btn-small">
-                <i style="color:white" class="bi bi-trash"></i>
+              <button  @click.prevent="confirmDelete(item.id)" class="btn btn-danger btn-small">
+                <i s class="bi bi-trash"></i>
               </button>
-              
             </span>
             </td>
           </tr>
         </tbody>
       </table>
-    
-
     <!-- Mensaje cuando no hay resultados -->
     <h1 v-if="embarcacionesFiltradas.length === 0 && searchQuery">
       No existe ningún registro asociado a ese parámetro de búsqueda.
     </h1>
   </div>
+  
   </div>
 </template>
 
@@ -110,7 +109,9 @@ export default {
       debounceTimeout: null, // Timeout para el debounce
       userPermissions: [], // Permisos del usuario
       userGroups: [], // Grupos del usuario
-      showNoId: false,
+      currentPage: 1,
+      totalPages: 1,
+      pages: [],
     };
   },
   async created() {
@@ -234,15 +235,60 @@ export default {
       };
       return tipos_patanas[value] || 'Desconocido';
     },
+    openEmbarcacionDetailsModal(Embarcacion) {
+    // Mapear IDs de grupos a nombres
+    const gruposAsignados = Embarcacion.groups && Embarcacion.groups.length > 0
+        ? Embarcacion.groups
+            .map(groupId => {
+                const grupo = this.gruposDisponibles.find(g => g.id === groupId);
+                return grupo ? grupo.name : 'Desconocido';
+            })
+            .join(', ')
+        : 'Ninguno';
+
+    // Mapear IDs de permisos a nombres
+    const permisosAsignados = Embarcacion.Embarcacion_permissions && Embarcacion.Embarcacion_permissions.length > 0
+        ? Embarcacion.Embarcacion_permissions
+            .map(permisoId => {
+                const permiso = this.permisosDisponibles.find(p => p.id === permisoId);
+                return permiso ? permiso.name : 'Desconocido';
+            })
+            .join(', ')
+        : 'Ninguno';
+
+    Swal.fire({
+        title: 'Detalles de la Embarcacion',
+        html: `
+            <div style="text-align: left;">
+                <p><strong>Nombre:</strong> ${Embarcacion.nombre_embarcacion}</p>
+                <p><strong>Nacionalidad:</strong> ${Embarcacion.nacionalidad_name}</p>
+                <p><strong>Eslora:</strong> ${Embarcacion.eslora}</p>
+                 <p><strong>Manga:</strong> ${Embarcacion.manga}</p>
+                <p><strong>Calado máximo:</strong> ${Embarcacion.calado_maximo}</p>
+                <p><strong>Desplazamiento maximo:</strong> ${Embarcacion.desplazamiento_maximo}</p>
+                 <p><strong>Tipo de Embarcacion:</strong> ${Embarcacion.tipo_embarcacion}</p>
+                <p><strong>Tipo de buque:</strong> ${Embarcacion.tipo_buque}</p>
+                <p><strong>Tipo de Patana:</strong> ${Embarcacion.tipo_patana}</p>
+                <p><strong>IMO:</strong> ${Embarcacion.imo}</p>
+                <p><strong>Potencia:</strong> ${Embarcacion.potencia}</p>
+                
+            </div>
+        `,
+        width: '600px',
+        customClass: {
+            popup: 'custom-swal-popup',
+            title: 'custom-swal-title',
+            htmlContainer: 'custom-swal-html',
+        },
+    });
+},
   },
 };
 </script>
 
-
 <style scoped>
-
 .search-container input::placeholder {
-  font-size: 12px; 
+  font-size: 14px; 
   color: #999;   
 }
 
@@ -260,6 +306,19 @@ body {
   overflow-x: auto;
   max-width: 100%;
 }
+.input-container {
+  position: relative;
+  display: inline-block;
+}
+
+.input-container .bi {
+  position: absolute;
+  left: 180px;
+  color: #999;
+  margin-top: -55px;
+  transform: translateY(-50%);
+  pointer-events: none; /* Para que el ícono no interfiera con el clic en el input */
+}
 .large-icon {
   font-size: 1.7rem; /* Tamaño del ícono */
 }
@@ -267,9 +326,8 @@ table {
   width: 84%;
   border-collapse: collapse;
   margin-left: 190px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   font-size: 0.875rem;
-  min-width: 300px;
 }
 
 th, td {
@@ -284,22 +342,36 @@ th {
 
 .btn {
   cursor: pointer;
-  font-weight: bold;
 }
 
 .btn-small {
-  padding: 0.25rem 0.45rem;
-  font-size: 0.875rem;
+  font-size: 22px; /* Aumenta el tamaño del ícono */
+  color: black;
+  margin-right: 5px;
+  outline: none; /* Elimina el borde de foco */
+  border: none;
+  background: none; /* Elimina el fondo */
+  padding: 0; /* Elimina el padding para que solo se vea el ícono */
 }
 .btn-eye {
-  background-color: rgb(0, 71, 163);
-  margin-right: 10px;
-  color: white;
+  font-size: 22px; /* Aumenta el tamaño del ícono */
+  margin-right: 5px;
+  outline: none; /* Elimina el borde de foco */
   border: none;
+  background: none; /* Elimina el fondo */
+  padding: 0; /* Elimina el padding para que solo se vea el ícono */
+}
+.btn:hover {
+  background: none; /* Asegura que no haya fondo al hacer hover */
+}
+
+.btn:focus {
+  outline: none; /* Elimina el borde de foco al hacer clic */
+  box-shadow: none; /* Elimina cualquier sombra de foco en algunos navegadores */
 }
 
 .create-button-container {
-  margin-top: -40px;
+  margin-top: -80px;
   text-align: left;
 }
 

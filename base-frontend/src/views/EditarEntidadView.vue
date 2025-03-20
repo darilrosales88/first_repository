@@ -1,57 +1,168 @@
 <template>
-  <div class="form-container">
-    <h2>Editar Entidad</h2>
-    <form @submit.prevent="updateItem" class="form-grid">
-      <div class="form-group">
-        <label for="nombre">Nombre:<span style="color: red;">*</span></label>
-        <input type="text" style="padding: 3px;" v-model="nombre" required />
-      </div>
-      <div class="form-group">
-        <label for="abreviatura">Abreviatura:<span style="color: red;">*</span></label>
-        <input type="text" style="padding: 3px;" v-model="abreviatura" required />
-      </div>
-      <div class="form-group">
-        <label for="codigo_reeup">Código REEUP:</label>
-        <input type="text" style="padding: 3px;" v-model="codigo_reeup" />
-      </div>
-      <div class="form-group">
-        <label for="osde_oace_organismo">OSDE/OACE u organismo:<span style="color: red;">*</span></label>
-        <select id="osde_oace_organismo" style="padding: 5px;" v-model="osde_oace_organismo" required>
-          <option v-for="item in osdeOaceOrganismoOptions" :key="item.id" :value="item.id">{{ item.nombre }}</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="provincia">Provincia:<span style="color: red;">*</span></label>
-        <select id="provincia" style="padding: 5px;" v-model="provincia" required>
-          <option v-for="item in provinciaOptions" :key="item.id" :value="item.id">{{ item.nombre_provincia }}</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="tipo_entidad">Tipo de entidad:<span style="color: red;">*</span></label>
-        <select id="tipo_entidad" style="padding: 5px;" v-model="tipo_entidad" required>
-          <option v-for="option in tipoEntidadOptions" :key="option.value" :value="option.value">{{ option.text }}</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="territorio">Territorio:</label>
-        <select id="territorio" style="padding: 5px;" v-model="territorio">
-          <option v-for="item in territoriosOptions" :key="item.id" :value="item.id">{{ item.nombre_territorio }}</option>
-        </select>
-      </div>
-      <div class="form-buttons">
-        <button type="button"><router-link style="color:white;text-decoration:none" to="/Entidades">Cancelar</router-link></button>
-        <button type="submit">Guardar Cambios</button>
-      </div>
-    </form>
+  <div>
+    <Navbar-Component />
+    
+    <div class="form-container">
+      <h3 style="color: #002A68;">Editar Entidad</h3>
+      <form @submit.prevent="updateItem" class="form-grid">
+        <!-- Campo Nombre -->
+        <div class="mb-3">
+          <label for="nombre" class="form-label">Nombre:<span style="color: red;">*</span></label>
+          <input type="text" class="form-control" id="nombre" v-model="nombre" required />
+        </div>
+
+        <!-- Campo Abreviatura -->
+        <div class="mb-3">
+          <label for="abreviatura" class="form-label">Abreviatura:<span style="color: red;">*</span></label>
+          <input type="text" class="form-control" id="abreviatura" v-model="abreviatura" required />
+        </div>
+
+        <!-- Campo Código REEUP -->
+        <div class="mb-3">
+          <label for="codigo_reeup" class="form-label">Código REEUP:</label>
+          <input type="text" class="form-control" id="codigo_reeup" v-model="codigo_reeup" />
+        </div>
+
+        <!-- Campo OSDE/OACE u organismo -->
+        <div class="mb-3">
+          <label for="osde_oace_organismo" class="form-label">OSDE/OACE u organismo:<span style="color: red;">*</span></label>
+          <select class="form-control" id="osde_oace_organismo" v-model="osde_oace_organismo" required>
+            <option v-for="item in osdeOaceOrganismoOptions" :key="item.id" :value="item.id">{{ item.nombre }}</option>
+          </select>
+        </div>
+
+        <!-- Campo Provincia -->
+        <div class="mb-3">
+          <label for="provincia" class="form-label">Provincia:<span style="color: red;">*</span></label>
+          <select class="form-control" id="provincia" v-model="provincia" required>
+            <option v-for="item in provinciaOptions" :key="item.id" :value="item.id">{{ item.nombre_provincia }}</option>
+          </select>
+        </div>
+
+        <!-- Campo Tipo de entidad -->
+        <div class="mb-3">
+          <label for="tipo_entidad" class="form-label">Tipo de entidad:<span style="color: red;">*</span></label>
+          <select class="form-control" id="tipo_entidad" v-model="tipo_entidad" required>
+            <option v-for="option in tipoEntidadOptions" :key="option.value" :value="option.value">{{ option.text }}</option>
+          </select>
+        </div>
+
+        <!-- Campo Territorio -->
+        <div class="mb-3">
+          <label for="territorio" class="form-label">Territorio:</label>
+          <select class="form-control" id="territorio" v-model="territorio">
+            <option v-for="item in territoriosOptions" :key="item.id" :value="item.id">{{ item.nombre_territorio }}</option>
+          </select>
+        </div>
+
+        <!-- Botones -->
+        <div class="form-buttons">
+          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button type="submit">Actualizar</button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
+
+<style scoped>
+body {
+  background-color: #F2F2F2;
+}
+
+.form-container {
+  max-width: 680px; /* Ancho reducido */
+  margin: 20px; /* Centra el formulario */
+  padding: 20px;
+  margin-left: 220px;
+  background-color: rgb(245, 245, 245);
+  border-radius: 8px;
+}
+
+h3 {
+  text-align: left;
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+.form-label {
+  font-size: 14px;
+  text-align: left;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columnas de igual tamaño */
+  gap: 15px; /* Espacio entre los elementos */
+}
+
+.mb-3 {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-control {
+  padding: 1px 0px; /* Padding reducido */
+  height: 25px; /* Altura reducida */
+  font-size: 14px; /* Tamaño de fuente reducido */
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  color: #000; /* Asegura que el texto sea negro */
+  background-color: #fff; /* Asegura que el fondo sea blanco */
+}
+
+select option {
+  color: #000; /* Asegura que el texto de las opciones sea negro */
+  background-color: #fff; /* Asegura que el fondo de las opciones sea blanco */
+}
+
+.form-buttons {
+  grid-column: span 3; /* Los botones ocupan las 2 columnas */
+  display: flex;
+  justify-content: flex-end;
+  font-size: 14px;
+  margin-top: 20px;
+}
+
+button {
+  margin-left: 10px;
+  padding: 6px 15px; /* Padding reducido */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px; /* Tamaño de fuente reducido */
+}
+
+button[type="button"] {
+  background-color: gray;
+  color: white;
+}
+
+button[type="submit"] {
+  background-color: #007bff;
+  color: white;
+}
+</style>
 
 <script>
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import NavbarComponent from '@/components/NavbarComponent.vue';
 
 export default {
   name: 'EditarEntidadView',
+  components: {
+    NavbarComponent,
+  },
 
   data() {
     return {
@@ -86,6 +197,21 @@ export default {
   },
 
   methods: {
+    confirmCancel() {
+    Swal.fire({
+    title: '¿Está seguro de que quiere cancelar la operación?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    cancelmButtonText: 'Cancelar',
+    confirmButtonText: 'Aceptar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.history.back();
+    }
+  });
+},
     validateForm() {
           this.errores = '';
           const nombre_regex = /^[A-Z][A-Za-zÁÉÍÓÚáéíóú ]{2,99}$/;
@@ -212,73 +338,3 @@ export default {
 };
 </script>
 
-<style scoped>
-.form-container {
-  max-width: 600px; /* Ajusta el ancho máximo del contenedor */
-  margin: 50px; /* Centra el contenedor */
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-h2 {
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  text-align: left;
-  margin-bottom: 20px;
-  font-size: 20px;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 4 columnas de igual tamaño */
-  gap: 15px; /* Espacio entre los elementos */
-}
-
-.form-group {
-  text-align: left;
-  width: 260px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  font-size: 14px;
-}
-
-label {
-  font-weight: bold;
-}
-
-input, select {
-  padding: 5px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.form-buttons {
-  grid-column: span 2; /* Los botones ocupan las 4 columnas */
-  display: flex;
-  justify-content: end;
-  font-size: 15px;
-  margin-top: 20px;
-}
-
-button {
-  margin-left: 10px;
-  padding: 5px 15px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-button[type="button"] {
-  background-color: #007bff;
-  color: white;
-}
-
-button[type="submit"] {
-  margin-left: 15px;
-  background-color: #007bff;
-  color: white;
-}
-</style>

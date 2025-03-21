@@ -3,6 +3,6 @@
 
 
 ----------
--Listar los trenes en orden descendente
--En el campo de introduccion del producto cuando se quiera agregar que se vea en un modal.
--Cambiar el listar "Locomotora"
+
+#Vista Crear producto sin estilos
+#

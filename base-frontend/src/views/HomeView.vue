@@ -1,4 +1,7 @@
 <template>
+  <div style=" background-color: #002A68; color: white; text-align: right;">
+    <h6>Bienvenido:</h6>
+  </div>  
   <nav class="navbar" style="background-color: #003366; height: 100vh;">
     <div class="logo-container">
       <img

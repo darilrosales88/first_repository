@@ -1,7 +1,10 @@
 <template>
+  <div style="background-color: #002a68; color: white; text-align: right">
+    <h6>Bienvenido:</h6>
+  </div>
   <Navbar-Component />
   <Producto-Vagones />
-  <div class="container mt-5" style="padding-left: 20%">
+  <div class="container mt-2 px-6" style="padding-left: 10%">
     <div class="row mb-4">
       <h2 class="mb-4">Nuevo registro de vagón</h2>
       <form @submit.prevent="submitForm">
@@ -11,7 +14,7 @@
             <!-- Campo: locomotora -->
             <div class="mb-3">
               <label for="locomotora" class="form-label"
-                >Locomotora<span style="color: red">*</span></label
+                >Locomotora <span style="color: red">*</span></label
               >
               <select
                 class="form-select"
@@ -33,7 +36,9 @@
 
             <!-- Campo: tipo_origen -->
             <div class="mb-3">
-              <label for="tipo_origen" class="form-label">Tipo de Origen</label>
+              <label for="tipo_origen" class="form-label"
+                >Tipo de Origen <span style="color: red">*</span></label
+              >
               <select
                 class="form-select"
                 v-model="formData.tipo_origen"
@@ -47,7 +52,9 @@
 
             <!-- Campo: origen -->
             <div class="mb-3">
-              <label for="origen" class="form-label">Origen</label>
+              <label for="origen" class="form-label"
+                >Origen <span style="color: red">*</span></label
+              >
               <select
                 v-if="formData.tipo_origen !== 'puerto'"
                 class="form-select"
@@ -84,7 +91,7 @@
             <!-- Campo: tipo_equipo -->
             <div class="mb-3">
               <label for="tipo_equipo" class="form-label"
-                >Tipo de Equipo<span style="color: red">*</span></label
+                >Tipo de Equipo <span style="color: red">*</span></label
               >
               <select
                 @click="buscarEquipos"
@@ -181,7 +188,9 @@
 
             <!-- Campo: destino -->
             <div class="mb-3">
-              <label for="destino" class="form-label">Destino</label>
+              <label for="destino" class="form-label"
+                >Destino <span style="color: red">*</span></label
+              >
               <select
                 v-if="formData.tipo_destino !== 'puerto'"
                 class="form-select"
@@ -238,11 +247,15 @@
                 </option>
               </select>
             </div>
-
+            <ModalAgregarProducto
+              v-if="mostrarModal"
+              :visible="mostrarModal"
+              @cerrar-modal="cerrarModal"
+            />
             <!-- Campo: cantidad_vagones -->
             <div class="mb-3">
               <label for="cantidad_vagones" class="form-label"
-                >Cantidad de Vagones</label
+                >Cantidad de Vagones <span style="color: red">*</span></label
               >
               <input
                 type="number"
@@ -413,11 +426,12 @@ button[type="submit"] {
 import axios from "axios";
 import Swal from "sweetalert2";
 import NavbarComponent from "@/components/NavbarComponent.vue";
-
+import ModalAgregarProducto from "@/components/ModalAgregarProducto.vue";
 export default {
   name: "AdicionarEnTren",
   components: {
     NavbarComponent,
+    ModalAgregarProducto,
   },
   data() {
     return {
@@ -434,6 +448,7 @@ export default {
         observaciones: "",
         equipo_vagon: "",
       },
+      mostrarModal: false,
       productos: [],
       equipos: [],
       equipos_vagones: [],
@@ -452,7 +467,6 @@ export default {
     this.getLocomotoras();
     this.getEntidades();
     this.getPuertos();
-    this.buscarEquipos();
   },
 
   methods: {
@@ -514,16 +528,16 @@ export default {
             "El formulario sido añadido exitosamente.",
             "success"
           );
+          this.resetForm();
         } catch (error) {
           console.error("Error al agregar el formulario:", error);
+          console.log("Este es el error", error);
           Swal.fire(
             "Error",
-            "Hubo un error al agregar el formulario.",
+            `${error["response"]["data"]["non_field_errors"][0]}`,
             "error"
           );
         }
-
-        this.resetForm();
       } else {
         Swal.fire("Error", "No hay vagones para agregar", "error");
       }
@@ -624,9 +638,11 @@ export default {
       }
     },
     abrirModalAgregarProducto() {
-      // Redirige a la vista "AdicionarProductoVagon"
-      localStorage.setItem("formData", JSON.stringify(this.formData));
-      this.$router.push({ name: "AdicionarProductoVagon" });
+      this.mostrarModal = true;
+    },
+    cerrarModal() {
+      this.mostrarModal = false;
+      this.getProductos();
     },
 
     agregarVagon() {

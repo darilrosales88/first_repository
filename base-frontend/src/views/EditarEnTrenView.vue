@@ -1,7 +1,10 @@
 <template>
+  <div style="background-color: #002a68; color: white; text-align: right">
+    <h6>Bienvenido:</h6>
+  </div>
   <Navbar-Component />
   <Producto-Vagones />
-  <div class="container mt-5" style="padding-left: 20%">
+  <div class="container mt-1" style="padding-left: 10%">
     <div class="row mb-4">
       <h2 class="mb-4">Editar vagón</h2>
       <form @submit.prevent="submitForm">
@@ -386,7 +389,6 @@ export default {
     this.getLocomotoras();
     this.getEntidades();
     this.getPuertos();
-    this.buscarEquipos();
     this.getTren();
   },
 
@@ -464,7 +466,11 @@ export default {
         );
       } catch (error) {
         console.error("Error al agregar el formulario:", error);
-        Swal.fire("Error", "Hubo un error al agregar el formulario.", "error");
+        Swal.fire(
+          "Error",
+          `${error["response"]["data"]["non_field_errors"][0]}`,
+          "error"
+        );
       }
     },
 

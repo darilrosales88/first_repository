@@ -161,6 +161,7 @@ class en_trenes_serializer(serializers.ModelSerializer):
             'cantidad_vagones',
             'observaciones',
         )
+            
         filterset_class=en_trenes_filter
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
@@ -170,6 +171,24 @@ class en_trenes_serializer(serializers.ModelSerializer):
                 self.fields['locomotora'].queryset = nom_equipo_ferroviario.objects.filter(
                 tipo_equipo__tipo_equipo='locomotora'
             )
+    def validate(self, data):
+        # Validar combinación única de Tipo equipo ferroviario, Estado, Producto, Origen, Destino
+        if en_trenes.objects.filter(
+            tipo_equipo=data['tipo_equipo'],
+            estado=data['estado'],
+            producto=data['producto'],
+            origen=data['origen'],
+            destino=data['destino']
+        ).exists():
+            raise serializers.ValidationError("La combinación de Tipo equipo ferroviario, Estado, Producto, Origen y Destino ya existe.")
+        
+        # Validar combinación única de Tipo equipo ferroviario y No. ID
+        if en_trenes.objects.filter(
+            tipo_equipo=data['tipo_equipo'],
+            equipo_vagon=data['equipo_vagon']
+        ).exists():
+            raise serializers.ValidationError("La combinación de Tipo equipo ferroviario y No. ID ya existe.")
+        return data
                 
                 
 class producto_vagon_serializer(serializers.ModelSerializer):

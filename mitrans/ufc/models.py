@@ -142,7 +142,7 @@ class en_trenes(models.Model):
     )
     tipo_equipo=models.ForeignKey(nom_tipo_equipo_ferroviario, on_delete=models.CASCADE,default="", max_length=50)
     estado = models.CharField(default="" ,choices=ESTADO_CHOICES, max_length = 50)
-    producto = models.ForeignKey(producto_en_vagon,default='', on_delete=models.CASCADE)
+    producto = models.ForeignKey(producto_en_vagon,default='', on_delete=models.CASCADE,null=True, blank=True)
     
     
     tipo_origen = models.CharField(default="",choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)

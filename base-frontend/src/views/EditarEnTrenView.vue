@@ -14,7 +14,7 @@
             <!-- Campo: locomotora -->
             <div class="mb-3">
               <label for="locomotora" class="form-label"
-                >Locomotora<span style="color: red">*</span></label
+                >Locomotora <span style="color: red">*</span></label
               >
               <select
                 class="form-select"
@@ -36,7 +36,9 @@
 
             <!-- Campo: tipo_origen -->
             <div class="mb-3">
-              <label for="tipo_origen" class="form-label">Tipo de Origen</label>
+              <label for="tipo_origen" class="form-label"
+                >Tipo de Origen <span style="color: red">*</span></label
+              >
               <select
                 class="form-select"
                 v-model="formData.tipo_origen"
@@ -50,7 +52,9 @@
 
             <!-- Campo: origen -->
             <div class="mb-3">
-              <label for="origen" class="form-label">Origen</label>
+              <label for="origen" class="form-label"
+                >Origen <span style="color: red">*</span></label
+              >
               <select
                 v-if="formData.tipo_origen !== 'puerto'"
                 class="form-select"
@@ -87,7 +91,7 @@
             <!-- Campo: tipo_equipo -->
             <div class="mb-3">
               <label for="tipo_equipo" class="form-label"
-                >Tipo de Equipo<span style="color: red">*</span></label
+                >Tipo de Equipo <span style="color: red">*</span></label
               >
               <select
                 @click="buscarEquipos"
@@ -183,7 +187,9 @@
 
             <!-- Campo: destino -->
             <div class="mb-3">
-              <label for="destino" class="form-label">Destino</label>
+              <label for="destino" class="form-label"
+                >Destino <span style="color: red">*</span></label
+              >
               <select
                 v-if="formData.tipo_destino !== 'puerto'"
                 class="form-select"
@@ -220,7 +226,8 @@
             <!-- Campo: producto -->
             <div class="mb-3">
               <label for="producto" class="form-label"
-                >Producto<button
+                >Producto <span style="color: red">*</span
+                ><button
                   class="create-button ms-2"
                   @click="abrirModalAgregarProducto"
                 >
@@ -240,21 +247,24 @@
                 </option>
               </select>
             </div>
-
+            <ModalAgregarProducto
+              v-if="mostrarModal"
+              :visible="mostrarModal"
+              @cerrar-modal="cerrarModal"
+            />
             <!-- Campo: cantidad_vagones -->
 
             <!-- Campo: observaciones -->
             <div class="mb-3">
               <label for="observaciones" class="form-label"
-                >Observaciones <span style="color: red">*</span></label
-              >
+                >Observaciones
+              </label>
               <textarea
                 class="form-control"
                 v-model="formData.observaciones"
                 id="observaciones"
                 name="observaciones"
                 rows="3"
-                required
               ></textarea>
             </div>
           </div>
@@ -357,6 +367,7 @@ export default {
   name: "AdicionarEnTren",
   components: {
     NavbarComponent,
+    ModalAgregarProducto,
   },
   data() {
     return {
@@ -385,12 +396,14 @@ export default {
 
   mounted() {
     // Llama al método para obtener los puertos
+    this.getTren();
     this.getProductos();
     this.getEquipos();
     this.getLocomotoras();
     this.getEntidades();
     this.getPuertos();
-    this.getTren();
+
+    this.buscarEquipos();
   },
 
   methods: {
@@ -514,10 +527,11 @@ export default {
     },
 
     async buscarEquipos() {
+      const vagon_id = this.$route.params.id;
+      const response = await axios.get(`/ufc/en-trenes/${vagon_id}/`);
       try {
-        const peticion =
-          "/api/equipos_ferroviarios/?id_tipo_equipo_territorio=" +
-          this.formData.tipo_equipo;
+        const peticion = `/api/equipos_ferroviarios/?id_tipo_equipo_territorio=${this.vagon["tipo_equipo"]}`;
+
         const response = await axios.get(peticion);
         this.equipos_vagones = response.data;
       } catch (error) {
@@ -552,7 +566,10 @@ export default {
 
     async getEquipos() {
       try {
-        const response = await axios.get("/api/tipo-e-f-no-locomotora/");
+        const response = await axios.get(
+          "/api/tipo-e-f-no-locomotora/",
+          this.formData["tipo_equipo"]
+        );
         this.equipos = response.data;
       } catch (error) {
         console.error("Error al obtener los equipos:", error);

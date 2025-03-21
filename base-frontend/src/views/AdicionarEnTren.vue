@@ -269,8 +269,8 @@
             <!-- Campo: observaciones -->
             <div class="mb-3">
               <label for="observaciones" class="form-label"
-                >Observaciones <span style="color: red">*</span></label
-              >
+                >Observaciones
+              </label>
               <textarea
                 class="form-control"
                 v-model="formData.observaciones"

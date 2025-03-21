@@ -1,6 +1,8 @@
 <template>
   <div>
-    <img style="width: 250px" src="@/assets/Imagenes/mitrans.png" />
+    <div style="background-color: #002a68; color: white; text-align: right">
+      <h6>Bienvenido:</h6>
+    </div>
     <Navbar-Component />
     <div class="wrap" style="margin-top: 1%">
       <br />
@@ -14,7 +16,7 @@
         </li>
         <li>
           <button
-            to="TipoEmbalaje"
+            to="/TipoEmbalaje"
             @click="openAddEmbarcacionModal"
             v-if="hasPermission"
             class="btn btn-primary"

@@ -625,6 +625,14 @@ const routes = [
     },
   },
   {
+    path: "/ParteUfc",
+    name: "ParteUfc",
+    component: () => import("../views/ParteUfcView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
     path: "/AdicionarTipoEmbalaje",
     name: "AdicionarTipoEmbalaje",
     component: () => import("../views/AdicionarTipoEmbalajeView.vue"),

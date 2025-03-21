@@ -62,6 +62,26 @@
               <td>{{ tren.destino }}</td>
 
               <td>
+                <!--   <button
+                  @click="openCargoDetailsModal(item)"
+                  class="btn btn-info btn-small btn-eye"
+                  v-html="
+                    showNoId
+                      ? '<i class=\'bi bi-eye-slash-fill\'></i>'
+                      : '<i class=\'bi bi-eye-fill\'></i>'
+                  "
+                ></button>
+
+                <button class="btn btn-warning btn-small">
+                  <router-link
+                    :to="{ name: 'EditarEnTren', params: { id: item.id } }"
+                  >
+                    <i style="color: black" class="bi bi-pencil-square"></i>
+                  </router-link>
+                </button>
+                <button class="btn btn-danger btn-small">
+                  <i class="bi bi-trash"></i>
+                </button> -->
                 <button
                   @click="toggleNoIdVisibility"
                   class="btn btn-info btn-small btn-eye"
@@ -73,13 +93,13 @@
                 ></button>
                 <span v-if="hasPermission">
                   <button
-                    class="btn btn-warning bt n-small"
+                    class="btn btn-danger btn-small btn-eye"
                     style="margin-left: 3%"
                   >
                     <router-link
                       :to="{ name: 'EditarEnTren', params: { id: tren.id } }"
                     >
-                      <i style="color: white" class="bi bi-pencil-square"></i>
+                      <i style="color: black" class="bi bi-pencil-square"></i>
                     </router-link>
                   </button>
                   <button
@@ -87,7 +107,7 @@
                     @click.prevent="confirmDelete(tren.id)"
                     class="btn btn-danger btn-small"
                   >
-                    <i style="color: white" class="bi bi-trash"></i>
+                    <i class="bi bi-trash"></i>
                   </button>
                 </span>
               </td>
@@ -100,7 +120,31 @@
 </template>
 
 <style scoped>
-/* Estilos para la barra de navegación */
+.btn-small {
+  font-size: 22px; /* Aumenta el tamaño del ícono */
+  color: black;
+  margin-right: 5px;
+  outline: none; /* Elimina el borde de foco */
+  border: none;
+  background: none; /* Elimina el fondo */
+  padding: 0; /* Elimina el padding para que solo se vea el ícono */
+}
+.btn-eye {
+  font-size: 22px; /* Aumenta el tamaño del ícono */
+  margin-right: 5px;
+  outline: none; /* Elimina el borde de foco */
+  border: none;
+  background: none; /* Elimina el fondo */
+  padding: 0; /* Elimina el padding para que solo se vea el ícono */
+}
+.btn:hover {
+  background: none; /* Asegura que no haya fondo al hacer hover */
+}
+
+.btn:focus {
+  outline: none; /* Elimina el borde de foco al hacer clic */
+  box-shadow: none; /* Elimina cualquier sombra de foco en algunos navegadores */
+}
 </style>
 <script>
 import axios from "axios";

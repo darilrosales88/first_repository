@@ -210,7 +210,9 @@
           <li><hr class="dropdown-divider" /></li>
           <li><a class="dropdown-item" href="#">ENOC</a></li>
           <li><hr class="dropdown-divider" /></li>
-          <li><a class="dropdown-item" href="#">UFC</a></li>
+          <li>
+            <router-link class="dropdown-item" to="ParteUfc">UFC</router-link>
+          </li>
           <li><hr class="dropdown-divider" /></li>
           <li><a class="dropdown-item" href="#">GEA</a></li>
           <li><hr class="dropdown-divider" /></li>

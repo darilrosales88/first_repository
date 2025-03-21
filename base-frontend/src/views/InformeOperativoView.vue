@@ -1,6 +1,8 @@
 <template>
   <div>
-    <img style="width: 250px" src="@/assets/Imagenes/mitrans.png" />
+    <div style="background-color: #002a68; color: white; text-align: right">
+      <h6>Bienvenido:</h6>
+    </div>
     <Navbar-Component />
     <EnTrenes />
     <!-- Contenedor de la tabla con scroll horizontal 

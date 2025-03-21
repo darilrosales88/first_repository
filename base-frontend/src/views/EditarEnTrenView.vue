@@ -352,7 +352,7 @@ button[type="submit"] {
 import axios from "axios";
 import Swal from "sweetalert2";
 import NavbarComponent from "@/components/NavbarComponent.vue";
-
+import ModalAgregarProducto from "@/components/ModalAgregarProducto.vue";
 export default {
   name: "AdicionarEnTren",
   components: {
@@ -372,6 +372,7 @@ export default {
         observaciones: "",
         equipo_vagon: "",
       },
+      mostrarModal: false,
       productos: [],
       equipos: [],
       equipos_vagones: [],
@@ -569,9 +570,11 @@ export default {
       }
     },
     abrirModalAgregarProducto() {
-      // Redirige a la vista "AdicionarProductoVagon"
-      localStorage.setItem("formData", JSON.stringify(this.formData));
-      this.$router.push({ name: "AdicionarProductoVagon" });
+      this.mostrarModal = true;
+    },
+    cerrarModal() {
+      this.mostrarModal = false;
+      this.getProductos();
     },
 
     eliminarVagon(index) {

@@ -116,10 +116,39 @@
         </table>
       </div>
     </div>
+    <div class="pagination-container" style="padding-left: 15%">
+      <button
+        @click="previousPage"
+        :disabled="currentPage === 1"
+        class="btn btn-primary"
+      >
+        Anterior
+      </button>
+      <span style="margin: 0 10px">
+        Página {{ currentPage }} de {{ Math.ceil(totalItems / itemsPerPage) }}
+      </span>
+      <button
+        @click="nextPage"
+        :disabled="currentPage * itemsPerPage >= totalItems"
+        class="btn btn-primary"
+      >
+        Siguiente
+      </button>
+    </div>
   </div>
 </template>
 
 <style scoped>
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination-container button {
+  margin: 0 5px;
+}
 .btn-small {
   font-size: 22px; /* Aumenta el tamaño del ícono */
   color: black;
@@ -138,7 +167,7 @@
   padding: 0; /* Elimina el padding para que solo se vea el ícono */
 }
 .btn:hover {
-  background: none; /* Asegura que no haya fondo al hacer hover */
+  scale: 1.1; /* Asegura que no haya fondo al hacer hover */
 }
 
 .btn:focus {
@@ -154,13 +183,15 @@ export default {
 
   data() {
     return {
-      en_trenes: [],
-      user_role: "",
-      searchQuery: "",
-      debounceTimeout: null, // Añadido aquí
+      en_trenes: [], // Lista de trenes
+      currentPage: 1, // Página actual
+      itemsPerPage: 10, // Elementos por página
+      totalItems: 0, // Total de elementos
+      searchQuery: "", // Búsqueda
+      debounceTimeout: null,
       busqueda_existente: true,
-      userPermissions: [], // Almacenará los permisos del usuario
-      userGroups: [], // Almacenará los grupos del usuario
+      userPermissions: [],
+      userGroups: [],
       showContent: false,
     };
   },
@@ -206,8 +237,14 @@ export default {
 
     async getTrenes() {
       try {
-        const response = await axios.get("/ufc/en-trenes/");
-        this.en_trenes = response.data; // Asignar la lista de trenes
+        const response = await axios.get("/ufc/en-trenes/", {
+          params: {
+            page: this.currentPage, // Página actual
+            page_size: this.itemsPerPage, // Elementos por página
+          },
+        });
+        this.en_trenes = response.data.results; // Datos de la página actual
+        this.totalItems = response.data.count; // Total de elementos
         console.log("Trenes obtenidos:", this.en_trenes);
       } catch (error) {
         console.error("Error al obtener los trenes:", error);
@@ -217,12 +254,16 @@ export default {
     async searchTrenes() {
       this.$store.commit("setIsLoading", true);
       try {
-        const response = await axios.get(
-          `/ufc/en-trenes/?origen_destino=${this.searchQuery}`
-        );
-        this.en_trenes = response.data;
-        // Actualiza busqueda_existente basado en el resultado
-        this.busqueda_existente = this.paises.length > 0;
+        const response = await axios.get("/ufc/en-trenes/", {
+          params: {
+            search: this.searchQuery, // Término de búsqueda
+            page: this.currentPage, // Página actual
+            page_size: this.itemsPerPage, // Elementos por página
+          },
+        });
+        this.en_trenes = response.data.results; // Datos de la página actual
+        this.totalItems = response.data.count; // Total de elementos
+        this.busqueda_existente = this.en_trenes.length > 0;
       } catch (error) {
         console.error("Error al buscar trenes", error);
         this.busqueda_existente = false;
@@ -235,6 +276,26 @@ export default {
       this.debounceTimeout = setTimeout(() => {
         this.searchTrenes();
       }, 300);
+    },
+    previousPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+        this.getTrenes();
+      }
+    },
+
+    // Cambiar a la página siguiente
+    nextPage() {
+      if (this.currentPage * this.itemsPerPage < this.totalItems) {
+        this.currentPage++;
+        this.getTrenes();
+      }
+    },
+
+    // Cambiar a una página específica
+    goToPage(page) {
+      this.currentPage = page;
+      this.getTrenes();
     },
     async delete_tren(id) {
       try {

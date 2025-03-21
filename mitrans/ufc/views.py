@@ -1,7 +1,7 @@
 #4.1 una variante para trabajar con los serializadores  es la propiedad viewsets
 # de rest_framework, facilita el CRUD
 from rest_framework import viewsets,generics,permissions
-
+from rest_framework.pagination import PageNumberPagination
 #importacion de modelos
 from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados,en_trenes,producto_en_vagon
 
@@ -198,9 +198,17 @@ class productos_vagones_cargados_descargados_view_set(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
     
 #/********************************************************EN_TRENES*********************************************************************
+
+
+
+class en_trenes_paginator(PageNumberPagination):
+    page_size = 10  # Número de registros por página
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 class en_trenes_view_set(viewsets.ModelViewSet):
     queryset = en_trenes.objects.all().order_by('-id') # Definir el queryset
     serializer_class = en_trenes_serializer
+    pagination_class = en_trenes_paginator
     permission_classes = [IsUFCPermission]
     ordering_fields = ['id'] 
     ordering = ['-id']  # Orden por defecto (descendente por id)

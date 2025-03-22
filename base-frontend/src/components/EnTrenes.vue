@@ -115,26 +115,28 @@
           </tbody>
         </table>
       </div>
+
+      <div class="pagination-container" style="padding-left: 15%">
+        <button
+          @click="previousPage"
+          :disabled="currentPage === 1"
+          class="btn btn-primary"
+        >
+          Anterior
+        </button>
+        <span style="margin: 0 10px">
+          Página {{ currentPage }} de {{ Math.ceil(totalItems / itemsPerPage) }}
+        </span>
+        <button
+          @click="nextPage"
+          :disabled="currentPage * itemsPerPage >= totalItems"
+          class="btn btn-primary"
+        >
+          Siguiente
+        </button>
+      </div>
     </div>
-    <div class="pagination-container" style="padding-left: 15%">
-      <button
-        @click="previousPage"
-        :disabled="currentPage === 1"
-        class="btn btn-primary"
-      >
-        Anterior
-      </button>
-      <span style="margin: 0 10px">
-        Página {{ currentPage }} de {{ Math.ceil(totalItems / itemsPerPage) }}
-      </span>
-      <button
-        @click="nextPage"
-        :disabled="currentPage * itemsPerPage >= totalItems"
-        class="btn btn-primary"
-      >
-        Siguiente
-      </button>
-    </div>
+    <!-- Aqui se acabo el contenido escondido -->
   </div>
 </template>
 

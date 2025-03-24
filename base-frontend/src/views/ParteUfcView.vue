@@ -8,7 +8,7 @@
       <br />
       <ul class="grid">
         <li>
-          <router-link class="dropdown-item" to="InformeOperativo">
+          <router-link class="dropdown-item" to="/InformeOperativo">
             <button v-if="hasPermission" class="btn btn-primary">
               Informe Operativo &nbsp;<i class="bi bi-plus-circle"></i>
             </button>

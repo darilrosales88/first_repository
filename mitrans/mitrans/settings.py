@@ -95,9 +95,9 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
 
-     # Configuración de paginación:
-    #'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    #'PAGE_SIZE': 15,
+    #para la paginacion global en los componentes
+   # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    #'PAGE_SIZE': 10,  # Número de elementos por página
 
 }
 

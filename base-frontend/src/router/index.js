@@ -636,7 +636,7 @@ const routes = [
 
   {
     path: "/InfoOperativo",
-    name: "InformeOperativo",
+    name: "InfoOperativo",
     component: () => import("../views/InformeOperativoView.vue"),
     meta: {
       requireLogin: true,

@@ -44,7 +44,7 @@
           <th scope="col">Latitud</th>
           <th scope="col">Longitud</th>
           <!-- Mostrar la columna "Acción" solo si el usuario pertenece al grupo "Admin" -->
-          <th scope="col" v-if="hasGroup('Admin')">Acción</th>
+          <th scope="col" >Acción</th>
         </tr>
       </thead>
       <tbody>

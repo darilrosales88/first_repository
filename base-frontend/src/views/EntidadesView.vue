@@ -41,7 +41,7 @@
           <th scope="col">OSDE/OACE u Organismo</th>
           <th scope="col">Tipo de entidad</th>
           <th scope="col">Provincia</th>
-          <th scope="col" v-if="hasGroup('Admin')">Acciones</th>
+          <th scope="col" >Acciones</th>
         </tr>
       </thead>
       <tbody>

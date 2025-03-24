@@ -1,22 +1,5 @@
 <template>
-  <div style=" background-color: #002A68; color: white; text-align: right;">
-    <h6>Bienvenido:</h6>
-  </div>  
   <nav class="navbar" style="background-color: #003366; height: 100vh;">
-    <div class="logo-container">
-      <img
-        class="logo"
-        style="
-          position: relative;
-          width: 146px;
-          height: 100px;
-          margin-top: -21px;
-          margin-left: 24px;
-        "
-        src="../assets/Imagenes/mitranslogo.jpg"
-        alt="Logo"
-      />
-    </div>
     <!-- Lista de elementos del menú -->
     <ul class="navbar-nav" style="margin-bottom:10em">
       <!-- Enlaces del menú -->
@@ -144,9 +127,7 @@
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="#">ENOC</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li>
-              <router-link class="dropdown-item" to="/ParteUfc">UFC</router-link>
-            </li>
+            <li><router-link class="dropdown-item" to="/ufc">UFC</router-link></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="#">GEA</a></li>
             <li><hr class="dropdown-divider"></li>
@@ -280,7 +261,7 @@
  
 <script>
 import axios from 'axios';
-import NavbarComponent from "@/components/NavbarComponent.vue";
+
 export default {
   name: 'NavbarComponent',
   data() {

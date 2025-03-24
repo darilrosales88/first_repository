@@ -51,7 +51,7 @@ class UserPermissionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'entidad','cargo','cargo_name','entidad_name', 'password', 'groups','role' ,'user_permissions']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'entidad','cargo','cargo_name','entidad_name', 'password', 'groups', 'user_permissions']
         extra_kwargs = {'password': {'write_only': True, 'required': False}}
     
 
@@ -62,7 +62,6 @@ class UserPermissionSerializer(serializers.ModelSerializer):
         instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.entidad = validated_data.get('entidad', instance.entidad)
         instance.cargo = validated_data.get('cargo', instance.cargo)
-        instance.role=validated_data.get('role', instance.role)
 
         password = validated_data.get('password', None)
         if password:

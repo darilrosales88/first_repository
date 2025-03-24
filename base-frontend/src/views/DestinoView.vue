@@ -40,7 +40,7 @@
         <tr>
           <th>Cliente</th>
           <th>Destino</th>
-          <th v-if="hasGroup('Admin')">Acciones</th>
+          <th >Acciones</th>
         </tr>
       </thead>
       <tbody>

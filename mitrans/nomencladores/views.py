@@ -1159,18 +1159,6 @@ def verificar_codigo_reeup(request):
 
     existe = nom_entidades.objects.filter(codigo_reeup=codigo_reeupp).exists()
     return Response({"exists": existe})#retorna un booleano
-
-#retorna solo las entidades cuyo tipo sean de acceso comercial o de ccd
-class entidades_acceso_comercial_ccdView(APIView):
-    def get(self, request):
-        # Filtrar las entidades cuyo tipo_entidad sea "acceso_comercial" o "CCD"
-        entidades = nom_entidades.objects.filter(tipo_entidad__in=['acceso_comercial', 'ccd'])
-        
-        # Serializar los datos
-        serializer = nom_entidades_serializer(entidades, many=True)
-        
-        # Devolver la respuesta
-        return Response(serializer.data, status=status.HTTP_200_OK)
 #/*********************************************************************************************************************************************
 class nom_destino_view_set(viewsets.ModelViewSet):
     queryset = nom_destino.objects.all()
@@ -1273,18 +1261,15 @@ class nom_tipo_equipo_ferroviario_view_set(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        
+
         # Filtrado por tipo de equipo, descripcion y tipo_combustible
-        search = self.request.query_params.get('tipo_equipo_tipo_carga', None)
+        search = self.request.query_params.get('busqueda_tipo_equipo__tipo_carga', None)
 
         if search is not None: #preguntamos si la variable search no está vacía
 
           #si no lo está el queryset es alguna coincidencia con el campo descripcion, 
           #tipo de equipo, o exactamente el valor del campo tipo_combustible
-            queryset = queryset.filter(
-            Q(tipo_equipo__icontains=search) |
-            Q(tipo_carga__icontains=search)
-            )
+            queryset = queryset.filter(tipo_equipo__icontains=search) | queryset.filter(tipo_carga__icontains=search)
 
         return queryset
 
@@ -1354,18 +1339,6 @@ class nom_tipo_equipo_ferroviario_view_set(viewsets.ModelViewSet):
         )
 
         return super().list(request, *args, **kwargs)
-
-#retorna solo las entidades cuyo tipo sean de acceso comercial o de ccd
-class tipo_equipo_ferroviario_no_locomotora(APIView):
-    def get(self, request):
-        # Excluir los tipos de equipos ferroviarios cuyo tipo sea "locomotora"
-        tipos_equipos = nom_tipo_equipo_ferroviario.objects.exclude(tipo_equipo='locomotora')
-        
-        # Serializar los datos
-        serializer = nom_tipo_equipo_ferroviario_serializer(tipos_equipos, many=True)
-        
-        # Devolver la respuesta
-        return Response(serializer.data, status=status.HTTP_200_OK)
 #/*********************************************************************************************************************************************
 class nom_embarcacion_view_set(viewsets.ModelViewSet):
     queryset = nom_embarcacion.objects.all().order_by('-id')  # Definir el queryset
@@ -1459,18 +1432,12 @@ class nom_equipo_ferroviario_view_set(viewsets.ModelViewSet):
         queryset = super().get_queryset()
 
         search = self.request.query_params.get('id_tipo_equipo_territorio', None)
-        if search:
-            try:
-                # Intenta convertir el término de búsqueda a un entero para buscar por ID
-                search_term_as_int = int(search)
-                queryset = queryset.select_related('tipo_equipo').filter(Q(tipo_equipo_id=search_term_as_int))
-                return queryset
-            except ValueError:
-                search_term_as_int = None
-                
-            queryset = queryset.select_related('tipo_equipo').filter(Q(tipo_equipo__tipo_equipo__icontains=search) |Q(territorio__icontains=search) | Q(numero_identificacion__icontains=search)
+
+        if search is not None:
+
+            queryset = queryset.filter( Q(tipo_equipo_name__icontains=search) | Q(territorio_name__icontains=search) | Q(numero_identificacion__icontains=search)
             )
-        #Fixed bug para buscar locomotoras cuando se usa select_related('campo_asociado_a_ForeignKEY')
+
         return queryset
     
     def create(self, request, *args, **kwargs):

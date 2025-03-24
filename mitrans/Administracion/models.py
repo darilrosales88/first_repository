@@ -6,17 +6,10 @@ from nomencladores.models import nom_cargo, nom_entidades  # Asegúrate de que l
 
 # Modelo de usuario personalizado
 class CustomUser(AbstractUser):
-    ROLE_CHOICES = (
-        ('ufc', 'UFC'),
-        ('admin', 'Administrador'),
-        ('operador', 'Operador'),
-    )
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='operador',verbose_name="Rol que desempeña")
     entidad = models.ForeignKey(nom_entidades, on_delete=models.CASCADE, blank=True, null=True, verbose_name="Entidad")
     cargo = models.ForeignKey(nom_cargo, on_delete=models.CASCADE, verbose_name="Cargo", blank=True, null=True, )
-   
 
-    def create_user(self, username, email, first_name, last_name, password, entidad=None, cargo=None, role="operador", **extra_fields):
+    def create_user(self, username, email, first_name, last_name, password, entidad=None, cargo=None, **extra_fields):
         user = self.model(
             username=username,
             email=email,
@@ -24,7 +17,6 @@ class CustomUser(AbstractUser):
             last_name=last_name,
             entidad=entidad,
             cargo=cargo,
-            role=role,
             **extra_fields
         )
         user.set_password(password)
@@ -49,4 +41,4 @@ class Auditoria(models.Model):
     fecha = models.DateTimeField(default=timezone.now)
     
     def __str__(self):
-        return f"{self.usuario} - {self.accion} - {self.fecha} - {self.usuario.role}"
+        return f"{self.usuario} - {self.accion} - {self.fecha}"

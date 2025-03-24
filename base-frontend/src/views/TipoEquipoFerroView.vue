@@ -43,7 +43,7 @@
     <th scope="col">Peso máximo con carga</th>
     <th scope="col">Capacidad cúbica máxima</th>
     <th scope="col">Descripción</th>
-    <th scope="col" v-if="hasGroup('Admin')">Acciones</th>
+    <th scope="col" >Acciones</th>
   </tr>
 </thead>
 <tbody>

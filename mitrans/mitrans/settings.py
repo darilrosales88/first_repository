@@ -47,7 +47,7 @@ THIRD_APPS = [
 OWN_APPS = [    
     'nomencladores.apps.NomencladoresConfig',
     'Administracion.apps.AdministracionConfig',
-    'ufc.apps.UfcConfig',
+    
 ]
 INSTALLED_APPS = BASE_APPS + THIRD_APPS + OWN_APPS
 
@@ -95,9 +95,9 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
 
-    #para la paginacion global en los componentes
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,  # Número de elementos por página
+     # Configuración de paginación:
+    #'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    #'PAGE_SIZE': 15,
 
 }
 

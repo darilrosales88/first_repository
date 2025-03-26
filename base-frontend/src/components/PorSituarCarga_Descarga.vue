@@ -31,20 +31,20 @@
             <th scope="col">Operacion</th>
             <th scope="col">Producto</th>
             <th scope="col">Por Situar</th>
-            <th scope="col">Dias</th>
+            
             <th scope="col">Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(item, index) in filteredItems" :key="index">
-            <th scope="row">{{ index + 1 }}</th>
-            <td>{{ item.origen }}</td>
-            <td>{{ item.tipoEquipo }}</td>
+          <tr v-for="(item, index) in por_situar" :key="item.id">
+            <th scope="row">{{ (index + 1) }}</th>
+            <td>{{ item.tipo_origen }}</td>
+            <td>{{ item.tipo_equipo }}</td>
             <td>{{ item.estado }}</td>
             <td>{{ item.operacion }}</td>
             <td>{{ item.producto }}</td>
-            <td>{{ item.situados }}</td>
-            <td>{{ item.dias }}</td>
+            <td>{{ item.por_situar }}</td>
+            
             <td>
               <button class="btn btn-warning btn-small">
                 <router-link to="">
@@ -107,68 +107,58 @@
     </div>
 </template>
   
-  <script>
+<script>
+import Swal from "sweetalert2";
+import axios from "axios";
+
   export default {
     data() {
-      return {
-        searchQuery: "", // Query de búsqueda
-        showModal: false, // Controla la visibilidad del modal
-        newItem: {
-          origen: "",
-          tipoEquipo: "",
-          estado: "",
-          operacion: "",
-          producto: "",
-          situados: "",
-          dias: "",
-        }, // Objeto para almacenar el nuevo registro
-        items: [
-          // Datos de ejemplo
-          {
-            origen: "Mark",
-            tipoEquipo: "Otto",
-            estado: "@mdo",
-            operacion: "Mark",
-            producto: "Otto",
-            situados: "@mdo",
-            dias: "Otto",
-          },
-          // Agrega más datos aquí...
-        ],
-      };
+        return {
+          searchQuery: "",
+          por_situar: [],
+          filteredData: [], // Datos filtrados que se mostrarán en la tabla
+          debounceTimeout: null,
+          busqueda_existente: true,
+          // ... otras propiedades
+        };
+},
+    
+    mounted(){
+      this.getPorSituar();
     },
-    computed: {
-      // Filtra los elementos de la tabla según la búsqueda
-      filteredItems() {
-        return this.items.filter((item) => {
-          return (
-            item.origen.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-            item.tipoEquipo.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-            item.estado.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-            item.operacion.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-            item.producto.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-            item.situados.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-            item.dias.toLowerCase().includes(this.searchQuery.toLowerCase())
-          );
-        });
-      },
-    },
+
     methods: {
-      // Método para agregar un nuevo registro
-      addNewItem() {
-        this.items.push({ ...this.newItem }); // Agrega el nuevo registro a la tabla
-        this.newItem = {
-          origen: "",
-          tipoEquipo: "",
-          estado: "",
-          operacion: "",
-          producto: "",
-          situados: "",
-          dias: "",
-        }; // Limpia el formulario
-        this.showModal = false; // Cierra el modal
-      },
-    },
+  getPorSituar() {
+    axios.get('http://127.0.0.1:8000/api/por_situar/')
+      .then((response) => {
+        this.por_situar = response.data;
+        this.filteredData = [...this.por_situar]; // Copia inicial para filtrado
+      })
+  },
+  
+  filterTable() {
+    // Cancelar el timeout anterior si existe
+    if (this.debounceTimeout) {
+      clearTimeout(this.debounceTimeout);
+    }
+    
+    // Establecer un nuevo timeout para evitar múltiples llamadas mientras se escribe
+    this.debounceTimeout = setTimeout(() => {
+      if (this.searchQuery.trim() === '') {
+        // Si la búsqueda está vacía, mostrar todos los datos
+        this.filteredData = [...this.por_situar];
+        this.busqueda_existente = true;
+      } else {
+        // Filtrar por tipo_equipo (insensible a mayúsculas/minúsculas)
+        this.filteredData = this.por_situar.filter(item => 
+          item.tipo_equipo.toLowerCase().includes(this.searchQuery.toLowerCase())
+        );
+        this.busqueda_existente = this.filteredData.length > 0;
+      }
+    }, 300); // Retardo de 300ms
+  }
+}
+
   };
   </script>
   

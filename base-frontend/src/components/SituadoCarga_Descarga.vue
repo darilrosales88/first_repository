@@ -36,15 +36,15 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(item, index) in filteredItems" :key="index">
-            <th scope="row">{{ index + 1 }}</th>
-            <td>{{ item.origen }}</td>
-            <td>{{ item.tipoEquipo }}</td>
+          <tr v-for="(item, index) in situados" :key="item.id">
+            <th scope="row">{{ (index + 1) }}</th>
+            <td>{{ item.tipo_origen }}</td>
+            <td>{{ item.tipo_equipo }}</td>
             <td>{{ item.estado }}</td>
             <td>{{ item.operacion }}</td>
             <td>{{ item.producto }}</td>
             <td>{{ item.situados }}</td>
-            <td>{{ item.dias }}</td>
+            <td>{{ item.pendiente_proximo_dia }}</td>
             <td>
               <button class="btn btn-warning btn-small">
                 <router-link to="">
@@ -108,66 +108,32 @@
 </template>
   
   <script>
+import Swal from "sweetalert2";
+import axios from "axios";
   export default {
     data() {
       return {
         searchQuery: "", // Query de búsqueda
-        showModal: false, // Controla la visibilidad del modal
-        newItem: {
-          origen: "",
-          tipoEquipo: "",
-          estado: "",
-          operacion: "",
-          producto: "",
-          situados: "",
-          dias: "",
-        }, // Objeto para almacenar el nuevo registro
-        items: [
-          // Datos de ejemplo
-          {
-            origen: "Mark",
-            tipoEquipo: "Otto",
-            estado: "@mdo",
-            operacion: "Mark",
-            producto: "Otto",
-            situados: "@mdo",
-            dias: "Otto",
-          },
-          // Agrega más datos aquí...
-        ],
+        situados: [],
+        debounceTimeout: null, // Añadido aquí
+        busqueda_existente: true, // Variable para controlar la visibilidad del mensaje de búsqueda
+        userPermissions: [], // Almacenará los permisos del usuario
+        userGroups: [],      // Almacenará los grupos del usuario
       };
     },
-    computed: {
-      // Filtra los elementos de la tabla según la búsqueda
-      filteredItems() {
-        return this.items.filter((item) => {
-          return (
-            item.origen.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-            item.tipoEquipo.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-            item.estado.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-            item.operacion.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-            item.producto.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-            item.situados.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-            item.dias.toLowerCase().includes(this.searchQuery.toLowerCase())
-          );
-        });
-      },
+    
+    mounted(){
+      this.getSituados();
     },
+
     methods: {
-      // Método para agregar un nuevo registro
-      addNewItem() {
-        this.items.push({ ...this.newItem }); // Agrega el nuevo registro a la tabla
-        this.newItem = {
-          origen: "",
-          tipoEquipo: "",
-          estado: "",
-          operacion: "",
-          producto: "",
-          situados: "",
-          dias: "",
-        }; // Limpia el formulario
-        this.showModal = false; // Cierra el modal
-      },
+      getSituados(){
+        axios.get('http://127.0.0.1:8000/api/situados/')
+        .then((response)=>{
+          console.log(response.data)
+          this.situados = response.data
+        })
+      }
     },
   };
   </script>

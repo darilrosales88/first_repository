@@ -87,15 +87,17 @@
                 <button class="btn btn-danger btn-small">
                   <i class="bi bi-trash"></i>
                 </button> -->
-                <button
-                  @click="openVagonDetailsModal(tren)"
-                  class="btn btn-info btn-small btn-eye"
-                  v-html="
-                    showNoId
-                      ? '<i class=\'bi bi-eye-slash-fill\'></i>'
-                      : '<i class=\'bi bi-eye-fill\'></i>'
-                  "
-                ></button>
+                <span v-if="hasPermission">
+                  <button
+                    @click="openVagonDetailsModal(tren)"
+                    class="btn btn-info btn-small btn-eye"
+                    v-html="
+                      showNoId
+                        ? '<i class=\'bi bi-eye-slash-fill\'></i>'
+                        : '<i class=\'bi bi-eye-fill\'></i>'
+                    "
+                  ></button>
+                </span>
                 <span v-if="hasPermission">
                   <button
                     class="btn btn-danger btn-small btn-eye"

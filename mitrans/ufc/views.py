@@ -22,7 +22,6 @@ from django.db.models import Q
 class IsUFCPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         ROLES_PERMITIDO=['ufc','admin']
-        # Asume que el rol del usuario está almacenado en un campo llamado 'role'
         return request.user.role in ROLES_PERMITIDO
 
 

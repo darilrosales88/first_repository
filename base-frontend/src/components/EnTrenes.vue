@@ -28,6 +28,11 @@
               style="width: 200px"
             />
           </form>
+          <ModalEnTrenes
+            v-if="mostrarModal"
+            :visible="mostrarModal"
+            @cerrar-modal="cerrarModal"
+          />
         </div>
       </div>
       <div class="table-container" style="padding-left: 15%">
@@ -56,7 +61,7 @@
               <td>{{ tren.tipo_equipo }}</td>
               <!-- nacionalidad_name esta declarado en el serializador -->
               <td>{{ tren.estado }}</td>
-              <td>{{ tren.producto_name }}</td>
+              <td>{{ tren.producto_name || "Null" }}</td>
               <td>{{ tren.cantidad_vagones }}</td>
               <td>{{ tren.origen }}</td>
               <td>{{ tren.destino }}</td>
@@ -83,7 +88,7 @@
                   <i class="bi bi-trash"></i>
                 </button> -->
                 <button
-                  @click="toggleNoIdVisibility"
+                  @click="openVagonDetailsModal(tren)"
                   class="btn btn-info btn-small btn-eye"
                   v-html="
                     showNoId
@@ -180,6 +185,7 @@
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
+import ModalEnTrenes from "@/components/ModalViewEnTrenes.vue";
 export default {
   name: "EnTrenes",
 
@@ -195,6 +201,7 @@ export default {
       userPermissions: [],
       userGroups: [],
       showContent: false,
+      mostrarModal: false,
     };
   },
 
@@ -314,6 +321,61 @@ export default {
         console.error("Error al eliminar el producto:", error);
         Swal.fire("Error", "Hubo un error al eliminar el producto.", "error");
       }
+    },
+
+    openVagonDetailsModal(tren) {
+      // Mapear IDs de grupos a nombres
+      /* const gruposAsignados = user.groups && user.groups.length > 0
+        ? user.groups
+            .map(groupId => {
+                const grupo = this.gruposDisponibles.find(g => g.id === groupId);
+                return grupo ? grupo.name : 'Desconocido';
+            })
+            .join(', ')
+        : 'Ninguno'; */
+
+      // Mapear IDs de permisos a nombres
+      /*  const permisosAsignados = user.user_permissions && user.user_permissions.length > 0
+        ? user.user_permissions
+            .map(permisoId => {
+                const permiso = this.permisosDisponibles.find(p => p.id === permisoId);
+                return permiso ? permiso.name : 'Desconocido';
+            })
+            .join(', ')
+        : 'Ninguno'; */
+
+      Swal.fire({
+        title: "Detalles del Vagon",
+        html: `
+            <div style="text-align: left;">
+                <p><strong>No Id Locomotora:</strong> ${tren.numero_identificacion_locomotora}</p>
+                <p><strong>Tipo de equipo:</strong> ${tren.tipo_equipo}</p>
+                <p><strong>Estado:</strong> ${tren.estado}</p>
+                <p><strong>Producto Id:</strong> ${tren.producto}</p>
+                <p><strong>Producto nombre:</strong> ${tren.producto_name}</p>
+                <p><strong>Tipo de origen:</strong> ${tren.tipo_origen}</p>
+                <p><strong>Origen:</strong> ${tren.origen}</p>
+                <p><strong>Tipo de destino:</strong> ${tren.tipo_destino}</p>
+                <p><strong>Destino:</strong> ${tren.destino}</p> 
+                <p><strong>Nombre del equipo de carga:</strong> ${tren.equipo_carga_name}</p>
+                <p><strong>Observaciones:</strong> ${tren.observaciones}</p>
+                
+            </div>
+        `,
+        width: "600px",
+        customClass: {
+          popup: "custom-swal-popup",
+          title: "custom-swal-title",
+          htmlContainer: "custom-swal-html",
+        },
+      });
+    },
+    abrirModalEnTren() {
+      this.mostrarModal = true;
+      console.log("Abriendo Modal....");
+    },
+    cerrarModal() {
+      this.mostrarModal = false;
     },
 
     confirmDelete(id) {

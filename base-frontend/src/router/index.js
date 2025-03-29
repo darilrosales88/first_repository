@@ -642,6 +642,30 @@ const routes = [
       requireLogin: true,
     },
   },
+  {
+    path: "/AdicionarVagon",
+    name: "AdicionarVagon",
+    component: () => import("../views/AdicionarEnTren.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/AdicionarProductoVagon",
+    name: "AdicionarProductoVagon",
+    component: () => import("../views/AdicionarProductoVagon.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/EditarEnTren",
+    name: "EditarEnTren",
+    component: () => import("../views/EditarEnTrenView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
 ];
 
 const router = createRouter({

@@ -19,7 +19,7 @@ router.register('vagones-cargados-descargados',vagon_cargado_descargado_view_set
 router.register('productos-vagones-cargados-descargados',productos_vagones_cargados_descargados_view_set,basename='productos-vagones-cargados-descargados')
 router.register('en-trenes',en_trenes_view_set, basename='en-trenes' )
 router.register('producto-vagon',producto_vagon_view_set, basename='producto-vagon' )
-router.register('por_situar',PorSituarCargaDescargaViewSet, basename="por_situar")
+router.register('por-situar',PorSituarCargaDescargaViewSet, basename="por-situar")
 router.register('situados', SituadoCargaDescargaViewset, basename="situados")
 
 

@@ -9,6 +9,9 @@ from .models import nom_pais,nom_provincia,nom_municipio,nom_tipo_maniobra_portu
 from .models import nom_territorio,nom_puerto,nom_terminal,nom_atraque,nom_unidad_medida,nom_osde_oace_organismo,nom_entidades
 from .models import nom_destino,nom_tipo_equipo_ferroviario,nom_embarcacion,nom_equipo_ferroviario,nom_estado_tecnico
 from .models import nom_producto,nom_tipo_embalaje,nom_incidencia,nom_tipo_estructura_ubicacion,nom_estructura_ubicacion
+from .models import por_situar_carga_descarga,Situado_Carga_Descarga
+
+
 
 #importacion de serializadores asociados a los modelos
 from .serializers import nom_pais_serializer,nom_provincia_serializer,nom_municipio_serializer
@@ -18,6 +21,7 @@ from .serializers import nom_atraque_serializer,nom_unidad_medida_serializer,nom
 from .serializers import nom_destino_serializer,nom_tipo_equipo_ferroviario_serializer,nom_embarcacion_serializer
 from .serializers import nom_equipo_ferroviario_serializer,nom_estado_tecnico_serializer,nom_producto_serializer,nom_entidades_filter
 from .serializers import nom_tipo_embalaje_serializer,nom_incidencia_serializer,nom_tipo_estructura_ubicacion_serializer,nom_estructura_ubicacion_serializer
+from .serializers import PorSituarCargaDescargaSerializer,SituadoCargaDescargaSerializers
 from Administracion.serializers import UserPermissionSerializer
 
 from Administracion.models import Auditoria
@@ -53,6 +57,39 @@ from django.db.models import Q
 from django.utils import timezone
 
 
+#Aqui comenzaremos con los partes:
+
+#UFC
+class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
+    queryset = por_situar_carga_descarga.objects.all()
+    serializer_class = PorSituarCargaDescargaSerializer
+    filter_backends = [DjangoFilterBackend]
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        tipo_equipo = self.request.query_params.get("tipo_equipo")
+        if tipo_equipo:
+            # Si el parámetro es una lista (ej: ?tipo_equipo=camion,furgon)
+            if "," in tipo_equipo:
+                tipos = tipo_equipo.split(",")
+                queryset = queryset.filter(tipo_equipo__in=tipos)
+        return queryset
+
+
+class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
+    queryset= Situado_Carga_Descarga.objects.all()
+    serializer_class = SituadoCargaDescargaSerializers
+    filter_backends = [DjangoFilterBackend]
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        tipo_equipo = self.request.query_params.get("tipo_equipo")
+        if tipo_equipo:
+            # Si el parámetro es una lista (ej: ?tipo_equipo=camion,furgon)
+            if "," in tipo_equipo:
+                tipos = tipo_equipo.split(",")
+                queryset = queryset.filter(tipo_equipo__in=tipos)
+        return queryset
           
     #*****************************************************************************************************************************
 

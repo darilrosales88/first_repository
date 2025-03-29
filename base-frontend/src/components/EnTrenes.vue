@@ -1,10 +1,10 @@
 <template>
   <div style="padding: 20px">
-    <button @click="toggleContentVisibility" class="btn btn-primary">
+    <!-- <button @click="toggleContentVisibility" class="btn btn-primary">
       <h2>En Trenes</h2>
-    </button>
+    </button> -->
 
-    <div v-if="showContent">
+    <div>
       <div class="d-flex" style="padding: 1%">
         <div class="create-button-container">
           <router-link

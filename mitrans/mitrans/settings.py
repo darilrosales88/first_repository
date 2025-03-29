@@ -47,6 +47,7 @@ THIRD_APPS = [
 OWN_APPS = [    
     'nomencladores.apps.NomencladoresConfig',
     'Administracion.apps.AdministracionConfig',
+    'ufc.apps.UfcConfig',
     
     
 ]

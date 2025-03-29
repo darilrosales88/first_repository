@@ -9,8 +9,8 @@ from .views import nom_atraque_view_set,nom_unidad_medida_view_set,nom_osde_oace
 from .views import nom_destino_view_set,nom_tipo_equipo_ferroviario_view_set,nom_embarcacion_view_set,nom_equipo_ferroviario_view_set
 from .views import nom_estado_tecnico_view_set,nom_producto_view_set,nom_tipo_equipo_ferroviario_view_set
 from .views import nom_incidencia_view_set,nom_tipo_estructura_ubicacion_view_set, nom_estructura_ubicacion_view_set
-from .views import nom_tipo_embalaje_view_set,verificar_destino,verificar_codigo_reeup,PorSituarCargaDescargaViewSet
-from .views import SituadoCargaDescargaViewset
+from .views import nom_tipo_embalaje_view_set,verificar_destino,verificar_codigo_reeup
+
 
 
 from django.urls import path
@@ -56,9 +56,6 @@ router.register('embalajes',nom_tipo_embalaje_view_set,basename='embalajes')#DAR
 router.register('incidencias',nom_incidencia_view_set,basename='incidencias')#karmal-----------------------------------------------------
 router.register('tipos_estructuras_ubicacion',nom_tipo_estructura_ubicacion_view_set,basename='tipos_estructuras_ubicacion')#darilOK
 router.register('estructuras_ubicacion',nom_estructura_ubicacion_view_set,basename='estructuras_ubicacion')#karmal---DARILOK
-router.register('por_situar',PorSituarCargaDescargaViewSet, basename="por_situar")
-router.register('situados', SituadoCargaDescargaViewset, basename="situados")
-
 
 
 #ahora declaramos el urlpatterns y lo igualamos a la propiedad urls de la variable creada de tipo routers

@@ -11,44 +11,7 @@ from .models import nom_pais,nom_provincia,nom_municipio,nom_tipo_maniobra_portu
 from .models import nom_territorio,nom_puerto,nom_terminal,nom_atraque,nom_unidad_medida, nom_osde_oace_organismo,nom_entidades
 from .models import nom_destino,nom_tipo_equipo_ferroviario,nom_embarcacion,nom_equipo_ferroviario,nom_estado_tecnico
 from .models import nom_producto,nom_tipo_embalaje,nom_incidencia,nom_tipo_estructura_ubicacion,nom_estructura_ubicacion
-from .models import por_situar_carga_descarga,Situado_Carga_Descarga
 
-#para cada modelo del que deseemos realizar el filtrado debemos hacer un filtrado
-#nom_pais_filter es una clase que se implementa para definir sobre qué campos quiero filtrar los registros de mi API, 
-#hereda de filters.FilterSet
-
-
-class SituadoCargaDescargaFilter(filters.FilterSet):
-    tipo_equipo = filters.CharFilter(lookup_expr='icontains')  # Filtro exacto (puedes usar 'icontains' para parcial
-    
-    class Meta:
-        model = por_situar_carga_descarga
-        fields = ['tipo_equipo']  # Campos filtrables
-        
-        
-class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
-    class Meta:
-        model = Situado_Carga_Descarga
-        fields = ('id','tipo_origen', 'tipo_equipo', 'estado', 'operacion', 'producto', 'situados','pendiente_proximo_dia')
-        filterset_class = SituadoCargaDescargaFilter
-        
-        
-        
-        
-class PorSituarCargaDescargaFilter(filters.FilterSet):
-    tipo_equipo = filters.CharFilter(lookup_expr='icontains')  # Filtro exacto (puedes usar 'icontains' para parcial
-    
-    class Meta:
-        model = por_situar_carga_descarga
-        fields = ['tipo_equipo']  # Campos filtrables
-
-
-class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = por_situar_carga_descarga  # Usa "=", no ":"
-        fields = ('id','tipo_origen', 'tipo_equipo', 'estado', 'operacion', 'producto', 'por_situar')
-        filterset_class = PorSituarCargaDescargaFilter
-        
 
 
 

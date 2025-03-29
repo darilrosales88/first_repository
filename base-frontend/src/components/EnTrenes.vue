@@ -185,7 +185,7 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 import ModalEnTrenes from "@/components/ModalViewEnTrenes.vue";
-import ModalEnTrenes from "@/components/ModalViewEnTrenes.vue";
+
 export default {
   name: "EnTrenes",
 

@@ -12,9 +12,9 @@ from .models import nom_territorio,nom_puerto,nom_terminal,nom_atraque,nom_unida
 from .models import nom_destino,nom_tipo_equipo_ferroviario,nom_embarcacion,nom_equipo_ferroviario,nom_estado_tecnico
 from .models import nom_producto,nom_tipo_embalaje,nom_incidencia,nom_tipo_estructura_ubicacion,nom_estructura_ubicacion
 
-
-
-
+#para cada modelo del que deseemos realizar el filtrado debemos hacer un filtrado
+#nom_pais_filter es una clase que se implementa para definir sobre qué campos quiero filtrar los registros de mi API, 
+#hereda de filters.FilterSet
 class nom_pais_filter(filters.FilterSet):
     nom_pais_nacionalidad = filters.CharFilter(field_name='nacionalidad',lookup_expr = 'exact') # filtrando con dos condiciones,                                                                               
                                                                                 #la primera que filtre por el campo del modelo 

@@ -10,7 +10,7 @@ from .views import nom_destino_view_set,nom_tipo_equipo_ferroviario_view_set,nom
 from .views import nom_estado_tecnico_view_set,nom_producto_view_set,nom_tipo_equipo_ferroviario_view_set
 from .views import nom_incidencia_view_set,nom_tipo_estructura_ubicacion_view_set, nom_estructura_ubicacion_view_set
 from .views import nom_tipo_embalaje_view_set,verificar_destino,verificar_codigo_reeup
-
+from .views import entidades_acceso_comercial_ccdView,tipo_equipo_ferroviario_no_locomotora
 
 
 from django.urls import path
@@ -28,6 +28,10 @@ urlpatterns = [
     #path('user/<int:user_id>/permissions-and-groups/', get_user_permissions_and_groups, name='get_user_permissions_and_groups'),
     #path('editar-grupo/<int:grupo_id>/edit/', editar_grupo, name='editar_grupo'),  # PATCH (editar el grupo del usuario)
     #path('permisos/', obtener_permisos, name='obtener_permisos'),  # GET),
+     #entidades que son acceso comrcial o ccd
+    path('entidades-acceso-ccd/', entidades_acceso_comercial_ccdView.as_view(), name='entidades-acceso-ccd'),
+    #tipos de equipos ferro que no son locomotora
+    path('tipo-e-f-no-locomotora/', tipo_equipo_ferroviario_no_locomotora.as_view(), name='tipo-e-f-no-locomotora'),
     
 ]
 

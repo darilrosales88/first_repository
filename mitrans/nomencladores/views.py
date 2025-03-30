@@ -157,6 +157,33 @@ class nom_pais_view_set(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
 #/*********************************************************************************************************************************************
+#retorna solo las entidades cuyo tipo sean de acceso comercial o de ccd
+class entidades_acceso_comercial_ccdView(APIView):
+    def get(self, request):
+        # Filtrar las entidades cuyo tipo_entidad sea "acceso_comercial" o "CCD"
+        entidades = nom_entidades.objects.filter(tipo_entidad__in=['acceso_comercial', 'ccd'])
+        
+        # Serializar los datos
+        serializer = nom_entidades_serializer(entidades, many=True)
+        
+        # Devolver la respuesta
+        return Response(serializer.data, status=status.HTTP_200_OK)
+#/*********************************************************************************************************************************************
+#retorna solo las locomotoras
+
+class tipo_equipo_ferroviario_no_locomotora(APIView):
+    def get(self, request):
+        # Excluir los tipos de equipos ferroviarios cuyo tipo sea "locomotora"
+        tipos_equipos = nom_tipo_equipo_ferroviario.objects.exclude(tipo_equipo='locomotora')
+        
+        # Serializar los datos
+        serializer = nom_tipo_equipo_ferroviario_serializer(tipos_equipos, many=True)
+        
+        # Devolver la respuesta
+        return Response(serializer.data, status=status.HTTP_200_OK)
+#/*********************************************************************************************************************************************
+
+
 class nom_provincia_view_set(viewsets.ModelViewSet):
     queryset = nom_provincia.objects.all()
     serializer_class = nom_provincia_serializer

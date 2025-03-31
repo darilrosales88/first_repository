@@ -570,7 +570,7 @@ export default {
         const response = await axios.get(
           "/api/equipos_ferroviarios/?id_tipo_equipo_territorio=locomo"
         );
-        this.locomotoras = response.data;
+        this.locomotoras = response.data.results;
       } catch (error) {
         console.error("Error al obtener las Locomotoras:", error);
         Swal.fire(
@@ -587,7 +587,7 @@ export default {
           "/api/equipos_ferroviarios/?id_tipo_equipo_territorio=" +
           this.formData.tipo_equipo;
         const response = await axios.get(peticion);
-        this.equipos_vagones = response.data;
+        this.equipos_vagones = response.data.results;
       } catch (error) {
         console.error("Error al obtener los equipos:", error);
         Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
@@ -597,7 +597,7 @@ export default {
     async getEntidades() {
       try {
         const response = await axios.get("/api/entidades/");
-        this.entidades = response.data;
+        this.entidades = response.data.results;
       } catch (error) {
         console.error("Error al obtener las entidades:", error);
         Swal.fire("Error", "Hubo un error al obtener las entidades.", "error");
@@ -611,7 +611,7 @@ export default {
     async getPuertos() {
       try {
         const response = await axios.get("/api/puertos/");
-        this.puertos = response.data;
+        this.puertos = response.data.results;
       } catch (error) {
         console.error("Error al obtener los puertos:", error);
         Swal.fire("Error", "Hubo un error al obtener los puertos.", "error");
@@ -631,7 +631,7 @@ export default {
     async getProductos() {
       try {
         const response = await axios.get("/ufc/producto-vagon/");
-        this.productos = response.data;
+        this.productos = response.data.results;
       } catch (error) {
         console.error("Error al obtener los productos:", error);
         Swal.fire("Error", "Hubo un error al obtener los productos.", "error");

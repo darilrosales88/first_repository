@@ -1470,12 +1470,18 @@ class nom_equipo_ferroviario_view_set(viewsets.ModelViewSet):
         queryset = super().get_queryset()
 
         search = self.request.query_params.get('id_tipo_equipo_territorio', None)
-
-        if search is not None:
-
-            queryset = queryset.filter( Q(tipo_equipo_name__icontains=search) | Q(territorio_name__icontains=search) | Q(numero_identificacion__icontains=search)
+        if search:
+            try:
+                # Intenta convertir el término de búsqueda a un entero para buscar por ID
+                search_term_as_int = int(search)
+                queryset = queryset.select_related('tipo_equipo').filter(Q(tipo_equipo_id=search_term_as_int))
+                return queryset
+            except ValueError:
+                search_term_as_int = None
+                
+            queryset = queryset.select_related('tipo_equipo').filter(Q(tipo_equipo__tipo_equipo__icontains=search) |Q(territorio__icontains=search) | Q(numero_identificacion__icontains=search)
             )
-
+        #Fixed bug para buscar locomotoras cuando se usa select_related('campo_asociado_a_ForeignKEY')
         return queryset
     
     def create(self, request, *args, **kwargs):

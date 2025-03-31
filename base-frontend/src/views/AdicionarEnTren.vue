@@ -605,7 +605,7 @@ export default {
     },
     volverEnTren() {
       // Redirige a la vista "AdicionarProductoVagon"
-      this.$router.push({ name: "InformeOperativo" });
+      this.$router.push({ name: "InfoOperativo" });
     },
 
     async getPuertos() {

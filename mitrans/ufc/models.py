@@ -171,6 +171,122 @@ class en_trenes(models.Model):
     def __str__(self):
         return f"En trenes {self.id} -{self.numero_identificacion_locomotora}- {self.get_estado_display()}"
 
+
+class por_situar_carga_descarga(models.Model):
+    
+    t_origen = (
+        ('puerto', 'Puerto'),
+        ('acceso comercial', 'Acceso Comercial')
+    )
+    
+    tipo_origen = models.CharField(max_length=100, choices=t_origen, verbose_name="Tipo de origen")
+    
+    t_equipo = (
+        ('casilla', 'Casilla'),
+        ('caj_gon', 'Cajones o Góndola'),
+        ('planc_plat', 'Plancha o Plataforma'),
+        ('Plan_porta_cont', 'Plancha porta contenedores'),
+        ('cist_liquidos', 'Cisterna para líquidos'),
+        ('cist_solidos', 'Cisterna para sólidos'),
+        ('tolva_g_mineral', 'Tolva granelera(mineral)'),
+        ('tolva_g_agric', 'Tolva granelera(agrícola)'),
+        ('tolva_g_cemento', 'Tolva para cemento'),
+        ('volqueta', 'Volqueta'),
+        ('Vagon_ref', 'Vagón refrigerado'),
+        ('jaula', 'Jaula'),
+        ('locomotora', 'Locomotora'),
+        ('tren', 'Tren'),
+    )
+    
+    tipo_equipo = models.CharField(max_length=200, choices=t_equipo, verbose_name="Tipo de equipo")
+    
+    status =(
+        ('vacio', 'Vacio'),
+        ('cargado', 'Cargado')
+    )
+    
+    estado = models.CharField(max_length=200, choices=status, verbose_name="Estado")
+    
+    t_operacion = (
+        ('carga', 'Carga'),
+        ('descarga', 'Descarga')
+    )
+    
+    operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion")
+    
+    producto = models.ForeignKey(nom_producto, null=False, blank=False, on_delete=models.CASCADE)
+    
+    por_situar = models.CharField( max_length=10, validators=[ RegexValidator(
+                regex='^-?\d+$',  # Acepta positivos y negativos
+                message='Solo se permiten números enteros (ej: 5, -10).',
+                code='numero_invalido'
+            )
+        ]
+    )
+
+class Situado_Carga_Descarga(models.Model):
+    
+    t_origen = (
+        ('puerto', 'Puerto'),
+        ('acceso comercial', 'Acceso Comercial')
+    )
+    
+    tipo_origen = models.CharField(max_length=100, choices=t_origen, verbose_name="Tipo de origen", blank=True, null=True)
+    
+    t_equipo = (
+        ('casilla', 'Casilla'),
+        ('caj_gon', 'Cajones o Góndola'),
+        ('planc_plat', 'Plancha o Plataforma'),
+        ('Plan_porta_cont', 'Plancha porta contenedores'),
+        ('cist_liquidos', 'Cisterna para líquidos'),
+        ('cist_solidos', 'Cisterna para sólidos'),
+        ('tolva_g_mineral', 'Tolva granelera(mineral)'),
+        ('tolva_g_agric', 'Tolva granelera(agrícola)'),
+        ('tolva_g_cemento', 'Tolva para cemento'),
+        ('volqueta', 'Volqueta'),
+        ('Vagon_ref', 'Vagón refrigerado'),
+        ('jaula', 'Jaula'),
+        ('locomotora', 'Locomotora'),
+        ('tren', 'Tren'),
+    )
+    
+    tipo_equipo = models.CharField(max_length=200, choices=t_equipo, verbose_name="Tipo de equipo", blank=True, null=True)
+    
+    status =(
+        ('vacio', 'Vacio'),
+        ('cargado', 'Cargado')
+    )
+    
+    estado = models.CharField(max_length=200, choices=status, verbose_name="Estado", blank=True, null=True)
+    
+    t_operacion = (
+        ('carga', 'Carga'),
+        ('descarga', 'Descarga')
+    )
+    
+    operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion", blank=True, null=True)
+    
+    producto = models.ForeignKey(nom_producto, null=False, blank=False, on_delete=models.CASCADE)
+    
+    situados = models.CharField( max_length=10, validators=[ RegexValidator(
+                regex='^-?\d+$',  # Acepta positivos y negativos
+                message='Solo se permiten números enteros (ej: 5, -10).',
+                code='numero_invalido'
+            )
+        ]
+    )
+    
+    pendiente_proximo_dia = models.CharField( max_length=10, validators=[ RegexValidator(
+                regex='^-?\d+$',  # Acepta positivos y negativos
+                message='Solo se permiten números enteros (ej: 5, -10).',
+                code='numero_invalido'
+            )
+        ]
+    )
+
+
+
+
 """ 
 class vagon_tren(models.Model):
     tren = models.ForeignKey(en_trenes, on_delete=models.CASCADE, related_name='vagones')
@@ -180,3 +296,4 @@ class vagon_tren(models.Model):
 
     def __str__(self):
         return f"Locomotora {self.tren.locomotora} - equipo {self.equipo_ferroviario})" """
+        

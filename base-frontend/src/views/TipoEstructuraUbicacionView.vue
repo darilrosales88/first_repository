@@ -1,8 +1,8 @@
 <template>
   <div>
-    <div style=" background-color: #002A68; color: white; text-align: right;">
-      <h6>Bienvenido: </h6>
-    </div>  
+    <div style="background-color: #002a68; color: white; text-align: right">
+      <h6>Bienvenido:</h6>
+    </div>
     <br />
     <Navbar-Component />
     <br />
@@ -11,70 +11,129 @@
       <form class="d-flex" @submit.prevent="searchTipoEstructura">
         <div class="input-container">
           <i class="bi bi-search"></i>
-        <input
-          class="form-control form-control-sm me-2"
-          type="search"
-          placeholder="Tipo de estructura"
-          aria-label="Search"
-          v-model="searchQuery"
-          @input="handleSearchInput"
-          style="width: 200px; padding-left: 5px;margin-top: -70px;" 
-        />
-      </div>
+          <input
+            class="form-control form-control-sm me-2"
+            type="search"
+            placeholder="Tipo de estructura"
+            aria-label="Search"
+            v-model="searchQuery"
+            @input="handleSearchInput"
+            style="width: 200px; padding-left: 5px; margin-top: -70px"
+          />
+        </div>
       </form>
     </div>
     <!-- Mostrar el botón "Crear nueva ubicación" solo si el usuario pertenece al grupo "Admin" -->
     <div class="create-button-container">
-      <router-link v-if="hasGroup('Admin')" class="create-button" to="CrearTipoUbicacion">
+      <router-link
+        v-if="hasGroup('Admin')"
+        class="create-button"
+        to="CrearTipoUbicacion"
+      >
         <i class="bi bi-plus-circle large-icon"></i>
       </router-link>
     </div>
-    <h3 style="margin-top: -33px; font-size: 18px;
-    margin-right: 390px;color: #002A68;">Listado de tipos de estructuras de ubicaciones</h3>
+    <h3
+      style="
+        margin-top: -33px;
+        font-size: 18px;
+        margin-right: 390px;
+        color: #002a68;
+      "
+    >
+      Listado de tipos de estructuras de ubicaciones
+    </h3>
     <br />
     <div class="table-container">
-    <table class="table">
-      <thead>
-        <tr>
-          <th scope="col">Tipo de estructura de ubicación</th>
-          <!-- Mostrar la columna "Acciones" solo si el usuario pertenece al grupo "Admin" -->
-          <th scope="col" >Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(item) in tipos_estructura_ubicacion" :key="item.id">
-          <td>{{ item.nombre_tipo_estructura_ubicacion }}</td>
-          <!-- Mostrar los botones de acciones solo si el usuario pertenece al grupo "Admin" -->
-          <td>
-              <button @click="openTipoEstructuraUbicacionDetailsModal(item)" class="btn btn-info btn-small btn-eye" 
-              v-html="showNoId ? '<i class=\'bi bi-eye-slash-fill\'></i>' : '<i class=\'bi bi-eye-fill\'></i>'">
-              </button>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Tipo de estructura de ubicación</th>
+            <!-- Mostrar la columna "Acciones" solo si el usuario pertenece al grupo "Admin" -->
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in tipos_estructura_ubicacion" :key="item.id">
+            <td>{{ item.nombre_tipo_estructura_ubicacion }}</td>
+            <!-- Mostrar los botones de acciones solo si el usuario pertenece al grupo "Admin" -->
+            <td>
+              <button
+                @click="openTipoEstructuraUbicacionDetailsModal(item)"
+                class="btn btn-info btn-small btn-eye"
+                v-html="
+                  showNoId
+                    ? '<i class=\'bi bi-eye-slash-fill\'></i>'
+                    : '<i class=\'bi bi-eye-fill\'></i>'
+                "
+              ></button>
               <span v-if="hasGroup('Admin')">
-            <button class="btn btn-warning btn-small">
-                  <router-link :to="{name: 'EditarTipoUbicacion', params: {id:item.id}}">
-                    <i style="color:black" class="bi bi-pencil-square"></i>
+                <button class="btn btn-warning btn-small">
+                  <router-link
+                    :to="{
+                      name: 'EditarTipoUbicacion',
+                      params: { id: item.id },
+                    }"
+                  >
+                    <i style="color: black" class="bi bi-pencil-square"></i>
                   </router-link>
                 </button>
-                <button  @click.prevent="confirmDelete(item.id)" class="btn btn-danger btn-small">
-                  <i  class="bi bi-trash"></i>
+                <button
+                  @click.prevent="confirmDelete(item.id)"
+                  class="btn btn-danger btn-small"
+                >
+                  <i class="bi bi-trash"></i>
                 </button>
               </span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <h1 v-if="!busqueda_existente">No existe ningún registro asociado a ese parámetro de búsqueda</h1>
-  </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h1 v-if="!busqueda_existente">
+        No existe ningún registro asociado a ese parámetro de búsqueda
+      </h1>
+    </div>
+    <!-- Paginación -->
+    <nav aria-label="Page navigation example">
+      <ul class="pagination">
+        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+          <a
+            class="page-link"
+            href="#"
+            @click.prevent="changePage(currentPage - 1)"
+            >Anterior</a
+          >
+        </li>
+        <li
+          class="page-item"
+          v-for="page in pages"
+          :key="page"
+          :class="{ active: page === currentPage }"
+        >
+          <a class="page-link" href="#" @click.prevent="changePage(page)">{{
+            page
+          }}</a>
+        </li>
+        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+          <a
+            class="page-link"
+            href="#"
+            @click.prevent="changePage(currentPage + 1)"
+            >Siguiente</a
+          >
+        </li>
+      </ul>
+    </nav>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
-import Swal from 'sweetalert2';
-import NavbarComponent from '@/components/NavbarComponent.vue';
+import axios from "axios";
+import Swal from "sweetalert2";
+import NavbarComponent from "@/components/NavbarComponent.vue";
 
 export default {
-  name: 'TipoEstructuraUbicacionView',
+  name: "TipoEstructuraUbicacionView",
   components: {
     NavbarComponent,
   },
@@ -85,8 +144,11 @@ export default {
       busqueda_existente: true,
       debounceTimeout: null, // Para el debounce en la búsqueda
       userPermissions: [], // Almacenará los permisos del usuario
-      userGroups: [],      // Almacenará los grupos del usuario
+      userGroups: [], // Almacenará los grupos del usuario
       showNoId: false,
+      currentPage: 1, // Página actual
+      totalPages: 1, // Total de páginas
+      pages: [], // Lista de páginas visibles
     };
   },
 
@@ -102,44 +164,72 @@ export default {
     },
     // Verifica si el usuario tiene un permiso específico
     hasPermission(permission) {
-      return this.userPermissions.some(p => p.name === permission);
+      return this.userPermissions.some((p) => p.name === permission);
     },
     hasGroup(group) {
-      return this.userGroups.some(g => g.name === group);
+      return this.userGroups.some((g) => g.name === group);
     },
     // Obtiene los permisos y grupos del usuario desde el backend
     async fetchUserPermissionsAndGroups() {
       try {
-        const userId = localStorage.getItem('userid');
+        const userId = localStorage.getItem("userid");
         if (userId) {
-          const response = await axios.get(`/apiAdmin/user/${userId}/permissions-and-groups/`);
+          const response = await axios.get(
+            `/apiAdmin/user/${userId}/permissions-and-groups/`
+          );
           this.userPermissions = response.data.permissions;
           this.userGroups = response.data.groups;
         }
       } catch (error) {
-        console.error('Error al obtener permisos y grupos:', error);
+        console.error("Error al obtener permisos y grupos:", error);
       }
     },
 
     // Obtener los tipos de estructura de ubicación
     async getTiposEstructuraUbicacion() {
       try {
-        const response = await axios.get('/api/tipos_estructuras_ubicacion/');
-        this.tipos_estructura_ubicacion = response.data;
+        const response = await axios.get("/api/tipos_estructuras_ubicacion/", {
+          params: {
+            page: this.currentPage,
+            search: this.searchQuery,
+          },
+        });
+        this.tipos_estructura_ubicacion = response.data.results; // Obtener los registros de la página actual
+        this.totalPages = Math.ceil(response.data.count / 15); // Calcular el número total de páginas
+        this.updatePages(); // Actualizar la lista de páginas visibles
+        this.busqueda_existente = true; // Reinicia la variable al cargar todos los tipos de estructura de ubicación
       } catch (error) {
-        console.error('Error al obtener los tipos de estructura de ubicación:', error);
-        Swal.fire('Error', 'No se pudieron cargar los tipos de estructura de ubicación.', 'error');
+        console.error(
+          "Error al obtener los tipos de estructura de ubicación:",
+          error
+        );
+        Swal.fire(
+          "Error",
+          "No se pudieron cargar los tipos de estructura de ubicación.",
+          "error"
+        );
       }
     },
 
     async searchTipoEstructura() {
+      this.currentPage = 1; // Reiniciar a la primera página al realizar una búsqueda
       try {
-        const response = await axios.get(`/api/tipos_estructuras_ubicacion/?nombre_tipo_estructura_ubicacion=${this.searchQuery}`);
-        this.tipos_estructura_ubicacion = response.data;
+        const response = await axios.get("/api/tipos_estructuras_ubicacion/", {
+          params: {
+            page: this.currentPage,
+            search: this.searchQuery,
+          },
+        });
+        this.tipos_estructura_ubicacion = response.data.results;
+        this.totalPages = Math.ceil(response.data.count / 15);
+        this.updatePages();
         this.busqueda_existente = this.tipos_estructura_ubicacion.length > 0;
       } catch (error) {
-        console.error('Error al buscar tipos de estructura de ubicación:', error);
-        this.busqueda_existente = false;
+        console.error(
+          "Error al buscar tipos de estructura de ubicación:",
+          error
+        );
+        this.busqueda_existente = false; // Asegura que busqueda_existente sea false en caso de error
       }
     },
 
@@ -149,16 +239,30 @@ export default {
         this.searchTipoEstructura();
       }, 300); // Ajusta el tiempo de espera según sea necesario
     },
+    updatePages() {
+      const startPage = Math.max(1, this.currentPage - 2); // Mostrar 2 páginas antes de la actual
+      const endPage = Math.min(this.totalPages, this.currentPage + 2); // Mostrar 2 páginas después de la actual
+      this.pages = [];
+      for (let i = startPage; i <= endPage; i++) {
+        this.pages.push(i);
+      }
+    },
 
+    changePage(page) {
+      if (page >= 1 && page <= this.totalPages) {
+        this.currentPage = page;
+        this.getTiposEstructuraUbicacion();
+      }
+    },
     // Confirmar eliminación de un tipo de estructura de ubicación
     confirmDelete(id) {
       Swal.fire({
-        title: '¿Estás seguro?',
-        text: '¡No podrás revertir esta acción!',
-        icon: 'warning',
+        title: "¿Estás seguro?",
+        text: "¡No podrás revertir esta acción!",
+        icon: "warning",
         showCancelButton: true,
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar',
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
         reverseButtons: true,
       }).then((result) => {
         if (result.isConfirmed) {
@@ -171,59 +275,76 @@ export default {
     async deleteTipoEstructuraUbicacion(id) {
       try {
         await axios.delete(`/api/tipos_estructuras_ubicacion/${id}/`);
-        Swal.fire('Eliminado!', 'El tipo de estructura de ubicación ha sido eliminado exitosamente.', 'success');
+        Swal.fire(
+          "Eliminado!",
+          "El tipo de estructura de ubicación ha sido eliminado exitosamente.",
+          "success"
+        );
         this.getTiposEstructuraUbicacion(); // Recargar la lista después de eliminar
       } catch (error) {
-        console.error('Error al eliminar el tipo de estructura de ubicación:', error);
-        Swal.fire('Error', 'Hubo un error al eliminar el tipo de estructura de ubicación.', 'error');
+        console.error(
+          "Error al eliminar el tipo de estructura de ubicación:",
+          error
+        );
+        Swal.fire(
+          "Error",
+          "Hubo un error al eliminar el tipo de estructura de ubicación.",
+          "error"
+        );
       }
     },
     openTipoEstructuraUbicacionDetailsModal(TipoEstructuraUbicacion) {
-    // Mapear IDs de grupos a nombres
-    const gruposAsignados = TipoEstructuraUbicacion.groups && TipoEstructuraUbicacion.groups.length > 0
-        ? TipoEstructuraUbicacion.groups
-            .map(groupId => {
-                const grupo = this.gruposDisponibles.find(g => g.id === groupId);
-                return grupo ? grupo.name : 'Desconocido';
-            })
-            .join(', ')
-        : 'Ninguno';
+      // Mapear IDs de grupos a nombres
+      const gruposAsignados =
+        TipoEstructuraUbicacion.groups &&
+        TipoEstructuraUbicacion.groups.length > 0
+          ? TipoEstructuraUbicacion.groups
+              .map((groupId) => {
+                const grupo = this.gruposDisponibles.find(
+                  (g) => g.id === groupId
+                );
+                return grupo ? grupo.name : "Desconocido";
+              })
+              .join(", ")
+          : "Ninguno";
 
-    // Mapear IDs de permisos a nombres
-    const permisosAsignados = TipoEstructuraUbicacion.TipoEstructuraUbicacion_permissions && 
-    TipoEstructuraUbicacion.TipoEstructuraUbicacion_permissions.length > 0
-        ? TipoEstructuraUbicacion.TipoEstructuraUbicacion_permissions
-            .map(permisoId => {
-                const permiso = this.permisosDisponibles.find(p => p.id === permisoId);
-                return permiso ? permiso.name : 'Desconocido';
-            })
-            .join(', ')
-        : 'Ninguno';
+      // Mapear IDs de permisos a nombres
+      const permisosAsignados =
+        TipoEstructuraUbicacion.TipoEstructuraUbicacion_permissions &&
+        TipoEstructuraUbicacion.TipoEstructuraUbicacion_permissions.length > 0
+          ? TipoEstructuraUbicacion.TipoEstructuraUbicacion_permissions.map(
+              (permisoId) => {
+                const permiso = this.permisosDisponibles.find(
+                  (p) => p.id === permisoId
+                );
+                return permiso ? permiso.name : "Desconocido";
+              }
+            ).join(", ")
+          : "Ninguno";
 
-    Swal.fire({
-        title: 'Detalles del Atraque',
+      Swal.fire({
+        title: "Detalles del Atraque",
         html: `
             <div style="text-align: left;">
                 <p><strong>Tipo de estructura de ubicación:</strong> ${TipoEstructuraUbicacion.nombre_tipo_estructura_ubicacion}</p>
             </div>
         `,
-        width: '600px',
+        width: "600px",
         customClass: {
-            popup: 'custom-swal-popup',
-            title: 'custom-swal-title',
-            htmlContainer: 'custom-swal-html',
+          popup: "custom-swal-popup",
+          title: "custom-swal-title",
+          htmlContainer: "custom-swal-html",
         },
-    });
-},
+      });
+    },
   },
 };
 </script>
 
 <style scoped>
-
 .search-container input::placeholder {
-  font-size: 14px; 
-  color: #999;   
+  font-size: 14px;
+  color: #999;
 }
 
 body {
@@ -263,12 +384,16 @@ table {
   margin-bottom: 10px;
   font-size: 0.875rem;
 }
-
-th, td {
+nav .pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+th,
+td {
   padding: 0.15rem; /* Reducir el padding */
   white-space: nowrap;
 }
-
 
 th {
   background-color: #f2f2f2;

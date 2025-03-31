@@ -1,80 +1,317 @@
 <template>
   <div>
-    <div style=" background-color: #002A68; color: white; text-align: right;">
-      <h6>Bienvenido: </h6>
-    </div>  
+    <div style="background-color: #002a68; color: white; text-align: right">
+      <h6>Bienvenido:</h6>
+    </div>
     <br />
     <Navbar-Component />
     <br />
     <br />
-  <div class="search-container">
+    <div class="search-container">
       <form class="d-flex search-form" @submit.prevent="search_territorio">
         <div class="input-container">
           <i class="bi bi-search"></i>
-        <input
-          class="form-control form-control-sm me-2"
-          type="search"
-          placeholder="nombre del territorio"
-          aria-label="Buscar"
-          v-model="searchQuery"
-          @input="handleSearchInput"
-          style="width: 200px; padding-left: 5px;margin-top: -70px;" 
-        />
-      </div>
+          <input
+            class="form-control form-control-sm me-2"
+            type="search"
+            placeholder="nombre del territorio"
+            aria-label="Buscar"
+            v-model="searchQuery"
+            @input="handleSearchInput"
+            style="width: 200px; padding-left: 5px; margin-top: -70px"
+          />
+        </div>
       </form>
-      <br>
+      <br />
     </div>
 
     <div class="create-button-container">
-      <router-link v-if="hasGroup('Admin')" class="create-button" to="AdicionarTerritorio">
+      <router-link
+        v-if="hasGroup('Admin')"
+        class="create-button"
+        to="AdicionarTerritorio"
+      >
         <i class="bi bi-plus-circle large-icon"></i>
       </router-link>
     </div>
-    <h3 style="margin-top: -33px; font-size: 18px;
-    margin-right: 600px;color: #002A68;">Listado de territorios</h3>
+    <h3
+      style="
+        margin-top: -33px;
+        font-size: 18px;
+        margin-right: 600px;
+        color: #002a68;
+      "
+    >
+      Listado de territorios
+    </h3>
     <br />
     <div class="table-container">
-  <table class="table" :fields="territorios">
-    <thead>
-      <tr>
-        <th scope="col">Nombre</th>
-        <th scope="col">Abreviatura</th>
-        <th scope="col" >Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="(item) in territorios" :key="item.id">
-        <td>{{ item.nombre_territorio }}</td>
-        <td>{{ item.abreviatura }}</td>
-        <td>
-              <button @click="openTerritorioDetailsModal(item)" class="btn btn-info btn-small btn-eye" 
-              v-html="showNoId ? '<i class=\'bi bi-eye-slash-fill\'></i>' : '<i class=\'bi bi-eye-fill\'></i>'">
-              </button>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col">Abreviatura</th>
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in territorios" :key="item.id">
+            <td>{{ item.nombre_territorio }}</td>
+            <td>{{ item.abreviatura }}</td>
+            <td>
+              <button
+                @click="openTerritorioDetailsModal(item)"
+                class="btn btn-info btn-small btn-eye"
+                v-html="
+                  showNoId
+                    ? '<i class=\'bi bi-eye-slash-fill\'></i>'
+                    : '<i class=\'bi bi-eye-fill\'></i>'
+                "
+              ></button>
               <span v-if="hasGroup('Admin')">
-          <button class="btn btn-warning btn-small">
-                  <router-link :to="{name: 'EditarTerritorio', params: {id:item.id}}">
-                    <i style="color:black" class="bi bi-pencil-square"></i>
+                <button class="btn btn-warning btn-small">
+                  <router-link
+                    :to="{ name: 'EditarTerritorio', params: { id: item.id } }"
+                  >
+                    <i style="color: black" class="bi bi-pencil-square"></i>
                   </router-link>
                 </button>
-                <button  @click.prevent="confirmDelete(item.id)" class="btn btn-danger btn-small">
-                  <i  class="bi bi-trash"></i>
+                <button
+                  @click.prevent="confirmDelete(item.id)"
+                  class="btn btn-danger btn-small"
+                >
+                  <i class="bi bi-trash"></i>
                 </button>
               </span>
             </td>
-      </tr>
-    </tbody>
-  </table>
-  <h1 v-if="!busqueda_existente">No existe ningún registro asociado a ese parámetro de búsqueda</h1>
-</div>
-</div>
+          </tr>
+        </tbody>
+      </table>
+      <h1 v-if="!busqueda_existente">
+        No existe ningún registro asociado a ese parámetro de búsqueda
+      </h1>
+
+      <!-- Paginación -->
+      <nav aria-label="Page navigation example">
+        <ul class="pagination">
+          <li class="page-item" :class="{ disabled: currentPage === 1 }">
+            <a
+              class="page-link"
+              href="#"
+              @click.prevent="changePage(currentPage - 1)"
+              >Anterior</a
+            >
+          </li>
+          <li
+            class="page-item"
+            v-for="page in pages"
+            :key="page"
+            :class="{ active: page === currentPage }"
+          >
+            <a class="page-link" href="#" @click.prevent="changePage(page)">{{
+              page
+            }}</a>
+          </li>
+          <li
+            class="page-item"
+            :class="{ disabled: currentPage === totalPages }"
+          >
+            <a
+              class="page-link"
+              href="#"
+              @click.prevent="changePage(currentPage + 1)"
+              >Siguiente</a
+            >
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
 </template>
 
+<script>
+import NavbarComponent from "@/components/NavbarComponent.vue";
+import axios from "axios";
+import Swal from "sweetalert2";
+
+export default {
+  name: "TerritoriosView",
+  components: {
+    NavbarComponent,
+  },
+
+  data() {
+    return {
+      territorios: [],
+      searchQuery: "",
+      debounceTimeout: null,
+      busqueda_existente: true,
+      userPermissions: [],
+      userGroups: [],
+      currentPage: 1,
+      totalPages: 1,
+      pages: [],
+    };
+  },
+
+  async created() {
+    await this.fetchUserPermissionsAndGroups();
+    this.get_territorios();
+  },
+
+  methods: {
+    hasPermission(permission) {
+      return this.userPermissions.some((p) => p.name === permission);
+    },
+
+    hasGroup(group) {
+      return this.userGroups.some((g) => g.name === group);
+    },
+
+    async fetchUserPermissionsAndGroups() {
+      try {
+        const userId = localStorage.getItem("userid");
+        if (userId) {
+          const response = await axios.get(
+            `/apiAdmin/user/${userId}/permissions-and-groups/`
+          );
+          this.userPermissions = response.data.permissions;
+          this.userGroups = response.data.groups;
+        }
+      } catch (error) {
+        console.error("Error al obtener permisos y grupos:", error);
+      }
+    },
+
+    async get_territorios() {
+      this.$store.commit("setIsLoading", true);
+      try {
+        const response = await axios.get("/api/territorios/", {
+          params: {
+            page: this.currentPage,
+            search: this.searchQuery,
+          },
+        });
+        this.territorios = response.data.results;
+        this.totalPages = Math.ceil(response.data.count / 15);
+        this.updatePages();
+        this.busqueda_existente = this.territorios.length > 0;
+      } catch (error) {
+        console.error("Error al obtener los territorios:", error);
+        this.busqueda_existente = false;
+      } finally {
+        this.$store.commit("setIsLoading", false);
+      }
+    },
+
+    async search_territorio() {
+      this.$store.commit("setIsLoading", true);
+      this.currentPage = 1;
+      try {
+        const response = await axios.get("/api/territorios/", {
+          params: {
+            search: this.searchQuery,
+            page: this.currentPage,
+          },
+        });
+        this.territorios = response.data.results;
+        this.totalPages = Math.ceil(response.data.count / 15);
+        this.updatePages();
+        this.busqueda_existente = this.territorios.length > 0;
+      } catch (error) {
+        console.error("Error al buscar territorios:", error);
+        this.busqueda_existente = false;
+      } finally {
+        this.$store.commit("setIsLoading", false);
+      }
+    },
+
+    updatePages() {
+      const startPage = Math.max(1, this.currentPage - 2);
+      const endPage = Math.min(this.totalPages, this.currentPage + 2);
+      this.pages = [];
+      for (let i = startPage; i <= endPage; i++) {
+        this.pages.push(i);
+      }
+    },
+
+    changePage(page) {
+      if (page >= 1 && page <= this.totalPages) {
+        this.currentPage = page;
+        this.get_territorios();
+      }
+    },
+
+    confirmDelete(id) {
+      Swal.fire({
+        title: "¿Estás seguro?",
+        text: "¡No podrás revertir esta acción!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
+        reverseButtons: true,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.deleteTerritorio(id);
+        }
+      });
+    },
+
+    handleSearchInput() {
+      clearTimeout(this.debounceTimeout);
+      this.debounceTimeout = setTimeout(() => {
+        this.search_territorio();
+      }, 300);
+    },
+
+    async deleteTerritorio(id) {
+      this.$store.commit("setIsLoading", true);
+      try {
+        await axios.delete(`/api/territorios/${id}/`);
+        this.territorios = this.territorios.filter(
+          (territ) => territ.id !== id
+        );
+        Swal.fire(
+          "Eliminado!",
+          "El territorio ha sido eliminado exitosamente.",
+          "success"
+        );
+        // Recargar los datos para actualizar la paginación
+        this.get_territorios();
+      } catch (error) {
+        console.error("Error al eliminar el territorio:", error);
+        Swal.fire("Error", "Hubo un error al eliminar el territorio.", "error");
+      } finally {
+        this.$store.commit("setIsLoading", false);
+      }
+    },
+
+    openTerritorioDetailsModal(Territorio) {
+      Swal.fire({
+        title: "Detalles del Territorio",
+        html: `
+          <div style="text-align: left;">
+            <p><strong>Nombre:</strong> ${Territorio.nombre_territorio}</p>
+            <p><strong>Abreviatura:</strong> ${Territorio.abreviatura}</p>
+          </div>
+        `,
+        width: "600px",
+        customClass: {
+          popup: "custom-swal-popup",
+          title: "custom-swal-title",
+          htmlContainer: "custom-swal-html",
+        },
+      });
+    },
+  },
+};
+</script>
 
 <style scoped>
-
 .search-container input::placeholder {
-  font-size: 14px; 
-  color: #999;   
+  font-size: 14px;
+  color: #999;
 }
 
 body {
@@ -114,12 +351,16 @@ table {
   margin-bottom: 10px;
   font-size: 0.875rem;
 }
-
-th, td {
+nav .pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+th,
+td {
   padding: 0.15rem; /* Reducir el padding */
   white-space: nowrap;
 }
-
 
 th {
   background-color: #f2f2f2;
@@ -173,162 +414,3 @@ th {
   }
 }
 </style>
-
-
-<script>
-import NavbarComponent from "@/components/NavbarComponent.vue";
-import axios from "axios";
-import Swal from "sweetalert2";
-
-export default {
-  name: "HomeView",
-  components: {
-    NavbarComponent,
-  },
-
-  data() {
-    return {
-      territorios: [],
-      searchQuery: '',
-      debounceTimeout: null,
-      busqueda_existente: true,
-      userPermissions: [],
-      userGroups: [],
-    };
-  },
-
-  mounted() {
-    this.get_territorios();
-  },
-
-  async created() {
-    await this.fetchUserPermissionsAndGroups();
-  },
-
-  methods: {
-    hasPermission(permission) {
-      return this.userPermissions.some(p => p.name === permission);
-      },
-    hasGroup(group) {
-          return this.userGroups.some(g => g.name === group);
-      },
-
-    async fetchUserPermissionsAndGroups() {
-      try {
-        const userId = localStorage.getItem('userid');
-        if (userId) {
-          const response = await axios.get(`/apiAdmin/user/${userId}/permissions-and-groups/`);
-          this.userPermissions = response.data.permissions;
-          this.userGroups = response.data.groups;          
-        }
-      } catch (error) {
-        console.error('Error al obtener permisos y grupos:', error);
-      }
-    },
-
-    async get_territorios() {
-      this.$store.commit('setIsLoading', true);
-
-      try {
-        const response = await axios.get('/api/territorios/');
-        this.territorios = response.data;
-      } catch (error) {
-        console.error("Error al obtener territorios:", error);
-      }
-
-      this.$store.commit('setIsLoading', false);
-    },
-
-    async search_territorio() {
-      this.$store.commit('setIsLoading', true);
-
-      try {
-        const response = await axios.get(`/api/territorios/?nomb_territorio=${this.searchQuery}`);
-        this.territorios = response.data;
-        this.busqueda_existente = this.territorios.length > 0;
-      } catch (error) {
-        console.error("Error al buscar territorios:", error);
-        this.busqueda_existente = false;
-      }
-
-      this.$store.commit('setIsLoading', false);
-    },
-
-    confirmDelete(id) {        
-      Swal.fire({
-        title: '¿Estás seguro?',
-        text: '¡No podrás revertir esta acción!',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar',
-        reverseButtons: true
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.deleteTerritorio(id);
-        }
-      });
-    },
-
-    handleSearchInput() {
-      clearTimeout(this.debounceTimeout);
-      this.debounceTimeout = setTimeout(() => {
-        this.search_territorio();
-      }, 300);
-    },
-
-    async deleteTerritorio(id) {
-      this.$store.commit("setIsLoading", true);
-      
-      try {
-        await axios.delete(`/api/territorios/${id}/`);
-        this.territorios = this.territorios.filter(territ => territ.id !== id);
-
-        Swal.fire('Eliminado!', 'El territorio ha sido eliminado exitosamente.', 'success');
-      } catch (error) {
-        console.error("Error al eliminar el territorio:", error);
-        Swal.fire('Error', 'Hubo un error al eliminar el territorio.', 'error');
-      }
-
-      this.$store.commit("setIsLoading", false);
-    },
-    openTerritorioDetailsModal(Territorio) {
-    // Mapear IDs de grupos a nombres
-    const gruposAsignados = Territorio.groups && Territorio.groups.length > 0
-        ? Territorio.groups
-            .map(groupId => {
-                const grupo = this.gruposDisponibles.find(g => g.id === groupId);
-                return grupo ? grupo.name : 'Desconocido';
-            })
-            .join(', ')
-        : 'Ninguno';
-
-    // Mapear IDs de permisos a nombres
-    const permisosAsignados = Territorio.Territorio_permissions && Territorio.Territorio_permissions.length > 0
-        ? Territorio.Territorio_permissions
-            .map(permisoId => {
-                const permiso = this.permisosDisponibles.find(p => p.id === permisoId);
-                return permiso ? permiso.name : 'Desconocido';
-            })
-            .join(', ')
-        : 'Ninguno';
-
-    Swal.fire({
-        title: 'Detalles del Atraque',
-        html: `
-            <div style="text-align: left;">
-                <p><strong>Nombre:</strong> ${Territorio.nombre_territorio}</p>
-                <p><strong>Abreviatura:</strong> ${Territorio.abreviatura}</p>
-            </div>
-        `,
-        width: '600px',
-        customClass: {
-            popup: 'custom-swal-popup',
-            title: 'custom-swal-title',
-            htmlContainer: 'custom-swal-html',
-        },
-    });
-},
-  },
-};
-</script>

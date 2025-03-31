@@ -1,5 +1,9 @@
 <template>
   <div>
+    <div style=" background-color: #002A68; color: white; text-align: right;">
+      <h6>Bienvenido:</h6>
+    </div>  
+    <br />
     <Navbar-Component />
     
     <div class="form-container">

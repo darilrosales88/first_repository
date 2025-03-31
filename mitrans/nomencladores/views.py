@@ -14,7 +14,7 @@ from .models import nom_producto,nom_tipo_embalaje,nom_incidencia,nom_tipo_estru
 from .serializers import nom_pais_serializer,nom_provincia_serializer,nom_municipio_serializer
 from .serializers import nom_tipo_maniobra_portuaria_serializer,nom_contenedor_serializer,nom_cargo_serializer
 from .serializers import nom_territorio_serializer,nom_puerto_serializer,nom_terminal_serializer
-from .serializers import nom_atraque_serializer,nom_unidad_medida_serializer,nom_osde_oace_organismo_serializer,nom_entidades_serializer
+from .serializers import nom_atraque_serializer,nom_unidad_medida_serializer,nom_osde_oace_organismo_serializer,nom_osde_oace_organismo_filter,nom_entidades_serializer
 from .serializers import nom_destino_serializer,nom_tipo_equipo_ferroviario_serializer,nom_embarcacion_serializer
 from .serializers import nom_equipo_ferroviario_serializer,nom_estado_tecnico_serializer,nom_producto_serializer,nom_entidades_filter
 from .serializers import nom_tipo_embalaje_serializer,nom_incidencia_serializer,nom_tipo_estructura_ubicacion_serializer,nom_estructura_ubicacion_serializer
@@ -52,10 +52,13 @@ from django.db.models import Q
 
 from django.utils import timezone
 
+#para hacer la paginacion
+#Para la paginacion
+from rest_framework.pagination import PageNumberPagination
+
 
           
     #*****************************************************************************************************************************
-
 #4.2 declaramos la vista para serializar el modelo nom_pais
 class nom_pais_view_set(viewsets.ModelViewSet):
     queryset = nom_pais.objects.all()
@@ -654,7 +657,7 @@ class nom_territorio_view_set(viewsets.ModelViewSet):
             
 #/*********************************************************************************************************************************************
 class nom_puerto_view_set(viewsets.ModelViewSet):
-    queryset = nom_puerto.objects.all()
+    queryset = nom_puerto.objects.all().order_by('id')  # Ordenar por defecto por el campo 'id'
     serializer_class = nom_puerto_serializer
 
     def get_queryset(self):
@@ -737,7 +740,7 @@ class nom_puerto_view_set(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs) 
 #/*********************************************************************************************************************************************
 class nom_terminal_view_set(viewsets.ModelViewSet):
-    queryset = nom_terminal.objects.all()
+    queryset = nom_terminal.objects.all().order_by('id')  # Ordenar por defecto por el campo 'id'
     serializer_class = nom_terminal_serializer
 
     def get_queryset(self):
@@ -819,9 +822,17 @@ class nom_terminal_view_set(viewsets.ModelViewSet):
 
         return super().list(request, *args, **kwargs) 
 #/*********************************************************************************************************************************************
+#funcion declarada en el views.py una sola vez, sera usada en cada view_set
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 15  # Número de registros por página
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
 class nom_atraque_view_set(viewsets.ModelViewSet):
-    queryset = nom_atraque.objects.all()
+    queryset = nom_atraque.objects.all().order_by('id')  # Ordenar por defecto por el campo 'id',hay que hacerlo con 
+    #todos los view_set que seran paginados
     serializer_class = nom_atraque_serializer
+    pagination_class = StandardResultsSetPagination #funcion declarada para la paginacion aqui en el views.py
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -831,7 +842,8 @@ class nom_atraque_view_set(viewsets.ModelViewSet):
 
         if search is not None:
             queryset = queryset.filter(nombre_atraque__icontains=search)
-        return queryset
+        
+        return queryset.order_by('id')  # Asegurar que el QuerySet esté ordenado,hacer esto en cada get_queryset
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -985,7 +997,8 @@ class nom_unidad_medida_view_set(viewsets.ModelViewSet):
 class nom_osde_oace_organismo_view_set(viewsets.ModelViewSet):
     queryset = nom_osde_oace_organismo.objects.all()
     serializer_class = nom_osde_oace_organismo_serializer
-
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = nom_osde_oace_organismo_filter
     def get_queryset(self):
         queryset = super().get_queryset()
         #filtrado por codigo_reeup
@@ -1067,9 +1080,10 @@ class nom_osde_oace_organismo_view_set(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_entidades_view_set(viewsets.ModelViewSet):
-    queryset = nom_entidades.objects.all()
+    queryset = nom_entidades.objects.all().order_by('id')  # Ordenar por defecto por el campo 'id' Esto estaba mal implementado estaba buscando en nom_atraques'
     serializer_class = nom_entidades_serializer
-    filterset_class = nom_entidades_filter  # Añade esta línea
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = nom_entidades_filter
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -1273,18 +1287,15 @@ class nom_tipo_equipo_ferroviario_view_set(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        
+
         # Filtrado por tipo de equipo, descripcion y tipo_combustible
-        search = self.request.query_params.get('tipo_equipo_tipo_carga', None)
+        search = self.request.query_params.get('busqueda_tipo_equipo__tipo_carga', None)
 
         if search is not None: #preguntamos si la variable search no está vacía
 
           #si no lo está el queryset es alguna coincidencia con el campo descripcion, 
           #tipo de equipo, o exactamente el valor del campo tipo_combustible
-            queryset = queryset.filter(
-            Q(tipo_equipo__icontains=search) |
-            Q(tipo_carga__icontains=search)
-            )
+            queryset = queryset.filter(tipo_equipo__icontains=search) | queryset.filter(tipo_carga__icontains=search)
 
         return queryset
 
@@ -1459,18 +1470,12 @@ class nom_equipo_ferroviario_view_set(viewsets.ModelViewSet):
         queryset = super().get_queryset()
 
         search = self.request.query_params.get('id_tipo_equipo_territorio', None)
-        if search:
-            try:
-                # Intenta convertir el término de búsqueda a un entero para buscar por ID
-                search_term_as_int = int(search)
-                queryset = queryset.select_related('tipo_equipo').filter(Q(tipo_equipo_id=search_term_as_int))
-                return queryset
-            except ValueError:
-                search_term_as_int = None
-                
-            queryset = queryset.select_related('tipo_equipo').filter(Q(tipo_equipo__tipo_equipo__icontains=search) |Q(territorio__icontains=search) | Q(numero_identificacion__icontains=search)
+
+        if search is not None:
+
+            queryset = queryset.filter( Q(tipo_equipo_name__icontains=search) | Q(territorio_name__icontains=search) | Q(numero_identificacion__icontains=search)
             )
-        #Fixed bug para buscar locomotoras cuando se usa select_related('campo_asociado_a_ForeignKEY')
+
         return queryset
     
     def create(self, request, *args, **kwargs):

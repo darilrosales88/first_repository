@@ -11,7 +11,7 @@
         aria-label="Search"
         v-model="searchQuery"
         @input="handleSearchInput"
-        style="width: 200px;"
+        style="width: 200px"
       />
       <button class="btn btn-outline-success btn-sm" type="submit">
         Search
@@ -19,7 +19,11 @@
     </form>
   </div>
   <div class="create-button-container">
-    <router-link class="create-button" to="/AdicionarDestino" v-if="hasGroup('Admin')">
+    <router-link
+      class="create-button"
+      to="/AdicionarDestino"
+      v-if="hasGroup('Admin')"
+    >
       Adicionar destino <i class="bi bi-plus-circle"></i>
     </router-link>
   </div>
@@ -35,15 +39,17 @@
     </thead>
     <tbody>
       <tr v-for="(item, index) in destinos" :key="item.id">
-        <th scope="row" style="background-color:white">{{ index + 1 }}</th>
+        <th scope="row" style="background-color: white">{{ index + 1 }}</th>
         <td>{{ item.cliente_name }}</td>
         <td>{{ item.destino }}</td>
-        <td  v-if="hasGroup('Admin')">
+        <td v-if="hasGroup('Admin')">
           <button @click="confirmDelete(item.id)" class="btn btn-danger">
             <i style="color: white" class="bi bi-trash"></i>
           </button>
           <button style="margin-left: 10px" class="btn btn-warning">
-            <router-link :to="{ name: 'EditarDestino', params: { id: item.id } }">
+            <router-link
+              :to="{ name: 'EditarDestino', params: { id: item.id } }"
+            >
               <i style="color: white" class="bi bi-pencil-square"></i>
             </router-link>
           </button>
@@ -76,7 +82,6 @@
 }
 </style>
 
-
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -95,7 +100,7 @@ export default {
       searchQuery: "",
       debounceTimeout: null,
       userPermissions: [], // Almacenará los permisos del usuario
-      userGroups: [],      // Almacenará los grupos del usuario
+      userGroups: [], // Almacenará los grupos del usuario
     };
   },
 
@@ -103,9 +108,9 @@ export default {
     this.getDestinos();
   },
   async created() {
-        // Obtener los permisos y grupos del usuario al cargar el componente
-        await this.fetchUserPermissionsAndGroups();
-      },
+    // Obtener los permisos y grupos del usuario al cargar el componente
+    await this.fetchUserPermissionsAndGroups();
+  },
   methods: {
     hasPermission(permission) {
       return this.userPermissions.includes(permission);
@@ -115,14 +120,16 @@ export default {
     },
     async fetchUserPermissionsAndGroups() {
       try {
-        const userId = localStorage.getItem('userid');
+        const userId = localStorage.getItem("userid");
         if (userId) {
-          const response = await axios.get(`/api/user/${userId}/permissions-and-groups/`);
+          const response = await axios.get(
+            `/api/user/${userId}/permissions-and-groups/`
+          );
           this.userPermissions = response.data.permissions;
-          this.userGroups = response.data.groups;          
+          this.userGroups = response.data.groups;
         }
       } catch (error) {
-        console.error('Error al obtener permisos y grupos:', error);
+        console.error("Error al obtener permisos y grupos:", error);
       }
     },
     getDestinos() {
@@ -180,7 +187,11 @@ export default {
         await axios.delete(`/api/destinos/${id}/`);
         // Actualizar la lista de destinos eliminando el que se ha borrado
         this.destinos = this.destinos.filter((item) => item.id !== id);
-        Swal.fire("Eliminado!", "El destino ha sido eliminado exitosamente.", "success");
+        Swal.fire(
+          "Eliminado!",
+          "El destino ha sido eliminado exitosamente.",
+          "success"
+        );
       } catch (error) {
         console.error("Error al eliminar el destino:", error);
         Swal.fire("Error", "Hubo un error al eliminar el destino.", "error");
@@ -191,8 +202,6 @@ export default {
 </script>
 
 <style scoped>
-
-
 th {
   background-color: #f2f2f2;
 }
@@ -205,6 +214,11 @@ th {
 .create-button-container {
   margin-top: -40px;
   text-align: left;
+}
+nav .pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .create-button {

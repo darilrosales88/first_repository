@@ -398,7 +398,7 @@ export default {
       axios
         .get("http://127.0.0.1:8000/ufc/por-situar/")
         .then((response) => {
-          this.allRecords = response.data; // Guarda todos los registros
+          this.allRecords = response.data.results; // Guarda todos los registros
           this.registrosPorSituar = [...this.allRecords]; // Copia para mostrar
           this.busqueda_existente = true;
         })
@@ -513,7 +513,7 @@ export default {
         });
 
         if (response.status === 200) {
-          this.producto_options = response.data.map((p) => ({
+          this.producto_options = response.data.results.map((p) => ({
             id: p.id,
             producto: p.nombre || p.descripcion || `Producto ${p.id}`,
           }));

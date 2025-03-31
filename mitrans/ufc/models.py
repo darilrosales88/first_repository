@@ -1,6 +1,6 @@
 from django.db import models
 from nomencladores.models import nom_puerto,nom_tipo_equipo_ferroviario,nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_equipo_ferroviario
-
+from django.core.validators import RegexValidator
 
 
 #productos asociados a vagones cargados/descargados

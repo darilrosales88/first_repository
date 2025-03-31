@@ -26,12 +26,8 @@ urlpatterns = [
     #ahora definimos un path para las api que han sido creadas y su path se encuentra en el archivo
     # urls.py de la app products y nomencladores, redireccionara a urls.py de la app nomencladores, para esto se importa la
     #clase include de django.urls y despues se genera el path
-
-    #gestion de los nomencladores
     path('api/', include('nomencladores.urls')),
-    #Administracion, gestion de usuarios y sus roles
-    path('apiAdmin/', include('Administracion.urls')), 
-    #aplicacion de UFC
+    path('apiAdmin/', include('Administracion.urls')),    
     path('ufc/', include('ufc.urls')),   
 ]
 

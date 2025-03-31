@@ -37,7 +37,7 @@
     <tr>
       <th scope="col">Código</th>
       <th scope="col">Nombre</th>
-      <th scope="col" v-if="hasGroup('Admin')">Acciones</th>
+      <th scope="col" >Acciones</th>
     </tr>
   </thead>
   <tbody>

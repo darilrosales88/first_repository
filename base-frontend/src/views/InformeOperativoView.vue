@@ -1,81 +1,223 @@
 <template>
-  <div>
-    <div style="background-color: #002a68; color: white; text-align: right">
-      <h6>Bienvenido:</h6>
+  <div
+    style="
+      background-color: #002a68;
+      color: rgb(16, 12, 12);
+      text-align: right;
+      padding: 10px;
+    "
+  >
+    <h6>Bienvenido: {{ username }}</h6>
+  </div>
+  <br />
+  <Navbar-Component /><br />
+
+  <div class="carrusel">
+    <!-- Tabla 1 -->
+    <div class="tabla activa">
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Edad</th>
+            <th>Ciudad</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Juan</td>
+            <td>25</td>
+            <td>Madrid</td>
+          </tr>
+          <tr>
+            <td>Ana</td>
+            <td>30</td>
+            <td>Barcelona</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    <Navbar-Component />
-    <EnTrenes />
-    <!-- Contenedor de la tabla con scroll horizontal 
-     La clase table-responsive de Bootstrap envuelve la tabla y permite el scroll horizontal cuando el contenido excede el 
-     ancho disponible.La tabla no debe tener  un ancho fijo, sino que se ajusta automáticamente al contenido.-->
+
+    <!-- Tabla 2 -->
+    <div class="tabla">
+      <table>
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Precio</th>
+            <th>Stock</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Laptop</td>
+            <td>$1200</td>
+            <td>10</td>
+          </tr>
+          <tr>
+            <td>Teléfono</td>
+            <td>$800</td>
+            <td>15</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tabla 3 -->
+    <div class="tabla">
+      <table>
+        <thead>
+          <tr>
+            <th>País</th>
+            <th>Capital</th>
+            <th>Población</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>España</td>
+            <td>Madrid</td>
+            <td>47M</td>
+          </tr>
+          <tr>
+            <td>México</td>
+            <td>CDMX</td>
+            <td>126M</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Controles de navegación -->
+  <button id="anterior">Anterior</button>
+  <button id="siguiente">Siguiente</button>
+
+  <!-- Indicadores -->
+  <div class="indicadores">
+    <span class="indicador activo"></span>
+    <span class="indicador"></span>
+    <span class="indicador"></span>
   </div>
 </template>
 
-<script>
-import Swal from "sweetalert2";
-import axios from "axios";
-import NavbarComponent from "@/components/NavbarComponent.vue";
-import EnTrenes from "@/components/EnTrenes.vue";
-
-export default {
-  name: "InformeOperativoView",
-
-  components: {
-    NavbarComponent,
-    EnTrenes,
-  },
-
-  methods: {},
-};
-</script>
-
 <style scoped>
-.search-container {
-  padding: 10px;
-}
-li {
-  margin-top: 0.1%;
-  scale: 0.75;
-  padding-right: 80%;
+/* styles.css */
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
 }
 
-.search-form {
-  display: flex;
-
-  margin-right: 50%;
+.carrusel {
+  position: relative;
+  width: 80%;
+  margin: 0 auto;
+  overflow: hidden;
 }
 
-@media (max-width: 768px) {
-  .search-form {
-    margin-left: auto;
-    margin-right: 10px;
-  }
+.tabla {
+  display: none; /* Oculta todas las tablas por defecto */
+  width: 100%;
+  margin: 20px 0;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out; /* Transición suave */
 }
 
-th {
-  background-color: #f2f2f2;
+.tabla.activa {
+  display: block; /* Muestra solo la tabla activa */
+  opacity: 1; /* Hace visible la tabla activa */
 }
 
-.btn {
-  cursor: pointer;
-  font-weight: bold;
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
 }
 
-.create-button-container {
-  margin-top: -40px;
+th,
+td {
+  border: 1px solid #ddd;
+  padding: 8px;
   text-align: left;
 }
 
-.create-button {
-  text-decoration: none;
-  color: black;
-  padding-bottom: 2em;
+th {
+  background-color: #f4f4f4;
 }
 
-@media (max-width: 768px) {
-  .create-button-container {
-    text-align: left;
-    margin-right: 0;
-  }
+button {
+  padding: 10px 20px;
+  margin: 10px;
+  cursor: pointer;
+}
+
+.indicadores {
+  margin-top: 20px;
+}
+
+.indicador {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background-color: #bbb;
+  border-radius: 50%;
+  margin: 0 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.indicador.activo {
+  background-color: #333; /* Color para el indicador activo */
 }
 </style>
+
+<script>
+const tablas = document.querySelectorAll(".tabla");
+const btnAnterior = document.getElementById("anterior");
+const btnSiguiente = document.getElementById("siguiente");
+const indicadores = document.querySelectorAll(".indicador");
+let indiceActual = 0;
+
+// Función para mostrar la tabla actual
+function mostrarTabla(indice) {
+  // Oculta todas las tablas
+  tablas.forEach((tabla) => {
+    tabla.classList.remove("activa");
+  });
+
+  // Muestra la tabla actual
+  tablas[indice].classList.add("activa");
+
+  // Actualiza los indicadores
+  indicadores.forEach((indicador, i) => {
+    if (i === indice) {
+      indicador.classList.add("activo");
+    } else {
+      indicador.classList.remove("activo");
+    }
+  });
+}
+
+// Evento para el botón "Siguiente"
+btnSiguiente.addEventListener("click", () => {
+  indiceActual = (indiceActual + 1) % tablas.length;
+  mostrarTabla(indiceActual);
+});
+
+// Evento para el botón "Anterior"
+btnAnterior.addEventListener("click", () => {
+  indiceActual = (indiceActual - 1 + tablas.length) % tablas.length;
+  mostrarTabla(indiceActual);
+});
+
+// Evento para los indicadores
+indicadores.forEach((indicador, i) => {
+  indicador.addEventListener("click", () => {
+    indiceActual = i;
+    mostrarTabla(indiceActual);
+  });
+});
+
+// Mostrar la primera tabla al cargar la página
+mostrarTabla(indiceActual);
+</script>

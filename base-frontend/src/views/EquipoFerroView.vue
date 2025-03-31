@@ -44,7 +44,7 @@
             <th scope="col">Tipo de carga</th>
             <th scope="col">Tipo de combustible</th>
             <th scope="col">Peso</th>
-            <th scope="col" v-if="hasGroup('Admin')">Acciones</th>
+            <th scope="col" >Acciones</th>
           </tr>
         </thead>
         <tbody>

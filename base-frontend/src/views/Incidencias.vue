@@ -38,7 +38,7 @@
             <th scope="col">Código</th>
             <th scope="col">Incidencia</th>
             <th scope="col">Imputable</th>
-            <th scope="col" v-if="hasGroup('Admin')">Acciones</th>
+            <th scope="col" >Acciones</th>
           </tr>
         </thead>
         <tbody>

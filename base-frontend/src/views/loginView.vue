@@ -1,4 +1,10 @@
 <template>
+<div>
+    <!-- Pantalla de carga -->
+    <div v-if="isLoading" class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <p>Iniciando sesión...</p>
+    </div>
   <div>
     <svg
       version="1.1"
@@ -68,7 +74,7 @@
     </svg>
     <div class="container">
       <img
-        style="position: relative; padding-top: 3em; margin-right: 44em"
+        style="position: relative; padding-top: 3em; margin-right: 35em"
         src="../assets/Imagenes/logo.png"
       />
   
@@ -77,11 +83,11 @@
         style="margin-top: 2em; position: absolute"
         class="row row-cols-lg-auto g-3 align-items-center"
       >
-        <div style="margin-left: 4em; " class="col-12">
+        <div style="margin-left: 5em; " class="responsive col-12">
           <label class="visually-hidden" for="inlineFormInputGroupUsername">Nombre de usuario</label>
           <div class="input-group">
             <div class="input-group-text">
-              <i class="bi bi-person"></i> <!-- Ícono de persona de Bootstrap Icons (person.svg) -->
+              <i class="bi bi-person"></i>
             </div>
             <input
               type="text"
@@ -95,11 +101,11 @@
           </div>
         </div>
   
-        <div style="margin-left: 5.3em; font-size: 12px;" class="col-12">
+        <div style="margin-left: 6.5em; font-size: 12px;" class="col-12">
           <label class="visually-hidden" for="inlineFormInputGroupPassword">Contraseña</label>
           <div class="input-group">
             <div class="input-group-text">
-              <i class="bi bi-lock"></i> <!-- Ícono de candado de Bootstrap Icons (lock.svg) -->
+              <i class="bi bi-lock"></i>
             </div>
             <input
               type="password"
@@ -113,19 +119,49 @@
           </div>
         </div>
   
-        <div style="margin-left: 5em;" class="justify-content-end">
+        <div style="margin-left: 7em;" class="justify-content-end">
           <button
-            style="margin-left: 3.3em; width: 80%; font-size: 14px; margin-top: 1em"
+            style="margin-left: 5.7em; width: 80%; font-size: 14px; margin-top: 1em"
             class="btn btn-primary me-md-2 justify-content-end"
             type="submit"
+            :disabled="isLoading"
           >
-          Iniciar Sesi&oacute;n  <i class="bi bi-shield-lock"></i>
+            <span v-if="!isLoading">Iniciar Sesi&oacute;n  <i class="bi bi-shield-lock"></i></span>
+            <span v-else>
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              Cargando...
+            </span>
           </button>
         </div>
       </form>
     </div>
   </div>
+</div>
 </template>
+
+<style scoped>
+/* Ajustes adicionales para pantallas pequeñas */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 15px;
+  }
+
+  .img-fluid {
+    padding-top: 1em !important;
+  }
+
+  .input-group {
+    margin-bottom: 1em;
+   
+  }
+
+  
+
+  .btn {
+    width: 100%;
+  }
+}
+</style>
 
 <style scoped>
 svg {
@@ -148,9 +184,10 @@ svg {
   width: 30%;
 }
 
+
 </style>
   
-  <script>
+<script>
 import axios from "axios";
 import Swal from 'sweetalert2';
 
@@ -161,12 +198,13 @@ export default {
       username: "",
       password: "",
       errors: [],
+      isLoading: false, // Estado de carga local
     };
   },
 
   methods: {
     async submitForm() {
-      this.$store.commit("setIsLoading", true);
+      this.isLoading = true; // Activar pantalla de carga
       axios.defaults.headers.common["Authorization"] = "";
       localStorage.removeItem("token");
 
@@ -181,10 +219,9 @@ export default {
         const username = this.username;
 
         // Guardar el token y el nombre de usuario en localStorage
-        this.$store.commit("setToken", token);
-        axios.defaults.headers.common["Authorization"] = "Token " + token;
         localStorage.setItem("token", token);
         localStorage.setItem("username", username);
+        axios.defaults.headers.common["Authorization"] = "Token " + token;
 
         // Obtener el ID del usuario desde el backend
         const userResponse = await axios.get("/api/v1/users/me/");
@@ -193,17 +230,17 @@ export default {
         console.log('ID del usuario:', userResponse.data.id); // Verificar el ID
         this.$router.push("/home");
       } catch (error) {
-        this.$store.commit("setIsLoading", false);
         if (error.response && error.response.status === 400) {
           Swal.fire('Error', 'Usuario o contraseña incorrectos.', 'error');
         } else if (error.message) {
           Swal.fire('Error', 'Algo salió mal. Inténtelo de nuevo.', 'error');
         }
       } finally {
-        this.$store.commit("setIsLoading", false);
+        this.isLoading = false; // Desactivar pantalla de carga
       }
     },
   },
 };
 </script>
+
   

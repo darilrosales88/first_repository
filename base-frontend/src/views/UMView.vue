@@ -39,7 +39,7 @@
           <th scope="col">Unidad de medida</th>
           <th scope="col">Símbolo</th>
           <!-- Mostrar la columna "Acciones" solo si el usuario pertenece al grupo "Admin" -->
-          <th scope="col" v-if="hasGroup('Admin')">Acciones</th>
+          <th scope="col" >Acciones</th>
         </tr>
       </thead>
       <tbody>

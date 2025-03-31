@@ -48,6 +48,8 @@ OWN_APPS = [
     'nomencladores.apps.NomencladoresConfig',
     'Administracion.apps.AdministracionConfig',
     'ufc.apps.UfcConfig',
+    
+    
 ]
 INSTALLED_APPS = BASE_APPS + THIRD_APPS + OWN_APPS
 

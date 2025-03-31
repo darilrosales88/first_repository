@@ -256,14 +256,6 @@ const routes = [
     },
   },
   {
-    path: "/EditarEnTren/:id/edit",
-    name: "EditarEnTren",
-    component: () => import("../views/EditarEnTrenView.vue"),
-    meta: {
-      requireLogin: true,
-    },
-  },
-  {
     path: "/Embarcaciones",
     name: "Embarcaciones",
     component: () => import("../views/EmbarcacionView.vue"),
@@ -625,14 +617,6 @@ const routes = [
     },
   },
   {
-    path: "/ParteUfc",
-    name: "ParteUfc",
-    component: () => import("../views/ParteUfcView.vue"),
-    meta: {
-      requireLogin: true,
-    },
-  },
-  {
     path: "/AdicionarTipoEmbalaje",
     name: "AdicionarTipoEmbalaje",
     component: () => import("../views/AdicionarTipoEmbalajeView.vue"),
@@ -640,10 +624,20 @@ const routes = [
       requireLogin: true,
     },
   },
+
   {
-    path: "/InformeOperativo",
-    name: "InformeOperativo",
-    component: () => import("../views/InformeOperativoView.vue"),
+    path: "/ufc",
+    name: "ufc",
+    component: () => import("../views/UFCView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+
+  {
+    path: "/InfoOperativo",
+    name: "InfoOperativo",
+    component: () => import("../views/UFC/InformeOperativoView.vue"),
     meta: {
       requireLogin: true,
     },
@@ -660,6 +654,14 @@ const routes = [
     path: "/AdicionarProductoVagon",
     name: "AdicionarProductoVagon",
     component: () => import("../views/AdicionarProductoVagon.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/EditarEnTren",
+    name: "EditarEnTren",
+    component: () => import("../views/EditarEnTrenView.vue"),
     meta: {
       requireLogin: true,
     },

@@ -4,18 +4,27 @@ from rest_framework import viewsets,generics,permissions
 from rest_framework.pagination import PageNumberPagination
 #importacion de modelos
 from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados,en_trenes,producto_en_vagon
-
+from .models import por_situar_carga_descarga,Situado_Carga_Descarga
 #importacion de serializadores asociados a los modelos
 from .serializers import vagon_cargado_descargado_filter,vagon_cargado_descargado_serializer,producto_vagon_serializer
 from .serializers import producto_vagon_cargado_descargado_filter,productos_vagones_cargados_descargados_serializer,en_trenes_serializer
+from .serializers import PorSituarCargaDescargaSerializer,SituadoCargaDescargaSerializers
 
 from Administracion.models import Auditoria
 
 from rest_framework.response import Response
 from rest_framework import status
 
+#para el filtrado
+from django_filters.rest_framework import DjangoFilterBackend
+
 #para usar el or
 from django.db.models import Q
+
+
+from django.utils import timezone
+#para usar el or
+
 
 
 # Verifica si el usuario tiene el rol "ufc"
@@ -381,3 +390,35 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
         )
 
         return super().list(request, *args, **kwargs)
+
+
+class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
+    queryset = por_situar_carga_descarga.objects.all()
+    serializer_class = PorSituarCargaDescargaSerializer
+    filter_backends = [DjangoFilterBackend]
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        tipo_equipo = self.request.query_params.get("tipo_equipo")
+        if tipo_equipo:
+            # Si el parámetro es una lista (ej: ?tipo_equipo=camion,furgon)
+            if "," in tipo_equipo:
+                tipos = tipo_equipo.split(",")
+                queryset = queryset.filter(tipo_equipo__in=tipos)
+        return queryset
+
+
+class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
+    queryset= Situado_Carga_Descarga.objects.all()
+    serializer_class = SituadoCargaDescargaSerializers
+    filter_backends = [DjangoFilterBackend]
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        tipo_equipo = self.request.query_params.get("tipo_equipo")
+        if tipo_equipo:
+            # Si el parámetro es una lista (ej: ?tipo_equipo=camion,furgon)
+            if "," in tipo_equipo:
+                tipos = tipo_equipo.split(",")
+                queryset = queryset.filter(tipo_equipo__in=tipos)
+        return queryset

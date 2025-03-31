@@ -1,149 +1,146 @@
 <template>
-  <div style="padding: 20px">
-    <button @click="toggleContentVisibility" class="btn btn-primary">
-      <h2>En Trenes</h2>
-    </button>
+  <div class="container py-3">
+    <!-- Encabezado con acciones -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <!-- Botón de agregar - más destacado -->
 
-    <div v-if="showContent">
-      <div class="d-flex" style="padding: 1%">
-        <div class="create-button-container">
-          <router-link
-            v-if="hasPermission"
-            class="create-button"
-            to="AdicionarVagon"
-          >
-            <i class="bi bi-plus-circle large-icon"></i>
-          </router-link>
-        </div>
+      <button class="btn btn-link p-0" @click="showModal = true">
+        <router-link
+          v-if="hasPermission"
+          to="AdicionarVagon"
+          title="Agregar nuevo vagón"
+        >
+          <i class="bi bi-plus-circle fs-3"></i>
+        </router-link>
+        <!-- Icono grande -->
+      </button>
 
-        <div class="search-container" style="padding-left: 10%">
-          <form class="d-flex search-form" @submit.prevent="search_producto">
-            <input
-              class="form-control form-control-sm me-2"
-              type="search"
-              placeholder="Origen, Destino, Producto, Locomotora"
-              aria-label="Search"
-              v-model="searchQuery"
-              @input="handleSearchInput"
-              style="width: 200px"
-            />
-          </form>
-          <ModalEnTrenes
-            v-if="mostrarModal"
-            :visible="mostrarModal"
-            @cerrar-modal="cerrarModal"
+      <form @submit.prevent="search_producto" class="search-container">
+        <div class="input-group">
+          <input
+            type="search"
+            class="form-control"
+            placeholder="Origen, Destino, Producto, Locomotora"
+            v-model="searchQuery"
+            @input="handleSearchInput"
           />
+          <span
+            class="position-absolute top-50 start-0 translate-middle-y ps-2"
+          >
+            <i class="bi bi-search"></i>
+          </span>
         </div>
-      </div>
-      <div class="table-container" style="padding-left: 15%">
-        <table class="table">
-          <thead>
-            <tr>
-              <th scope="col" v-if="showNoId">No</th>
-              <th scope="col">No</th>
-              <th scope="col">Código_locomotora</th>
-              <th scope="col">Tipo</th>
-              <th scope="col">Estado</th>
-              <th scope="col">Producto</th>
-              <th scope="col">Cantidad de vagones</th>
-              <th scope="col">Origen</th>
-              <th scope="col">Destino</th>
-              <th scope="col" v-if="showNoId">Descripción</th>
-              <th scope="col" v-if="hasPermission">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(tren, index) in en_trenes" :key="tren.id">
-              <th scope="row" style="background-color: white">
-                {{ index + 1 }}
-              </th>
-              <td>{{ tren.numero_identificacion_locomotora }}</td>
-              <td>{{ tren.tipo_equipo }}</td>
-              <!-- nacionalidad_name esta declarado en el serializador -->
-              <td>{{ tren.estado }}</td>
-              <td>{{ tren.producto_name || "Null" }}</td>
-              <td>{{ tren.cantidad_vagones }}</td>
-              <td>{{ tren.origen }}</td>
-              <td>{{ tren.destino }}</td>
-
-              <td>
-                <!--   <button
-                  @click="openCargoDetailsModal(item)"
-                  class="btn btn-info btn-small btn-eye"
-                  v-html="
-                    showNoId
-                      ? '<i class=\'bi bi-eye-slash-fill\'></i>'
-                      : '<i class=\'bi bi-eye-fill\'></i>'
-                  "
-                ></button>
-
-                <button class="btn btn-warning btn-small">
-                  <router-link
-                    :to="{ name: 'EditarEnTren', params: { id: item.id } }"
-                  >
-                    <i style="color: black" class="bi bi-pencil-square"></i>
-                  </router-link>
-                </button>
-                <button class="btn btn-danger btn-small">
-                  <i class="bi bi-trash"></i>
-                </button> -->
-                <span v-if="hasPermission">
-                  <button
-                    @click="openVagonDetailsModal(tren)"
-                    class="btn btn-info btn-small btn-eye"
-                    v-html="
-                      showNoId
-                        ? '<i class=\'bi bi-eye-slash-fill\'></i>'
-                        : '<i class=\'bi bi-eye-fill\'></i>'
-                    "
-                  ></button>
-                </span>
-                <span v-if="hasPermission">
-                  <button
-                    class="btn btn-danger btn-small btn-eye"
-                    style="margin-left: 3%"
-                  >
-                    <router-link
-                      :to="{ name: 'EditarEnTren', params: { id: tren.id } }"
-                    >
-                      <i style="color: black" class="bi bi-pencil-square"></i>
-                    </router-link>
-                  </button>
-                  <button
-                    style="margin-left: 5px"
-                    @click.prevent="confirmDelete(tren.id)"
-                    class="btn btn-danger btn-small"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="pagination-container" style="padding-left: 15%">
-        <button
-          @click="previousPage"
-          :disabled="currentPage === 1"
-          class="btn btn-primary"
-        >
-          Anterior
-        </button>
-        <span style="margin: 0 10px">
-          Página {{ currentPage }} de {{ Math.ceil(totalItems / itemsPerPage) }}
-        </span>
-        <button
-          @click="nextPage"
-          :disabled="currentPage * itemsPerPage >= totalItems"
-          class="btn btn-primary"
-        >
-          Siguiente
-        </button>
-      </div>
+      </form>
     </div>
-    <!-- Aqui se acabo el contenido escondido -->
+
+    <!-- Tabla responsive con mejoras -->
+    <div class="table table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th scope="col" style="width: 50px">#</th>
+            <th scope="col">Código Locomotora</th>
+            <th scope="col">Tipo</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Producto</th>
+            <th scope="col" class="text-end">Cant. Vagones</th>
+            <th scope="col">Origen</th>
+            <th scope="col">Destino</th>
+            <th scope="col" v-if="showNoId">Descripción</th>
+            <th scope="col" v-if="hasPermission" style="width: 120px">
+              Acciones
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="(tren, index) in en_trenes"
+            :key="tren.id"
+            class="align-middle"
+          >
+            <th scope="row">{{ index + 1 }}</th>
+            <td>{{ tren.numero_identificacion_locomotora || "-" }}</td>
+            <td>{{ tren.tipo_equipo || "-" }}</td>
+            <td>
+              <span>
+                {{ tren.estado || "-" }}
+              </span>
+            </td>
+            <td>{{ tren.producto_name || "-" }}</td>
+            <td class="text-end">{{ tren.cantidad_vagones || "0" }}</td>
+            <td>{{ tren.origen || "-" }}</td>
+            <td>{{ tren.destino || "-" }}</td>
+            <td v-if="showNoId">{{ tren.descripcion || "-" }}</td>
+            <td v-if="hasPermission">
+              <div class="d-flex">
+                <button
+                  @click="openVagonDetailsModal(tren)"
+                  class="btn btn-sm btn-outline-info me-2"
+                  :title="showNoId ? 'Ocultar detalles' : 'Ver detalles'"
+                >
+                  <i
+                    :class="
+                      showNoId ? 'bi bi-eye-slash-fill' : 'bi bi-eye-fill'
+                    "
+                  ></i>
+                </button>
+                <router-link
+                  :to="{ name: 'EditarEnTren', params: { id: tren.id } }"
+                  class="btn btn-sm btn-outline-warning me-2"
+                  title="Editar"
+                >
+                  <i class="bi bi-pencil-square"></i>
+                </router-link>
+                <button
+                  @click.prevent="confirmDelete(tren.id)"
+                  class="btn btn-sm btn-outline-danger"
+                  title="Eliminar"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación mejorada -->
+    <div class="d-flex justify-content-between align-items-center">
+      <div class="text-muted small">
+        Mostrando {{ en_trenes.length }} de {{ totalItems }} registros
+      </div>
+      <nav aria-label="Page navigation">
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item" :class="{ disabled: currentPage === 1 }">
+            <button class="page-link" @click="previousPage">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+          </li>
+          <li class="page-item disabled">
+            <span class="page-link">
+              Página {{ currentPage }} de
+              {{ Math.ceil(totalItems / itemsPerPage) }}
+            </span>
+          </li>
+          <li
+            class="page-item"
+            :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
+          >
+            <button class="page-link" @click="nextPage">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <!-- Modal para detalles -->
+    <ModalEnTrenes
+      v-if="mostrarModal"
+      :visible="mostrarModal"
+      @cerrar-modal="cerrarModal"
+    />
   </div>
 </template>
 
@@ -188,6 +185,7 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 import ModalEnTrenes from "@/components/ModalViewEnTrenes.vue";
+
 export default {
   name: "EnTrenes",
 
@@ -203,6 +201,7 @@ export default {
       userPermissions: [],
       userGroups: [],
       showContent: false,
+      mostrarModal: false,
       mostrarModal: false,
     };
   },
@@ -379,6 +378,13 @@ export default {
     cerrarModal() {
       this.mostrarModal = false;
     },
+    abrirModalEnTren() {
+      this.mostrarModal = true;
+      console.log("Abriendo Modal....");
+    },
+    cerrarModal() {
+      this.mostrarModal = false;
+    },
 
     confirmDelete(id) {
       Swal.fire({
@@ -399,10 +405,108 @@ export default {
 };
 </script>
 
-<style>
-.create-button {
-  text-decoration: none;
-  color: green;
-  margin-left: 940px;
+<style scoped>
+/* Estilos para el contenedor del buscador */
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 300px; /* Ancho máximo del buscador */
+}
+
+/* Estilos para el input del buscador */
+.search-container input {
+  padding-right: 40px; /* Espacio para el icono de lupa */
+  border-radius: 20px; /* Bordes redondeados */
+}
+
+/* Estilos para el icono de lupa */
+.search-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888; /* Color del icono */
+  pointer-events: none; /* Evita que el icono interfiera con el input */
+}
+
+/* Estilos para la tabla responsive */
+.table-responsive {
+  overflow-x: auto; /* Permite desplazamiento horizontal en pantallas pequeñas */
+}
+
+/* Estilos para el modal */
+.modal-backdrop {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 90%;
+  background-color: transparent; /* Fondo semitransparente */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Asegura que el modal esté por encima de todo */
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px; /* Ancho máximo del modal */
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.modal-title {
+  margin: 0;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.modal-body {
+  margin-bottom: 20px;
+}
+
+/* Estilos para el icono de agregar */
+.btn-link {
+  color: #007bff; /* Color azul para el icono */
+  text-decoration: none; /* Sin subrayado */
+}
+
+.btn-link:hover {
+  color: #0056b3; /* Color azul más oscuro al pasar el mouse */
+}
+
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+}
+
+.search-container input {
+  padding-left: 2.5rem !important; /* Espacio para el icono */
+  border-radius: 20px !important;
+}
+
+.search-container .bi-search {
+  color: #6c757d; /* Color gris para el icono */
+  z-index: 10;
+}
+
+/* Para asegurar que el input group conserve los estilos */
+.input-group {
+  width: 100%;
 }
 </style>

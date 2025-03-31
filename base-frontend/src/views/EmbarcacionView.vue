@@ -48,7 +48,7 @@
             <th scope="col" >Tipo de patana</th>
             <th scope="col" >IMO</th>
             <th scope="col" >Potencia</th>
-            <th scope="col" v-if="hasGroup('Admin')">Acciones</th>
+            <th scope="col" >Acciones</th>
           </tr>
         </thead>
         <tbody>

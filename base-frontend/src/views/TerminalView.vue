@@ -41,7 +41,7 @@
           <th scope="col">Capacidad de Importación</th>
           <th scope="col">Capacidad de Exportación</th>
           <!-- Mostrar la columna "Acción" solo si el usuario pertenece al grupo "Admin" -->
-          <th scope="col" v-if="hasGroup('Admin')">Acciones</th>
+          <th scope="col" >Acciones</th>
         </tr>
       </thead>
       <tbody>

@@ -315,12 +315,10 @@ class nom_entidades(models.Model):
         ('exportador', 'Exportador'),
         ('transportista', 'Transportista'),
         ('acceso_comercial', 'Acceso comercial'),
-        ('ccd', 'CCD'),
         ('compania_naviera', 'Compañía naviera'),
         ('mitrans', 'Mitrans'),
         ('otros', 'Otros')
-    )    
-
+    )
     tipo_entidad = models.CharField(choices=t_entidad, default="DC", help_text="Escoja una opción.",
                                      verbose_name="Tipo de entidad",max_length=30)
 
@@ -641,3 +639,6 @@ class nom_estructura_ubicacion(models.Model):
     def __str__(self):
         return self.nombre_estructura_ubicacion
 #-----------------------------------------Aqui termina el Modelo nom_estructura_ubicacion---------------------------
+
+
+

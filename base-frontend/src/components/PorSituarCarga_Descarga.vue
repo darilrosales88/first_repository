@@ -327,7 +327,7 @@ export default {
         };
 
         const response = await axios.put(
-          `http://127.0.0.1:8000/api/por_situar/${this.currentItemId}/`,
+          `http://127.0.0.1:8000/ufc/por-situar/${this.currentItemId}/`,
           datosParaEnviar
         );
 
@@ -367,7 +367,7 @@ export default {
         };
 
         const response = await axios.put(
-          `http://127.0.0.1:8000/api/por_situar/${this.currentItemId}/`,
+          `http://127.0.0.1:8000/ufc/por-situar/${this.currentItemId}/`,
           datosParaEnviar
         );
 
@@ -396,7 +396,7 @@ export default {
     getPorSituar() {
       this.loading = true;
       axios
-        .get("http://127.0.0.1:8000/api/por_situar/")
+        .get("http://127.0.0.1:8000/ufc/por-situar/")
         .then((response) => {
           this.allRecords = response.data; // Guarda todos los registros
           this.registrosPorSituar = [...this.allRecords]; // Copia para mostrar
@@ -455,7 +455,7 @@ export default {
         console.log("Datos a enviar al backend:", datosParaEnviar);
 
         const response = await axios.post(
-          "http://127.0.0.1:8000/api/por_situar/",
+          "http://127.0.0.1:8000/ufc/por-situar/",
           datosParaEnviar
         );
 
@@ -577,7 +577,7 @@ export default {
       this.loading = true;
       axios
         .get(
-          `http://127.0.0.1:8000/api/por_situar/?tipo_equipo=${this.searchQuery}`
+          `http://127.0.0.1:8000/ufc/por-situar/?tipo_equipo=${this.searchQuery}`
         )
         .then((response) => {
           this.registrosPorSituar = response.data;
@@ -622,7 +622,7 @@ export default {
       this.loading = true;
       try {
         const response = await axios.delete(
-          `http://127.0.0.1:8000/api/por_situar/${id}/`
+          `http://127.0.0.1:8000/ufc/por-situar/${id}/`
         );
 
         if (response.status !== 204) {

@@ -188,7 +188,7 @@ export default {
     getSituados() {
       axios.get("http://127.0.0.1:8000/ufc/situados/").then((response) => {
         console.log(response.data);
-        this.situados = response.data;
+        this.situados = response.data.results;
       });
     },
   },

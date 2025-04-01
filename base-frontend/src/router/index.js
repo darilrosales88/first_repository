@@ -659,7 +659,7 @@ const routes = [
     },
   },
   {
-    path: "/EditarEnTren",
+    path: "/EditarEnTren/:id/edit",
     name: "EditarEnTren",
     component: () => import("../views/EditarEnTrenView.vue"),
     meta: {

@@ -266,7 +266,7 @@ export default {
       try {
         const response = await axios.get("/ufc/en-trenes/", {
           params: {
-            search: this.searchQuery, // Término de búsqueda
+            origen_destino: this.searchQuery, // Término de búsqueda
             page: this.currentPage, // Página actual
             page_size: this.itemsPerPage, // Elementos por página
           },

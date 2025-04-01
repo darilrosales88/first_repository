@@ -564,13 +564,22 @@ export default {
         this.numeroIdentificacionSeleccionado = null;
       }
     },
-
+    /* Asi se capturan todos los objetos con paginado, Reproducir esta estructura en todos los demas Formularios */
     async getLocomotoras() {
       try {
-        const response = await axios.get(
-          "/api/equipos_ferroviarios/?id_tipo_equipo_territorio=locomo"
-        );
-        this.locomotoras = response.data.results;
+        let allLocomotoras = [];
+        let nextPage =
+          "/api/equipos_ferroviarios/?id_tipo_equipo_territorio=locomo"; // URL inicial con el filtro
+
+        while (nextPage) {
+          const response = await axios.get(nextPage);
+          allLocomotoras = [...allLocomotoras, ...response.data.results];
+
+          // Actualizamos nextPage con la URL de la siguiente página (o null si no hay más)
+          nextPage = response.data.next;
+        }
+
+        this.locomotoras = allLocomotoras;
       } catch (error) {
         console.error("Error al obtener las Locomotoras:", error);
         Swal.fire(
@@ -582,22 +591,37 @@ export default {
     },
 
     async buscarEquipos() {
+      const vagon_id = this.$route.params.id;
+      const response = await axios.get(`/ufc/en-trenes/${vagon_id}/`);
       try {
-        const peticion =
-          "/api/equipos_ferroviarios/?id_tipo_equipo_territorio=" +
-          this.formData.tipo_equipo;
-        const response = await axios.get(peticion);
-        this.equipos_vagones = response.data.results;
+        let peticion = `/api/equipos_ferroviarios/?id_tipo_equipo_territorio=${this.vagon["tipo_equipo"]}`;
+        let allEquipos = [];
+        while (peticion) {
+          const response = await axios.get(peticion);
+          allEquipos = [...allEquipos, ...response.data.results];
+
+          peticion = response.data.next;
+        }
+        this.equipos_vagones = allEquipos;
       } catch (error) {
         console.error("Error al obtener los equipos:", error);
         Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
       }
     },
-
     async getEntidades() {
       try {
-        const response = await axios.get("/api/entidades/");
-        this.entidades = response.data.results;
+        let allEntidades = [];
+        let nextPage = "/api/entidades/"; // URL inicial
+
+        while (nextPage) {
+          const response = await axios.get(nextPage);
+          allEntidades = [...allEntidades, ...response.data.results];
+
+          // Actualizamos nextPage con la URL de la siguiente página (o null si no hay más)
+          nextPage = response.data.next;
+        }
+
+        this.entidades = allEntidades;
       } catch (error) {
         console.error("Error al obtener las entidades:", error);
         Swal.fire("Error", "Hubo un error al obtener las entidades.", "error");
@@ -610,8 +634,18 @@ export default {
 
     async getPuertos() {
       try {
-        const response = await axios.get("/api/puertos/");
-        this.puertos = response.data.results;
+        let allPuertos = [];
+        let nextPage = "/api/puertos/"; // URL inicial
+
+        while (nextPage) {
+          const response = await axios.get(nextPage);
+          allPuertos = [...allPuertos, ...response.data.results];
+
+          // Actualizamos nextPage con la URL de la siguiente página (o null si no hay más)
+          nextPage = response.data.next;
+        }
+
+        this.puertos = allPuertos;
       } catch (error) {
         console.error("Error al obtener los puertos:", error);
         Swal.fire("Error", "Hubo un error al obtener los puertos.", "error");
@@ -630,8 +664,18 @@ export default {
 
     async getProductos() {
       try {
-        const response = await axios.get("/ufc/producto-vagon/");
-        this.productos = response.data.results;
+        let allProductos = [];
+        let nextPage = "/ufc/producto-vagon/"; // URL inicial
+
+        while (nextPage) {
+          const response = await axios.get(nextPage);
+          allProductos = [...allProductos, ...response.data.results];
+
+          // Actualiza nextPage con la URL de la siguiente página (null si no hay más)
+          nextPage = response.data.next;
+        }
+
+        this.productos = allProductos;
       } catch (error) {
         console.error("Error al obtener los productos:", error);
         Swal.fire("Error", "Hubo un error al obtener los productos.", "error");

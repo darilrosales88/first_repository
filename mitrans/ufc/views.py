@@ -567,4 +567,6 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
 
     
     
-    
+class PendienteArrastreViewset(viewsets.ModelViewSet):
+    queryset = ArrastrePendientes.objects.all()
+    serializer_class = PendienteArrastreSerializer

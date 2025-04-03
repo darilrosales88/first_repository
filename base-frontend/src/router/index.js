@@ -645,7 +645,7 @@ const routes = [
   {
     path: "/AdicionarVagon",
     name: "AdicionarVagon",
-    component: () => import("../views/AdicionarEnTren.vue"),
+    component: () => import("../views/UFC/AdicionarEnTren.vue"),
     meta: {
       requireLogin: true,
     },
@@ -653,7 +653,7 @@ const routes = [
   {
     path: "/AdicionarProductoVagon",
     name: "AdicionarProductoVagon",
-    component: () => import("../views/AdicionarProductoVagon.vue"),
+    component: () => import("../views/UFC/AdicionarProductoVagon.vue"),
     meta: {
       requireLogin: true,
     },
@@ -661,7 +661,7 @@ const routes = [
   {
     path: "/EditarEnTren/:id/edit",
     name: "EditarEnTren",
-    component: () => import("../views/EditarEnTrenView.vue"),
+    component: () => import("../views/UFC/EditarEnTrenView.vue"),
     meta: {
       requireLogin: true,
     },

@@ -1,7 +1,7 @@
 from rest_framework import routers
 #importamos las vistas
 from .views import vagon_cargado_descargado_view_set,productos_vagones_cargados_descargados_view_set , en_trenes_view_set, producto_vagon_view_set
-from .views import SituadoCargaDescargaViewset,PorSituarCargaDescargaViewSet
+from .views import SituadoCargaDescargaViewset,PorSituarCargaDescargaViewSet,PendienteArrastreViewset
 
 
 from django.urls import path
@@ -21,6 +21,7 @@ router.register('en-trenes',en_trenes_view_set, basename='en-trenes' )
 router.register('producto-vagon',producto_vagon_view_set, basename='producto-vagon' )
 router.register('por-situar',PorSituarCargaDescargaViewSet, basename="por-situar")
 router.register('situados', SituadoCargaDescargaViewset, basename="situados")
+router.register('pendiente_arrastre', PendienteArrastreViewset, basename ="Pendiente_de_arrastre")
 
 
 #ahora declaramos el urlpatterns y lo igualamos a la propiedad urls de la variable creada de tipo routers

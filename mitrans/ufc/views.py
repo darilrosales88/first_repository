@@ -4,11 +4,11 @@ from rest_framework import viewsets,generics,permissions
 from rest_framework.pagination import PageNumberPagination
 #importacion de modelos
 from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados,en_trenes,producto_en_vagon
-from .models import por_situar_carga_descarga,Situado_Carga_Descarga
+from .models import por_situar_carga_descarga,Situado_Carga_Descarga,ArrastrePendientes
 #importacion de serializadores asociados a los modelos
 from .serializers import vagon_cargado_descargado_filter,vagon_cargado_descargado_serializer,producto_vagon_serializer
 from .serializers import producto_vagon_cargado_descargado_filter,productos_vagones_cargados_descargados_serializer,en_trenes_serializer
-from .serializers import PorSituarCargaDescargaSerializer,SituadoCargaDescargaSerializers
+from .serializers import PorSituarCargaDescargaSerializer,SituadoCargaDescargaSerializers,PendienteArrastreSerializer
 
 from Administracion.models import Auditoria
 
@@ -421,4 +421,16 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
             if "," in tipo_equipo:
                 tipos = tipo_equipo.split(",")
                 queryset = queryset.filter(tipo_equipo__in=tipos)
+        return queryset
+    
+    
+class PendienteArrastreViewset(viewsets.ModelViewSet):
+    queryset = ArrastrePendientes.objects.all()
+    serializer_class = PendienteArrastreSerializer
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        producto = self.request.query_params.get('producto')
+        if producto:
+            queryset = queryset.filter(producto__icontains=producto)
         return queryset

@@ -86,6 +86,7 @@ CORS_ALLOW_METHODS = (
 #Modificando las configuracion por defecto del filtrado de django-rest-framework de forma global, con esto estoy 
 #permitiendo que DRF realice el filtrado (esto fue copiado de la doc oficial de DRF)
 
+"""
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     
@@ -102,6 +103,7 @@ REST_FRAMEWORK = {
     #'PAGE_SIZE': 10,  # Número de elementos por página
 
 }
+"""
 
 ROOT_URLCONF = 'mitrans.urls'
 

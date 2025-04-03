@@ -1,29 +1,57 @@
 <template>
   <div>
+    <div style="background-color: #002a68; color: white; text-align: right">
+      <h6>Bienvenido:</h6>
+    </div>
+    <br />
     <Navbar-Component />
-    
     <div class="form-container">
-      <h3 style="color: #002A68;">Adicionar atraque:</h3>
+      <h3 style="color: #002a68">Adicionar atraque:</h3>
       <form @submit.prevent="saveAtraque">
         <div class="form-row">
           <div class="mb-3">
-            <label for="nombre_atraque" class="form-label">Nombre:<span style="color: red;">*</span></label>
-            <input type="text" class="form-control" id="nombre_atraque" v-model="nombre_atraque" required />
+            <label for="nombre_atraque" class="form-label"
+              >Nombre:<span style="color: red">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="nombre_atraque"
+              v-model="nombre_atraque"
+              required
+            />
           </div>
 
           <div class="mb-3">
-            <label for="puerto" class="form-label">Puerto:<span style="color: red;">*</span></label>
+            <label for="puerto" class="form-label"
+              >Puerto:<span style="color: red">*</span></label
+            >
             <select class="form-control" id="puerto" v-model="puerto" required>
-              <option v-for="puerto in puertos" :value="puerto.id" :key="puerto.id">
+              <option
+                v-for="puerto in puertos"
+                :value="puerto.id"
+                :key="puerto.id"
+              >
                 {{ puerto.nombre_puerto }}
               </option>
             </select>
           </div>
 
           <div class="mb-3">
-            <label for="terminal" class="form-label">Terminal:<span style="color: red;">*</span></label>
-            <select class="form-control" id="terminal" v-model="terminal" required>
-              <option v-for="terminal in terminales" :value="terminal.id" :key="terminal.id">
+            <label for="terminal" class="form-label"
+              >Terminal:<span style="color: red">*</span></label
+            >
+            <select
+              class="form-control"
+              id="terminal"
+              v-model="terminal"
+              required
+            >
+              <option
+                v-for="terminal in terminales"
+                :value="terminal.id"
+                :key="terminal.id"
+              >
                 {{ terminal.nombre_terminal }}
               </option>
             </select>
@@ -31,7 +59,13 @@
         </div>
 
         <div class="form-buttons">
-          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button
+            type="button"
+            @click="confirmCancel"
+            style="color: white; text-decoration: none"
+          >
+            Cancelar
+          </button>
           <button type="submit">Adicionar</button>
         </div>
       </form>
@@ -41,17 +75,16 @@
 
 <style scoped>
 body {
-  background-color: #F2F2F2;
+  background-color: #f2f2f2;
 }
 
 .form-container {
   max-width: 600px; /* Ancho reducido */
-  margin: 20px ; /* Centra el formulario */
+  margin: 20px; /* Centra el formulario */
   padding: 20px;
   margin-left: 220px;
   background-color: rgb(245, 245, 245);
   border-radius: 8px;
- 
 }
 
 h3 {
@@ -59,7 +92,7 @@ h3 {
   margin-bottom: 20px;
   font-size: 18px;
 }
-.form-label{
+.form-label {
   font-size: 14px;
   text-align: left;
 }
@@ -117,12 +150,12 @@ button[type="submit"] {
 </style>
 
 <script>
-import axios from 'axios';
-import Swal from 'sweetalert2';
-import NavbarComponent from '@/components/NavbarComponent.vue';
+import axios from "axios";
+import Swal from "sweetalert2";
+import NavbarComponent from "@/components/NavbarComponent.vue";
 
 export default {
-  name: 'AdicionarAtraqueView',
+  name: "AdicionarAtraqueView",
   components: {
     NavbarComponent,
   },
@@ -130,9 +163,9 @@ export default {
     return {
       terminales: [], // Almacena las terminales obtenidas
       puertos: [], // Almacena los puertos obtenidos
-      nombre_atraque: '',
-      terminal: '',
-      puerto: '',
+      nombre_atraque: "",
+      terminal: "",
+      puerto: "",
     };
   },
 
@@ -143,23 +176,23 @@ export default {
 
   methods: {
     confirmCancel() {
-    Swal.fire({
-    title: '¿Está seguro de que quiere cancelar la operación?',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    cancelmButtonText: 'Cancelar',
-    confirmButtonText: 'Aceptar'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      window.history.back();
-    }
-  });
-},
+      Swal.fire({
+        title: "¿Está seguro de que quiere cancelar la operación?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        cancelmButtonText: "Cancelar",
+        confirmButtonText: "Aceptar",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.history.back();
+        }
+      });
+    },
     validateForm() {
       const nombre_atraque_regex = /^[A-Z][A-Za-z ]{2,99}$/;
-      let errorMessage = '';
+      let errorMessage = "";
 
       if (!nombre_atraque_regex.test(this.nombre_atraque)) {
         errorMessage +=
@@ -168,8 +201,8 @@ export default {
 
       if (errorMessage) {
         Swal.fire({
-          icon: 'error',
-          title: 'Error de validación',
+          icon: "error",
+          title: "Error de validación",
           text: errorMessage,
         });
         return false; // Detener el envío del formulario
@@ -180,21 +213,23 @@ export default {
 
     async getTerminales() {
       try {
-        const response = await axios.get('/api/terminales/');
-        this.terminales = response.data;
+        const response = await axios.get("/api/terminales/");
+        this.terminales =
+          response.data.results; /* Aqui hay que agregar el .results */
       } catch (error) {
-        console.error('Error al obtener las terminales:', error);
-        Swal.fire('Error', 'Hubo un error al obtener las terminales.', 'error');
+        console.error("Error al obtener las terminales:", error);
+        Swal.fire("Error", "Hubo un error al obtener las terminales.", "error");
       }
     },
 
     async getPuertos() {
       try {
-        const response = await axios.get('/api/puertos/');
-        this.puertos = response.data;
+        const response = await axios.get("/api/puertos/");
+        this.puertos =
+          response.data.results; /* Aqui hay que agregar el .results */
       } catch (error) {
-        console.error('Error al obtener los puertos:', error);
-        Swal.fire('Error', 'Hubo un error al obtener los puertos.', 'error');
+        console.error("Error al obtener los puertos:", error);
+        Swal.fire("Error", "Hubo un error al obtener los puertos.", "error");
       }
     },
 
@@ -211,12 +246,16 @@ export default {
       };
 
       try {
-        await axios.post('/api/atraques/', data);
-        Swal.fire('Agregado!', 'El atraque ha sido añadido exitosamente.', 'success');
-        this.$router.push('/Atraques');
+        await axios.post("/api/atraques/", data);
+        Swal.fire(
+          "Agregado!",
+          "El atraque ha sido añadido exitosamente.",
+          "success"
+        );
+        this.$router.push("/Atraques");
       } catch (error) {
         console.log(error);
-        Swal.fire('Error', 'Hubo un error al agregar el atraque.', 'error');
+        Swal.fire("Error", "Hubo un error al agregar el atraque.", "error");
       }
     },
   },

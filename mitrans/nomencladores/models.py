@@ -331,7 +331,7 @@ class nom_entidades(models.Model):
     class Meta:
         verbose_name = "Entidad"
         verbose_name_plural = "Entidades"
-        unique_together = [['nombre', 'abreviatura','osde_oace_organismo', 'provincia','tipo_entidad']]
+        #unique_together = [['nombre', 'abreviatura','osde_oace_organismo', 'provincia','tipo_entidad']]
 
 # -----------------------------Aqui termina Modelo nom_entidades-----------------------------------------
 
@@ -484,7 +484,10 @@ class nom_equipo_ferroviario(models.Model):
     # TEF cuyo valor tipo_equipo es el mismo,por ejemplo, pueden haber diferentes locomotoras, el usuario debe especificar en la descripcion
     # del nom_tipo_equipo_ferroviario de cada locomotora las diferencias
     #tipo_equipo_especifico = models.CharField(max_length=45,blank=True,null=True, verbose_name="Tipo de equipo específico",)
-
+    
+    #Hay que agregar un nuevo campo que sea en servicio para validar si esta o no en uso este equipo.
+    #y aplicar la logica correspondiente.
+    
     numero_identificacion = models.CharField(max_length=10, verbose_name="Número de identificación",
                             validators=[RegexValidator(r'^[\d\w\W\s]{3,10}$',"Este campo acepta letras, números y caracteres especiales. Tamaño mínimo 3 caracteres y tamaño máximo 10 caracteres.",)])
 

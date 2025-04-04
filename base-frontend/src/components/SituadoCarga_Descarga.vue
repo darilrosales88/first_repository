@@ -314,7 +314,7 @@ export default {
         console.log("Datos de situados:", response.data);
 
         // Validación más robusta
-        if (!response.data || !Array.isArray(response.data)) {
+        if (!response.data || !Array.isArray(response.data.results)) {
           throw new Error("La API no devolvió un array de datos");
         }
 
@@ -349,7 +349,7 @@ export default {
         );
         console.log("Datos de productos:", response.data);
 
-        if (!response.data || !Array.isArray(response.data)) {
+        if (!response.data || !Array.isArray(response.data.results)) {
           throw new Error("La API no devolvió un array de productos");
         }
 

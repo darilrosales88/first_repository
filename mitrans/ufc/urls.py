@@ -21,7 +21,7 @@ router.register('en-trenes',en_trenes_view_set, basename='en-trenes' )
 router.register('producto-vagon',producto_vagon_view_set, basename='producto-vagon' )
 router.register('por-situar',PorSituarCargaDescargaViewSet, basename="por-situar")
 router.register('situados', SituadoCargaDescargaViewset, basename="situados")
-router.register('pendiente_arrastre', PendienteArrastreViewset, basename ="Pendiente_de_arrastre")
+router.register('pendiente-arrastre', PendienteArrastreViewset, basename ="pendiente-arrastre")
 
 
 #ahora declaramos el urlpatterns y lo igualamos a la propiedad urls de la variable creada de tipo routers

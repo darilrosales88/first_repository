@@ -194,9 +194,7 @@ export default {
       try {
         const response = await axios.post("/api/v1/token/login/", formData);
         const token = response.data.auth_token;
-
         const username = this.username;
-        const password = this.password;
 
         // Guardar el token y el nombre de usuario en localStorage
         this.$store.commit("setToken", token);
@@ -204,11 +202,7 @@ export default {
         localStorage.setItem("token", token);
         localStorage.setItem("username", username);
 
-        localStorage.setItem("password", password);
-
         // Obtener el ID del usuario desde el backend
-        alert(token);
-        alert([formData["username"], formData["password"]]);
         const userResponse = await axios.get("/api/v1/users/me/");
         localStorage.setItem("userid", userResponse.data.id);
 

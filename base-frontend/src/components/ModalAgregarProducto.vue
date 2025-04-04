@@ -195,7 +195,7 @@ export default {
     async getProductos() {
       try {
         const response = await axios.get("/api/productos/");
-        this.productos = response.data;
+        this.productos = response.data.results;
       } catch (error) {
         console.error("Error al obtener los productos:", error);
         Swal.fire("Error", "Hubo un error al obtener los productos.", "error");
@@ -204,7 +204,7 @@ export default {
     async getEmbalaje() {
       try {
         const response = await axios.get("/api/embalajes/");
-        this.embalajes = response.data;
+        this.embalajes = response.data.results;
       } catch (error) {
         console.error("Error al obtener los embalajes:", error);
         Swal.fire("Error", "Hubo un error al obtener los embalajes.", "error");
@@ -213,7 +213,7 @@ export default {
     async getUnidades() {
       try {
         const response = await axios.get("/api/unidades_medida/");
-        this.unidades = response.data;
+        this.unidades = response.data.results;
       } catch (error) {
         console.error("Error al obtener las unidades de medida:", error);
         Swal.fire(

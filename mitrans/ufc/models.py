@@ -173,6 +173,8 @@ class en_trenes(models.Model):
     def __str__(self):
         return f"En trenes {self.id} -{self.numero_identificacion_locomotora}- {self.get_estado_display()}"
 
+
+
 class por_situar_carga_descarga(models.Model):
     
     t_origen = (

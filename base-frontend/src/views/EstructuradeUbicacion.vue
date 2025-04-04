@@ -46,7 +46,7 @@
           <tr v-for="(item) in estructuras" :key="item.id">
             <td>{{ item.nombre_estructura_ubicacion }}</td>
             <td>{{ item.terminal_name }}</td>
-            <td>{{ item.tipo_estructura_name }}</td><!-- nacionalidad_name esta declarado en el serializador -->
+            <td>{{ item.tipo_estructura_name }}</td>
             <td>{{ item.estructura_padre_name }}</td>            
             <td>{{ item.capacidad }}</td>
             <td >
@@ -69,11 +69,190 @@
       </table>            
     </div>
     <h1 v-if="!busqueda_existente">No existe ningún registro asociado a ese parámetro de búsqueda.</h1>
+    
+    <!-- Paginación -->
+    <nav aria-label="Page navigation example">
+      <ul class="pagination">
+        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+          <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Anterior</a>
+        </li>
+        <li class="page-item" v-for="page in pages" :key="page" :class="{ active: page === currentPage }">
+          <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
+        </li>
+        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+          <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Siguiente</a>
+        </li>
+      </ul>
+    </nav>
   </div>
 </template>
 
-<style scoped>
+<script>
+import Swal from 'sweetalert2'
+import axios from 'axios';
+import NavbarComponent from '@/components/NavbarComponent.vue';
 
+export default {
+  name: 'EstructurasView',
+  components: {
+    NavbarComponent
+  },
+  data() {
+    return {
+      estructuras: [],
+      searchQuery: '',
+      debounceTimeout: null,
+      busqueda_existente: true,
+      userPermissions: [],
+      userGroups: [],
+      showNoId: false,
+      currentPage: 1,      // Página actual
+      totalPages: 1,       // Total de páginas
+      pages: []            // Lista de páginas visibles
+    }
+  },
+  async created() {
+    await this.fetchUserPermissionsAndGroups();
+    await this.get_estructuras();
+  },
+  methods: {
+    toggleNoIdVisibility() {
+      this.showNoId = !this.showNoId;
+    },
+    hasPermission(permission) {
+      if (!this.userPermissions) return false;
+      return this.userPermissions.some(p => p.name === permission);
+    },
+    hasGroup(group) {
+      if (!this.userGroups) return false;
+      return this.userGroups.some(g => g.name === group);
+    },
+    async fetchUserPermissionsAndGroups() {
+      try {
+        const userId = localStorage.getItem('userid');
+        if (userId) {
+          const response = await axios.get(`/apiAdmin/user/${userId}/permissions-and-groups/`);
+          this.userPermissions = response.data.permissions || [];
+          this.userGroups = response.data.groups || [];
+        }
+      } catch (error) {
+        console.error('Error al obtener permisos y grupos:', error);
+      }
+    },
+    async get_estructuras() {
+      this.$store.commit('setIsLoading', true);
+      try {
+        const response = await axios.get('/api/estructuras_ubicacion/', {
+          params: {
+            page: this.currentPage,
+            search: this.searchQuery
+          }
+        });
+        this.estructuras = response.data.results;
+        this.totalPages = Math.ceil(response.data.count / 15);
+        this.updatePages();
+        this.busqueda_existente = this.estructuras.length > 0;
+      } catch (error) {
+        console.error('Error al obtener las estructuras:', error);
+      } finally {
+        this.$store.commit('setIsLoading', false);
+      }
+    },
+    async search_estructura() {
+      this.$store.commit('setIsLoading', true);
+      this.currentPage = 1; // Reset to first page when searching
+      try {
+        const response = await axios.get('/api/estructuras_ubicacion/', {
+          params: {
+            page: this.currentPage,
+            search: this.searchQuery
+          }
+        });
+        this.estructuras = response.data.results;
+        this.totalPages = Math.ceil(response.data.count / 15);
+        this.updatePages();
+        this.busqueda_existente = this.estructuras.length > 0;
+      } catch (error) {
+        console.error('Error al buscar estructuras:', error);
+        this.busqueda_existente = false;
+      } finally {
+        this.$store.commit('setIsLoading', false);
+      }
+    },
+    confirmDelete(id) {
+      Swal.fire({
+        title: '¿Estás seguro?',
+        text: '¡No podrás revertir esta acción!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.delete_estructura(id)
+        }
+      })
+    },
+    handleSearchInput() {
+      clearTimeout(this.debounceTimeout);
+      this.debounceTimeout = setTimeout(() => {
+        this.search_estructura();
+      }, 300);
+    },
+    async delete_estructura(id) {
+      try {
+        await axios.delete(`/api/estructuras_ubicacion/${id}/`);
+        // If it was the last item on the page, go back one page
+        if (this.estructuras.length === 1 && this.currentPage > 1) {
+          this.currentPage -= 1;
+        }
+        await this.get_estructuras();
+        Swal.fire('Eliminado!', 'La estructura ha sido eliminada exitosamente.', 'success');
+      } catch (error) {
+        console.error("Error al eliminar la estructura:", error);
+        Swal.fire('Error', 'Hubo un error al eliminar la estructura.', 'error');
+      }
+    },
+    changePage(page) {
+      if (page >= 1 && page <= this.totalPages) {
+        this.currentPage = page;
+        this.get_estructuras();
+      }
+    },
+    updatePages() {
+      const startPage = Math.max(1, this.currentPage - 2);
+      const endPage = Math.min(this.totalPages, this.currentPage + 2);
+      this.pages = [];
+      for (let i = startPage; i <= endPage; i++) {
+        this.pages.push(i);
+      }
+    },
+    openEstructuradeUbicacionDetailsModal(EstructuradeUbicacion) {
+      Swal.fire({
+        title: 'Detalles de la Estructura',
+        html: `
+          <div style="text-align: left;">
+            <p><strong>Nombre:</strong> ${EstructuradeUbicacion.nombre_estructura_ubicacion}</p>
+            <p><strong>Terminal:</strong> ${EstructuradeUbicacion.terminal_name}</p>
+            <p><strong>Tipo de estructura:</strong> ${EstructuradeUbicacion.tipo_estructura_name}</p>
+            <p><strong>Estructura padre:</strong> ${EstructuradeUbicacion.estructura_padre_name}</p>
+            <p><strong>Capacidad:</strong> ${EstructuradeUbicacion.capacidad}</p>     
+          </div>
+        `,
+        width: '600px',
+        customClass: {
+          popup: 'custom-swal-popup',
+          title: 'custom-swal-title',
+          htmlContainer: 'custom-swal-html',
+        },
+      });
+    }
+  }
+}
+</script>
+
+<style scoped>
 .search-container input::placeholder {
   font-size: 14px; 
   color: #999;   
@@ -104,10 +283,10 @@ body {
   color: #999;
   margin-top: -55px;
   transform: translateY(-50%);
-  pointer-events: none; /* Para que el ícono no interfiera con el clic en el input */
+  pointer-events: none;
 }
 .large-icon {
-  font-size: 1.7rem; /* Tamaño del ícono */
+  font-size: 1.7rem;
 }
 table {
   width: 84%;
@@ -118,10 +297,9 @@ table {
 }
 
 th, td {
-  padding: 0.15rem; /* Reducir el padding */
+  padding: 0.15rem;
   white-space: nowrap;
 }
-
 
 th {
   background-color: #f2f2f2;
@@ -132,29 +310,29 @@ th {
 }
 
 .btn-small {
-  font-size: 22px; /* Aumenta el tamaño del ícono */
+  font-size: 22px;
   color: black;
   margin-right: 5px;
-  outline: none; /* Elimina el borde de foco */
+  outline: none;
   border: none;
-  background: none; /* Elimina el fondo */
-  padding: 0; /* Elimina el padding para que solo se vea el ícono */
+  background: none;
+  padding: 0;
 }
 .btn-eye {
-  font-size: 22px; /* Aumenta el tamaño del ícono */
+  font-size: 22px;
   margin-right: 5px;
-  outline: none; /* Elimina el borde de foco */
+  outline: none;
   border: none;
-  background: none; /* Elimina el fondo */
-  padding: 0; /* Elimina el padding para que solo se vea el ícono */
+  background: none;
+  padding: 0;
 }
 .btn:hover {
-  background: none; /* Asegura que no haya fondo al hacer hover */
+  background: none;
 }
 
 .btn:focus {
-  outline: none; /* Elimina el borde de foco al hacer clic */
-  box-shadow: none; /* Elimina cualquier sombra de foco en algunos navegadores */
+  outline: none;
+  box-shadow: none;
 }
 
 .create-button-container {
@@ -174,183 +352,34 @@ th {
     margin-right: 0;
   }
 }
-</style>
 
-
-
-<script>
-import Swal from 'sweetalert2'
-import axios from 'axios';
-import NavbarComponent from '@/components/NavbarComponent.vue';
-
-export default {
-  name: 'EmbarcacionView',
-
-  components:{
-      NavbarComponent
-  },
-
-  data(){
-      return{
-          estructuras: [],
-          searchQuery: '', // Añadido aquí
-          debounceTimeout: null, // Añadido aquí
-          busqueda_existente: true, // Variable para controlar la visibilidad del <h1> de la busqueda
-          userPermissions: [], // Almacenará los permisos del usuario
-          userGroups: [],      // Almacenará los grupos del usuario
-          showNoId: false,
-      }
-  },
-
-  mounted() {
-      this.get_estructuras()
-  },
-  async created() {
-        // Obtener los permisos y grupos del usuario al cargar el componente
-        await this.fetchUserPermissionsAndGroups();
-      },
- methods:{
-  toggleNoIdVisibility() {
-      this.showNoId = !this.showNoId; // Alternar la visibilidad de las columnas No e Id
-    },
-  // Verifica si el usuario tiene un permiso específico
-  hasPermission(permission) {
-      if (!this.userPermissions) return false; // Verificación adicional
-      return this.userPermissions.some(p => p.name === permission);
-    },
-    hasGroup(group) {
-      if (!this.userGroups) return false; // Verificación adicional
-      return this.userGroups.some(g => g.name === group);
-    },
-    // Obtiene los permisos y grupos del usuario desde el backend
-    async fetchUserPermissionsAndGroups() {
-      try {
-        const userId = localStorage.getItem('userid');
-        if (userId) {
-          const response = await axios.get(`/apiAdmin/user/${userId}/permissions-and-groups/`);
-          this.userPermissions = response.data.permissions || []; // Inicializa como array vacío si es undefined
-          this.userGroups = response.data.groups || []; // Inicializa como array vacío si es undefined
-        }
-      } catch (error) {
-        console.error('Error al obtener permisos y grupos:', error);
-      }
-    },
-    async get_estructuras() {
-    this.$store.commit('setIsLoading', true);
-
-    try {
-        const response = await axios.get('/api/estructuras_ubicacion/');
-        console.log('Datos recibidos:', response.data);  // Verifica los datos recibidos
-        this.estructuras = response.data;
-    } catch (error) {
-        console.error('Error al obtener las estructuras:', error);
-    } finally {
-        this.$store.commit('setIsLoading', false);
-    }
-},
-      //metodo para buscar registros en base al parametro de búsqueda
-      async search_estructura() {
-          this.$store.commit('setIsLoading', true);
-
-          axios
-          //aqui nombre_embarcacion es el nombre que declaramos en el parametro al que se iguala la variable search
-          //en la vista asociada al serializador del modelo en cuestion
-              .get(`/api/estructuras_ubicacion/?nombre_estructura=${this.searchQuery}`)
-              .then(response => {
-                  this.estructuras = response.data;
-                  // Actualiza showH1 basado en el resultado
-                  this.busqueda_existente = this.estructuras.length > 0;
-              })
-              .catch(error => {
-                  console.log(error);
-                  this.busqueda_inexistente = false; // Asegura que busqueda_inexistente sea false en caso de error
-              });
-
-          this.$store.commit('setIsLoading', false);
-      },
-              
-      // Usar SweetAlert2 para confirmar la eliminación
-      confirmDelete(id) {
-          Swal.fire({
-              title: '¿Estás seguro?',
-              text: '¡No podrás revertir esta acción!',
-              icon: 'warning',
-              showCancelButton: true,
-              confirmButtonText: 'Sí, eliminar',
-              cancelButtonText: 'Cancelar',
-              reverseButtons: true
-          }).then((result) => {
-              if (result.isConfirmed) {
-                  this.delete_embarcacion(id)
-              }
-          })
-      },
-
-      handleSearchInput() {
-          clearTimeout(this.debounceTimeout);
-          this.debounceTimeout = setTimeout(() => {
-              this.search_estructura();
-          }, 300); // Ajusta el tiempo de espera según sea necesario
-      },
-
-      // Eliminar embarcacion
-      async delete_embarcacion(id) {
-          try {
-              await axios.delete(`/api/tipos_estructuras_ubicacion/${id}/`)
-              // Actualizar la lista de estructuras eliminando el que se ha borrado
-              this.estructuras = this.estructuras.filter(estructura => estructura.id !== id)
-
-              Swal.fire('Eliminado!', 'La estructura ha sido eliminada exitosamente.', 'success')
-            } catch (error) {
-            
-              console.error("Error al eliminar la estructura:", error)
-              Swal.fire('Error', 'Hubo un error al eliminar la estructura.', 'error')
-          }
-      }, 
-      openEstructuradeUbicacionDetailsModal(EstructuradeUbicacion) {
-    // Mapear IDs de grupos a nombres
-    const gruposAsignados = EstructuradeUbicacion.groups && EstructuradeUbicacion.groups.length > 0
-        ? EstructuradeUbicacion.groups
-            .map(groupId => {
-                const grupo = this.gruposDisponibles.find(g => g.id === groupId);
-                return grupo ? grupo.name : 'Desconocido';
-            })
-            .join(', ')
-        : 'Ninguno';
-
-    // Mapear IDs de permisos a nombres
-    const permisosAsignados = EstructuradeUbicacion.EstructuradeUbicacion_permissions && 
-    EstructuradeUbicacion.EstructuradeUbicacion_permissions.length > 0
-        ? EstructuradeUbicacion.EstructuradeUbicacion_permissions
-            .map(permisoId => {
-                const permiso = this.permisosDisponibles.find(p => p.id === permisoId);
-                return permiso ? permiso.name : 'Desconocido';
-            })
-            .join(', ')
-        : 'Ninguno';
-
-    Swal.fire({
-        title: 'Detalles del Atraque',
-        html: `
-            <div style="text-align: left;">
-                <p><strong>Nombre:</strong> ${EstructuradeUbicacion.nombre_estructura_ubicacion}</p>
-                <p><strong>Terminal:</strong> ${EstructuradeUbicacion.terminal_name}</p>
-                <p><strong>Tipo de estructura:</strong> ${EstructuradeUbicacion.tipo_estructura_name}</p>
-                <p><strong>Estructura padre:</strong> ${EstructuradeUbicacion.estructura_padre_name}</p>
-                <p><strong>Capacidad:</strong> ${EstructuradeUbicacion.capacidad}</p>     
-            </div>
-        `,
-        width: '600px',
-        customClass: {
-            popup: 'custom-swal-popup',
-            title: 'custom-swal-title',
-            htmlContainer: 'custom-swal-html',
-        },
-    });
-},    
-
-  },
-
-
+/* Estilos para la paginación */
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
 }
-</script>
+
+.page-item {
+  margin: 0 5px;
+}
+
+.page-link {
+  color: #002A68;
+  border: 1px solid #dee2e6;
+  padding: 5px 10px;
+}
+
+.page-item.active .page-link {
+  background-color: #002A68;
+  border-color: #002A68;
+  color: white;
+}
+
+.page-item.disabled .page-link {
+  color: #6c757d;
+  pointer-events: none;
+  background-color: #fff;
+  border-color: #dee2e6;
+}
+</style>

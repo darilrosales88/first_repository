@@ -1,22 +1,47 @@
 <template>
   <div>
+    <div style="background-color: #002a68; color: white; text-align: right">
+      <h6>Bienvenido:</h6>
+    </div>
+    <br />
     <Navbar-Component />
-    
+
     <div class="form-container">
-      <h3 style="color: #002A68;">Editar atraque <strong>{{ atraque.nombre_atraque }}</strong></h3>
+      <h3 style="color: #002a68">
+        Editar atraque <strong>{{ atraque.nombre_atraque }}</strong>
+      </h3>
       <form @submit.prevent="submitForm">
         <div class="form-row">
           <!-- Campo Nombre del Atraque -->
           <div class="mb-3">
-            <label for="nombre_atraque" class="form-label">Nombre:<span style="color: red;">*</span></label>
-            <input type="text" class="form-control" id="nombre_atraque" v-model="atraque.nombre_atraque" required />
+            <label for="nombre_atraque" class="form-label"
+              >Nombre:<span style="color: red">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="nombre_atraque"
+              v-model="atraque.nombre_atraque"
+              required
+            />
           </div>
 
           <!-- Campo Puerto -->
           <div class="mb-3">
-            <label for="puerto" class="form-label">Puerto:<span style="color: red;">*</span></label>
-            <select class="form-control" id="puerto" v-model="atraque.puerto" required>
-              <option v-for="puerto in puertos" :value="puerto.id" :key="puerto.id">
+            <label for="puerto" class="form-label"
+              >Puerto:<span style="color: red">*</span></label
+            >
+            <select
+              class="form-control"
+              id="puerto"
+              v-model="atraque.puerto"
+              required
+            >
+              <option
+                v-for="puerto in puertos"
+                :value="puerto.id"
+                :key="puerto.id"
+              >
                 {{ puerto.nombre_puerto }}
               </option>
             </select>
@@ -24,9 +49,20 @@
 
           <!-- Campo Terminal -->
           <div class="mb-3">
-            <label for="terminal" class="form-label">Terminal:<span style="color: red;">*</span></label>
-            <select class="form-control" id="terminal" v-model="atraque.terminal" required>
-              <option v-for="terminal in terminales" :value="terminal.id" :key="terminal.id">
+            <label for="terminal" class="form-label"
+              >Terminal:<span style="color: red">*</span></label
+            >
+            <select
+              class="form-control"
+              id="terminal"
+              v-model="atraque.terminal"
+              required
+            >
+              <option
+                v-for="terminal in terminales"
+                :value="terminal.id"
+                :key="terminal.id"
+              >
                 {{ terminal.nombre_terminal }}
               </option>
             </select>
@@ -35,7 +71,13 @@
 
         <!-- Botones -->
         <div class="form-buttons">
-          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button
+            type="button"
+            @click="confirmCancel"
+            style="color: white; text-decoration: none"
+          >
+            Cancelar
+          </button>
           <button type="submit">Aceptar</button>
         </div>
       </form>
@@ -45,7 +87,7 @@
 
 <style scoped>
 body {
-  background-color: #F2F2F2;
+  background-color: #f2f2f2;
 }
 
 .form-container {
@@ -129,21 +171,21 @@ button[type="submit"] {
 </style>
 
 <script>
-import axios from 'axios';
-import Swal from 'sweetalert2';
-import NavbarComponent from '@/components/NavbarComponent.vue';
+import axios from "axios";
+import Swal from "sweetalert2";
+import NavbarComponent from "@/components/NavbarComponent.vue";
 
 export default {
-  name: 'EditarAtraqueView',
+  name: "EditarAtraqueView",
   components: {
     NavbarComponent,
   },
   data() {
     return {
       atraque: {
-        nombre_atraque: '',
-        puerto: '', // Asegúrate de que este campo coincida con el valor del backend
-        terminal: '', // Asegúrate de que este campo coincida con el valor del backend
+        nombre_atraque: "",
+        puerto: "", // Asegúrate de que este campo coincida con el valor del backend
+        terminal: "", // Asegúrate de que este campo coincida con el valor del backend
       },
       terminales: [], // Almacena las terminales obtenidas
       puertos: [], // Almacena los puertos obtenidos
@@ -158,28 +200,28 @@ export default {
 
   methods: {
     confirmCancel() {
-    Swal.fire({
-    title: '¿Está seguro de que quiere cancelar la operación?',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    cancelmButtonText: 'Cancelar',
-    confirmButtonText: 'Aceptar'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      window.history.back();
-    }
-  });
-},
+      Swal.fire({
+        title: "¿Está seguro de que quiere cancelar la operación?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        cancelmButtonText: "Cancelar",
+        confirmButtonText: "Aceptar",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.history.back();
+        }
+      });
+    },
     validateForm() {
       const nombre_atraque_regex = /^[A-Z][A-Za-z ]{2,99}$/;
 
       if (!nombre_atraque_regex.test(this.atraque.nombre_atraque)) {
         Swal.fire({
-          icon: 'error',
-          title: 'Error de validación',
-          text: 'El nombre del atraque debe comenzar con mayúscula, seguido de letras y espacios. No puede exceder los 100 caracteres.',
+          icon: "error",
+          title: "Error de validación",
+          text: "El nombre del atraque debe comenzar con mayúscula, seguido de letras y espacios. No puede exceder los 100 caracteres.",
         });
         return false; // Detener el envío del formulario
       }
@@ -189,35 +231,36 @@ export default {
 
     async getTerminales() {
       try {
-        const response = await axios.get('/api/terminales/');
-        this.terminales = response.data;
+        const response = await axios.get("/api/terminales/");
+        this.terminales =
+          response.data.results; /* .results es lo que hay que agregar cada vez que hagas una peticion a la api, esto es debido a la estructura que vienen los objetos de la Api */
       } catch (error) {
-        console.error('Error al obtener las terminales:', error);
+        console.error("Error al obtener las terminales:", error);
       }
     },
 
     async getPuertos() {
       try {
-        const response = await axios.get('/api/puertos/');
-        this.puertos = response.data;
+        const response = await axios.get("/api/puertos/");
+        this.puertos = response.data.results;
       } catch (error) {
-        console.error('Error al obtener los puertos:', error);
+        console.error("Error al obtener los puertos:", error);
       }
     },
 
     async get_atraque() {
-      this.$store.commit('setIsLoading', true);
+      this.$store.commit("setIsLoading", true);
       const atraque_id = this.$route.params.id;
 
       try {
         const response = await axios.get(`/api/atraques/${atraque_id}/`);
         this.atraque = response.data; // Asegúrate de que los campos coincidan con el backend
-        console.log('Datos del atraque:', this.atraque);
+        console.log("Datos del atraque:", this.atraque);
       } catch (error) {
-        console.error('Error al obtener el atraque:', error);
-        Swal.fire('Error', 'No se pudo cargar el atraque.', 'error');
+        console.error("Error al obtener el atraque:", error);
+        Swal.fire("Error", "No se pudo cargar el atraque.", "error");
       } finally {
-        this.$store.commit('setIsLoading', false);
+        this.$store.commit("setIsLoading", false);
       }
     },
 
@@ -226,7 +269,7 @@ export default {
         return; // Detener el envío si la validación falla
       }
 
-      this.$store.commit('setIsLoading', true);
+      this.$store.commit("setIsLoading", true);
       const atraque_id = this.$route.params.id;
 
       try {
@@ -238,13 +281,17 @@ export default {
         };
 
         await axios.patch(`/api/atraques/${atraque_id}/`, data);
-        this.$router.push('/Atraques');
-        Swal.fire('Actualizado!', 'El atraque ha sido modificado exitosamente.', 'success');
+        this.$router.push("/Atraques");
+        Swal.fire(
+          "Actualizado!",
+          "El atraque ha sido modificado exitosamente.",
+          "success"
+        );
       } catch (error) {
-        console.error('Error al actualizar el atraque:', error);
-        Swal.fire('Error', 'Hubo un error al actualizar el atraque.', 'error');
+        console.error("Error al actualizar el atraque:", error);
+        Swal.fire("Error", "Hubo un error al actualizar el atraque.", "error");
       } finally {
-        this.$store.commit('setIsLoading', false);
+        this.$store.commit("setIsLoading", false);
       }
     },
   },

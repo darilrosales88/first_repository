@@ -48,8 +48,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(item) in puertosFiltrados" :key="item.id">
-       
+        <tr v-for="(item) in puertos" :key="item.id">
           <td>{{ item.nombre_puerto }}</td>
           <td>{{ item.nombre_pais }}</td>
           <td>{{ item.nombre_provincia }}</td>
@@ -75,9 +74,22 @@
         </tr>
       </tbody>
     </table>
-    <h1 v-if="puertosFiltrados.length === 0 && searchQuery">
-      No existe ningún registro asociado a ese parámetro de búsqueda.
-    </h1>
+    <!-- Mensaje cuando no hay resultados -->
+    <h1 v-if="!busqueda_existente">No existe ningún registro asociado a ese parámetro de búsqueda.</h1>
+    <!-- Paginación -->
+    <nav aria-label="Page navigation example">
+      <ul class="pagination">
+        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+          <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Anterior</a>
+        </li>
+        <li class="page-item" v-for="page in pages" :key="page" :class="{ active: page === currentPage }">
+          <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
+        </li>
+        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+          <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Siguiente</a>
+        </li>
+      </ul>
+    </nav>
   </div>
 </div>
 </template>
@@ -96,33 +108,36 @@ export default {
   data() {
     return {
       puertos: [],
-      puertosFiltrados: [], // Lista filtrada de puertos
-      searchQuery: '', // Añadido aquí
-      debounceTimeout: null, // Añadido aquí
-      userPermissions: [], // Almacenará los permisos del usuario
-      userGroups: [],      // Almacenará los grupos del usuario
+      searchQuery: '',
+      debounceTimeout: null,
+      userPermissions: [],
+      userGroups: [],
       showNoId: false,
+      currentPage: 1,
+      totalPages: 1,
+      pages: [],
+      busqueda_existente: true,
     };
   },
 
   async created() {
-    // Obtener los permisos y grupos del usuario al cargar el componente
     await this.fetchUserPermissionsAndGroups();
     this.getPuertos();
   },
 
   methods: {
     toggleNoIdVisibility() {
-      this.showNoId = !this.showNoId; // Alternar la visibilidad de las columnas No e Id
+      this.showNoId = !this.showNoId;
     },
-    // Verifica si el usuario tiene un permiso específico
+    
     hasPermission(permission) {
       return this.userPermissions.some(p => p.name === permission);
     },
+    
     hasGroup(group) {
       return this.userGroups.some(g => g.name === group);
     },
-    // Obtiene los permisos y grupos del usuario desde el backend
+    
     async fetchUserPermissionsAndGroups() {
       try {
         const userId = localStorage.getItem('userid');
@@ -138,24 +153,44 @@ export default {
 
     async getPuertos() {
       try {
-        const response = await axios.get('api/puertos/');
-        this.puertos = response.data;
-        this.puertosFiltrados = this.puertos; // Inicialmente, muestra todos los puertos
+        this.$store.commit("setIsLoading", true);
+        const response = await axios.get('api/puertos/', {
+          params: {
+            page: this.currentPage,
+            search: this.searchQuery,
+          },
+        });
+        this.puertos = response.data.results;
+        this.totalPages = Math.ceil(response.data.count / 15);
+        this.updatePages();
+        this.busqueda_existente = this.puertos.length > 0;
       } catch (error) {
         console.error('Error al obtener los puertos:', error);
+        this.busqueda_existente = false;
+      } finally {
+        this.$store.commit("setIsLoading", false);
       }
     },
 
-    searchPuertos() {
-      if (this.searchQuery) {
-        const query = this.searchQuery.toLowerCase(); // Convirtiendo a minúsculas el parámetro de búsqueda
-        this.puertosFiltrados = this.puertos.filter(
-          (puerto) =>
-            puerto.nombre_pais.toLowerCase().includes(query) ||
-            puerto.nombre_puerto.toLowerCase().includes(query)
-        );
-      } else {
-        this.puertosFiltrados = this.puertos; // Si no hay búsqueda, muestra todos
+    async searchPuertos() {
+      this.$store.commit("setIsLoading", true);
+      this.currentPage = 1;
+      try {
+        const response = await axios.get('api/puertos/', {
+          params: {
+            search: this.searchQuery,
+            page: this.currentPage,
+          },
+        });
+        this.puertos = response.data.results;
+        this.totalPages = Math.ceil(response.data.count / 15);
+        this.updatePages();
+        this.busqueda_existente = this.puertos.length > 0;
+      } catch (error) {
+        console.error('Error al buscar puertos:', error);
+        this.busqueda_existente = false;
+      } finally {
+        this.$store.commit("setIsLoading", false);
       }
     },
 
@@ -166,82 +201,77 @@ export default {
       }, 300);
     },
 
-    deleteItem(id) {
+    confirmDelete(id) {
       Swal.fire({
-        title: '¿Desea eliminar este puerto?',
+        title: '¿Estás seguro?',
+        text: '¡No podrás revertir esta acción!',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
         confirmButtonText: 'Sí, eliminar',
         cancelButtonText: 'Cancelar',
+        reverseButtons: true,
       }).then((result) => {
         if (result.isConfirmed) {
-          axios.delete(`api/puertos/${id}/`)
-            .then(() => {
-              this.getPuertos(); // Actualizar la lista de puertos después de eliminar
-              Swal.fire(
-                'Eliminado',
-                'El puerto ha sido eliminado exitosamente.',
-                'success'
-              );
-            })
-            .catch(error => {
-              console.error('Error al eliminar el puerto:', error);
-              Swal.fire(
-                'Error',
-                'Hubo un error al eliminar el puerto.',
-                'error'
-              );
-            });
+          this.deletePuerto(id);
         }
       });
     },
+
+    async deletePuerto(id) {
+      try {
+        await axios.delete(`api/puertos/${id}/`);
+        this.puertos = this.puertos.filter((puerto) => puerto.id !== id);
+        Swal.fire(
+          'Eliminado!',
+          'El puerto ha sido eliminado exitosamente.',
+          'success'
+        );
+      } catch (error) {
+        console.error('Error al eliminar el puerto:', error);
+        Swal.fire('Error', 'Hubo un error al eliminar el puerto.', 'error');
+      }
+    },
+
     openPuertoDetailsModal(Puerto) {
-    // Mapear IDs de grupos a nombres
-    const gruposAsignados = Puerto.groups && Puerto.groups.length > 0
-        ? Puerto.groups
-            .map(groupId => {
-                const grupo = this.gruposDisponibles.find(g => g.id === groupId);
-                return grupo ? grupo.name : 'Desconocido';
-            })
-            .join(', ')
-        : 'Ninguno';
-
-    // Mapear IDs de permisos a nombres
-    const permisosAsignados = Puerto.Puerto_permissions && Puerto.Puerto_permissions.length > 0
-        ? Puerto.Puerto_permissions
-            .map(permisoId => {
-                const permiso = this.permisosDisponibles.find(p => p.id === permisoId);
-                return permiso ? permiso.name : 'Desconocido';
-            })
-            .join(', ')
-        : 'Ninguno';
-
-    Swal.fire({
-        title: 'Detalles del Atraque',
+      Swal.fire({
+        title: 'Detalles del Puerto',
         html: `
-            <div style="text-align: left;">
-                <p><strong>Nombre:</strong> ${Puerto.nombre_puerto}</p>
-                <p><strong>País:</strong> ${Puerto.nombre_pais}</p>
-                <p><strong>Provincia:</strong> ${Puerto.nombre_provincia}</p>
-                <p><strong>Servicio portuario:</strong> ${Puerto.servicio_portuario_name}</p>
-                <p><strong>Latitud:</strong> ${Puerto.latitud}</p>
-                <p><strong>Longitud:</strong> ${Puerto.longitud}</p>
-            </div>
+          <div style="text-align: left;">
+            <p><strong>Nombre:</strong> ${Puerto.nombre_puerto}</p>
+            <p><strong>País:</strong> ${Puerto.nombre_pais}</p>
+            <p><strong>Provincia:</strong> ${Puerto.nombre_provincia}</p>
+            <p><strong>Servicio portuario:</strong> ${Puerto.servicio_portuario_name}</p>
+            <p><strong>Latitud:</strong> ${Puerto.latitud}</p>
+            <p><strong>Longitud:</strong> ${Puerto.longitud}</p>
+          </div>
         `,
         width: '600px',
         customClass: {
-            popup: 'custom-swal-popup',
-            title: 'custom-swal-title',
-            htmlContainer: 'custom-swal-html',
+          popup: 'custom-swal-popup',
+          title: 'custom-swal-title',
+          htmlContainer: 'custom-swal-html',
         },
-    });
-},
+      });
+    },
+
+    changePage(page) {
+      if (page >= 1 && page <= this.totalPages) {
+        this.currentPage = page;
+        this.getPuertos();
+      }
+    },
+
+    updatePages() {
+      const startPage = Math.max(1, this.currentPage - 2);
+      const endPage = Math.min(this.totalPages, this.currentPage + 2);
+      this.pages = [];
+      for (let i = startPage; i <= endPage; i++) {
+        this.pages.push(i);
+      }
+    },
   },
 };
 </script>
-
 <style scoped>
 
 .search-container input::placeholder {
@@ -258,7 +288,35 @@ body {
   justify-content: flex-end;
   margin-bottom: 5px;
 }
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
 
+.page-item {
+  margin: 0 5px;
+}
+
+.page-link {
+  color: #002A68;
+  border: 1px solid #002A68;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.page-item.active .page-link {
+  background-color: #002A68;
+  border-color: #002A68;
+  color: white;
+}
+
+.page-item.disabled .page-link {
+  color: #6c757d;
+  pointer-events: none;
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+}
 .table-container {
   overflow-x: auto;
   max-width: 100%;

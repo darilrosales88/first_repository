@@ -1,8 +1,8 @@
 <template>
   <div>
-    <div style=" background-color: #002A68; color: white; text-align: right;">
+    <div style="background-color: #002a68; color: white; text-align: right">
       <h6>Bienvenido:</h6>
-    </div>  
+    </div>
     <br />
     <Navbar-Component />
     <br />
@@ -10,79 +10,135 @@
     <div class="search-container">
       <form class="d-flex search-form" @submit.prevent="searchTerminales">
         <div class="input-container">
-          <i class="bi bi-search"></i> 
-        <input
-          class="form-control form-control-sm me-2"
-          type="search"
-          placeholder="nombre de terminal o puerto"
-          aria-label="Buscar"
-          v-model="searchQuery"
-          @input="handleSearchInput"
-          style="width: 200px; padding-left: 5px;margin-top: -70px;" 
-        />
-      </div>
+          <i class="bi bi-search"></i>
+          <input
+            class="form-control form-control-sm me-2"
+            type="search"
+            placeholder="nombre de terminal o puerto"
+            aria-label="Buscar"
+            v-model="searchQuery"
+            @input="handleSearchInput"
+            style="width: 200px; padding-left: 5px; margin-top: -70px"
+          />
+        </div>
       </form>
-      <br>
+      <br />
     </div>
     <div class="create-button-container">
-      <router-link v-if="hasGroup('Admin')" class="create-button" to="CrearTerminal">
+      <router-link
+        v-if="hasGroup('Admin')"
+        class="create-button"
+        to="CrearTerminal"
+      >
         <i class="bi bi-plus-circle large-icon"></i>
       </router-link>
     </div>
-    <h6 style="margin-top: -33px; font-size: 18px;
-    margin-right: 595px;color: #002A68;">Listado de terminales</h6>
+    <h6
+      style="
+        margin-top: -33px;
+        font-size: 18px;
+        margin-right: 595px;
+        color: #002a68;
+      "
+    >
+      Listado de terminales
+    </h6>
     <br />
     <div class="table-container">
-    <table class="table">
-      <thead>
-        <tr>
-          <th scope="col">Nombre</th>
-          <th scope="col">Puerto</th>
-          <th scope="col">Capacidad de Importación</th>
-          <th scope="col">Capacidad de Exportación</th>
-          <!-- Mostrar la columna "Acción" solo si el usuario pertenece al grupo "Admin" -->
-          <th scope="col" >Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(item) in terminalesFiltrados" :key="item.id">
-          <td>{{ item.nombre_terminal }}</td>
-          <td>{{ item.puerto_name }}</td>
-          <td>{{ item.capacidad_almacen_importacion }}</td>
-          <td>{{ item.capacidad_almacen_exportacion }}</td>
-          <!-- Mostrar los botones de acciones solo si el usuario pertenece al grupo "Admin" -->
-          <td >
-              <button @click="openTerminalDetailsModal(item)" class="btn btn-info btn-small btn-eye" 
-              v-html="showNoId ? '<i class=\'bi bi-eye-slash-fill\'></i>' : '<i class=\'bi bi-eye-fill\'></i>'">
-              </button>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col">Puerto</th>
+            <th scope="col">Capacidad de Importación</th>
+            <th scope="col">Capacidad de Exportación</th>
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in terminales" :key="item.id">
+            <td>{{ item.nombre_terminal }}</td>
+            <td>{{ item.puerto_name }}</td>
+            <td>{{ item.capacidad_almacen_importacion }}</td>
+            <td>{{ item.capacidad_almacen_exportacion }}</td>
+            <td>
+              <button
+                @click="openTerminalDetailsModal(item)"
+                class="btn btn-info btn-small btn-eye"
+                v-html="
+                  showNoId
+                    ? '<i class=\'bi bi-eye-slash-fill\'></i>'
+                    : '<i class=\'bi bi-eye-fill\'></i>'
+                "
+              ></button>
               <span v-if="hasGroup('Admin')">
                 <button class="btn btn-warning btn-small">
-                  <router-link :to="{name: 'EditarTerminal', params: {id:item.id}}">
-                    <i style="color:black" class="bi bi-pencil-square"></i>
+                  <router-link
+                    :to="{ name: 'EditarTerminal', params: { id: item.id } }"
+                  >
+                    <i style="color: black" class="bi bi-pencil-square"></i>
                   </router-link>
                 </button>
-                <button  @click.prevent="confirmDelete(item.id)" class="btn btn-danger btn-small">
-                  <i  class="bi bi-trash"></i>
+                <button
+                  @click.prevent="confirmDelete(item.id)"
+                  class="btn btn-danger btn-small"
+                >
+                  <i class="bi bi-trash"></i>
                 </button>
               </span>
             </td>
-        </tr>
-      </tbody>
-    </table>
-    <h1 v-if="terminalesFiltrados.length === 0 && searchQuery">
-      No existe ningún registro asociado a ese parámetro de búsqueda.
-    </h1>
+          </tr>
+        </tbody>
+      </table>
+      <!-- Mensaje cuando no hay resultados -->
+      <h1 v-if="!busqueda_existente">
+        No existe ningún registro asociado a ese parámetro de búsqueda.
+      </h1>
+      <!-- Paginación -->
+      <nav aria-label="Page navigation example">
+        <ul class="pagination">
+          <li class="page-item" :class="{ disabled: currentPage === 1 }">
+            <a
+              class="page-link"
+              href="#"
+              @click.prevent="changePage(currentPage - 1)"
+              >Anterior</a
+            >
+          </li>
+          <li
+            class="page-item"
+            v-for="page in pages"
+            :key="page"
+            :class="{ active: page === currentPage }"
+          >
+            <a class="page-link" href="#" @click.prevent="changePage(page)">{{
+              page
+            }}</a>
+          </li>
+          <li
+            class="page-item"
+            :class="{ disabled: currentPage === totalPages }"
+          >
+            <a
+              class="page-link"
+              href="#"
+              @click.prevent="changePage(currentPage + 1)"
+              >Siguiente</a
+            >
+          </li>
+        </ul>
+      </nav>
+    </div>
   </div>
-</div>
 </template>
 
 <script>
-import axios from 'axios';
-import Swal from 'sweetalert2';
-import NavbarComponent from '@/components/NavbarComponent.vue';
+import axios from "axios";
+import Swal from "sweetalert2";
+import NavbarComponent from "@/components/NavbarComponent.vue";
 
 export default {
-  name: 'TerminalView',
+  name: "TerminalView",
   components: {
     NavbarComponent,
   },
@@ -90,66 +146,91 @@ export default {
   data() {
     return {
       terminales: [],
-      terminalesFiltrados: [], // Lista filtrada de terminales
-      searchQuery: '', // Añadido aquí
-      debounceTimeout: null, // Añadido aquí
-      userPermissions: [], // Almacenará los permisos del usuario
-      userGroups: [],      // Almacenará los grupos del usuario
+      searchQuery: "",
+      debounceTimeout: null,
+      userPermissions: [],
+      userGroups: [],
       showNoId: false,
+      currentPage: 1,
+      totalPages: 1,
+      pages: [],
+      busqueda_existente: true,
     };
   },
 
   async created() {
-    // Obtener los permisos y grupos del usuario al cargar el componente
     await this.fetchUserPermissionsAndGroups();
     this.getTerminales();
   },
 
   methods: {
     toggleNoIdVisibility() {
-      this.showNoId = !this.showNoId; // Alternar la visibilidad de las columnas No e Id
+      this.showNoId = !this.showNoId;
     },
-    // Verifica si el usuario tiene un permiso específico
+
     hasPermission(permission) {
-      return this.userPermissions.some(p => p.name === permission);
+      return this.userPermissions.some((p) => p.name === permission);
     },
+
     hasGroup(group) {
-      return this.userGroups.some(g => g.name === group);
+      return this.userGroups.some((g) => g.name === group);
     },
-    // Obtiene los permisos y grupos del usuario desde el backend
+
     async fetchUserPermissionsAndGroups() {
       try {
-        const userId = localStorage.getItem('userid');
+        const userId = localStorage.getItem("userid");
         if (userId) {
-          const response = await axios.get(`/apiAdmin/user/${userId}/permissions-and-groups/`);
+          const response = await axios.get(
+            `/apiAdmin/user/${userId}/permissions-and-groups/`
+          );
           this.userPermissions = response.data.permissions;
           this.userGroups = response.data.groups;
         }
       } catch (error) {
-        console.error('Error al obtener permisos y grupos:', error);
+        console.error("Error al obtener permisos y grupos:", error);
       }
     },
 
     async getTerminales() {
       try {
-        const response = await axios.get('api/terminales/');
-        this.terminales = response.data;
-        this.terminalesFiltrados = this.terminales; // Inicialmente, muestra todas las terminales
+        this.$store.commit("setIsLoading", true);
+        const response = await axios.get("api/terminales/", {
+          params: {
+            page: this.currentPage,
+            search: this.searchQuery,
+          },
+        });
+        this.terminales = response.data.results;
+        this.totalPages = Math.ceil(response.data.count / 15);
+        this.updatePages();
+        this.busqueda_existente = this.terminales.length > 0;
       } catch (error) {
-        console.error('Error al obtener las terminales:', error);
+        console.error("Error al obtener las terminales:", error);
+        this.busqueda_existente = false;
+      } finally {
+        this.$store.commit("setIsLoading", false);
       }
     },
 
-    searchTerminales() {
-      if (this.searchQuery) {
-        const query = this.searchQuery.toLowerCase(); // Convirtiendo a minúsculas el parámetro de búsqueda
-        this.terminalesFiltrados = this.terminales.filter(
-          (terminal) =>
-            terminal.nombre_terminal.toLowerCase().includes(query) ||
-            terminal.puerto_name.toLowerCase().includes(query)
-        );
-      } else {
-        this.terminalesFiltrados = this.terminales; // Si no hay búsqueda, muestra todas
+    async searchTerminales() {
+      this.$store.commit("setIsLoading", true);
+      this.currentPage = 1;
+      try {
+        const response = await axios.get("api/terminales/", {
+          params: {
+            search: this.searchQuery,
+            page: this.currentPage,
+          },
+        });
+        this.terminales = response.data.results;
+        this.totalPages = Math.ceil(response.data.count / 15);
+        this.updatePages();
+        this.busqueda_existente = this.terminales.length > 0;
+      } catch (error) {
+        console.error("Error al buscar terminales:", error);
+        this.busqueda_existente = false;
+      } finally {
+        this.$store.commit("setIsLoading", false);
       }
     },
 
@@ -160,85 +241,84 @@ export default {
       }, 300);
     },
 
-    deleteItem(id) {
+    confirmDelete(id) {
       Swal.fire({
-        title: '¿Desea eliminar esta terminal?',
-        icon: 'warning',
+        title: "¿Estás seguro?",
+        text: "¡No podrás revertir esta acción!",
+        icon: "warning",
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar',
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
+        reverseButtons: true,
       }).then((result) => {
         if (result.isConfirmed) {
-          axios.delete(`api/terminales/${id}/`)
-            .then(() => {
-              this.getTerminales(); // Actualizar la lista de terminales después de eliminar
-              Swal.fire(
-                'Eliminado',
-                'La terminal ha sido eliminada exitosamente.',
-                'success'
-              );
-            })
-            .catch(error => {
-              console.error('Error al eliminar la terminal:', error);
-              Swal.fire(
-                'Error',
-                'Hubo un error al eliminar la terminal.',
-                'error'
-              );
-            });
+          this.deleteTerminal(id);
         }
       });
     },
+
+    async deleteTerminal(id) {
+      try {
+        await axios.delete(`api/terminales/${id}/`);
+        this.terminales = this.terminales.filter(
+          (terminal) => terminal.id !== id
+        );
+        Swal.fire(
+          "Eliminado!",
+          "La terminal ha sido eliminada exitosamente.",
+          "success"
+        );
+        // Recargar los datos para actualizar la paginación
+        this.getTerminales();
+      } catch (error) {
+        console.error("Error al eliminar la terminal:", error);
+        Swal.fire("Error", "Hubo un error al eliminar la terminal.", "error");
+      }
+    },
+
     openTerminalDetailsModal(Terminal) {
-    // Mapear IDs de grupos a nombres
-    const gruposAsignados = Terminal.groups && Terminal.groups.length > 0
-        ? Terminal.groups
-            .map(groupId => {
-                const grupo = this.gruposDisponibles.find(g => g.id === groupId);
-                return grupo ? grupo.name : 'Desconocido';
-            })
-            .join(', ')
-        : 'Ninguno';
-
-    // Mapear IDs de permisos a nombres
-    const permisosAsignados = Terminal.Terminal_permissions && Terminal.Terminal_permissions.length > 0
-        ? Terminal.Terminal_permissions
-            .map(permisoId => {
-                const permiso = this.permisosDisponibles.find(p => p.id === permisoId);
-                return permiso ? permiso.name : 'Desconocido';
-            })
-            .join(', ')
-        : 'Ninguno';
-
-    Swal.fire({
-        title: 'Detalles del Atraque',
+      Swal.fire({
+        title: "Detalles de la Terminal",
         html: `
-            <div style="text-align: left;">
-                <p><strong>Nombre:</strong> ${Terminal.nombre_terminal}</p>
-                <p><strong>Puerto:</strong> ${Terminal.puerto_name}</p>
-                <p><strong>Capacidad de Importación:</strong> ${Terminal.capacidad_almacen_importacion}</p>
-                <p><strong>Capacidad de Exportación:</strong> ${Terminal.capacidad_almacen_exportacion}</p>
-            </div> 
+          <div style="text-align: left;">
+            <p><strong>Nombre:</strong> ${Terminal.nombre_terminal}</p>
+            <p><strong>Puerto:</strong> ${Terminal.puerto_name}</p>
+            <p><strong>Capacidad de Importación:</strong> ${Terminal.capacidad_almacen_importacion}</p>
+            <p><strong>Capacidad de Exportación:</strong> ${Terminal.capacidad_almacen_exportacion}</p>
+          </div> 
         `,
-        width: '600px',
+        width: "600px",
         customClass: {
-            popup: 'custom-swal-popup',
-            title: 'custom-swal-title',
-            htmlContainer: 'custom-swal-html',
+          popup: "custom-swal-popup",
+          title: "custom-swal-title",
+          htmlContainer: "custom-swal-html",
         },
-    });
-},
+      });
+    },
+
+    changePage(page) {
+      if (page >= 1 && page <= this.totalPages) {
+        this.currentPage = page;
+        this.getTerminales();
+      }
+    },
+
+    updatePages() {
+      const startPage = Math.max(1, this.currentPage - 2);
+      const endPage = Math.min(this.totalPages, this.currentPage + 2);
+      this.pages = [];
+      for (let i = startPage; i <= endPage; i++) {
+        this.pages.push(i);
+      }
+    },
   },
 };
 </script>
 
 <style scoped>
-
 .search-container input::placeholder {
-  font-size: 14px; 
-  color: #999;   
+  font-size: 14px;
+  color: #999;
 }
 
 body {
@@ -271,6 +351,11 @@ body {
 .large-icon {
   font-size: 1.7rem; /* Tamaño del ícono */
 }
+nav .pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 table {
   width: 84%;
   border-collapse: collapse;
@@ -279,11 +364,11 @@ table {
   font-size: 0.875rem;
 }
 
-th, td {
+th,
+td {
   padding: 0.15rem; /* Reducir el padding */
   white-space: nowrap;
 }
-
 
 th {
   background-color: #f2f2f2;

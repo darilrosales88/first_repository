@@ -264,7 +264,7 @@ export default {
           throw new Error("La API no devolvió un array de productos");
         }
 
-        this.producto_options = response.data.map(p => ({
+        this.producto_options = response.data.results.map(p => ({
           id: p.id,
           producto: p.nombre || p.producto || `Producto ${p.id}`
         }));

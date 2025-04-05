@@ -288,6 +288,11 @@ class Situado_Carga_Descarga(models.Model):
 
 
 
+
+
+
+
+
 """ 
 class vagon_tren(models.Model):
     tren = models.ForeignKey(en_trenes, on_delete=models.CASCADE, related_name='vagones')

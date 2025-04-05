@@ -536,10 +536,8 @@ export default {
     },
 
     async buscarEquipos() {
-      const vagon_id = this.$route.params.id;
-      const response = await axios.get(`/ufc/en-trenes/${vagon_id}/`);
       try {
-        let peticion = `/api/equipos_ferroviarios/?id_tipo_equipo_territorio=${this.vagon["tipo_equipo"]}`;
+        let peticion = `/api/equipos_ferroviarios/?id_tipo_equipo_territorio=${this.formData["tipo_equipo"]}`;
         let allEquipos = [];
         while (peticion) {
           const response = await axios.get(peticion);
@@ -573,9 +571,9 @@ export default {
         Swal.fire("Error", "Hubo un error al obtener las entidades.", "error");
       }
     },
-    volverEnTren() {
+    volverEnTren(args = -1) {
       // Redirige a la vista "AdicionarProductoVagon"
-      this.$router.go(-1);
+      this.$router.go(args);
     },
 
     async getPuertos() {

@@ -1,33 +1,29 @@
-*.sqlite3
+# Ignorar el entorno virtual de Python
+entorno_virtual
+
+# Ignorar la carpeta node_modules de Vue
+base-frontend/node_modules
+base-frontend/public/
+base-frontend/src-2/
+
+# Ignorar archivos de configuración de entornos locales (opcional)
+.env
+.env.local
+
+# Ignorar archivos de caché de Python
+mitrans
 __pycache__
 *.pyc
-venv
-
-.DS_Store
-node_modules
-/dist
-#Cambios local armando
-
-# local env files
-.env.local
-.env.*.local
-
-# Log files
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-#newssss
-# Editor directories and files
-.idea
-.vscode
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-*.docx
-.extras
-.~lock*
+*.pyo
+*.pyd
 *.7z
+# Ignorar archivos de base de datos SQLite (si usas SQLite)
+*.sqlite3
+*.db
+
+# Ignorar archivos de configuración de VSCode (opcional)
+.vscode/
+
+# Ignorar archivos de compilación de Vue (opcional)
+base-frontend/dist/
+base-frontend/.env

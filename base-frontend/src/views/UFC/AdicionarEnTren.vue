@@ -664,7 +664,7 @@ export default {
       try {
         let allProductos = [];
         let nextPage = "/ufc/producto-vagon/"; // URL inicial
-        /* Agregar todos los elementos con paginado desde la APi */
+
         while (nextPage) {
           const response = await axios.get(nextPage);
           allProductos = [...allProductos, ...response.data.results];

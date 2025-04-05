@@ -286,7 +286,100 @@ class Situado_Carga_Descarga(models.Model):
     )
 
 
-
+class arrastre_pendientes(models.Model):
+    
+    TIPO_ORIGEN_DESTINO_CHOICES = [
+        ('puerto', 'Puerto'),
+        ('ac_ccd', 'Acceso comercial/CCD'),
+    ]
+    
+    tipo_origen = models.CharField(
+        default="",
+        choices=TIPO_ORIGEN_DESTINO_CHOICES, 
+        max_length=50,
+        verbose_name="Tipo de origen"
+    )
+    
+    origen = models.CharField(
+        default='',
+        max_length=40,
+        verbose_name="Origen"
+    )
+    
+    TIPO_EQUIPO_CHOICES = (
+        ('casilla', 'Casilla'),
+        ('caj_gon', 'Cajones o Góndola'),
+        ('planc_plat', 'Plancha o Plataforma'),
+        ('Plan_porta_cont', 'Plancha porta contenedores'),
+        ('cist_liquidos', 'Cisterna para líquidos'),
+        ('cist_solidos', 'Cisterna para sólidos'),
+        ('tolva_g_mineral', 'Tolva granelera(mineral)'),
+        ('tolva_g_agric', 'Tolva granelera(agrícola)'),
+        ('tolva_g_cemento', 'Tolva para cemento'),
+        ('volqueta', 'Volqueta'),
+        ('Vagon_ref', 'Vagón refrigerado'),
+        ('jaula', 'Jaula'),
+        ('locomotora', 'Locomotora'),
+        ('tren', 'Tren'),
+    )
+    
+    tipo_equipo = models.CharField(
+        max_length=200, 
+        choices=TIPO_EQUIPO_CHOICES, 
+        verbose_name="Tipo de equipo", 
+        blank=True, 
+        null=True
+    )
+    
+    ESTADO_CHOICES = (
+        ('vacio', 'Vacio'),
+        ('cargado', 'Cargado')
+    )
+    
+    estado = models.CharField(
+        max_length=200, 
+        choices=ESTADO_CHOICES, 
+        verbose_name="Estado", 
+        blank=True, 
+        null=True
+    )
+    
+    producto = models.ForeignKey(
+        nom_producto, 
+        on_delete=models.CASCADE, 
+        null=False, 
+        blank=False, 
+        verbose_name="Producto"
+    )
+    
+    cantidad_vagones = models.CharField(
+        max_length=10, 
+        verbose_name="Cantidad de vagones",
+    )
+    
+    tipo_destino = models.CharField(
+        default="",
+        choices=TIPO_ORIGEN_DESTINO_CHOICES, 
+        max_length=50,
+        verbose_name="Tipo de destino"
+    )
+    
+    destino = models.CharField(
+        default='',
+        max_length=40,
+        verbose_name="Destino"
+    )
+    
+    class Meta:
+        verbose_name = "arrastre"
+        verbose_name_plural="Arrastres"
+    
+    
+    
+    def __str__(self):
+        return f"Arrastre Pendiente{self.id} - {self.origen}"
+    
+    
 
 
 

@@ -94,11 +94,11 @@
                 >Tipo de Equipo <span style="color: red">*</span></label
               >
               <select
-                @click="buscarEquipos"
                 class="form-select"
                 v-model="formData.tipo_equipo"
                 id="tipo_equipo"
                 name="tipo_equipo"
+                @click="buscarEquipos"
                 required
               >
                 <option
@@ -591,10 +591,8 @@ export default {
     },
 
     async buscarEquipos() {
-      const vagon_id = this.$route.params.id;
-      const response = await axios.get(`/ufc/en-trenes/${vagon_id}/`);
       try {
-        let peticion = `/api/equipos_ferroviarios/?id_tipo_equipo_territorio=${this.vagon["tipo_equipo"]}`;
+        let peticion = `/api/equipos_ferroviarios/?id_tipo_equipo_territorio=${this.formData["tipo_equipo"]}`;
         let allEquipos = [];
         while (peticion) {
           const response = await axios.get(peticion);

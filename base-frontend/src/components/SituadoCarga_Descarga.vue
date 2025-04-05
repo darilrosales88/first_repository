@@ -265,7 +265,7 @@ export default {
       isEditing: false,
       currentItemId: null,
       searchQuery: "",
-      registrosPorSituar: [], // Nombre consistente
+      registrosPorSituar: [],
       loading: false,
       busqueda_existente: true,
       showModal: false,
@@ -307,33 +307,29 @@ export default {
   },
 
   methods: {
+    // Obtener todos los registros
     async getPorSituar() {
       this.loading = true;
       try {
         const response = await axios.get("http://127.0.0.1:8000/ufc/situados/");
-        console.log("Datos de situados:", response.data);
-
-        // Validación más robusta
-        if (!response.data || !Array.isArray(response.data.results)) {
-          throw new Error("La API no devolvió un array de datos");
+        
+        if (response.data && Array.isArray(response.data.results || response.data)) {
+          const data = response.data.results || response.data;
+          this.allRecords = data.map((item) => ({
+            id: item.id,
+            tipo_origen: item.tipo_origen || "",
+            tipo_equipo: item.tipo_equipo || "",
+            estado: item.estado || "",
+            operacion: item.operacion || "",
+            producto: item.producto || "",
+            situados: item.situados || 0,
+            pendiente_proximo_dia: item.pendiente_proximo_dia || 0,
+          }));
+          
+          this.registrosPorSituar = [...this.allRecords];
+          this.busqueda_existente = true;
         }
-
-        // Mapeo seguro de datos
-        this.allRecords = response.data.results.map((item) => ({
-          id: item.id,
-          tipo_origen: item.tipo_origen || "",
-          tipo_equipo: item.tipo_equipo || "",
-          estado: item.estado || "",
-          operacion: item.operacion || "",
-          producto: item.producto || "",
-          situados: item.situados || 0,
-          pendiente_proximo_dia: item.pendiente_proximo_dia || 0,
-        }));
-
-        this.registrosPorSituar = [...this.allRecords];
-        this.busqueda_existente = true;
       } catch (error) {
-        console.error("Error en getPorSituar:", error);
         this.handleApiError(error, "cargar registros");
         this.registrosPorSituar = [];
       } finally {
@@ -341,31 +337,157 @@ export default {
       }
     },
 
+    // Cargar productos para el select
     async loadProductos() {
       try {
         this.loading = true;
-        const response = await axios.get(
-          "http://127.0.0.1:8000/api/productos/"
-        );
-        console.log("Datos de productos:", response.data);
+        const response = await axios.get("/api/productos/", {
+          params: { limit: 100 },
+        });
 
-        if (!response.data || !Array.isArray(response.data.results)) {
-          throw new Error("La API no devolvió un array de productos");
+        if (response.data && Array.isArray(response.data.results || response.data)) {
+          const productos = response.data.results || response.data;
+          this.producto_options = productos.map((p) => ({
+            id: p.id,
+            producto: p.nombre || p.producto || p.descripcion || `Producto ${p.id}`,
+          }));
         }
-
-        this.producto_options = response.data.results.map((p) => ({
-          id: p.id,
-          producto: p.nombre || p.producto || `Producto ${p.id}`,
-        }));
       } catch (error) {
-        console.error("Error en loadProductos:", error);
         this.handleApiError(error, "cargar productos");
-        this.producto_options = [];
       } finally {
         this.loading = false;
       }
     },
 
+    // Buscar por tipo de equipo
+    handleSearchInput() {
+      clearTimeout(this.debounceTimeout);
+      this.debounceTimeout = setTimeout(() => {
+        if (!this.searchQuery.trim()) {
+          this.registrosPorSituar = [...this.allRecords];
+          this.busqueda_existente = true;
+          return;
+        }
+
+        const query = this.searchQuery.toLowerCase();
+        this.registrosPorSituar = this.allRecords.filter((item) => {
+          const tipoEquipo = item.tipo_equipo?.toLowerCase() || "";
+          return tipoEquipo.includes(query);
+        });
+
+        this.busqueda_existente = this.registrosPorSituar.length > 0;
+      }, 300);
+    },
+
+    // Abrir modal para editar
+    openEditModal(item) {
+      this.isEditing = true;
+      this.currentItemId = item.id;
+      this.nuevoRegistro = { ...item };
+      this.showModal = true;
+    },
+
+    // Cerrar modal
+    closeModal() {
+      this.showModal = false;
+      this.isEditing = false;
+      this.currentItemId = null;
+      this.resetForm();
+    },
+
+    // Resetear formulario
+    resetForm() {
+      this.nuevoRegistro = {
+        tipo_origen: "",
+        tipo_equipo: "",
+        estado: "",
+        operacion: "",
+        producto: "",
+        situados: "",
+        pendiente_proximo_dia: "",
+      };
+    },
+
+    // Agregar nuevo registro
+    async addNewItem() {
+      try {
+        this.loading = true;
+        const response = await axios.post(
+          "http://127.0.0.1:8000/ufc/situados/",
+          this.nuevoRegistro
+        );
+
+        if (response.status === 201) {
+          Swal.fire("Éxito", "Registro creado correctamente", "success");
+          this.closeModal();
+          await this.getPorSituar();
+        }
+      } catch (error) {
+        this.handleApiError(error, "crear registro");
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    // Actualizar registro existente
+    async updateItem() {
+      try {
+        this.loading = true;
+        const response = await axios.put(
+          `http://127.0.0.1:8000/ufc/situados/${this.currentItemId}/`,
+          this.nuevoRegistro
+        );
+
+        if (response.status === 200) {
+          Swal.fire("Éxito", "Registro actualizado correctamente", "success");
+          this.closeModal();
+          await this.getPorSituar();
+        }
+      } catch (error) {
+        this.handleApiError(error, "actualizar registro");
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    // Confirmar eliminación
+    async confirmDelete(id) {
+      const result = await Swal.fire({
+        title: "¿Estás seguro?",
+        text: "¡No podrás revertir esta acción!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
+      });
+
+      if (result.isConfirmed) {
+        await this.deleteItem(id);
+      }
+    },
+
+    // Eliminar registro
+    async deleteItem(id) {
+      try {
+        this.loading = true;
+        const response = await axios.delete(
+          `http://127.0.0.1:8000/ufc/situados/${id}/`
+        );
+
+        if (response.status === 204) {
+          Swal.fire("Eliminado", "El registro ha sido eliminado", "success");
+          await this.getPorSituar();
+        }
+      } catch (error) {
+        this.handleApiError(error, "eliminar registro");
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    // Manejo de errores
     handleApiError(error, action) {
       let errorMsg = `Error al ${action}`;
       if (error.response) {
@@ -376,10 +498,9 @@ export default {
       } else {
         errorMsg += `: ${error.message}`;
       }
+      console.error(errorMsg, error);
       Swal.fire("Error", errorMsg, "error");
     },
-
-    // ... (otros métodos se mantienen igual)
   },
 };
 </script>

@@ -664,7 +664,7 @@ export default {
       try {
         let allProductos = [];
         let nextPage = "/ufc/producto-vagon/"; // URL inicial
-
+        /* Esto es para recoger todos los objetos de la Api  */
         while (nextPage) {
           const response = await axios.get(nextPage);
           allProductos = [...allProductos, ...response.data.results];

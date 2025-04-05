@@ -287,7 +287,7 @@ class Situado_Carga_Descarga(models.Model):
         ]
     )
     
-class arrastre_pendientes(models.Model):
+class arrastres(models.Model):
     
     TIPO_ORIGEN_DESTINO_CHOICES = [
         ('puerto', 'Puerto'),

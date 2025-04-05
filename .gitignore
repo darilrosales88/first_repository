@@ -31,3 +31,37 @@ pnpm-debug.log*
 .extras
 .~lock*
 *.7z
+#Carlos Linux
+
+#una linea
+
+#Daril WIndow
+# Ignorar el entorno virtual de Python
+entorno_virtual
+
+# Ignorar la carpeta node_modules de Vue
+base-frontend/node_modules
+base-frontend/public/
+base-frontend/src-2/
+
+# Ignorar archivos de configuración de entornos locales (opcional)
+.env
+.env.local
+
+# Ignorar archivos de caché de Python
+mitrans
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.7z
+# Ignorar archivos de base de datos SQLite (si usas SQLite)
+*.sqlite3
+*.db
+
+# Ignorar archivos de configuración de VSCode (opcional)
+.vscode/
+
+# Ignorar archivos de compilación de Vue (opcional)
+base-frontend/dist/
+base-frontend/.env

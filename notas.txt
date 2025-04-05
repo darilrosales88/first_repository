@@ -1,8 +1,0 @@
-#Que sentido tiene que en el endpoint de trenes se especifique el id de la locomotora y despues el tipo de equipo ferroviario
-#Los productos del formulario mio de entrenes_ son los productos cargados descargados , o son los productos normales
-
-
-----------
-
-#Vista Crear producto sin estilos
-#

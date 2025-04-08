@@ -142,6 +142,7 @@
         </ul>
       </nav>
     </div>
+    <!-- Termina la paginacion -->
 
     <!-- Modal para detalles -->
     <ModalEnTrenes

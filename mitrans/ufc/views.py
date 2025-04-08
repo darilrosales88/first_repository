@@ -4,11 +4,11 @@ from rest_framework import viewsets,generics,permissions
 from rest_framework.pagination import PageNumberPagination
 #importacion de modelos
 from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados,en_trenes,producto_en_vagon
-from .models import por_situar_carga_descarga,Situado_Carga_Descarga,ArrastrePendientes,CopiaPendientes_Arrast
+from .models import por_situar_carga_descarga,Situado_Carga_Descarga,ArrastrePendientes
 #importacion de serializadores asociados a los modelos
 from .serializers import vagon_cargado_descargado_filter,vagon_cargado_descargado_serializer,producto_vagon_serializer
 from .serializers import producto_vagon_cargado_descargado_filter,productos_vagones_cargados_descargados_serializer,en_trenes_serializer
-from .serializers import PorSituarCargaDescargaSerializer,SituadoCargaDescargaSerializers,PendienteArrastreSerializer,CopiaPendientes_Arrast_Serializers
+from .serializers import PorSituarCargaDescargaSerializer,SituadoCargaDescargaSerializers,PendienteArrastreSerializer
 
 from Administracion.models import Auditoria
 
@@ -572,6 +572,3 @@ class PendienteArrastreViewset(viewsets.ModelViewSet):
     serializer_class = PendienteArrastreSerializer
     
     
-class CopiaArrastrePendienteViewset(viewsets.ModelViewSet):
-    queryset = CopiaPendientes_Arrast.object.all()
-    serializer_class = CopiaPendientes_Arrast_Serializers

@@ -5,7 +5,7 @@ from django_filters import rest_framework as filters
 from django.db.models import Q
 from nomencladores.models import nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_tipo_equipo_ferroviario
 from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados, en_trenes,nom_equipo_ferroviario, producto_en_vagon
-from .models import por_situar_carga_descarga,Situado_Carga_Descarga,ArrastrePendientes,CopiaPendientes_Arrast
+from .models import por_situar_carga_descarga,Situado_Carga_Descarga,ArrastrePendientes
 
 #para cada modelo del que deseemos realizar el filtrado debemos hacer un filtrado
 #nom_pais_filter es una clase que se implementa para definir sobre qué campos quiero filtrar los registros de mi API, 
@@ -275,7 +275,3 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
         filterset_class = PendienteArrastreFilter
     
         
-class CopiaPendientes_Arrast_Serializers(serializers.ModelSerializer):
-    class Meta:
-        model = CopiaPendientes_Arrast
-        fields = ('origen','tipo_origen','tipo_equipo','estado','producto','cantidad_vagones','tipo_destino','destino')

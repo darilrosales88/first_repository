@@ -51,6 +51,14 @@
               Acciones
             </th>
           </tr>
+          <tr v-if="!busqueda_existente">
+            <td colspan="8" class="text-center text-muted py-4">
+              <i class="bi bi-exclamation-circle fs-4"></i>
+              <p class="mt-2">
+                No se encontraron resultados para "{{ searchQuery }}"
+              </p>
+            </td>
+          </tr>
         </thead>
         <tbody>
           <tr

@@ -573,7 +573,7 @@ export default {
     },
     volverEnTren(args = -1) {
       // Redirige a la vista "AdicionarProductoVagon"
-      this.$router.go(args);
+      this.$router.push({ name: "InfoOperativo" });
     },
 
     async getPuertos() {

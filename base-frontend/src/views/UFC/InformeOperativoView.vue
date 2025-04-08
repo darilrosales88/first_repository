@@ -1,11 +1,18 @@
 <template>
-    <div style="background-color: #002A68; color: white; text-align: right; padding: 10px;">
-      <h6>Bienvenido: {{ username }}</h6>
-    </div>
-    <br />
-    <Navbar-Component /><br>
+  <div
+    style="
+      background-color: #002a68;
+      color: white;
+      text-align: right;
+      padding: 10px;
+    "
+  >
+    <!--   <h6>Bienvenido: {{ username }}</h6> -->
+  </div>
+  <br />
+  <Navbar-Component /><br />
 
-    <div style="margin-left:12em">
+  <div style="margin-left: 12em">
     <!-- Navbar con enlaces -->
     <nav>
       <ul>
@@ -62,8 +69,6 @@
       <component :is="currentComponent" />
     </div>
   </div>
-
-
 </template>
 
 <style scoped>
@@ -117,8 +122,6 @@ a:active {
 }
 </style>
 
-
-
 <style scoped>
 nav ul {
   list-style: none;
@@ -138,17 +141,16 @@ a {
 }
 </style>
 
-
 <script>
-import NavbarComponent from '@/components/NavbarComponent.vue'
-import PorSituarCarga_Descarga from '@/components/PorSituarCarga_Descarga.vue';
-import SituadoCarga_Descarga from '@/components/SituadoCarga_Descarga.vue';
-import Cargados_Descargados from '@/components/Cargados_Descargados.vue';
-import PendientesArrastre from '@/components/PendientesArrastre.vue';
-import EnTrenes from '@/components/EnTrenes.vue';
+import NavbarComponent from "@/components/NavbarComponent.vue";
+import PorSituarCarga_Descarga from "@/components/PorSituarCarga_Descarga.vue";
+import SituadoCarga_Descarga from "@/components/SituadoCarga_Descarga.vue";
+import Cargados_Descargados from "@/components/Cargados_Descargados.vue";
+import PendientesArrastre from "@/components/PendientesArrastre.vue";
+import EnTrenes from "@/components/EnTrenes.vue";
 
 export default {
-  name: 'UFCView',
+  name: "UFCView",
   components: {
     NavbarComponent,
     PorSituarCarga_Descarga,
@@ -159,7 +161,7 @@ export default {
   },
   data() {
     return {
-      currentComponent: 'PorSituarCarga_Descarga', // Componente inicial
+      currentComponent: "PorSituarCarga_Descarga", // Componente inicial
     };
   },
 };

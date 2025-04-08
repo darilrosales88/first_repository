@@ -312,8 +312,11 @@ export default {
       this.loading = true;
       try {
         const response = await axios.get("http://127.0.0.1:8000/ufc/situados/");
-        
-        if (response.data && Array.isArray(response.data.results || response.data)) {
+
+        if (
+          response.data &&
+          Array.isArray(response.data.results || response.data)
+        ) {
           const data = response.data.results || response.data;
           this.allRecords = data.map((item) => ({
             id: item.id,
@@ -321,11 +324,11 @@ export default {
             tipo_equipo: item.tipo_equipo || "",
             estado: item.estado || "",
             operacion: item.operacion || "",
-            producto: item.producto || "",
+            producto: item.producto_name || "",
             situados: item.situados || 0,
             pendiente_proximo_dia: item.pendiente_proximo_dia || 0,
           }));
-          
+
           this.registrosPorSituar = [...this.allRecords];
           this.busqueda_existente = true;
         }
@@ -345,11 +348,15 @@ export default {
           params: { limit: 100 },
         });
 
-        if (response.data && Array.isArray(response.data.results || response.data)) {
+        if (
+          response.data &&
+          Array.isArray(response.data.results || response.data)
+        ) {
           const productos = response.data.results || response.data;
           this.producto_options = productos.map((p) => ({
             id: p.id,
-            producto: p.nombre || p.producto || p.descripcion || `Producto ${p.id}`,
+            producto:
+              p.nombre || p.producto || p.descripcion || `Producto ${p.id}`,
           }));
         }
       } catch (error) {

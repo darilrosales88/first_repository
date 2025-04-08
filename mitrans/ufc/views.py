@@ -395,7 +395,7 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
 
 #Voy a agregar los modulos de auditoria a los que hizo Karmal
 class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
-    queryset = por_situar_carga_descarga.objects.all()
+    queryset = por_situar_carga_descarga.objects.all().order_by("-id")
     serializer_class = PorSituarCargaDescargaSerializer
     filter_backends = [DjangoFilterBackend]
     
@@ -484,7 +484,7 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
 
 
 class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
-    queryset= Situado_Carga_Descarga.objects.all()
+    queryset= Situado_Carga_Descarga.objects.all().order_by("-id")
     serializer_class = SituadoCargaDescargaSerializers
     filter_backends = [DjangoFilterBackend]
     

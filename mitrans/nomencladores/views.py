@@ -832,7 +832,7 @@ class nom_atraque_view_set(viewsets.ModelViewSet):
     queryset = nom_atraque.objects.all().order_by('id')  # Ordenar por defecto por el campo 'id',hay que hacerlo con 
     #todos los view_set que seran paginados
     serializer_class = nom_atraque_serializer
-    pagination_class = StandardResultsSetPagination #funcion declarada para la paginacion aqui en el views.py
+    #funcion declarada para la paginacion aqui en el views.py
 
     def get_queryset(self):
         queryset = super().get_queryset()

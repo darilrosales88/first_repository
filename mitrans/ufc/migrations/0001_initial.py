@@ -15,28 +15,21 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='CopiaPendientes_Arrast',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-            ],
-        ),
-        migrations.CreateModel(
-            name='ArrastrePendientes',
+            name='arrastre_pendientes',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('tipo_origen', models.CharField(choices=[('puerto', 'Puerto'), ('ac_ccd', 'Acceso comercial/CCD')], default='', max_length=50, verbose_name='Tipo de origen')),
                 ('origen', models.CharField(default='', max_length=40, verbose_name='Origen')),
                 ('tipo_equipo', models.CharField(blank=True, choices=[('casilla', 'Casilla'), ('caj_gon', 'Cajones o Góndola'), ('planc_plat', 'Plancha o Plataforma'), ('Plan_porta_cont', 'Plancha porta contenedores'), ('cist_liquidos', 'Cisterna para líquidos'), ('cist_solidos', 'Cisterna para sólidos'), ('tolva_g_mineral', 'Tolva granelera(mineral)'), ('tolva_g_agric', 'Tolva granelera(agrícola)'), ('tolva_g_cemento', 'Tolva para cemento'), ('volqueta', 'Volqueta'), ('Vagon_ref', 'Vagón refrigerado'), ('jaula', 'Jaula'), ('locomotora', 'Locomotora'), ('tren', 'Tren')], max_length=200, null=True, verbose_name='Tipo de equipo')),
                 ('estado', models.CharField(blank=True, choices=[('vacio', 'Vacio'), ('cargado', 'Cargado')], max_length=200, null=True, verbose_name='Estado')),
-                ('cantidad_vagones', models.CharField(max_length=10, validators=[django.core.validators.RegexValidator(code='numero_invalido', message='Solo se permiten números enteros (ej: 5, -10).', regex='^-?\\d+$')], verbose_name='Cantidad de vagones')),
+                ('cantidad_vagones', models.CharField(max_length=10, verbose_name='Cantidad de vagones')),
                 ('tipo_destino', models.CharField(choices=[('puerto', 'Puerto'), ('ac_ccd', 'Acceso comercial/CCD')], default='', max_length=50, verbose_name='Tipo de destino')),
                 ('destino', models.CharField(default='', max_length=40, verbose_name='Destino')),
                 ('producto', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='nomencladores.nom_producto', verbose_name='Producto')),
             ],
             options={
-                'verbose_name': 'Arrastre Pendiente',
-                'verbose_name_plural': 'Arrastres Pendientes',
-                'db_table': 'ufc_arrastre_pendientes',
+                'verbose_name': 'arrastre',
+                'verbose_name_plural': 'Arrastres',
             },
         ),
         migrations.CreateModel(

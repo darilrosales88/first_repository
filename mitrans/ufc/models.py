@@ -287,7 +287,7 @@ class Situado_Carga_Descarga(models.Model):
         ]
     )
     
-class ArrastrePendientes(models.Model):
+class arrastres(models.Model):
     
     TIPO_ORIGEN_DESTINO_CHOICES = [
         ('puerto', 'Puerto'),
@@ -356,13 +356,6 @@ class ArrastrePendientes(models.Model):
     cantidad_vagones = models.CharField(
         max_length=10, 
         verbose_name="Cantidad de vagones",
-        validators=[
-            RegexValidator(
-                regex='^-?\d+$',
-                message='Solo se permiten números enteros (ej: 5, -10).',
-                code='numero_invalido'
-            )
-        ]
     )
     
     tipo_destino = models.CharField(
@@ -377,14 +370,15 @@ class ArrastrePendientes(models.Model):
         max_length=40,
         verbose_name="Destino"
     )
-
+    
     class Meta:
-        verbose_name = "Arrastre Pendiente"
-        verbose_name_plural = "Arrastres Pendientes"
-        db_table = 'ufc_arrastre_pendientes'  # Nombre personalizado para la tabla en BD
-
+        verbose_name = "arrastre"
+        verbose_name_plural="Arrastres"
+    
+    
+    
     def __str__(self):
-        return f"Arrastre Pendiente #{self.id} - {self.origen} a {self.destino}"
+        return f"Arrastre Pendiente{self.id} - {self.origen}"
     
     
     

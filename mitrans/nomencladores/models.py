@@ -497,6 +497,7 @@ class nom_equipo_ferroviario(models.Model):
         ('centro', 'Centro'),
         ('occidente', 'Occidente'),
         )
+    #agregar si esta cogido
 
     territorio = models.CharField(max_length=10,choices=territ, default="-", verbose_name="Territorio",)
 

@@ -4,7 +4,7 @@ from rest_framework import viewsets,generics,permissions
 from rest_framework.pagination import PageNumberPagination
 #importacion de modelos
 from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados,en_trenes,producto_en_vagon
-from .models import por_situar_carga_descarga,Situado_Carga_Descarga,ArrastrePendientes
+from .models import por_situar_carga_descarga,Situado_Carga_Descarga,arrastres
 #importacion de serializadores asociados a los modelos
 from .serializers import vagon_cargado_descargado_filter,vagon_cargado_descargado_serializer,producto_vagon_serializer
 from .serializers import producto_vagon_cargado_descargado_filter,productos_vagones_cargados_descargados_serializer,en_trenes_serializer
@@ -395,7 +395,7 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
 
 #Voy a agregar los modulos de auditoria a los que hizo Karmal
 class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
-    queryset = por_situar_carga_descarga.objects.all()
+    queryset = por_situar_carga_descarga.objects.all().order_by("-id")
     serializer_class = PorSituarCargaDescargaSerializer
     filter_backends = [DjangoFilterBackend]
     
@@ -484,7 +484,7 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
 
 
 class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
-    queryset= Situado_Carga_Descarga.objects.all()
+    queryset= Situado_Carga_Descarga.objects.all().order_by("-id")
     serializer_class = SituadoCargaDescargaSerializers
     filter_backends = [DjangoFilterBackend]
     
@@ -568,7 +568,8 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
     
     
 class PendienteArrastreViewset(viewsets.ModelViewSet):
-    queryset = ArrastrePendientes.objects.all()
+    queryset = arrastres.objects.all()
+    a=arrastres.objects.create
     serializer_class = PendienteArrastreSerializer
     
     

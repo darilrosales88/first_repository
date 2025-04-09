@@ -92,166 +92,8 @@
       </tbody>
     </table>
 
-    <!-- Modal para agregar nuevos datos -->
-    <div v-if="showModal" class="modal-backdrop">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">
-            {{ isEditing ? "Editar Registro" : "Agregar nuevo registro" }}
-          </h5>
-          <button type="button" class="btn-close" @click="closeModal"></button>
-        </div>
-        <div class="modal-body">
-          <form @submit.prevent="isEditing ? updateItem() : addNewItem()">
-            <!-- Campos del formulario (igual que antes) -->
-            <div class="mb-3">
-              <label for="origen" class="form-label">Origen</label>
-              <select
-                class="form-select"
-                id="origen"
-                v-model="nuevoRegistro.tipo_origen"
-                required
-              >
-                <option value="">Seleccione un origen</option>
-                <option
-                  v-for="item in tipo_origen_options"
-                  :key="item.id"
-                  :value="item.id"
-                >
-                  {{ item.text }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="tipoEquipo" class="form-label">Tipo de equipo</label>
-              <select
-                class="form-select"
-                id="tipoEquipo"
-                v-model="nuevoRegistro.tipo_equipo"
-                required
-              >
-                <option value="">Seleccione un tipo</option>
-                <option
-                  v-for="item in tipo_equipo_options"
-                  :key="item.id"
-                  :value="item.id"
-                >
-                  {{ item.text }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="estado" class="form-label">Estado</label>
-              <select
-                class="form-select"
-                id="estado"
-                v-model="nuevoRegistro.estado"
-                required
-              >
-                <option value="">Seleccione un estado</option>
-                <option
-                  v-for="item in estado_options"
-                  :key="item.id"
-                  :value="item.id"
-                >
-                  {{ item.text }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="operacion" class="form-label">Operacion</label>
-              <select
-                class="form-select"
-                id="operacion"
-                v-model="nuevoRegistro.operacion"
-                required
-              >
-                <option value="">Seleccione una operación</option>
-                <option
-                  v-for="item in t_operacion_options"
-                  :key="item.id"
-                  :value="item.id"
-                >
-                  {{ item.text }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="producto" class="form-label">Producto</label>
-              <select
-                class="form-select"
-                id="producto"
-                v-model="nuevoRegistro.producto"
-                required
-              >
-                <option value="">Seleccione un producto</option>
-                <option
-                  v-for="item in producto_options"
-                  :key="item.id"
-                  :value="item.id"
-                >
-                  {{ item.producto }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="situados" class="form-label">Situados</label>
-              <input
-                type="text"
-                class="form-control"
-                id="situados"
-                v-model="nuevoRegistro.situados"
-                required
-              />
-            </div>
-
-            <div class="mb-3">
-              <label for="situados" class="form-label"
-                >Pendientes al proximo dia</label
-              >
-              <input
-                type="text"
-                class="form-control"
-                id="situados"
-                v-model="nuevoRegistro.pendiente_proximo_dia"
-                required
-              />
-            </div>
-
-            <button
-              style="margin-right: 1em"
-              type="submit"
-              class="btn btn-primary btn-sm"
-              :disabled="loading"
-            >
-              <span
-                v-if="loading"
-                class="spinner-border spinner-border-sm"
-                role="status"
-                aria-hidden="true"
-              ></span>
-              {{
-                isEditing
-                  ? loading
-                    ? "Actualizando..."
-                    : "Actualizar"
-                  : loading
-                  ? "Procesando..."
-                  : "Agregar"
-              }}
-            </button>
-            <button
-              type="button"
-              class="btn btn-secondary btn-sm"
-              @click="showModal = false"
-              :disabled="loading"
-            >
-              Cancelar
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
+    
+    
     <!-- Paginación mejorada -->
     <div class="d-flex justify-content-between align-items-center">
       <div class="text-muted small">
@@ -338,7 +180,7 @@ export default {
 
   mounted() {
     this.getPorSituar();
-    this.loadProductos();
+    
   },
 
   methods: {
@@ -376,31 +218,7 @@ export default {
     },
 
     // Cargar productos para el select
-    async loadProductos() {
-      try {
-        this.loading = true;
-        const response = await axios.get("/api/productos/", {
-          params: { limit: 100 },
-        });
-
-        if (
-          response.data &&
-          Array.isArray(response.data.results || response.data)
-        ) {
-          const productos = response.data.results || response.data;
-          this.producto_options = productos.map((p) => ({
-            id: p.id,
-            producto:
-              /*  p.codigo_producto || */
-              p.nombre_producto || p.descripcion || `Producto ${p.id}`,
-          }));
-        }
-      } catch (error) {
-        this.handleApiError(error, "cargar productos");
-      } finally {
-        this.loading = false;
-      }
-    },
+    
 
     // Buscar por tipo de equipo
     handleSearchInput() {
@@ -422,76 +240,12 @@ export default {
       }, 300);
     },
 
-    // Abrir modal para editar
-    openEditModal(item) {
-      this.isEditing = true;
-      this.currentItemId = item.id;
-      this.nuevoRegistro = { ...item };
-      this.showModal = true;
-    },
-
-    // Cerrar modal
-    closeModal() {
-      this.showModal = false;
-      this.isEditing = false;
-      this.currentItemId = null;
-      this.resetForm();
-    },
-
-    // Resetear formulario
-    resetForm() {
-      this.nuevoRegistro = {
-        tipo_origen: "",
-        tipo_equipo: "",
-        estado: "",
-        operacion: "",
-        producto: "",
-        situados: "",
-        pendiente_proximo_dia: "",
-      };
-    },
+    
 
     // Agregar nuevo registro
-    async addNewItem() {
-      try {
-        this.loading = true;
-        const response = await axios.post(
-          "http://127.0.0.1:8000/ufc/situados/",
-          this.nuevoRegistro
-        );
+    
 
-        if (response.status === 201) {
-          Swal.fire("Éxito", "Registro creado correctamente", "success");
-          this.closeModal();
-          await this.getPorSituar();
-        }
-      } catch (error) {
-        this.handleApiError(error, "crear registro");
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    // Actualizar registro existente
-    async updateItem() {
-      try {
-        this.loading = true;
-        const response = await axios.put(
-          `http://127.0.0.1:8000/ufc/situados/${this.currentItemId}/`,
-          this.nuevoRegistro
-        );
-
-        if (response.status === 200) {
-          Swal.fire("Éxito", "Registro actualizado correctamente", "success");
-          this.closeModal();
-          await this.getPorSituar();
-        }
-      } catch (error) {
-        this.handleApiError(error, "actualizar registro");
-      } finally {
-        this.loading = false;
-      }
-    },
+    
 
     // Confirmar eliminación
     async confirmDelete(id) {

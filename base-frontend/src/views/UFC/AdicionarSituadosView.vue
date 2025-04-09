@@ -23,6 +23,7 @@
                 id="tipo_origen"
                 name="tipo_origen"
                 required
+                :disabled="isSubmitting"
               >
                 <option value="ac_ccd">Acceso Comercial</option>
                 <option value="puerto">Puerto</option>
@@ -41,7 +42,9 @@
                 id="origen"
                 name="origen"
                 required
+                :disabled="isSubmitting"
               >
+                <option value="" disabled>Seleccione un origen</option>
                 <option
                   v-for="entidad in entidades"
                   :key="entidad.id"
@@ -58,7 +61,9 @@
                 id="origen"
                 name="origen"
                 required
+                :disabled="isSubmitting"
               >
+                <option value="" disabled>Seleccione un puerto</option>
                 <option
                   v-for="puerto in puertos"
                   :key="puerto.id"
@@ -79,10 +84,10 @@
                 v-model="formData.tipo_equipo"
                 id="tipo_equipo"
                 name="tipo_equipo"
-                @change="buscarEquipos"
                 required
+                :disabled="isSubmitting"
               >
-                <option value="">Seleccione un tipo</option>
+                <option value="" disabled>Seleccione un tipo</option>
                 <option
                   v-for="option in tipo_equipo_options"
                   :key="option.id"
@@ -104,6 +109,7 @@
                 id="estado"
                 name="estado"
                 required
+                :disabled="isSubmitting"
               >
                 <option value="cargado">Cargado</option>
                 <option value="vacio">Vacio</option>
@@ -120,8 +126,9 @@
                 id="operacion"
                 name="operacion"
                 required
+                :disabled="isSubmitting"
               >
-                <option value="">Seleccione una operación</option>
+                <option value="" disabled>Seleccione una operación</option>
                 <option
                   v-for="option in t_operacion_options"
                   :key="option.id"
@@ -142,6 +149,7 @@
                   <button
                   class="create-button ms-2"
                   @click.prevent="abrirModalAgregarProducto"
+                  :disabled="isSubmitting"
                   >
                   <i class="bi bi-plus-circle large-icon"></i>
                   </button>
@@ -149,12 +157,13 @@
               
               <template v-if="formData.estado === 'cargado'">
                   <select
-                  v-if="!loading"
+                  v-if="!loadingProducts"
                   class="form-select"
                   v-model="formData.producto"
                   id="producto"
                   name="producto"
                   required
+                  :disabled="isSubmitting"
                   >
                   <option value="" disabled>Seleccione un producto</option>
                   <option 
@@ -193,6 +202,7 @@
                   name="situados"
                   min="1"
                   required
+                  :disabled="isSubmitting"
               >
             </div>
 
@@ -209,6 +219,7 @@
                   name="pendiente_proximo_dia"
                   min="0"
                   required
+                  :disabled="isSubmitting"
               >
             </div>
 
@@ -223,6 +234,7 @@
                 id="observaciones"
                 name="observaciones"
                 rows="3"
+                :disabled="isSubmitting"
               ></textarea>
             </div>
           </div>
@@ -230,13 +242,22 @@
 
         <div class="text-center">
           <button 
-              type="button" 
+              type="submit" 
               class="btn btn-primary" 
-              @click="submitForm"
+              :disabled="isSubmitting"
               >
-              Agregar
+              <span v-if="isSubmitting">
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Procesando...
+              </span>
+              <span v-else>Agregar</span>
           </button>
-          <button @click="confirmCancel" class="btn btn-secondary">
+          <button 
+            type="button" 
+            @click="confirmCancel" 
+            class="btn btn-secondary ms-2"
+            :disabled="isSubmitting"
+          >
             Cancelar
           </button>
         </div>
@@ -252,286 +273,315 @@ import NavbarComponent from "@/components/NavbarComponent.vue";
 import ModalAgregarProducto from "@/components/ModalAgregarProducto.vue";
 
 export default {
-name: "AdicionarSituados",
-components: {
-  NavbarComponent,
-  ModalAgregarProducto,
-},
-data() {
-  return {
+  name: "AdicionarSituados",
+  components: {
+    NavbarComponent,
+    ModalAgregarProducto,
+  },
+  data() {
+    return {
       formData: {
-      tipo_origen: "ac_ccd",
-      origen: "",
-      tipo_equipo: "",
-      estado: "cargado",
-      operacion: "",
-      producto: "",
-      situados: 0,
-      pendiente_proximo_dia: 0,
-      observaciones: "",
-    },
-    entidades: [],
-    puertos: [],
-    productos: [],
-    mostrarModal: false,
-    loading: false,
-    tipo_equipo_options: [
-      { id: "casilla", text: "Casilla" },
-      { id: "caj_gon", text: "Cajon o Gondola" },
-    ],
-    t_operacion_options: [
-      { id: "carga", text: "Carga" },
-      { id: "descarga", text: "Descarga" },
-    ],
-  };
-},
-mounted() {
-  this.getProductos();
-  this.getEntidades();
-  this.getPuertos();
-},
-methods: {
-  async getEntidades() {
-    try {
-      const response = await axios.get("/api/entidades/");
-      this.entidades = response.data.results;
-    } catch (error) {
-      console.error("Error al obtener entidades:", error);
-      Swal.fire("Error", "No se pudieron obtener las entidades", "error");
-    }
-  },
-  
-  async getProductos() {
-    try {
-      this.loading = true;
-      const response = await axios.get("/api/productos/", {
-        params: { limit: 100 },
-      });
-
-      if (response.status === 200) {
-        this.productos = response.data.results.map(producto => ({
-          id: producto.id,
-          producto_name: producto.nombre_producto || producto.descripcion || `Producto ${producto.id}`,
-          producto_codigo: producto.codigo || 'N/A',
-          tipo_embalaje_name: producto.tipo_embalaje?.nombre || 'N/A'
-        }));
-      }
-    } catch (error) {
-      console.error("Error al obtener productos:", error);
-      let errorMsg = "Error al cargar productos";
-
-      if (error.response?.data?.detail) {
-        errorMsg += `: ${error.response.data.detail}`;
-      }
-
-      Swal.fire("Error", errorMsg, "error");
-    } finally {
-      this.loading = false;
-    }
-  },
-
-  async getPuertos() {
-    try {
-      let allPuertos = [];
-      let nextPage = "/api/puertos/";
-
-      while (nextPage) {
-        const response = await axios.get(nextPage);
-        allPuertos = [...allPuertos, ...response.data.results];
-        nextPage = response.data.next;
-      }
-
-      this.puertos = allPuertos;
-    } catch (error) {
-      console.error("Error al obtener los puertos:", error);
-      Swal.fire("Error", "Hubo un error al obtener los puertos.", "error");
-    }
-  },
-
-  abrirModalAgregarProducto() {
-    this.mostrarModal = true;
-  },
-  
-  cerrarModal() {
-    this.mostrarModal = false;
-    this.getProductos();
-  },
-  
-  async submitForm() {
-    try {
-      // Validación
-      const errors = [];
-      
-      if (!this.formData.origen) {
-        errors.push("El campo Origen es requerido");
-      }
-      
-      if (!this.formData.tipo_equipo) {
-        errors.push("El campo Tipo de Equipo es requerido");
-      }
-      
-      if (!this.formData.operacion) {
-        errors.push("El campo Operación es requerido");
-      }
-      
-      if (this.formData.estado === "cargado" && !this.formData.producto) {
-        errors.push("El campo Producto es requerido cuando el estado es Cargado");
-      }
-      
-      if (this.formData.situados === null || this.formData.situados < 0) {
-        errors.push("La cantidad de situados debe ser un número positivo");
-      }
-
-      if (this.formData.pendiente_proximo_dia === null || this.formData.pendiente_proximo_dia < 0) {
-        errors.push("Los pendientes al próximo día deben ser un número positivo");
-      }
-
-      if (errors.length > 0) {
-        throw new Error(errors.join("\n"));
-      }
-
-      // Preparar datos para enviar
-      const payload = {
-        tipo_origen: this.formData.tipo_origen,
-        origen: this.formData.origen,
-        tipo_equipo: this.formData.tipo_equipo,
-        estado: this.formData.estado,
-        operacion: this.formData.operacion,
-        producto: this.formData.producto,
-        situados: this.formData.situados,
-        pendiente_proximo_dia: this.formData.pendiente_proximo_dia,
-        observaciones: this.formData.observaciones
-      };
-
-      // Enviar datos al endpoint correcto
-      const response = await axios.post("http://127.0.0.1:8000/ufc/situados/", payload);
-
-      if (response.status === 201) {
-        Swal.fire({
-          title: "Éxito",
-          text: "Registro creado correctamente",
-          icon: "success",
-        }).then(() => {
-          this.resetForm();
-          this.$router.push({ name: "InfoOperativo" });
-        });
-      }
-    } catch (error) {
-      let errorMessage = "Error al crear el registro";
-      
-      if (error.message) {
-        errorMessage = error.message;
-      } else if (error.response?.data) {
-        errorMessage = Object.values(error.response.data).join("\n");
-      }
-      
-      Swal.fire("Error", errorMessage, "error");
-      console.error("Error al enviar el formulario:", error);
-    }
-  },
-  
-  resetForm() {
-    this.formData = {
-      tipo_origen: "ac_ccd",
-      origen: "",
-      tipo_equipo: "",
-      estado: "cargado",
-      operacion: "",
-      producto: "",
-      situados: 0,
-      pendiente_proximo_dia: 0,
-      observaciones: "",
+        tipo_origen: "ac_ccd",
+        origen: "",
+        tipo_equipo: "",
+        estado: "cargado",
+        operacion: "",
+        producto: "",
+        situados: 0,
+        pendiente_proximo_dia: 0,
+        observaciones: "",
+      },
+      entidades: [],
+      puertos: [],
+      productos: [],
+      mostrarModal: false,
+      loadingProducts: false,
+      isSubmitting: false,
+      tipo_equipo_options: [
+        { id: "casilla", text: "Casilla" },
+        { id: "caj_gon", text: "Cajon o Gondola" },
+      ],
+      t_operacion_options: [
+        { id: "carga", text: "Carga" },
+        { id: "descarga", text: "Descarga" },
+      ],
     };
   },
-  
-  confirmCancel() {
-    Swal.fire({
-      title: "¿Cancelar operación?",
-      text: "Los datos no guardados se perderán",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Sí, cancelar",
-      cancelButtonText: "No, continuar",
-    }).then((result) => {
+  mounted() {
+    this.getProductos();
+    this.getEntidades();
+    this.getPuertos();
+  },
+  methods: {
+    async getEntidades() {
+      try {
+        const response = await axios.get("/api/entidades/");
+        this.entidades = response.data.results;
+      } catch (error) {
+        console.error("Error al obtener entidades:", error);
+        Swal.fire("Error", "No se pudieron obtener las entidades", "error");
+      }
+    },
+    
+    async getProductos() {
+      try {
+        this.loadingProducts = true;
+        const response = await axios.get("/api/productos/", {
+          params: { limit: 100 },
+        });
+
+        if (response.status === 200) {
+          this.productos = response.data.results.map(producto => ({
+            id: producto.id,
+            producto_name: producto.nombre_producto || producto.descripcion || `Producto ${producto.id}`,
+            producto_codigo: producto.codigo || 'N/A',
+            tipo_embalaje_name: producto.tipo_embalaje?.nombre || 'N/A'
+          }));
+        }
+      } catch (error) {
+        console.error("Error al obtener productos:", error);
+        let errorMsg = "Error al cargar productos";
+
+        if (error.response?.data?.detail) {
+          errorMsg += `: ${error.response.data.detail}`;
+        }
+
+        Swal.fire("Error", errorMsg, "error");
+      } finally {
+        this.loadingProducts = false;
+      }
+    },
+
+    async getPuertos() {
+      try {
+        const response = await axios.get("/api/puertos/");
+        this.puertos = response.data.results;
+      } catch (error) {
+        console.error("Error al obtener los puertos:", error);
+        Swal.fire("Error", "Hubo un error al obtener los puertos.", "error");
+      }
+    },
+
+    abrirModalAgregarProducto() {
+      this.mostrarModal = true;
+    },
+    
+    cerrarModal() {
+      this.mostrarModal = false;
+      this.getProductos();
+    },
+    
+    async submitForm() {
+      this.isSubmitting = true;
+      try {
+        // Validación mejorada
+        const errors = [];
+        
+        if (!this.formData.origen) {
+          errors.push("El campo Origen es requerido");
+        }
+        
+        if (!this.formData.tipo_equipo) {
+          errors.push("El campo Tipo de Equipo es requerido");
+        }
+        
+        if (!this.formData.operacion) {
+          errors.push("El campo Operación es requerido");
+        }
+        
+        if (this.formData.estado === "cargado" && !this.formData.producto) {
+          errors.push("El campo Producto es requerido cuando el estado es Cargado");
+        }
+        
+        if (this.formData.situados === null || this.formData.situados < 1) {
+          errors.push("La cantidad de situados debe ser al menos 1");
+        }
+
+        if (this.formData.pendiente_proximo_dia === null || this.formData.pendiente_proximo_dia < 0) {
+          errors.push("Los pendientes al próximo día deben ser un número positivo");
+        }
+
+        if (errors.length > 0) {
+          throw new Error(errors.join("\n"));
+        }
+
+        // Preparar datos para enviar
+        const payload = {
+          tipo_origen: this.formData.tipo_origen,
+          origen: this.formData.origen,
+          tipo_equipo: this.formData.tipo_equipo,
+          estado: this.formData.estado,
+          operacion: this.formData.operacion,
+          producto: this.formData.producto,
+          situados: this.formData.situados,
+          pendiente_proximo_dia: this.formData.pendiente_proximo_dia,
+          observaciones: this.formData.observaciones
+        };
+
+        // Configuración de axios para manejar mejor los errores
+        const config = {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          validateStatus: function (status) {
+            return status >= 200 && status < 500;
+          }
+        };
+
+        // Enviar datos al endpoint
+        const response = await axios.post("http://127.0.0.1:8000/ufc/situados/", payload, config);
+
+        if (response.status === 201) {
+          await Swal.fire({
+            title: "Éxito",
+            text: "Registro creado correctamente",
+            icon: "success",
+          });
+          this.resetForm();
+          this.$router.push({ name: "InfoOperativo" });
+        } else {
+          let errorMessage = "Error al crear el registro";
+          if (response.data) {
+            // Procesar errores del backend
+            if (typeof response.data === 'string') {
+              errorMessage = response.data;
+            } else if (response.data.detail) {
+              errorMessage = response.data.detail;
+            } else if (response.data.non_field_errors) {
+              errorMessage = response.data.non_field_errors.join(", ");
+            } else {
+              errorMessage = Object.entries(response.data)
+                .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : value}`)
+                .join("\n");
+            }
+          }
+          throw new Error(errorMessage);
+        }
+      } catch (error) {
+        console.error("Error en submitForm:", error);
+        Swal.fire({
+          title: "Error",
+          text: error.message || "Ocurrió un error al procesar la solicitud",
+          icon: "error",
+        });
+      } finally {
+        this.isSubmitting = false;
+      }
+    },
+    
+    resetForm() {
+      this.formData = {
+        tipo_origen: "ac_ccd",
+        origen: "",
+        tipo_equipo: "",
+        estado: "cargado",
+        operacion: "",
+        producto: "",
+        situados: 0,
+        pendiente_proximo_dia: 0,
+        observaciones: "",
+      };
+    },
+    
+    async confirmCancel() {
+      const result = await Swal.fire({
+        title: "¿Cancelar operación?",
+        text: "Los datos no guardados se perderán",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, cancelar",
+        cancelButtonText: "No, continuar",
+        reverseButtons: true
+      });
+      
       if (result.isConfirmed) {
         this.resetForm();
         this.$router.push({ name: "InfoOperativo" });
       }
-    });
+    }
   }
-}
 };
 </script>
 
 <style scoped>
 .create-button {
-background: none;
-border: none;
-color: green;
-padding: 0;
-cursor: pointer;
+  background: none;
+  border: none;
+  color: green;
+  padding: 0;
+  cursor: pointer;
 }
 
 .create-button:hover {
-color: darkgreen;
+  color: darkgreen;
 }
 
 .large-icon {
-font-size: 1.2rem;
+  font-size: 1.2rem;
 }
 
 .form-container {
-max-width: 300px;
-margin: 50px;
-padding: 20px;
-background-color: #f9f9f9;
-border-radius: 8px;
-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 300px;
+  margin: 50px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 h2 {
-font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
-text-align: left;
-margin-bottom: 20px;
-font-size: 20px;
+  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  text-align: left;
+  margin-bottom: 20px;
+  font-size: 20px;
 }
 
 .form-group {
-text-align: left;
-display: flex;
-width: 260px;
-flex-direction: column;
-gap: 5px;
-font-size: 14px;
+  text-align: left;
+  display: flex;
+  width: 260px;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 14px;
 }
 
 label {
-font-weight: bold;
+  font-weight: bold;
 }
 
 input,
 select,
 textarea {
-padding: 8px;
-border: 1px solid #ccc;
-border-radius: 4px;
-width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
 }
 
 .btn {
-margin: 0 5px;
-padding: 8px 16px;
+  margin: 0 5px;
+  padding: 8px 16px;
 }
 
 .text-warning {
-color: #ffc107;
+  color: #ffc107;
 }
 
 .text-success {
-color: #28a745;
+  color: #28a745;
 }
 
 .text-danger {
-color: #dc3545;
+  color: #dc3545;
+}
+
+[disabled] {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.spinner-border {
+  vertical-align: text-top;
 }
 </style>

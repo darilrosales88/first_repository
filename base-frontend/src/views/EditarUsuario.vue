@@ -42,13 +42,33 @@
       </div>
 
       <div class="form-group">
-        <label for="password">Contraseña</label>
-        <input type="password" v-model="password" />
-      </div>
+      <label for="password">Contraseña (opcional)</label>
+      <input 
+        type="password" 
+        v-model="password" 
+        :class="{ 'input-error': !passwordsMatch && password && confirmPassword, 'input-success': passwordsMatch }"
+        placeholder="Dejar en blanco para no cambiar"
+      />
+    </div>
 
+    <div class="form-group">
+      <label for="confirmPassword">Confirmar contraseña (opcional)</label>
+      <input 
+        type="password" 
+        v-model="confirmPassword" 
+        :class="{ 'input-error': !passwordsMatch && password && confirmPassword, 'input-success': passwordsMatch }"
+        placeholder="Dejar en blanco para no cambiar"
+      />
+    </div>
+
+      <!-- campo rol añadido -->
       <div class="form-group">
-        <label for="confirmPassword">Confirmar contraseña</label>
-        <input type="password" v-model="confirmPassword" />
+        <label for="role">Rol</label>
+        <select v-model="role" required>
+          <option value="operador">Operador</option>
+          <option value="ufc">UFC</option>
+          <option value="admin">Administrador</option>
+        </select>
       </div>
 
       <!-- Contenedor principal para grupos y permisos -->
@@ -319,7 +339,8 @@ export default {
       entidad: '',
       entidades: [],
       cargo: '',
-      cargos: [],
+      cargos: [],      
+      role: 'operador', // Valor por defecto para el rol
       password: '',
       confirmPassword: '',
       groupsDisponibles: [],
@@ -374,7 +395,7 @@ export default {
     async fetchGroups() {
       try {
         const response = await axios.get('/apiAdmin/groups/');
-        this.groupsDisponibles = response.data;
+        this.groupsDisponibles = response.data.results;
       } catch (error) {
         console.error('Error al obtener los grupos:', error);
         Swal.fire('Error', 'No se pudieron cargar los grupos.', 'error');
@@ -392,7 +413,7 @@ export default {
     async getEntidades() {
       try {
         const response = await axios.get('/api/entidades/');
-        this.entidades = response.data;
+        this.entidades = response.data.results;
       } catch (error) {
         console.error('Error al obtener las entidades:', error);
       }
@@ -400,7 +421,7 @@ export default {
     async getCargos() {
       try {
         const response = await axios.get('/api/cargos/');
-        this.cargos = response.data;
+        this.cargos = response.data.results;
       } catch (error) {
         console.error('Error al obtener los cargos:', error);
       }
@@ -481,14 +502,17 @@ export default {
         valid = false;
       }
 
-      if (this.password && !password_regex.test(this.password)) {
-        Swal.fire('Error', 'La contraseña debe tener al menos 8 caracteres.', 'error');
-        valid = false;
-      }
+      // Validaciones condicionales para contraseña
+      if (this.password || this.confirmPassword) {
+        if (this.password && !password_regex.test(this.password)) {
+          Swal.fire('Error', 'La contraseña debe tener al menos 8 caracteres.', 'error');
+          valid = false;
+        }
 
-      if (this.password !== this.confirmPassword) {
-        Swal.fire('Error', 'Las contraseñas no coinciden.', 'error');
-        valid = false;
+        if (this.password !== this.confirmPassword) {
+          Swal.fire('Error', 'Las contraseñas no coinciden.', 'error');
+          valid = false;
+        }
       }
 
       return valid;
@@ -507,10 +531,12 @@ export default {
         email: this.email,
         entidad: this.entidad,
         cargo: this.cargo,
+        role: this.role,
         groups: this.groupsAsignados.map(g => g.id),
         user_permissions: this.permisosAsignados.map(p => p.id),
       };
 
+      // Solo incluir la contraseña si se proporcionó
       if (this.password) {
         userData.password = this.password;
       }

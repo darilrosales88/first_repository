@@ -57,7 +57,7 @@
           <td>{{ item.tipo_equipo }}</td>
           <td>{{ item.estado }}</td>
           <td>{{ item.operacion }}</td>
-          <td>{{ item.producto }}</td>
+          <td>{{ item.producto_name }}</td>
           <td>{{ item.por_situar }}</td>
 
           <td>
@@ -515,7 +515,7 @@ export default {
         if (response.status === 200) {
           this.producto_options = response.data.results.map((p) => ({
             id: p.id,
-            producto: p.nombre || p.descripcion || `Producto ${p.id}`,
+            producto: p.nombre_producto || p.descripcion || `Producto ${p.id}`,
           }));
         }
       } catch (error) {

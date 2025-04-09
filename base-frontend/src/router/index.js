@@ -666,6 +666,38 @@ const routes = [
       requireLogin: true,
     },
   },
+  {
+    path: "/AdicionarPorSituar",
+    name: "AdicionarPorSituar",
+    component: () => import("../views/UFC/AdicionarPorSituarView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/EditarPorSituar/:id",
+    name: "EditarPorSituar",
+    component: () => import("../views/UFC/EditarPorSituarView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/EditarSituados/:id",
+    name: "EditarSituados",
+    component: () => import("../views/UFC/EditarSituadosView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/AdicionarSituados",
+    name: "AdicionarSituados",
+    component: () => import("../views/UFC/AdicionarSituadosView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
 ];
 
 const router = createRouter({

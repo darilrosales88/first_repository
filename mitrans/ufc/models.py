@@ -183,6 +183,7 @@ class por_situar_carga_descarga(models.Model):
     )
     
     tipo_origen = models.CharField(max_length=100, choices=t_origen, verbose_name="Tipo de origen")
+    origen = models.CharField(max_length=200, verbose_name="Origen")
     
     t_equipo = (
         ('casilla', 'Casilla'),
@@ -226,6 +227,12 @@ class por_situar_carga_descarga(models.Model):
             )
         ]
     )
+    observaciones = models.TextField(
+        verbose_name="Observaciones",
+        help_text="Ingrese observaciones adicionales. Admite letras, números y caracteres especiales.",
+        blank=True,  # Permite que el campo esté vacío
+        null=True,   # Permite valores nulos en la base de datos
+    )
 
 class Situado_Carga_Descarga(models.Model):
     
@@ -235,6 +242,7 @@ class Situado_Carga_Descarga(models.Model):
     )
     
     tipo_origen = models.CharField(max_length=100, choices=t_origen, verbose_name="Tipo de origen", blank=True, null=True)
+    origen = models.CharField(max_length=200, verbose_name="Origen")
     
     t_equipo = (
         ('casilla', 'Casilla'),
@@ -285,6 +293,13 @@ class Situado_Carga_Descarga(models.Model):
                 code='numero_invalido'
             )
         ]
+    )
+    
+    observaciones = models.TextField(
+        verbose_name="Observaciones",
+        help_text="Ingrese observaciones adicionales. Admite letras, números y caracteres especiales.",
+        blank=True,  # Permite que el campo esté vacío
+        null=True,   # Permite valores nulos en la base de datos
     )
     
 class arrastres(models.Model):

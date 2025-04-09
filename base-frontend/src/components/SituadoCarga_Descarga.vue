@@ -3,8 +3,9 @@
     <!-- Fila para el icono y el buscador -->
     <div class="d-flex justify-content-between align-items-center mb-3">
       <!-- Icono de agregar (a la izquierda) -->
-      <button class="btn btn-link p-0" @click="showModal = true">
-        <i class="bi bi-plus-circle fs-3"></i>
+      <button class="btn btn-link p-0">
+        <router-link to="/AdicionarSituados"><i class="bi bi-plus-circle fs-3"></i></router-link>
+        
         <!-- Icono grande -->
       </button>
 
@@ -63,11 +64,12 @@
           <td>{{ item.pendiente_proximo_dia }}</td>
 
           <td>
-            <button
-              class="btn btn-warning btn-small"
-              @click="openEditModal(item)"
-            >
-              <i style="color: black" class="bi bi-pencil-square"></i>
+            <button class="btn btn-warning btn-small">
+              <router-link
+                    :to="{ name: 'EditarSituados', params: { id: item.id } }"
+                  >
+                    <i style="color: black" class="bi bi-pencil-square"></i>
+                  </router-link>
             </button>
             <button
               style="margin-left: 1em"

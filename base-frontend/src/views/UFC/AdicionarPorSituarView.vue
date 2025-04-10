@@ -212,16 +212,15 @@
             </div>
           </div>
         </div>
-
-        <div class="text-center">
-          <button type="button" class="btn btn-primary" @click="submitForm">
-            Agregar
-          </button>
-          <button @click="confirmCancel" class="btn btn-secondary">
-            Cancelar
-          </button>
-        </div>
       </form>
+      <div class="text-center">
+        <button type="button" class="btn btn-primary" @click="submitForm">
+          Agregar
+        </button>
+        <button type="menu" @click="confirmCancel" class="btn btn-secondary">
+          Cancelar
+        </button>
+      </div>
     </div>
 
     <!-- Segunda fila: Lista de vagones -->
@@ -422,6 +421,7 @@ export default {
     },
 
     confirmCancel() {
+      this.resetForm();
       Swal.fire({
         title: "¿Cancelar operación?",
         text: "Los datos no guardados se perderán",
@@ -431,7 +431,6 @@ export default {
         cancelButtonText: "No, continuar",
       }).then((result) => {
         if (result.isConfirmed) {
-          this.resetForm();
           this.$router.push({ name: "InfoOperativo" });
         }
       });

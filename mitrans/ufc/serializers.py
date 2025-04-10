@@ -259,7 +259,7 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
     producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
     class Meta:
         model = por_situar_carga_descarga  # Usa "=", no ":"
-        fields = ('id','tipo_origen', 'tipo_equipo', 'estado', 'operacion', 'producto', 'por_situar','producto_name')
+        fields = ('tipo_origen', 'origen','tipo_equipo', 'estado', 'operacion', 'producto', 'por_situar','producto_name')
         filterset_class = PorSituarCargaDescargaFilter
         
 

@@ -179,7 +179,7 @@ class por_situar_carga_descarga(models.Model):
     
     t_origen = (
         ('puerto', 'Puerto'),
-        ('acceso comercial', 'Acceso Comercial')
+        ('ac_ccd', 'Acceso Comercial')
     )
     
     tipo_origen = models.CharField(max_length=100, choices=t_origen, verbose_name="Tipo de origen")

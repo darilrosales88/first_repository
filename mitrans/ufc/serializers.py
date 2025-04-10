@@ -5,7 +5,7 @@ from django_filters import rest_framework as filters
 from django.db.models import Q
 from nomencladores.models import nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_tipo_equipo_ferroviario
 from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados, en_trenes,nom_equipo_ferroviario, producto_en_vagon
-from .models import por_situar_carga_descarga,Situado_Carga_Descarga,arrastres
+from .models import por_situar,Situado_Carga_Descarga,arrastres
 
 #para cada modelo del que deseemos realizar el filtrado debemos hacer un filtrado
 #nom_pais_filter es una clase que se implementa para definir sobre qué campos quiero filtrar los registros de mi API, 
@@ -233,7 +233,7 @@ class SituadoCargaDescargaFilter(filters.FilterSet):
     
     
     class Meta:
-        model = por_situar_carga_descarga
+        model = por_situar
         fields = ['tipo_equipo']  # Campos filtrables
         
         
@@ -251,14 +251,14 @@ class PorSituarCargaDescargaFilter(filters.FilterSet):
     tipo_equipo = filters.CharFilter(lookup_expr='icontains')  # Filtro exacto (puedes usar 'icontains' para parcial
     
     class Meta:
-        model = por_situar_carga_descarga
+        model = por_situar
         fields = ['tipo_equipo']  # Campos filtrables
 
 
 class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
     producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
     class Meta:
-        model = por_situar_carga_descarga  # Usa "=", no ":"
+        model = por_situar  # Usa "=", no ":"
         fields = ('tipo_origen', 'origen','tipo_equipo', 'estado', 'operacion', 'producto', 'por_situar','producto_name')
         filterset_class = PorSituarCargaDescargaFilter
         

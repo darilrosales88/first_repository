@@ -175,7 +175,7 @@ class en_trenes(models.Model):
 
 
 
-class por_situar_carga_descarga(models.Model):
+class por_situar(models.Model):
     
     t_origen = (
         ('puerto', 'Puerto'),
@@ -186,7 +186,7 @@ class por_situar_carga_descarga(models.Model):
     origen = models.CharField(max_length=200, verbose_name="Origen")
     
     t_equipo = (
-        ('casilla', 'Casilla'),2
+        ('casilla', 'Casilla'),
         ('caj_gon', 'Cajones o Góndola'),
         ('planc_plat', 'Plancha o Plataforma'),
         ('Plan_porta_cont', 'Plancha porta contenedores'),

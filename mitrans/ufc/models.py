@@ -186,7 +186,7 @@ class por_situar_carga_descarga(models.Model):
     origen = models.CharField(max_length=200, verbose_name="Origen")
     
     t_equipo = (
-        ('casilla', 'Casilla'),
+        ('casilla', 'Casilla'),2
         ('caj_gon', 'Cajones o Góndola'),
         ('planc_plat', 'Plancha o Plataforma'),
         ('Plan_porta_cont', 'Plancha porta contenedores'),

@@ -25,6 +25,9 @@ from django.db.models import Q
 from django.utils import timezone
 #para usar el or
 
+#Actualizando el ModelViewSet para usar diferentes permisos según la acción
+from .permissions import IsAdminUFCPermission,IsVisualizadorUFCPermission
+
 
 
 # Verifica si el usuario tiene el rol "ufc"
@@ -217,9 +220,17 @@ class en_trenes_view_set(viewsets.ModelViewSet):
     queryset = en_trenes.objects.all().order_by('-id') # Definir el queryset
     serializer_class = en_trenes_serializer
     pagination_class = en_trenes_paginator
-    permission_classes = [IsUFCPermission]
     ordering_fields = ['id'] 
     ordering = ['-id']  # Orden por defecto (descendente por id)
+    
+    #asignando a permission_classes los permisos asociados al usuario
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            permission_classes = [IsAdminUFCPermission]
+        else:  # list, retrieve
+            permission_classes = [IsVisualizadorUFCPermission]
+        return [permission() for permission in permission_classes]
+
     def get_queryset(self):
         queryset = super().get_queryset()
         search_term = self.request.query_params.get('origen_destino', None)
@@ -230,12 +241,18 @@ class en_trenes_view_set(viewsets.ModelViewSet):
             Q(origen__icontains=search_term) |
             Q(destino__icontains=search_term)|
             Q(producto__producto__nombre_producto__icontains=search_term)|
-            Q(numero_identificacion_locomotora__icontains=search_term)
-            
-)
+            Q(numero_identificacion_locomotora__icontains=search_term)         
+     )
         return queryset
 
     def create(self, request, *args, **kwargs):
+        #si no esta en el grupo AdminUFC no puede haver la accion
+        if not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         objeto_en_trenes = serializer.save()
@@ -254,6 +271,11 @@ class en_trenes_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -273,6 +295,12 @@ class en_trenes_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         instance = self.get_object()
         id_objeto_en_trenes = instance.id
 
@@ -290,6 +318,13 @@ class en_trenes_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        #si no pertenece a VisualizadorUFC o AdminUFC no puede realizar la accion
+        if not request.user.groups.filter(name='AdminUFC').exists() and not request.user.groups.filter(name='VisualizadorUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')

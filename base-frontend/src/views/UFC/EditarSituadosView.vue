@@ -32,44 +32,8 @@
   
               <!-- Campo: origen -->
               <div class="mb-3">
-                <label for="origen" class="form-label"
-                  >Origen <span style="color: red">*</span></label
-                >
-                <select
-                  v-if="formData.tipo_origen !== 'puerto'"
-                  class="form-select"
-                  v-model="formData.origen"
-                  id="origen"
-                  name="origen"
-                  required
-                  :disabled="loading"
-                >
-                  <option
-                    v-for="entidad in entidades"
-                    :key="entidad.id"
-                    :value="entidad.id"
-                  >
-                    {{ entidad.id }}-{{ entidad.nombre }}
-                  </option>
-                </select>
-  
-                <select
-                  v-else
-                  class="form-select"
-                  v-model="formData.origen"
-                  id="origen"
-                  name="origen"
-                  required
-                  :disabled="loading"
-                >
-                  <option
-                    v-for="puerto in puertos"
-                    :key="puerto.id"
-                    :value="puerto.id"
-                  >
-                    {{ puerto.id }}- {{ puerto.nombre_puerto }}
-                  </option>
-                </select>
+                        <label for="nombre" class="form-label">Origen:<span style="color: red;">*</span></label>
+                        <input type="text" class="form-control" id="nombre" v-model="formData.origen" required />
               </div>
   
               <!-- Campo: tipo_equipo -->
@@ -297,6 +261,10 @@
           { id: "carga", text: "Carga" },
           { id: "descarga", text: "Descarga" },
         ],
+        tipo_origen_options: [
+        { id: 'puerto', text: 'Puerto' },
+        { id: 'acceso comercial', text: 'Acceso Comercial' }
+      ],
       };
     },
     created() {
@@ -348,33 +316,24 @@
       },
       
       async getProductos() {
-        try {
-          this.loading = true;
-          const response = await axios.get("/api/productos/", {
-            params: { limit: 100 },
-          });
-  
-          if (response.status === 200) {
-            this.productos = response.data.results.map(producto => ({
-              id: producto.id,
-              producto_name: producto.nombre_producto || producto.descripcion || `Producto ${producto.id}`,
-              producto_codigo: producto.codigo || 'N/A',
-              tipo_embalaje_name: producto.tipo_embalaje?.nombre || 'N/A'
-            }));
-          }
-        } catch (error) {
-          console.error("Error al obtener productos:", error);
-          let errorMsg = "Error al cargar productos";
-  
-          if (error.response?.data?.detail) {
-            errorMsg += `: ${error.response.data.detail}`;
-          }
-  
-          Swal.fire("Error", errorMsg, "error");
-        } finally {
-          this.loading = false;
+      try {
+        let allProductos = [];
+        let nextPage = "/ufc/producto-vagon/"; // URL inicial
+
+        while (nextPage) {
+          const response = await axios.get(nextPage);
+          allProductos = [...allProductos, ...response.data.results];
+
+          // Actualiza nextPage con la URL de la siguiente página (null si no hay más)
+          nextPage = response.data.next;
         }
-      },
+
+        this.productos = allProductos;
+      } catch (error) {
+        console.error("Error al obtener los productos:", error);
+        Swal.fire("Error", "Hubo un error al obtener los productos.", "error");
+      }
+    },
   
       async getPuertos() {
         try {

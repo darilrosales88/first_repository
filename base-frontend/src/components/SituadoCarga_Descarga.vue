@@ -33,6 +33,7 @@
       <thead>
         <tr>
           <th scope="col">#</th>
+          <th scope="col">Tipo de origen</th>
           <th scope="col">Origen</th>
           <th scope="col">Tipo de equipo</th>
           <th scope="col">Estado</th>
@@ -56,10 +57,11 @@
         <tr v-for="(item, index) in registrosPorSituar" :key="item.id">
           <th scope="row">{{ index + 1 }}</th>
           <td>{{ item.tipo_origen }}</td>
+          <td>{{ item.origen }}</td>
           <td>{{ item.tipo_equipo }}</td>
           <td>{{ item.estado }}</td>
           <td>{{ item.operacion }}</td>
-          <td>{{ item.producto }}</td>
+          <td>{{ item.producto_name }}</td>
           <td>{{ item.situados }}</td>
           <td>{{ item.pendiente_proximo_dia }}</td>
 
@@ -148,23 +150,7 @@ export default {
       itemsPerPage: 10,
 
       // Opciones para los selects
-      tipo_origen_options: [
-        { id: "puerto", text: "Puerto" },
-        { id: "acceso comercial", text: "Acceso Comercial" },
-      ],
-      tipo_equipo_options: [
-        { id: "casilla", text: "Casilla" },
-        { id: "caj_gon", text: "Cajon o Gondola" },
-      ],
-      estado_options: [
-        { id: "vacio", text: "Vacio" },
-        { id: "cargado", text: "Cargado" },
-      ],
-      t_operacion_options: [
-        { id: "carga", text: "Carga" },
-        { id: "descarga", text: "Descarga" },
-      ],
-      producto_options: [],
+      
 
       nuevoRegistro: {
         tipo_origen: "",
@@ -174,6 +160,7 @@ export default {
         producto: "",
         situados: "",
         pendiente_proximo_dia: "",
+        origen: '',
       },
     };
   },

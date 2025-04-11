@@ -283,35 +283,29 @@ export default {
 
     async getProductos() {
       try {
-        this.loading = true;
-        const response = await axios.get("/api/productos/", {
-          params: { limit: 100 },
-        });
+        let allProductos = [];
+        let nextPage = "/ufc/producto-vagon/"; // URL inicial
 
-        if (response.status === 200) {
-          // Mapeamos los datos del backend al formato que espera el select
-          this.productos = response.data.results.map((producto) => ({
-            id: producto.id,
-            producto_name:
-              producto.nombre_producto ||
-              producto.descripcion ||
-              `Producto ${producto.id}`,
-            producto_codigo: producto.codigo || "N/A",
-            tipo_embalaje_name: producto.tipo_embalaje?.nombre || "N/A",
-          }));
+        while (nextPage) {
+          const response = await axios.get(nextPage);
+          allProductos = [...allProductos, ...response.data.results];
+
+          // Actualiza nextPage con la URL de la siguiente página (null si no hay más)
+          nextPage = response.data.next;
         }
+
+        this.productos = allProductos;
       } catch (error) {
-        console.error("Error al obtener productos:", error);
-        let errorMsg = "Error al cargar productos";
-
-        if (error.response?.data?.detail) {
-          errorMsg += `: ${error.response.data.detail}`;
-        }
-
-        Swal.fire("Error", errorMsg, "error");
-      } finally {
-        this.loading = false;
+        console.error("Error al obtener los productos:", error);
+        Swal.fire("Error", "Hubo un error al obtener los productos.", "error");
       }
+    },
+    abrirModalAgregarProducto() {
+      this.mostrarModal = true;
+    },
+    cerrarModal() {
+      this.mostrarModal = false;
+      this.getProductos();
     },
 
     async getPuertos() {

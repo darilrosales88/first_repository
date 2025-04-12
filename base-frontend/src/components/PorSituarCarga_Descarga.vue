@@ -204,24 +204,23 @@ export default {
   },
 
   methods: {
-    async getPorSituar() {
-      this.loading = true;
-      this.errorLoading = false;
-      try {
-        const response = await axios.get("http://127.0.0.1:8000/ufc/por-situar/");
-        this.allRecords = Array.isArray(response.data) ? response.data : response.data.results || [];
-        this.registrosPorSituar = [...this.allRecords];
-      } catch (error) {
-        console.error("Error al cargar datos:", error);
-        this.errorLoading = true;
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudieron cargar los datos. Por favor, intente nuevamente.',
+     getPorSituar() {
+      this.loading = true; // Activar estado de carga
+      axios.get('http://127.0.0.1:8000/ufc/por-situar/')
+        .then((response) => {
+          this.registrosPorSituar = response.data.results; // Asignar a la variable correcta
+          this.loading = false; // Desactivar carga
+        })
+        .catch((error) => {
+          console.error("Error al obtener datos:", error);
+          this.errorLoading = true;
+          this.loading = false;
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudieron cargar los registros. Por favor, intente más tarde.',
+          });
         });
-      } finally {
-        this.loading = false;
-      }
     },
 
     async viewDetails(item) {
@@ -270,15 +269,25 @@ export default {
           Swal.fire("Eliminado", "El registro ha sido eliminado", "success");
           await this.getPorSituar();
         } catch (error) {
-          let errorMsg = 'Error al eliminar el registro';
-          if (error.response?.status === 404) {
-            errorMsg = 'El registro no existe o ya fue eliminado';
-          }
-          Swal.fire("Error", errorMsg, "error");
+          this.handleApiError(error, "eliminar registro");
         } finally {
           this.loading = false;
         }
       }
+    },
+
+    handleApiError(error, action) {
+      let errorMsg = `Error al ${action}`;
+      if (error.response) {
+        errorMsg += ` (${error.response.status})`;
+        if (error.response.data) {
+          errorMsg += `: ${JSON.stringify(error.response.data)}`;
+        }
+      } else {
+        errorMsg += `: ${error.message}`;
+      }
+      console.error(errorMsg, error);
+      Swal.fire("Error", errorMsg, "error");
     },
 
     handleSearchInput() {
@@ -288,9 +297,7 @@ export default {
       }, 300);
     },
 
-    search_por_situar() {
-      // No es necesario hacer nada aquí ya que filteredRecords es computado
-    },
+    
 
     formatDate(dateString) {
       if (!dateString) return 'N/A';

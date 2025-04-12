@@ -24,7 +24,7 @@
                 name="tipo_origen"
                 required
               >
-                <option value="ac_ccd">Acceso Comercial</option>
+                <option value="acceso comercial">Acceso Comercial</option>
                 <option value="puerto">Puerto</option>
               </select>
             </div>

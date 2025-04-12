@@ -25,7 +25,7 @@
                   required
                   :disabled="loading"
                 >
-                  <option value="ac_ccd">Acceso Comercial</option>
+                  <option value="acceso comercial">Acceso Comercial</option>
                   <option value="puerto">Puerto</option>
                 </select>
               </div>
@@ -220,7 +220,7 @@ export default {
     return {
       formData: {
         id: null,
-        tipo_origen: "ac_ccd",
+        tipo_origen: "",
         origen: "",
         tipo_equipo: "",
         estado: "cargado",
@@ -258,7 +258,7 @@ export default {
     async cargarRegistro() {
   this.loading = true;
   try {
-    const response = await axios.get(`/api/por-situar/${this.registroId}/`);
+    const response = await axios.get(`http://127.0.0.1:8000/ufc/por-situar/${this.registroId}/`);
     const registro = response.data;
     
     // Mapear los datos del registro al formulario

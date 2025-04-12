@@ -1,6 +1,6 @@
 <template>
   <div style="background-color: #002a68; color: white; text-align: right">
-    <h6>Bienvenido:</h6>
+    <h6>Partes UFC</h6>
   </div>
   <Navbar-Component />
   <Producto-Vagones />

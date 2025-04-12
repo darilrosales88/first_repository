@@ -238,7 +238,7 @@ class SituadoCargaDescargaFilter(filters.FilterSet):
         
         
 class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
-    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
+    producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')
     class Meta:
         model = Situado_Carga_Descarga
         fields = ('id','tipo_origen','origen', 'tipo_equipo', 'estado', 'operacion', 'producto','producto_name', 'situados','pendiente_proximo_dia')
@@ -256,7 +256,7 @@ class PorSituarCargaDescargaFilter(filters.FilterSet):
 
 
 class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
-    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
+    producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')
     class Meta:
         model = por_situar  # Usa "=", no ":"
         fields = ('id','tipo_origen', 'origen','tipo_equipo', 'estado', 'operacion', 'producto', 'por_situar','producto_name')

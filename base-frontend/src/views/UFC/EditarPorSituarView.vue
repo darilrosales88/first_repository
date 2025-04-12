@@ -1,6 +1,6 @@
 <template>
     <div style="background-color: #002a68; color: white; text-align: right">
-      <h6>Bienvenido:</h6>
+      <h6>Partes UFC</h6>
     </div>
     <Navbar-Component />
     <Producto-Vagones />
@@ -159,7 +159,7 @@
                 <input
                     type="number"
                     class="form-control"
-                    v-model.number="formData.cantidad_vagones"
+                    v-model.number="formData.por_situar"
                     id="cantidad_vagones"
                     name="cantidad_vagones"
                     min="1"
@@ -226,7 +226,7 @@ export default {
         estado: "cargado",
         operacion: "",
         producto: "",
-        cantidad_vagones: 1,
+        por_situar: 1,
         observaciones: "",
       },
       entidades: [],
@@ -270,7 +270,7 @@ export default {
       estado: registro.estado,
       operacion: registro.operacion,
       producto: registro.producto?.id || registro.producto, // Depende de cómo venga de la API
-      cantidad_vagones: registro.cantidad_por_situar,
+      por_situar: registro.por_situar,
       observaciones: registro.observaciones,
     };
     
@@ -309,7 +309,7 @@ export default {
     async getProductos() {
       try {
         this.loading = true;
-        const response = await axios.get("/api/productos/", {
+        const response = await axios.get("/ufc/producto-vagon/", {
           params: { limit: 100 },
         });
 
@@ -385,11 +385,11 @@ export default {
           errors.push("El campo Producto es requerido cuando el estado es Cargado");
         }
         
-        if (!this.formData.cantidad_vagones || this.formData.cantidad_vagones < 1) {
-          errors.push("La cantidad de vagones debe ser al menos 1");
+        if (!this.formData.por_situar || this.formData.por_situar < 1) {
+          errors.push("La cantidad debe ser al menos 1");
         }
 
-        if (!['ac_ccd', 'puerto'].includes(this.formData.tipo_origen)) {
+        if (!['acceso comercial', 'puerto'].includes(this.formData.tipo_origen)) {
           errors.push("Tipo de origen no válido");
         }
 
@@ -405,12 +405,12 @@ export default {
           estado: this.formData.estado,
           operacion: this.formData.operacion,
           producto: this.formData.producto,
-          cantidad_por_situar: this.formData.cantidad_vagones,
+          por_situar: this.formData.por_situar,
           observaciones: this.formData.observaciones
         };
 
         // Enviar datos para actualizar (PUT)
-        const response = await axios.put(`/api/por-situar/${this.registroId}/`, payload);
+        const response = await axios.put(`http://127.0.0.1:8000/ufc/por-situar/${this.registroId}/`, payload);
 
         if (response.status === 200) {
           Swal.fire({

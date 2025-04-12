@@ -25,7 +25,7 @@
                 required
                 :disabled="isSubmitting"
               >
-                <option value="ac_ccd">Acceso Comercial</option>
+                <option value="acceso comercial">Acceso Comercial</option>
                 <option value="puerto">Puerto</option>
               </select>
             </div>
@@ -243,7 +243,7 @@ export default {
   data() {
     return {
       formData: {
-        tipo_origen: "ac_ccd",
+        tipo_origen: "",
         origen: "",
         tipo_equipo: "",
         estado: "cargado",
@@ -425,7 +425,7 @@ export default {
     
     resetForm() {
       this.formData = {
-        tipo_origen: "ac_ccd",
+        tipo_origen: "",
         origen: "",
         tipo_equipo: "",
         estado: "cargado",

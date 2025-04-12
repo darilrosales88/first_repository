@@ -31,43 +31,9 @@
 
             <!-- Campo: origen -->
             <div class="mb-3">
-              <label for="origen" class="form-label"
-                >Origen <span style="color: red">*</span></label
-              >
-              <select
-                v-if="formData.tipo_origen !== 'puerto'"
-                class="form-select"
-                v-model="formData.origen"
-                id="origen"
-                name="origen"
-                required
-              >
-                <option
-                  v-for="entidad in entidades"
-                  :key="entidad.id"
-                  :value="entidad.id"
-                >
-                  {{ entidad.id }}-{{ entidad.nombre }}
-                </option>
-              </select>
-
-              <select
-                v-else
-                class="form-select"
-                v-model="formData.origen"
-                id="origen"
-                name="origen"
-                required
-              >
-                <option
-                  v-for="puerto in puertos"
-                  :key="puerto.id"
-                  :value="puerto.id"
-                >
-                  {{ puerto.id }}- {{ puerto.nombre_puerto }}
-                </option>
-              </select>
-            </div>
+          <label for="nombre" class="form-label">Nombre:<span style="color: red;">*</span></label>
+          <input type="text" class="form-control" id="nombre" v-model="formData.origen" required />
+        </div>
 
             <!-- Campo: tipo_equipo -->
             <div class="mb-3">
@@ -242,7 +208,7 @@ export default {
   data() {
     return {
       formData: {
-        tipo_origen: "ac_ccd", // Asegúrate que este valor coincide con tus opciones
+        tipo_origen: "", // Asegúrate que este valor coincide con tus opciones
         origen: "",
         tipo_equipo: "",
         estado: "cargado",
@@ -403,7 +369,7 @@ export default {
 
     resetForm() {
       this.formData = {
-        tipo_origen: "ac_ccd",
+        tipo_origen: "",
         origen: "",
         tipo_equipo: "",
         estado: "cargado",

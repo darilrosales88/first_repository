@@ -32,45 +32,9 @@
   
               <!-- Campo: origen -->
               <div class="mb-3">
-                <label for="origen" class="form-label"
-                  >Origen <span style="color: red">*</span></label
-                >
-                <select
-                  v-if="formData.tipo_origen !== 'puerto'"
-                  class="form-select"
-                  v-model="formData.origen"
-                  id="origen"
-                  name="origen"
-                  required
-                  :disabled="loading"
-                >
-                  <option
-                    v-for="entidad in entidades"
-                    :key="entidad.id"
-                    :value="entidad.id"
-                  >
-                    {{ entidad.id }}-{{ entidad.nombre }}
-                  </option>
-                </select>
-  
-                <select
-                  v-else
-                  class="form-select"
-                  v-model="formData.origen"
-                  id="origen"
-                  name="origen"
-                  required
-                  :disabled="loading"
-                >
-                  <option
-                    v-for="puerto in puertos"
-                    :key="puerto.id"
-                    :value="puerto.id"
-                  >
-                    {{ puerto.id }}- {{ puerto.nombre_puerto }}
-                  </option>
-                </select>
-              </div>
+          <label for="nombre" class="form-label">Nombre:<span style="color: red;">*</span></label>
+          <input type="text" class="form-control" id="nombre" v-model="formData.origen" required />
+        </div>
   
               <!-- Campo: tipo_equipo -->
               <div class="mb-3">
@@ -292,31 +256,45 @@ export default {
   },
   methods: {
     async cargarRegistro() {
-      this.loading = true;
-      try {
-        const response = await axios.get(`/api/por-situar/${this.registroId}/`);
-        const registro = response.data;
-        
-        // Mapear los datos del registro al formulario
-        this.formData = {
-          id: registro.id,
-          tipo_origen: registro.tipo_origen,
-          origen: registro.origen,
-          tipo_equipo: registro.tipo_equipo,
-          estado: registro.estado,
-          operacion: registro.operacion,
-          producto: registro.producto,
-          cantidad_vagones: registro.cantidad_por_situar,
-          observaciones: registro.observaciones,
-        };
-      } catch (error) {
-        console.error("Error al cargar el registro:", error);
-        Swal.fire("Error", "No se pudo cargar el registro para editar", "error");
-        this.$router.push({ name: "InfoOperativo" });
-      } finally {
-        this.loading = false;
-      }
-    },
+  this.loading = true;
+  try {
+    const response = await axios.get(`/api/por-situar/${this.registroId}/`);
+    const registro = response.data;
+    
+    // Mapear los datos del registro al formulario
+    this.formData = {
+      id: registro.id,
+      tipo_origen: registro.tipo_origen,
+      origen: registro.origen,
+      tipo_equipo: registro.tipo_equipo, // Asegúrate que el nombre coincide con la API
+      estado: registro.estado,
+      operacion: registro.operacion,
+      producto: registro.producto?.id || registro.producto, // Depende de cómo venga de la API
+      cantidad_vagones: registro.cantidad_por_situar,
+      observaciones: registro.observaciones,
+    };
+    
+    // Forzar actualización del select de productos si es necesario
+    if (this.formData.producto && this.formData.estado === 'cargado') {
+      await this.getProductos();
+    }
+  } catch (error) {
+    console.error("Error al cargar el registro:", error);
+    let errorMsg = "No se pudo cargar el registro para editar";
+    
+    if (error.response?.status === 404) {
+      errorMsg = "El registro no existe o fue eliminado";
+    } else if (error.response?.data?.detail) {
+      errorMsg += `: ${error.response.data.detail}`;
+    }
+    
+    Swal.fire("Error", errorMsg, "error").then(() => {
+      this.$router.push({ name: "InfoOperativo" });
+    });
+  } finally {
+    this.loading = false;
+  }
+},
     
     async getEntidades() {
       try {

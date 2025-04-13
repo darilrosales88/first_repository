@@ -5,8 +5,7 @@ from django.core.validators import RegexValidator
 
 
 
-#productos asociados a vagones cargados/descargados
-
+#productos asociados a vagones en trenes
 class producto_en_vagon(models.Model):
    
     ESTADO_CHOICES = [
@@ -34,6 +33,8 @@ class producto_en_vagon(models.Model):
     
     def __str__(self):
         return f"tipo de producto {self.get_contiene_display()} - {self.producto.nombre_producto}"
+    
+#productos asociados al estado vagones cargados/descargados
 class productos_vagones_cargados_descargados(models.Model):
     TIPO_PROD_CHOICES = [
         ('producto', 'Producto'),
@@ -67,7 +68,7 @@ class productos_vagones_cargados_descargados(models.Model):
     def __str__(self):
         return f"tipo de producto {self.get_tipo_producto_display()} - {self.producto.nombre_producto}"
 
-# Modelo para representar los vagones cargados/descargados
+# Modelo para representar el estado vagones cargados/descargados
 class vagon_cargado_descargado(models.Model):
     TIPO_ORIGEN_DESTINO_CHOICES = [
         ('puerto', 'Puerto'),
@@ -99,15 +100,13 @@ class vagon_cargado_descargado(models.Model):
     tipo_destino = models.CharField(choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
     destino = models.CharField(max_length=40)
     causas_incumplimiento = models.TextField(null=True, blank=True, max_length = 100)
-    producto = models.ForeignKey(productos_vagones_cargados_descargados, on_delete=models.CASCADE)
+    # Cambiamos ForeignKey a ManyToManyField, es posible que un vagon tenga mas de un producto
+    producto = models.ManyToManyField(productos_vagones_cargados_descargados)
 
     class Meta:
         verbose_name_plural = "Vagones cargados/descargados"
-        #unique_together = [['cliente', 'destino']]
-        verbose_name = "Vagón cargado/descargado"
-         
+        verbose_name = "Vagón cargado/descargado"         
 
-    
     def __str__(self):
         return f"Vagón {self.id} - {self.get_estado_display()}"
 

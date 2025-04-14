@@ -25,8 +25,8 @@
                   required
                   :disabled="loading"
                 >
-                  <option value="acceso comercial">Acceso Comercial</option>
-                  <option value="puerto">Puerto</option>
+                  <option v-for="item in tipo_origen_options" :key="item.id" :value="item.id">{{ item.text }}</option>
+                  
                 </select>
               </div>
   
@@ -235,6 +235,10 @@ export default {
       mostrarModal: false,
       loading: false,
       registroId: null,
+      tipo_origen_options: [
+        { id: "ac_ccd", text: "comercial/AccesoCCD" },
+        { id: "puerto", text: "Puerto" },
+      ],
       tipo_equipo_options: [
         { id: "casilla", text: "Casilla" },
         { id: "caj_gon", text: "Cajon o Gondola" },
@@ -389,9 +393,10 @@ export default {
           errors.push("La cantidad debe ser al menos 1");
         }
 
-        if (!['acceso comercial', 'puerto'].includes(this.formData.tipo_origen)) {
+        if (!['ac_ccd', 'puerto'].includes(this.formData.tipo_origen)) {
           errors.push("Tipo de origen no válido");
         }
+
 
         if (errors.length > 0) {
           throw new Error(errors.join("\n"));

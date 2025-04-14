@@ -14,20 +14,21 @@
           <div class="col-md-6">
             <!-- Campo: tipo_origen -->
             <div class="mb-3">
-              <label for="tipo_origen" class="form-label"
-                >Tipo de Origen <span style="color: red">*</span></label
-              >
-              <select
-                class="form-select"
-                v-model="formData.tipo_origen"
-                id="tipo_origen"
-                name="tipo_origen"
-                required
-              >
-                <option value="acceso comercial">Acceso Comercial</option>
-                <option value="puerto">Puerto</option>
-              </select>
-            </div>
+                <label for="tipo_origen" class="form-label"
+                  >Tipo de Origen <span style="color: red">*</span></label
+                >
+                <select
+                  class="form-select"
+                  v-model="formData.tipo_origen"
+                  id="tipo_origen"
+                  name="tipo_origen"
+                  required
+                  :disabled="loading"
+                >
+                  <option v-for="item in tipo_origen_options" :key="item.id" :value="item.id">{{ item.text }}</option>
+                  
+                </select>
+              </div>
 
             <!-- Campo: origen -->
             <div class="mb-3">
@@ -208,7 +209,7 @@ export default {
   data() {
     return {
       formData: {
-        tipo_origen: "", // Asegúrate que este valor coincide con tus opciones
+        tipo_origen: "", // Asegúrarse que este valor coincide con tus opciones
         origen: "",
         tipo_equipo: "",
         estado: "cargado",
@@ -221,6 +222,10 @@ export default {
       puertos: [],
       productos: [],
       mostrarModal: false,
+      tipo_origen_options: [
+        { id: "ac_ccd", text: "comercial/AccesoCCD" },
+        { id: "puerto", text: "Puerto" },
+      ],
       tipo_equipo_options: [
         { id: "casilla", text: "Casilla" },
         { id: "caj_gon", text: "Cajon o Gondola" },

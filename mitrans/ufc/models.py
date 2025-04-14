@@ -306,7 +306,7 @@ class arrastres(models.Model):
     
     TIPO_ORIGEN_DESTINO_CHOICES = [
         ('puerto', 'Puerto'),
-        ('ac_ccd', 'Acceso comercial/CCD'),
+        ('ac_ccd', ' comercial/AccesoCCD'),
     ]
     
     tipo_origen = models.CharField(

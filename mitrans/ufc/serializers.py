@@ -238,10 +238,10 @@ class SituadoCargaDescargaFilter(filters.FilterSet):
         
         
 class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
-    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
+    producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')
     class Meta:
         model = Situado_Carga_Descarga
-        fields = ('id','tipo_origen', 'origen','tipo_equipo', 'estado', 'operacion', 'producto','producto_name', 'situados','pendiente_proximo_dia')
+        fields = ('id','tipo_origen','origen', 'tipo_equipo', 'estado', 'operacion', 'producto','producto_name', 'situados','pendiente_proximo_dia')
         filterset_class = SituadoCargaDescargaFilter
         
         
@@ -249,14 +249,14 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
         
 class PorSituarCargaDescargaFilter(filters.FilterSet):
     tipo_equipo = filters.CharFilter(lookup_expr='icontains')  # Filtro exacto (puedes usar 'icontains' para parcial
-    
+   
     class Meta:
         model = por_situar
         fields = ['tipo_equipo']  # Campos filtrables
 
 
 class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
-    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
+    producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')
     class Meta:
         model = por_situar  # Usa "=", no ":"
         fields = ('id','tipo_origen', 'origen','tipo_equipo', 'estado', 'operacion', 'producto', 'por_situar','producto_name')

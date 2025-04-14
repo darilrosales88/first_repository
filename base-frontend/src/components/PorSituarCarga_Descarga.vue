@@ -2,240 +2,191 @@
   <div class="container">
     <!-- Fila para el icono y el buscador -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <!-- Icono de agregar (a la izquierda) -->
+      <!-- Icono de agregar -->
       <button class="btn btn-link p-0">
         <router-link to="/AdicionarPorSituar"
           ><i class="bi bi-plus-circle fs-3"></i
         ></router-link>
-
-        <!-- Icono grande -->
       </button>
 
-      <!-- Buscador (a la derecha) -->
+      <!-- Buscador mejorado -->
       <form @submit.prevent="search_por_situar" class="search-container">
         <div class="input-group">
+          <span class="input-group-text bg-white border-end-0">
+            <i class="bi bi-search"></i>
+          </span>
           <input
             type="search"
-            class="form-control"
-            placeholder="Buscar por tipo de equipo..."
+            class="form-control border-start-0"
+            placeholder="Buscar..."
             v-model="searchQuery"
             @input="handleSearchInput"
           />
-          <span
-            class="position-absolute top-50 start-0 translate-middle-y ps-2"
-          >
-            <i class="bi bi-search"></i>
-          </span>
         </div>
       </form>
     </div>
 
     <!-- Tabla -->
-    <table class="table table-responsive">
-      <thead>
-        <tr>
-          <th scope="col">#</th>
-          <th scope="col">Origen</th>
-          <th scope="col">Tipo de equipo</th>
-          <th scope="col">Estado</th>
-          <th scope="col">Operacion</th>
-          <th scope="col">Producto</th>
-          <th scope="col">Por Situar</th>
+    <div class="table-responsive rounded-3 shadow-sm">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Tipo Origen</th>
+            <th scope="col">Origen</th>
+            <th scope="col">Tipo de equipo</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Operacion</th>
+            <th scope="col">Producto</th>
+            <th scope="col">Por Situar</th>
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-if="loading">
+            <td colspan="9" class="text-center py-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+            </td>
+          </tr>
 
-          <th scope="col">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-if="loading">
-          <td colspan="8" class="text-center">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Cargando...</span>
-            </div>
-          </td>
-        </tr>
+          <tr v-for="(item, index) in filteredRecords" :key="item.id">
+            <th scope="row">{{ index + 1 }}</th>
+            <td>{{ item.tipo_origen }}</td>
+            <td>{{ item.origen }}</td>
+            <td>{{ item.tipo_equipo }}</td>
+            <td>{{ item.estado }}</td>
+            <td>{{ item.operacion }}</td>
+            <td>{{ item.producto_name }}</td>
+            <td>{{ item.por_situar }}</td>
 
-        <tr v-for="(item, index) in registrosPorSituar" :key="item.id">
-          <th scope="row">{{ index + 1 }}</th>
-          <td>{{ item.origen }}</td>
-          <td>{{ item.tipo_equipo }}</td>
-          <td>{{ item.estado }}</td>
-          <td>{{ item.operacion }}</td>
-          <td>{{ item.producto_name }}</td>
-          <td>{{ item.por_situar }}</td>
-
-          <td>
-            <button class="btn btn-warning btn-small">
-              <router-link
-                :to="{ name: 'EditarPorSituar', params: { id: item.id } }"
+            <td>
+              <button
+                @click="viewDetails(item)"
+                class="btn btn-sm btn-info me-2"
+                title="Ver detalles"
               >
-                <i style="color: black" class="bi bi-pencil-square"></i>
+                <i class="bi bi-eye-fill text-white"></i>
+              </button>
+              <router-link
+                :to="{
+                  name: 'EditarPorSituar',
+                  params: { id: item.id || 'default-id' },
+                }"
+                class="btn btn-sm btn-warning me-2"
+                title="Editar"
+              >
+                <i class="bi bi-pencil-square text-white"></i>
               </router-link>
-            </button>
-            <button
-              style="margin-left: 1em"
-              class="btn btn-danger btn-small"
-              @click="confirmDelete(item.id)"
-              :disabled="loading"
-            >
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        </tr>
-        <tr v-if="!busqueda_existente && registrosPorSituar.length === 0">
-          <td colspan="8" class="text-center text-muted py-4">
-            <i class="bi bi-exclamation-circle fs-4"></i>
-            <p class="mt-2">
-              No se encontraron resultados para "{{ searchQuery }}"
-            </p>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+              <button
+                @click="confirmDelete(item.id)"
+                class="btn btn-sm btn-danger"
+                title="Eliminar"
+                :disabled="loading"
+              >
+                <i class="bi bi-trash text-white"></i>
+              </button>
+            </td>
+          </tr>
 
-    <!-- Modal para agregar nuevos datos -->
-    <div v-if="showModal" class="modal-backdrop">
+          <tr v-if="!loading && filteredRecords.length === 0">
+            <td colspan="9" class="text-center text-muted py-4">
+              <i class="bi bi-exclamation-circle fs-4"></i>
+              <p class="mt-2 mb-0">
+                {{
+                  searchQuery
+                    ? `No se encontraron resultados para "${searchQuery}"`
+                    : "No hay registros disponibles"
+                }}
+              </p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Modal para detalles -->
+    <div
+      v-if="showDetailsModal"
+      class="modal-backdrop"
+      @click.self="closeModal"
+    >
       <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">
-            {{ isEditing ? "Editar Registro" : "Agregar nuevo registro" }}
-          </h5>
-          <button type="button" class="btn-close" @click="closeModal"></button>
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Info</h5>
+          <button
+            type="button"
+            class="btn-close btn-close-white"
+            @click="closeModal"
+          ></button>
         </div>
         <div class="modal-body">
-          <form @submit.prevent="isEditing ? updateItem() : addNewItem()">
-            <!-- Campos del formulario (igual que antes) -->
-            <div class="mb-3">
-              <label for="origen" class="form-label">Origen</label>
-              <select
-                class="form-select"
-                id="origen"
-                v-model="nuevoRegistro.tipo_origen"
-                required
-              >
-                <option value="">Seleccione un origen</option>
-                <option
-                  v-for="item in tipo_origen_options"
-                  :key="item.id"
-                  :value="item.id"
-                >
-                  {{ item.text }}
-                </option>
-              </select>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <div class="detail-item">
+                <span class="detail-label">Tipo Origen:</span>
+                <span class="detail-value">{{
+                  currentRecord.tipo_origen || "N/A"
+                }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Origen:</span>
+                <span class="detail-value">{{
+                  currentRecord.origen || "N/A"
+                }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Tipo de Equipo:</span>
+                <span class="detail-value">{{
+                  currentRecord.tipo_equipo || "N/A"
+                }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Estado:</span>
+                <span class="detail-value">{{
+                  currentRecord.estado || "N/A"
+                }}</span>
+              </div>
             </div>
-            <div class="mb-3">
-              <label for="tipoEquipo" class="form-label">Tipo de equipo</label>
-              <select
-                class="form-select"
-                id="tipoEquipo"
-                v-model="nuevoRegistro.tipo_equipo"
-                required
-              >
-                <option value="">Seleccione un tipo</option>
-                <option
-                  v-for="item in tipo_equipo_options"
-                  :key="item.id"
-                  :value="item.id"
-                >
-                  {{ item.text }}
-                </option>
-              </select>
+            <div class="col-md-6 mb-3">
+              <div class="detail-item">
+                <span class="detail-label">Operación:</span>
+                <span class="detail-value">{{
+                  currentRecord.operacion || "N/A"
+                }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Producto:</span>
+                <span class="detail-value">{{
+                  currentRecord.producto_name || "N/A"
+                }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Por Situar:</span>
+                <span class="detail-value">{{
+                  currentRecord.por_situar || "0"
+                }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Observaciones:</span>
+                <span class="detail-value">{{
+                  currentRecord.observaciones || "Ninguna"
+                }}</span>
+              </div>
+              <div class="detail-item" v-if="currentRecord.created_at">
+                <span class="detail-label">Fecha Creación:</span>
+                <span class="detail-value">{{
+                  formatDate(currentRecord.created_at)
+                }}</span>
+              </div>
             </div>
-            <div class="mb-3">
-              <label for="estado" class="form-label">Estado</label>
-              <select
-                class="form-select"
-                id="estado"
-                v-model="nuevoRegistro.estado"
-                required
-              >
-                <option value="">Seleccione un estado</option>
-                <option
-                  v-for="item in estado_options"
-                  :key="item.id"
-                  :value="item.id"
-                >
-                  {{ item.text }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="operacion" class="form-label">Operacion</label>
-              <select
-                class="form-select"
-                id="operacion"
-                v-model="nuevoRegistro.operacion"
-                required
-              >
-                <option value="">Seleccione una operación</option>
-                <option
-                  v-for="item in t_operacion_options"
-                  :key="item.id"
-                  :value="item.id"
-                >
-                  {{ item.text }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="producto" class="form-label">Producto</label>
-              <select
-                class="form-select"
-                id="producto"
-                v-model="nuevoRegistro.producto"
-                required
-              >
-                <option value="">Seleccione un producto</option>
-                <option
-                  v-for="item in producto_options"
-                  :key="item.id"
-                  :value="item.id"
-                >
-                  {{ item.producto }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="situados" class="form-label">Por Situar</label>
-              <input
-                type="text"
-                class="form-control"
-                id="situados"
-                v-model="nuevoRegistro.cantidad_por_situar"
-                required
-              />
-            </div>
-
-            <button
-              style="margin-right: 1em"
-              type="submit"
-              class="btn btn-primary btn-sm"
-              :disabled="loading"
-            >
-              <span
-                v-if="loading"
-                class="spinner-border spinner-border-sm"
-                role="status"
-                aria-hidden="true"
-              ></span>
-              {{
-                isEditing
-                  ? loading
-                    ? "Actualizando..."
-                    : "Actualizar"
-                  : loading
-                  ? "Procesando..."
-                  : "Agregar"
-              }}
-            </button>
-            <button
-              type="button"
-              class="btn btn-secondary btn-sm"
-              @click="showModal = false"
-              :disabled="loading"
-            >
-              Cancelar
-            </button>
-          </form>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" @click="closeModal">
+            Cerrar
+          </button>
         </div>
       </div>
     </div>
@@ -249,499 +200,315 @@ import axios from "axios";
 export default {
   data() {
     return {
-      allRecords: [], // Para guardar todos los registros sin filtrar
-      debounceTimeout: null, // Para el debounce del buscador
-      isEditing: false,
-      currentItemId: null,
+      allRecords: [],
       searchQuery: "",
-      registrosPorSituar: [], // Cambiado de por_situar a registrosPorSituar para evitar conflicto
+      registrosPorSituar: [],
       loading: false,
-      busqueda_existente: true,
-      showModal: false,
-
-      // Opciones para los selects
-      tipo_origen_options: [
-        { id: "puerto", text: "Puerto" },
-        { id: "acceso comercial", text: "Acceso Comercial" },
-      ],
-      tipo_equipo_options: [
-        { id: "casilla", text: "Casilla" },
-        { id: "caj_gon", text: "Cajon o Gondola" },
-      ],
-      estado_options: [
-        { id: "vacio", text: "Vacio" },
-        { id: "cargado", text: "Cargado" },
-      ],
-      t_operacion_options: [
-        { id: "carga", text: "Carga" },
-        { id: "descarga", text: "Descarga" },
-      ],
-      producto_options: [],
-
-      // Datos del nuevo registro
-      nuevoRegistro: {
-        tipo_origen: "",
-        tipo_equipo: "",
-        estado: "",
-        operacion: "",
-        producto: "",
-        cantidad_por_situar: "",
-      },
+      showDetailsModal: false,
+      errorLoading: false,
+      currentRecord: {},
+      debounceTimeout: null,
     };
+  },
+
+  computed: {
+    filteredRecords() {
+      if (!this.searchQuery) return this.registrosPorSituar;
+
+      const query = this.searchQuery.toLowerCase();
+      return this.registrosPorSituar.filter((item) => {
+        // Buscar en todos los campos relevantes
+        const fieldsToSearch = [
+          item.tipo_origen,
+          item.origen,
+          item.tipo_equipo,
+          item.estado,
+          item.operacion,
+          item.producto_name,
+          item.por_situar?.toString(),
+          item.observaciones,
+        ];
+
+        return fieldsToSearch.some(
+          (field) => field && field.toString().toLowerCase().includes(query)
+        );
+      });
+    },
   },
 
   mounted() {
     this.getPorSituar();
-    this.loadProductos();
   },
 
   methods: {
-    openEditModal(item) {
-      this.isEditing = true;
-      this.currentItemId = item.id;
-      this.nuevoRegistro = {
-        tipo_origen: item.tipo_origen,
-        tipo_equipo: item.tipo_equipo,
-        estado: item.estado,
-        operacion: item.operacion,
-        producto: item.producto,
-        cantidad_por_situar: item.por_situar,
-      };
-      this.showModal = true;
-    },
-
-    closeModal() {
-      this.showModal = false;
-      this.isEditing = false;
-      this.currentItemId = null;
-      this.resetForm();
-    },
-
-    async updateItem() {
-      try {
-        this.loading = true;
-
-        const datosParaEnviar = {
-          tipo_origen: this.nuevoRegistro.tipo_origen,
-          tipo_equipo: this.nuevoRegistro.tipo_equipo,
-          estado: this.nuevoRegistro.estado,
-          operacion: this.nuevoRegistro.operacion,
-          producto: this.nuevoRegistro.producto,
-          por_situar: this.nuevoRegistro.cantidad_por_situar,
-        };
-
-        const response = await axios.put(
-          `http://127.0.0.1:8000/ufc/por-situar/${this.currentItemId}/`,
-          datosParaEnviar
-        );
-
-        if (response.status === 200) {
-          Swal.fire("Éxito", "Registro actualizado correctamente", "success");
-          this.showModal = false;
-          this.resetForm();
-          this.getPorSituar();
-        } else {
-          throw new Error(`Respuesta inesperada: ${response.status}`);
-        }
-      } catch (error) {
-        console.error("Error al actualizar:", error);
-        let errorMessage = "Error al actualizar el registro";
-
-        if (error.response?.data) {
-          errorMessage += ": " + JSON.stringify(error.response.data);
-        }
-
-        Swal.fire("Error", errorMessage, "error");
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    async updateItem() {
-      try {
-        this.loading = true;
-
-        const datosParaEnviar = {
-          tipo_origen: this.nuevoRegistro.tipo_origen,
-          tipo_equipo: this.nuevoRegistro.tipo_equipo,
-          estado: this.nuevoRegistro.estado,
-          operacion: this.nuevoRegistro.operacion,
-          producto: this.nuevoRegistro.producto,
-          por_situar: this.nuevoRegistro.cantidad_por_situar,
-        };
-
-        const response = await axios.put(
-          `http://127.0.0.1:8000/ufc/por-situar/${this.currentItemId}/`,
-          datosParaEnviar
-        );
-
-        if (response.status === 200) {
-          Swal.fire("Éxito", "Registro actualizado correctamente", "success");
-          this.showModal = false;
-          this.resetForm();
-          this.getPorSituar();
-        } else {
-          throw new Error(`Respuesta inesperada: ${response.status}`);
-        }
-      } catch (error) {
-        console.error("Error al actualizar:", error);
-        let errorMessage = "Error al actualizar el registro";
-
-        if (error.response?.data) {
-          errorMessage += ": " + JSON.stringify(error.response.data);
-        }
-
-        Swal.fire("Error", errorMessage, "error");
-      } finally {
-        this.loading = false;
-      }
-    },
-
     getPorSituar() {
-      this.loading = true;
+      this.loading = true; // Activar estado de carga
       axios
         .get("http://127.0.0.1:8000/ufc/por-situar/")
         .then((response) => {
-          this.allRecords = response.data.results; // Guarda todos los registros
-          this.registrosPorSituar = [...this.allRecords]; // Copia para mostrar
-          this.busqueda_existente = true;
+          this.registrosPorSituar = response.data.results; // Asignar a la variable correcta
+          this.loading = false; // Desactivar carga
         })
         .catch((error) => {
-          console.error(error);
-          Swal.fire("Error", "No se pudieron cargar los datos", "error");
-        })
-        .finally(() => {
+          console.error("Error al obtener datos:", error);
+          this.errorLoading = true;
           this.loading = false;
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "No se pudieron cargar los registros. Por favor, intente más tarde.",
+          });
         });
     },
 
-    async addNewItem() {
+    async viewDetails(item) {
+      this.loading = true;
       try {
-        // Validación mejorada
-        const camposRequeridos = [
-          { nombre: "tipo_origen", valor: this.nuevoRegistro.tipo_origen },
-          { nombre: "tipo_equipo", valor: this.nuevoRegistro.tipo_equipo },
-          { nombre: "estado", valor: this.nuevoRegistro.estado },
-          { nombre: "operacion", valor: this.nuevoRegistro.operacion },
-          { nombre: "producto", valor: this.nuevoRegistro.producto },
-          {
-            nombre: "cantidad_por_situar",
-            valor: this.nuevoRegistro.cantidad_por_situar,
-          },
-        ];
+        // Usamos los datos que ya tenemos para mostrar inmediatamente
+        this.currentRecord = { ...item };
+        this.showDetailsModal = true;
 
-        const camposFaltantes = camposRequeridos.filter(
-          (campo) => !campo.valor
+        // Opcional: Si quieres cargar datos adicionales del servidor
+        const response = await axios.get(
+          `http://127.0.0.1:8000/ufc/por-situar/${item.id}/`
         );
-
-        if (camposFaltantes.length > 0) {
-          const campos = camposFaltantes.map((c) => c.nombre).join(", ");
-          Swal.fire(
-            "Error",
-            `Faltan los siguientes campos: ${campos}`,
-            "error"
-          );
-          return;
-        }
-
-        this.loading = true;
-
-        // Preparamos los datos para enviar
-        const datosParaEnviar = {
-          tipo_origen: this.nuevoRegistro.tipo_origen,
-          tipo_equipo: this.nuevoRegistro.tipo_equipo,
-          estado: this.nuevoRegistro.estado,
-          operacion: this.nuevoRegistro.operacion, // Cambiado a t_operacion para coincidir con el backend
-          producto: this.nuevoRegistro.producto,
-          por_situar: this.nuevoRegistro.cantidad_por_situar,
-        };
-
-        console.log("Datos a enviar al backend:", datosParaEnviar);
-
-        const response = await axios.post(
-          "http://127.0.0.1:8000/ufc/por-situar/",
-          datosParaEnviar
-        );
-
-        if (response.status === 201) {
-          Swal.fire("Éxito", "Registro creado correctamente", "success");
-          this.showModal = false;
-          this.resetForm();
-          this.getPorSituar();
-        } else {
-          throw new Error(`Respuesta inesperada: ${response.status}`);
-        }
+        this.currentRecord = response.data;
       } catch (error) {
-        console.error("Error completo:", error);
-        console.error("Respuesta del error:", error.response);
-
-        let errorMessage = "Error al crear el registro";
-        if (error.response) {
-          errorMessage += ` (${error.response.status}): `;
-          if (error.response.data) {
-            // Mostrar errores específicos del backend
-            if (typeof error.response.data === "object") {
-              errorMessage += Object.entries(error.response.data)
-                .map(([key, value]) => `${key}: ${value}`)
-                .join(", ");
-            } else {
-              errorMessage += JSON.stringify(error.response.data);
-            }
-          }
-        } else {
-          errorMessage += `: ${error.message}`;
-        }
-
-        Swal.fire("Error", errorMessage, "error");
+        console.error("Error al cargar detalles:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No se pudieron cargar los detalles completos del registro.",
+        });
       } finally {
         this.loading = false;
       }
     },
 
-    resetForm() {
-      this.nuevoRegistro = {
-        tipo_origen: "",
-        tipo_equipo: "",
-        estado: "",
-        operacion: "",
-        producto: "",
-        cantidad_por_situar: "",
-      };
+    closeModal() {
+      this.showDetailsModal = false;
+      this.currentRecord = {};
     },
 
-    async loadProductos() {
-      try {
-        this.loading = true;
-        const response = await axios.get("/api/productos/", {
-          params: { limit: 100 },
-        });
+    async confirmDelete(id) {
+      const result = await Swal.fire({
+        title: "¿Estás seguro?",
+        text: "¡No podrás revertir esta acción!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
+      });
 
-        if (response.status === 200) {
-          this.producto_options = response.data.results.map((p) => ({
-            id: p.id,
-            producto: p.nombre_producto || p.descripcion || `Producto ${p.id}`,
-          }));
+      if (result.isConfirmed) {
+        try {
+          this.loading = true;
+          await axios.delete(`http://127.0.0.1:8000/ufc/por-situar/${id}/`);
+          Swal.fire("Eliminado", "El registro ha sido eliminado", "success");
+          await this.getPorSituar();
+        } catch (error) {
+          this.handleApiError(error, "eliminar registro");
+        } finally {
+          this.loading = false;
         }
-      } catch (error) {
-        console.error("Error detallado:", error);
-        let errorMsg = "Error al cargar productos";
-
-        if (error.response?.data?.detail) {
-          errorMsg += `: ${error.response.data.detail}`;
-        }
-
-        Swal.fire("Error", errorMsg, "error");
-      } finally {
-        this.loading = false;
       }
+    },
+
+    handleApiError(error, action) {
+      let errorMsg = `Error al ${action}`;
+      if (error.response) {
+        errorMsg += ` (${error.response.status})`;
+        if (error.response.data) {
+          errorMsg += `: ${JSON.stringify(error.response.data)}`;
+        }
+      } else {
+        errorMsg += `: ${error.message}`;
+      }
+      console.error(errorMsg, error);
+      Swal.fire("Error", errorMsg, "error");
     },
 
     handleSearchInput() {
       clearTimeout(this.debounceTimeout);
       this.debounceTimeout = setTimeout(() => {
-        if (this.searchQuery.trim() === "") {
-          this.getPorSituar();
-        } else {
-          this.filterRecords();
-        }
+        this.search_por_situar();
       }, 300);
     },
 
-    filterRecords() {
-      const query = this.searchQuery.toLowerCase();
-      if (!query) {
-        this.registrosPorSituar = [...this.allRecords];
-        this.busqueda_existente = true;
-        return;
-      }
-
-      this.registrosPorSituar = this.allRecords.filter((item) => {
-        // Convertir todos los valores a string antes de comparar
-        const tipoEquipo = item.tipo_equipo
-          ? String(item.tipo_equipo).toLowerCase()
-          : "";
-        const producto = item.producto
-          ? String(item.producto).toLowerCase()
-          : "";
-        const operacion = item.operacion
-          ? String(item.operacion).toLowerCase()
-          : "";
-
-        return (
-          tipoEquipo.includes(query) ||
-          producto.includes(query) ||
-          operacion.includes(query)
-        );
-      });
-
-      this.busqueda_existente = this.registrosPorSituar.length > 0;
-    },
-
-    search_por_situar() {
-      this.loading = true;
-      axios
-        .get(
-          `http://127.0.0.1:8000/ufc/por-situar/?tipo_equipo=${this.searchQuery}`
-        )
-        .then((response) => {
-          this.registrosPorSituar = response.data;
-          this.busqueda_existente = this.registrosPorSituar.length > 0;
-        })
-        .catch((error) => {
-          console.error(error);
-          this.busqueda_existente = false;
-          this.registrosPorSituar = [];
-        })
-        .finally(() => {
-          this.loading = false;
-        });
-    },
-
-    async confirmDelete(id) {
-      try {
-        const result = await Swal.fire({
-          title: "¿Estás seguro?",
-          text: "¡No podrás revertir esto!",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#d33",
-          cancelButtonColor: "#3085d6",
-          confirmButtonText: "Sí, eliminar",
-          cancelButtonText: "Cancelar",
-        });
-
-        if (result.isConfirmed) {
-          await this.deleteItem(id);
-          Swal.fire("¡Eliminado!", "El registro ha sido eliminado.", "success");
-          // Recargar los datos después de eliminar
-          this.getPorSituar();
-        }
-      } catch (error) {
-        console.error("Error al eliminar:", error);
-        Swal.fire("Error", "No se pudo eliminar el registro", "error");
-      }
-    },
-
-    async deleteItem(id) {
-      this.loading = true;
-      try {
-        const response = await axios.delete(
-          `http://127.0.0.1:8000/ufc/por-situar/${id}/`
-        );
-
-        if (response.status !== 204) {
-          throw new Error(`Respuesta inesperada: ${response.status}`);
-        }
-      } finally {
-        this.loading = false;
-      }
+    formatDate(dateString) {
+      if (!dateString) return "N/A";
+      const options = {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      };
+      return new Date(dateString).toLocaleDateString("es-ES", options);
     },
   },
 };
 </script>
 
 <style scoped>
-/* Estilos para el contenedor del buscador */
+/* Estilos generales */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Botón de agregar */
+.btn-primary {
+  padding: 8px 16px;
+  border-radius: 20px;
+}
+
+/* Buscador */
 .search-container {
-  position: relative;
   width: 100%;
-  max-width: 300px; /* Ancho máximo del buscador */
+  max-width: 350px;
 }
 
-/* Estilos para el input del buscador */
+.search-container .input-group-text {
+  border-radius: 20px 0 0 20px;
+  border-right: none;
+}
+
 .search-container input {
-  padding-right: 40px; /* Espacio para el icono de lupa */
-  border-radius: 20px; /* Bordes redondeados */
+  border-radius: 0 20px 20px 0;
+  border-left: none;
+  padding: 8px 15px;
 }
 
-/* Estilos para el icono de lupa */
-.search-icon {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #888; /* Color del icono */
-  pointer-events: none; /* Evita que el icono interfiera con el input */
-}
-
-/* Estilos para la tabla responsive */
+/* Tabla */
 .table-responsive {
-  overflow-x: auto; /* Permite desplazamiento horizontal en pantallas pequeñas */
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-/* Estilos para el modal */
+.table {
+  margin-bottom: 0;
+}
+
+.table th {
+  font-weight: 600;
+  background-color: #f8f9fa;
+  padding: 12px 15px;
+}
+
+.table td {
+  padding: 12px 15px;
+  vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Botones de acción */
+.btn-sm {
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+/* Modal */
 .modal-backdrop {
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: 90%;
-  background-color: transparent; /* Fondo semitransparente */
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; /* Asegura que el modal esté por encima de todo */
+  z-index: 1050;
 }
 
 .modal-content {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 10px;
+  background-color: white;
+  border-radius: 8px;
   width: 90%;
-  max-width: 500px; /* Ancho máximo del modal */
+  max-width: 800px;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  animation: modalFadeIn 0.3s ease-out;
 }
 
 .modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #dee2e6;
 }
 
 .modal-title {
   margin: 0;
-}
-
-.btn-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
 .modal-body {
-  margin-bottom: 20px;
+  padding: 1.5rem;
 }
 
-/* Estilos para el icono de agregar */
-.btn-link {
-  color: #007bff; /* Color azul para el icono */
-  text-decoration: none; /* Sin subrayado */
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #dee2e6;
 }
 
-.btn-link:hover {
-  color: #0056b3; /* Color azul más oscuro al pasar el mouse */
+/* Detalles en el modal */
+.detail-item {
+  margin-bottom: 1rem;
 }
 
-.search-container {
-  position: relative;
-  width: 100%;
-  max-width: 300px;
+.detail-label {
+  font-weight: 600;
+  color: #495057;
+  display: inline-block;
+  min-width: 140px;
 }
 
-.search-container input {
-  padding-left: 2.5rem !important; /* Espacio para el icono */
-  border-radius: 20px !important;
+.detail-value {
+  color: #212529;
 }
 
-.search-container .bi-search {
-  color: #6c757d; /* Color gris para el icono */
-  z-index: 10;
+/* Animación del modal */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* Para asegurar que el input group conserve los estilos */
-.input-group {
-  width: 100%;
+/* Responsive */
+@media (max-width: 768px) {
+  .d-flex.justify-content-between {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .search-container {
+    max-width: 100%;
+  }
+
+  .btn-primary {
+    width: 100%;
+    text-align: center;
+  }
+
+  .modal-content {
+    width: 95%;
+  }
+
+  .detail-label {
+    min-width: 120px;
+    display: block;
+    margin-bottom: 0.25rem;
+  }
 }
 </style>

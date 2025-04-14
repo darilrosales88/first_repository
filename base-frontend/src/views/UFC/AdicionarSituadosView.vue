@@ -48,7 +48,7 @@
                 <option
                   v-for="entidad in entidades"
                   :key="entidad.id"
-                  :value="entidad.id"
+                  :value="entidad.nombre"
                 >
                   {{ entidad.id }}-{{ entidad.nombre }}
                 </option>
@@ -67,7 +67,7 @@
                 <option
                   v-for="puerto in puertos"
                   :key="puerto.id"
-                  :value="puerto.id"
+                  :value="puerto.nombre_puerto"
                 >
                   {{ puerto.id }}- {{ puerto.nombre_puerto }}
                 </option>
@@ -145,18 +145,18 @@
             <!-- Campo: producto -->
             <div class="mb-3">
               <label for="producto" class="form-label">
-                  Producto
-                  <button
+                Producto
+                <button
                   class="create-button ms-2"
                   @click.prevent="abrirModalAgregarProducto"
                   :disabled="isSubmitting"
-                  >
+                >
                   <i class="bi bi-plus-circle large-icon"></i>
-                  </button>
+                </button>
               </label>
-              
+
               <template v-if="formData.estado === 'cargado'">
-                  <select
+                <select
                   v-if="!loadingProducts"
                   class="form-select"
                   v-model="formData.producto"
@@ -164,23 +164,24 @@
                   name="producto"
                   required
                   :disabled="isSubmitting"
-                  >
+                >
                   <option value="" disabled>Seleccione un producto</option>
-                  <option 
-                      v-for="producto in productos" 
-                      :key="producto.id"
-                      :value="producto.id"
+                  <option
+                    v-for="producto in productos"
+                    :key="producto.id"
+                    :value="producto.id"
                   >
-                      {{ producto.id }}-{{ producto.producto_name }} - {{ producto.producto_codigo }}
+                    {{ producto.id }}-{{ producto.producto_name }} -
+                    {{ producto.producto_codigo }}
                   </option>
-                  </select>
-                  <div v-else class="text-muted">
+                </select>
+                <div v-else class="text-muted">
                   <i class="bi bi-arrow-repeat"></i> Cargando productos...
-                  </div>
+                </div>
               </template>
-              
+
               <div v-else class="text-muted">
-                  (Seleccione "Cargado" para ver los productos)
+                (Seleccione "Cargado" para ver los productos)
               </div>
             </div>
             <ModalAgregarProducto
@@ -188,39 +189,39 @@
               :visible="mostrarModal"
               @cerrar-modal="cerrarModal"
             />
-            
+
             <!-- Campo: situados -->
             <div class="mb-3">
               <label for="situados" class="form-label">
-                  Situados <span style="color: red">*</span>
+                Situados <span style="color: red">*</span>
               </label>
               <input
-                  type="number"
-                  class="form-control"
-                  v-model.number="formData.situados"
-                  id="situados"
-                  name="situados"
-                  min="1"
-                  required
-                  :disabled="isSubmitting"
-              >
+                type="number"
+                class="form-control"
+                v-model.number="formData.situados"
+                id="situados"
+                name="situados"
+                min="1"
+                required
+                :disabled="isSubmitting"
+              />
             </div>
 
             <!-- Campo: pendiente_proximo_dia -->
             <div class="mb-3">
               <label for="pendiente_proximo_dia" class="form-label">
-                  Pendientes al próximo día <span style="color: red">*</span>
+                Pendientes al próximo día <span style="color: red">*</span>
               </label>
               <input
-                  type="number"
-                  class="form-control"
-                  v-model.number="formData.pendiente_proximo_dia"
-                  id="pendiente_proximo_dia"
-                  name="pendiente_proximo_dia"
-                  min="0"
-                  required
-                  :disabled="isSubmitting"
-              >
+                type="number"
+                class="form-control"
+                v-model.number="formData.pendiente_proximo_dia"
+                id="pendiente_proximo_dia"
+                name="pendiente_proximo_dia"
+                min="0"
+                required
+                :disabled="isSubmitting"
+              />
             </div>
 
             <!-- Campo: observaciones -->
@@ -241,20 +242,24 @@
         </div>
 
         <div class="text-center">
-          <button 
-              type="submit" 
-              class="btn btn-primary" 
-              :disabled="isSubmitting"
-              >
-              <span v-if="isSubmitting">
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                Procesando...
-              </span>
-              <span v-else>Agregar</span>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            :disabled="isSubmitting"
+          >
+            <span v-if="isSubmitting">
+              <span
+                class="spinner-border spinner-border-sm"
+                role="status"
+                aria-hidden="true"
+              ></span>
+              Procesando...
+            </span>
+            <span v-else>Agregar</span>
           </button>
-          <button 
-            type="button" 
-            @click="confirmCancel" 
+          <button
+            type="button"
+            @click="confirmCancel"
             class="btn btn-secondary ms-2"
             :disabled="isSubmitting"
           >
@@ -322,7 +327,7 @@ export default {
         Swal.fire("Error", "No se pudieron obtener las entidades", "error");
       }
     },
-    
+
     async getProductos() {
       try {
         this.loadingProducts = true;
@@ -331,11 +336,14 @@ export default {
         });
 
         if (response.status === 200) {
-          this.productos = response.data.results.map(producto => ({
+          this.productos = response.data.results.map((producto) => ({
             id: producto.id,
-            producto_name: producto.nombre_producto || producto.descripcion || `Producto ${producto.id}`,
-            producto_codigo: producto.codigo || 'N/A',
-            tipo_embalaje_name: producto.tipo_embalaje?.nombre || 'N/A'
+            producto_name:
+              producto.nombre_producto ||
+              producto.descripcion ||
+              `Producto ${producto.id}`,
+            producto_codigo: producto.codigo || "N/A",
+            tipo_embalaje_name: producto.tipo_embalaje?.nombre || "N/A",
           }));
         }
       } catch (error) {
@@ -365,40 +373,47 @@ export default {
     abrirModalAgregarProducto() {
       this.mostrarModal = true;
     },
-    
+
     cerrarModal() {
       this.mostrarModal = false;
       this.getProductos();
     },
-    
+
     async submitForm() {
       this.isSubmitting = true;
       try {
         // Validación mejorada
         const errors = [];
-        
+
         if (!this.formData.origen) {
           errors.push("El campo Origen es requerido");
         }
-        
+
         if (!this.formData.tipo_equipo) {
           errors.push("El campo Tipo de Equipo es requerido");
         }
-        
+
         if (!this.formData.operacion) {
           errors.push("El campo Operación es requerido");
         }
-        
+
         if (this.formData.estado === "cargado" && !this.formData.producto) {
-          errors.push("El campo Producto es requerido cuando el estado es Cargado");
+          errors.push(
+            "El campo Producto es requerido cuando el estado es Cargado"
+          );
         }
-        
+
         if (this.formData.situados === null || this.formData.situados < 1) {
           errors.push("La cantidad de situados debe ser al menos 1");
         }
 
-        if (this.formData.pendiente_proximo_dia === null || this.formData.pendiente_proximo_dia < 0) {
-          errors.push("Los pendientes al próximo día deben ser un número positivo");
+        if (
+          this.formData.pendiente_proximo_dia === null ||
+          this.formData.pendiente_proximo_dia < 0
+        ) {
+          errors.push(
+            "Los pendientes al próximo día deben ser un número positivo"
+          );
         }
 
         if (errors.length > 0) {
@@ -415,22 +430,26 @@ export default {
           producto: this.formData.producto,
           situados: this.formData.situados,
           pendiente_proximo_dia: this.formData.pendiente_proximo_dia,
-          observaciones: this.formData.observaciones
+          observaciones: this.formData.observaciones,
         };
 
         // Configuración de axios para manejar mejor los errores
         const config = {
           headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            "Content-Type": "application/json",
+            Accept: "application/json",
           },
           validateStatus: function (status) {
             return status >= 200 && status < 500;
-          }
+          },
         };
 
         // Enviar datos al endpoint
-        const response = await axios.post("http://127.0.0.1:8000/ufc/situados/", payload, config);
+        const response = await axios.post(
+          "http://127.0.0.1:8000/ufc/situados/",
+          payload,
+          config
+        );
 
         if (response.status === 201) {
           await Swal.fire({
@@ -444,7 +463,7 @@ export default {
           let errorMessage = "Error al crear el registro";
           if (response.data) {
             // Procesar errores del backend
-            if (typeof response.data === 'string') {
+            if (typeof response.data === "string") {
               errorMessage = response.data;
             } else if (response.data.detail) {
               errorMessage = response.data.detail;
@@ -452,7 +471,10 @@ export default {
               errorMessage = response.data.non_field_errors.join(", ");
             } else {
               errorMessage = Object.entries(response.data)
-                .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : value}`)
+                .map(
+                  ([key, value]) =>
+                    `${key}: ${Array.isArray(value) ? value.join(", ") : value}`
+                )
                 .join("\n");
             }
           }
@@ -469,7 +491,7 @@ export default {
         this.isSubmitting = false;
       }
     },
-    
+
     resetForm() {
       this.formData = {
         tipo_origen: "ac_ccd",
@@ -483,7 +505,7 @@ export default {
         observaciones: "",
       };
     },
-    
+
     async confirmCancel() {
       const result = await Swal.fire({
         title: "¿Cancelar operación?",
@@ -492,15 +514,15 @@ export default {
         showCancelButton: true,
         confirmButtonText: "Sí, cancelar",
         cancelButtonText: "No, continuar",
-        reverseButtons: true
+        reverseButtons: true,
       });
-      
+
       if (result.isConfirmed) {
         this.resetForm();
         this.$router.push({ name: "InfoOperativo" });
       }
-    }
-  }
+    },
+  },
 };
 </script>
 

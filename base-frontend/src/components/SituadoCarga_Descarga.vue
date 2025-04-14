@@ -4,8 +4,10 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
       <!-- Icono de agregar (a la izquierda) -->
       <button class="btn btn-link p-0">
-        <router-link to="/AdicionarSituados"><i class="bi bi-plus-circle fs-3"></i></router-link>
-        
+        <router-link to="/AdicionarSituados"
+          ><i class="bi bi-plus-circle fs-3"></i
+        ></router-link>
+
         <!-- Icono grande -->
       </button>
 
@@ -66,10 +68,10 @@
           <td>
             <button class="btn btn-warning btn-small">
               <router-link
-                    :to="{ name: 'EditarSituados', params: { id: item.id } }"
-                  >
-                    <i style="color: black" class="bi bi-pencil-square"></i>
-                  </router-link>
+                :to="{ name: 'EditarSituados', params: { id: item.id } }"
+              >
+                <i style="color: black" class="bi bi-pencil-square"></i>
+              </router-link>
             </button>
             <button
               style="margin-left: 1em"
@@ -92,8 +94,6 @@
       </tbody>
     </table>
 
-    
-    
     <!-- Paginación mejorada -->
     <div class="d-flex justify-content-between align-items-center">
       <div class="text-muted small">
@@ -180,7 +180,6 @@ export default {
 
   mounted() {
     this.getPorSituar();
-    
   },
 
   methods: {
@@ -197,7 +196,7 @@ export default {
           const data = response.data.results || response.data;
           this.allRecords = data.map((item) => ({
             id: item.id,
-            tipo_origen: item.tipo_origen || "",
+            tipo_origen: item.origen || "",
             tipo_equipo: item.tipo_equipo || "",
             estado: item.estado || "",
             operacion: item.operacion || "",
@@ -218,7 +217,6 @@ export default {
     },
 
     // Cargar productos para el select
-    
 
     // Buscar por tipo de equipo
     handleSearchInput() {
@@ -240,12 +238,7 @@ export default {
       }, 300);
     },
 
-    
-
     // Agregar nuevo registro
-    
-
-    
 
     // Confirmar eliminación
     async confirmDelete(id) {

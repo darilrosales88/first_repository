@@ -3,9 +3,11 @@
     <!-- Fila para el icono y el buscador -->
     <div class="d-flex justify-content-between align-items-center mb-3">
       <!-- Icono de agregar (a la izquierda) -->
-      <button class="btn btn-link p-0" >
-        <router-link to="/AdicionarPorSituar"><i class="bi bi-plus-circle fs-3"></i></router-link>
-        
+      <button class="btn btn-link p-0">
+        <router-link to="/AdicionarPorSituar"
+          ><i class="bi bi-plus-circle fs-3"></i
+        ></router-link>
+
         <!-- Icono grande -->
       </button>
 
@@ -54,7 +56,7 @@
 
         <tr v-for="(item, index) in registrosPorSituar" :key="item.id">
           <th scope="row">{{ index + 1 }}</th>
-          <td>{{ item.tipo_origen }}</td>
+          <td>{{ item.origen }}</td>
           <td>{{ item.tipo_equipo }}</td>
           <td>{{ item.estado }}</td>
           <td>{{ item.operacion }}</td>
@@ -64,10 +66,10 @@
           <td>
             <button class="btn btn-warning btn-small">
               <router-link
-                    :to="{ name: 'EditarPorSituar', params: { id: item.id } }"
-                  >
-                    <i style="color: black" class="bi bi-pencil-square"></i>
-                  </router-link>
+                :to="{ name: 'EditarPorSituar', params: { id: item.id } }"
+              >
+                <i style="color: black" class="bi bi-pencil-square"></i>
+              </router-link>
             </button>
             <button
               style="margin-left: 1em"

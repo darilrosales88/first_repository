@@ -241,7 +241,7 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
     producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
     class Meta:
         model = Situado_Carga_Descarga
-        fields = ('id','tipo_origen', 'tipo_equipo', 'estado', 'operacion', 'producto','producto_name', 'situados','pendiente_proximo_dia')
+        fields = ('id','tipo_origen', 'origen','tipo_equipo', 'estado', 'operacion', 'producto','producto_name', 'situados','pendiente_proximo_dia')
         filterset_class = SituadoCargaDescargaFilter
         
         
@@ -259,7 +259,7 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
     producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
     class Meta:
         model = por_situar  # Usa "=", no ":"
-        fields = ('tipo_origen', 'origen','tipo_equipo', 'estado', 'operacion', 'producto', 'por_situar','producto_name')
+        fields = ('id','tipo_origen', 'origen','tipo_equipo', 'estado', 'operacion', 'producto', 'por_situar','producto_name')
         filterset_class = PorSituarCargaDescargaFilter
         
 
@@ -274,7 +274,7 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = arrastres
-        fields= ('tipo_origen','tipo_equipo','estado','producto','cantidad_vagones','destino')
+        fields= ('id','tipo_origen','tipo_equipo','estado','producto','cantidad_vagones','destino')
         filterset_class = PendienteArrastreFilter
     
         

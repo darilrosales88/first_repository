@@ -230,7 +230,7 @@
                     {{ producto.producto_codigo }}-{{ producto.tipo_embalaje_name }}
                   </option>
                 </select>
-                <small class="text-muted">Mantén presionado Ctrl (Windows) para seleccionar múltiples productos</small>
+                <small class="text-muted">Mantén presionado Ctrl o Shift (Windows) para seleccionar múltiples productos</small>
               </div>
 
               <!-- Modal para agregar producto cargado/descargado -->
@@ -274,7 +274,7 @@
           >Guardar</button>
           <button @click="volver_principal" class="btn btn-secondary">Volver</button>
         </div>
-        </form>
+      </form>
         
       </div>
   <br>
@@ -314,9 +314,10 @@
                       </router-link> -->
                     </button>
                     <button
-                      @click.prevent="confirmDeleteVagonAsignado(item.id)"
+                    @click.prevent="confirmDeleteVagonAsignado(item)"
                       class="btn btn-danger btn-small"
-                    >
+                      :disabled="!item"
+                  >
                       <i class="bi bi-trash"></i>
                     </button>
                   </span>
@@ -405,6 +406,8 @@
     background-color: #007bff;
     color: white;
   }
+
+  
 </style>
   
   <script>
@@ -421,27 +424,29 @@
       ModalAgregarVagonCargado,
     },
     data() {
-      return {        
+      return { 
+        /*para que cuando se abra el modal de adicionar vagon se oculte el formulario padre */ 
+        mostrarModalVagon: false,
+
         formData: {
-      tipo_equipo_ferroviario: "",
-      tipo_origen: "ac_ccd",
-      origen: "",
-      tipo_destino: "ac_ccd",
-      destino: "",
-      estado: "cargado",
-      lista_productos: [], 
-      plan_diario_carga_descarga: "",
-      real_carga_descarga: "",
-      operacion: "",
-      causas_incumplimiento: "" // Asegúrate de incluir este campo
-    },
+        tipo_equipo_ferroviario: "",
+        tipo_origen: "ac_ccd",
+        origen: "",
+        tipo_destino: "ac_ccd",
+        destino: "",
+        estado: "cargado",
+        lista_productos: [], 
+        plan_diario_carga_descarga: "",
+        real_carga_descarga: "",
+        operacion: "",
+        causas_incumplimiento: "" // Asegúrate de incluir este campo
+      },
         registros_vagones_temporales: [], // Asegúrate de inicializarlo como array vacío
         //vagonPrincipalId: null, // Para almacenar el ID del vagon principal
         userGroups: [], // Inicializa como array vacío
         userPermissions: [], // Inicializa como array vacío        
         registros_vagones_cargados: [], // Lista filtrada de resitros de vagones en el estado cargado/descargado
         mostrarModalProducto: false,
-        mostrarModalVagon: false,
         productos: [],
         equipos: [],
         equipos_vagones: [],
@@ -485,6 +490,14 @@
       },
   
     methods: {
+      // Al abrir/cerrar el modal hijo
+      abrirModalAgregarVagon() {
+        this.mostrarModalVagon = true;
+      },
+
+      cerrarModalAddVagonCargado() {
+        this.mostrarModalVagon = false;
+      },
       // Verifica si el usuario tiene un permiso específico
     hasPermission(permission) {
       return this.userPermissions.some((p) => p.name === permission);
@@ -510,23 +523,26 @@
         },
 
         handleVagonAgregado(nuevoVagon) {
-  // Verificar si el vagón ya está en la lista temporal
-  const existe = this.registros_vagones_temporales.some(v => v.no_id === nuevoVagon.no_id);
-  
-  if (existe) {
-    Swal.fire("Advertencia", "Este vagón ya fue agregado a la lista", "warning");
-    return;
-  }
-
-  // Agregar a la lista temporal (sin ID, se creará al guardar el formulario principal)
-  this.registros_vagones_temporales.push({
-    ...nuevoVagon,
-    id: null // Asegurarse que no tenga ID
-  });
-
-  // Actualizar lista de visualización
-  this.registros_vagones_cargados = [...this.registros_vagones_temporales];
-},
+          // Verificar si el vagón ya está en la lista temporal
+          const existe = this.registros_vagones_temporales.some(
+              v => v.no_id === nuevoVagon.no_id && 
+                  v.fecha_despacho === nuevoVagon.fecha_despacho
+          );
+          
+          if (existe) {
+              Swal.fire("Advertencia", "Este vagón ya fue agregado a la lista", "warning");
+              return;
+          }
+          
+          // Agregar a la lista temporal
+          this.registros_vagones_temporales.push({
+              ...nuevoVagon,
+              id: null
+          });
+          
+          // Actualizar lista de visualización (creando nuevo array)
+          this.registros_vagones_cargados = [...this.registros_vagones_temporales];
+      },
 
     async calcularRealCargaDescarga() {
             if (!this.formData.lista_productos || this.formData.lista_productos.length === 0) {
@@ -548,6 +564,20 @@
         },
 
         async submitForm() {
+
+          // Validación de campos obligatorios base
+        if (!this.formData.tipo_equipo_ferroviario || !this.formData.tipo_origen || 
+            !this.formData.origen || !this.formData.tipo_destino || !this.formData.destino) {
+          Swal.fire("Error", "Por favor complete todos los campos obligatorios", "error");
+          return;
+        }
+
+        // Validación específica para productos cuando estado es "cargado"
+        if (this.formData.estado === 'cargado' && 
+            (!this.formData.lista_productos || this.formData.lista_productos.length === 0)) {
+          Swal.fire("Error", "Debe seleccionar al menos un producto cuando el estado es 'Cargado'", "error");
+          return;
+        }
         // Asegurar que tenemos el cálculo más reciente
         await this.calcularRealCargaDescarga();
         
@@ -575,9 +605,19 @@
             this.formData.lista_productos = [];
             this.resetForm();
             
-            Swal.fire("Éxito", "Registro creado correctamente", "success");
+            // Mostrar mensaje de éxito y redireccionar
+            await Swal.fire({
+              title: "Éxito",
+              text: "Registro creado correctamente",
+              icon: "success",
+              confirmButtonText: "Aceptar"
+            });
             
-        } catch (error) {
+            // Redirección a InfoOperativo
+            this.$router.push({ name: 'InfoOperativo' });
+        } 
+        
+        catch (error) {
             console.error("Error al guardar:", error.response);
             let errorMsg = "No se pudo guardar el registro";
             
@@ -641,47 +681,88 @@
             window.history.back();
           }
         });
-      },
-      async delete_vagon_asignado(id) {
-        try {
-            await axios.delete(`/ufc/vagones-cargados-descargados/${id}/`);
-            
-            // Actualizar la lista eliminando el registro borrado
-            this.registros_vagones_cargados = this.registros_vagones_cargados.filter(
-                (vagon) => vagon.id !== id
-            );
-            
-            Swal.fire(
-                "Eliminado!",
-                "El registro principal y todos sus vagones asociados han sido eliminados exitosamente.",
-                "success"
-            );
-        } catch (error) {
-            console.error("Error al eliminar el vagon asignado:", error);
-            Swal.fire(
-                "Error", 
-                "Hubo un error al eliminar el registro principal y sus vagones asociados.", 
-                "error"
-            );
-        }
-    },
+      },      
     
-    confirmDeleteVagonAsignado(id) {
-        Swal.fire({
-            title: "¿Estás seguro?",
-            text: "¡Esta acción eliminará el registro principal y todos los vagones asociados!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Sí, eliminar todo",
-            cancelButtonText: "Cancelar",
-            reverseButtons: true,
-        }).then((result) => {
-            if (result.isConfirmed) {
-                this.delete_vagon_asignado(id);
-            }
-        });
-    },
-  
+      confirmDeleteVagonAsignado(item) {
+          // Verificación adicional de seguridad
+          if (!item) {
+              console.error("Item a eliminar es null/undefined");
+              Swal.fire("Error", "No se puede eliminar: elemento no válido", "error");
+              return;
+          }
+
+          // Si es un vagon temporal (sin ID)
+          if (item.id === null || item.id === undefined) {
+              Swal.fire({
+                  title: "¿Estás seguro?",
+                  text: "¿Quieres eliminar este vagón de la lista temporal?",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonText: "Sí, eliminar",
+                  cancelButtonText: "Cancelar",
+              }).then((result) => {
+                  if (result.isConfirmed) {
+                      this.deleteVagonTemporal(item);
+                  }
+              });
+          } else {
+              // Si es un vagon persistente (con ID)
+              Swal.fire({
+                  title: "¿Estás seguro?",
+                  text: "¡Esta acción eliminará el registro principal y todos los vagones asociados!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonText: "Sí, eliminar todo",
+                  cancelButtonText: "Cancelar",
+                  reverseButtons: true,
+              }).then((result) => {
+                  if (result.isConfirmed) {
+                      this.delete_vagon_asignado(item.id);
+                  }
+              });
+          }
+      },
+      deleteVagonTemporal(item) {
+          try {
+              // Validación exhaustiva del item
+              if (!item || typeof item !== 'object' || item === null) {
+                  throw new Error("El elemento a eliminar no es válido");
+              }
+
+              // Validación de propiedades requeridas
+              if (!item.hasOwnProperty('no_id') || !item.hasOwnProperty('fecha_despacho')) {
+                  throw new Error("El elemento no tiene las propiedades requeridas");
+              }
+
+              // Encontrar el índice usando propiedades seguras
+              const index = this.registros_vagones_temporales.findIndex(
+                  vagon => vagon && 
+                          vagon.no_id === item.no_id && 
+                          vagon.fecha_despacho === item.fecha_despacho
+              );
+
+              if (index === -1) {
+                  Swal.fire("Error", "No se encontró el vagón en la lista temporal", "error");
+                  return;
+              }
+
+              // Eliminar el elemento
+              this.registros_vagones_temporales.splice(index, 1);
+              
+              // Actualizar lista de visualización (creando nuevo array para reactividad)
+              this.registros_vagones_cargados = [...this.registros_vagones_temporales];
+              
+              Swal.fire("Éxito", "Vagón eliminado correctamente", "success");
+              
+          } catch (error) {
+              console.error("Error al eliminar vagón temporal:", error);
+              Swal.fire(
+                  "Error", 
+                  `No se pudo eliminar el vagón: ${error.message}`, 
+                  "error"
+              );
+          }
+      },
       async getNoLocomotoras() {
         try {
             // Hacemos la petición al nuevo endpoint que ya filtra las locomotoras
@@ -770,19 +851,7 @@
       cerrarModalAddProductoCargado() {
         this.mostrarModalProducto = false;
         this.getProductos();
-      }, 
-      
-      /* abrir y cerrar modal de agregar vagon en estado de vagones cargados */
-      abrirModalAgregarVagon() {
-        this.mostrarModalVagon = true;
-      },
-      
-        
-        cerrarModalAddVagonCargado() {
-          this.mostrarModalVagon = false;
-          // No necesitas llamar a getProductos() aquí a menos que sea realmente necesario
-        }, 
-  
+      },       
       validateForm() {
         const nombre_atraque_regex = /^[A-Z][A-Za-z ]{2,99}$/;
   

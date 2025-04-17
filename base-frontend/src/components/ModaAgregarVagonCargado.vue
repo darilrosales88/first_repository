@@ -172,11 +172,23 @@
       this.getPuertos();
     },
     methods: {
+      cerrarModal() {
+        this.$emit("cerrar-modal");
+      },
       
       async submitForm() {
   // Validación de campos
   if (!this.formData.no_id || !this.formData.fecha_despacho || !this.formData.origen) {
     Swal.fire("Error", "Por favor complete todos los campos obligatorios", "error");
+    return;
+  }
+   
+  /*validando que la fecha de despacho no sea mayor que la fecha de llegada */
+  const fechaDespacho = new Date(this.formData.fecha_despacho);
+  const fechaLlegada = new Date(this.formData.fecha_llegada || this.formData.fecha_despacho);
+  
+  if (fechaDespacho > fechaLlegada) {
+    Swal.fire("Error", "La fecha de despacho no puede ser posterior a la fecha de llegada", "error");
     return;
   }
 
@@ -197,6 +209,7 @@
         try {
             const response = await axios.get("/api/e-f-no-locomotora/");
             this.equipos_ferroviarios = response.data;
+            console.log()
         } catch (error) {
             console.error("Error al obtener los equipos ferroviarios:", error);
             Swal.fire("Error", "Hubo un error al obtener los equipos ferroviarios.", "error");
@@ -265,5 +278,36 @@
     width: 80%;
     max-width: 600px;
   }
+
+  /* Estilos para el modal hijo (debe estar en el componente hijo), que se sobreponga por encima del comp padre */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000; /* Mayor que cualquier otro elemento */
+}
+
+.modal-content {
+  background-color: white;
+  padding: 25px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  z-index: 2001;
+}
+
+/* Ocultar elementos del padre cuando el modal está activo */
+.v-show-modal-active {
+  display: none !important;
+}
   </style>
   

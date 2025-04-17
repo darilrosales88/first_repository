@@ -238,7 +238,7 @@ class registro_vagones_cargados_serializer(serializers.ModelSerializer):
                 obj.save()
             return obj
         except Exception as e:
-            raise serializers.ValidationError(f"Error al guardar el vagóncito: {str(e)}")
+            raise serializers.ValidationError(f"Error al guardar el vagón: {str(e)}")
         
 #-------------------------********************------------EN_TRENES--------------------***************-----------------************    
 

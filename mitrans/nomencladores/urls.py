@@ -32,6 +32,7 @@ urlpatterns = [
     path('entidades-acceso-ccd/', entidades_acceso_comercial_ccdView.as_view(), name='entidades-acceso-ccd'),
     #tipos de equipos ferro que no son locomotora
     path('tipo-e-f-no-locomotora/', tipo_equipo_ferroviario_no_locomotora.as_view(), name='tipo-e-f-no-locomotora'),
+    #equipos ferro que no son locomotora
     path('e-f-no-locomotora/', equipo_ferroviario_no_locomotora.as_view(), name='e-f-no-locomotora'),
     
 ]

@@ -41,7 +41,7 @@ from Administracion.serializers import GroupSerializer
 from django.contrib.auth.models import Group
 from rest_framework.permissions import IsAuthenticated  # Importa IsAuthenticated
 
-
+from ufc.models import registro_vagones_cargados  # Importar el modelo de la app ufc
 
 #para el filtrado
 from django_filters.rest_framework import DjangoFilterBackend
@@ -1841,19 +1841,24 @@ class nom_embarcacion_view_set(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 
-#retorna todos los equipos ferroviarios excepto los de tipo "Locomotora"
+#retorna todos los equipos ferroviarios excepto los de tipo "Locomotora", y que no se encuentren presentes en el estado 
+#vagones cargados/descargados
 class equipo_ferroviario_no_locomotora(APIView):
     def get(self, request):
-        # Primero obtenemos los IDs de los tipos de equipo que no son locomotoras
         tipos_no_locomotoras = nom_tipo_equipo_ferroviario.objects.exclude(tipo_equipo='locomotora')
         
-        # Luego filtramos los equipos ferroviarios que tienen esos tipos
-        equipos_no_locomotoras = nom_equipo_ferroviario.objects.filter(tipo_equipo__in=tipos_no_locomotoras)
+        # Usamos subquery para mejor rendimiento
+        vagones_registrados = registro_vagones_cargados.objects.exclude(
+            Q(no_id__isnull=True) | Q(no_id__exact='')
+        ).values('no_id')
         
-        # Serializar los datos (usando el serializer correcto)
+        equipos_no_locomotoras = nom_equipo_ferroviario.objects.filter(
+            tipo_equipo__in=tipos_no_locomotoras
+        ).exclude(
+            numero_identificacion__in=vagones_registrados
+        )
+        
         serializer = nom_equipo_ferroviario_serializer(equipos_no_locomotoras, many=True)
-        
-        # Devolver la respuesta
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 class nom_equipo_ferroviario_view_set(viewsets.ModelViewSet):

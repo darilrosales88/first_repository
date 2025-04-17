@@ -321,7 +321,10 @@ export default {
       try {
         const response = await axios.get("http://127.0.0.1:8000/ufc/situados/");
         this.totalItems = response.data.count;
-        if (response.data && Array.isArray(response.data.results || response.data)) {
+        if (
+          response.data &&
+          Array.isArray(response.data.results || response.data)
+        ) {
           const data = response.data.results || response.data;
           this.allRecords = data.map((item) => ({
             id: item.id,
@@ -334,7 +337,7 @@ export default {
             situados: item.situados || 0,
             pendiente_proximo_dia: item.pendiente_proximo_dia || 0,
             observaciones: item.observaciones || "",
-            created_at: item.created_at || null
+            created_at: item.created_at || null,
           }));
 
           this.registrosPorSituar = [...this.allRecords];
@@ -400,11 +403,11 @@ export default {
             item.producto_name,
             item.situados?.toString(),
             item.pendiente_proximo_dia?.toString(),
-            item.observaciones
+            item.observaciones,
           ];
-          
-          return fieldsToSearch.some(field => 
-            field && field.toString().toLowerCase().includes(query)
+
+          return fieldsToSearch.some(
+            (field) => field && field.toString().toLowerCase().includes(query)
           );
         });
 
@@ -412,6 +415,9 @@ export default {
       }, 300);
     },
 
+    // Agregar nuevo registro
+
+    // Confirmar eliminación
     async confirmDelete(id) {
       const result = await Swal.fire({
         title: "¿Eliminar registro?",
@@ -516,17 +522,17 @@ export default {
     },
 
     formatDate(dateString) {
-      if (!dateString) return 'N/A';
-      const options = { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+      if (!dateString) return "N/A";
+      const options = {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       };
-      return new Date(dateString).toLocaleDateString('es-ES', options);
-    }
-  }
+      return new Date(dateString).toLocaleDateString("es-ES", options);
+    },
+  },
 };
 </script>
 

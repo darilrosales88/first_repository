@@ -285,7 +285,7 @@ export default {
   computed: {
     filteredRecords() {
       if (!this.searchQuery) return this.registrosPorSituar;
-      
+
       const query = this.searchQuery.toLowerCase();
       return this.registrosPorSituar.filter(item => {
         const fieldsToSearch = [
@@ -296,14 +296,14 @@ export default {
           item.operacion,
           item.producto_name,
           item.por_situar?.toString(),
-          item.observaciones
+          item.observaciones,
         ];
-        
-        return fieldsToSearch.some(field => 
-          field && field.toString().toLowerCase().includes(query)
+
+        return fieldsToSearch.some(
+          (field) => field && field.toString().toLowerCase().includes(query)
         );
       });
-    }
+    },
   },
 
   mounted() {
@@ -447,20 +447,18 @@ export default {
       this.showErrorToast(errorMsg);
     },
 
-    
-
     formatDate(dateString) {
-      if (!dateString) return 'N/A';
-      const options = { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+      if (!dateString) return "N/A";
+      const options = {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       };
-      return new Date(dateString).toLocaleDateString('es-ES', options);
-    }
-  }
+      return new Date(dateString).toLocaleDateString("es-ES", options);
+    },
+  },
 };
 </script>
 

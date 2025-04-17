@@ -275,7 +275,7 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = arrastres
-        fields= ('tipo_origen','tipo_equipo','estado','producto','cantidad_vagones','destino')
+        fields= ('id','tipo_origen','tipo_equipo','estado','producto','cantidad_vagones','destino')
         filterset_class = PendienteArrastreFilter
     
         

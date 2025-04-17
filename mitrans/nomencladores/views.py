@@ -1721,7 +1721,7 @@ class nom_tipo_equipo_ferroviario_view_set(viewsets.ModelViewSet):
 
         return super().list(request, *args, **kwargs)
 
-#retorna solo las entidades cuyo tipo sean de acceso comercial o de ccd
+#retorna los tipos de equipo
 class tipo_equipo_ferroviario_no_locomotora(APIView):
     def get(self, request):
         # Excluir los tipos de equipos ferroviarios cuyo tipo sea "locomotora"
@@ -1840,6 +1840,22 @@ class nom_embarcacion_view_set(viewsets.ModelViewSet):
 
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
+
+#retorna todos los equipos ferroviarios excepto los de tipo "Locomotora"
+class equipo_ferroviario_no_locomotora(APIView):
+    def get(self, request):
+        # Primero obtenemos los IDs de los tipos de equipo que no son locomotoras
+        tipos_no_locomotoras = nom_tipo_equipo_ferroviario.objects.exclude(tipo_equipo='locomotora')
+        
+        # Luego filtramos los equipos ferroviarios que tienen esos tipos
+        equipos_no_locomotoras = nom_equipo_ferroviario.objects.filter(tipo_equipo__in=tipos_no_locomotoras)
+        
+        # Serializar los datos (usando el serializer correcto)
+        serializer = nom_equipo_ferroviario_serializer(equipos_no_locomotoras, many=True)
+        
+        # Devolver la respuesta
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
 class nom_equipo_ferroviario_view_set(viewsets.ModelViewSet):
     queryset = nom_equipo_ferroviario.objects.all()
     serializer_class = nom_equipo_ferroviario_serializer
@@ -2069,7 +2085,7 @@ class nom_estado_tecnico_view_set(viewsets.ModelViewSet):
 
 #/*********************************************************************************************************************************************
 class nom_producto_view_set(viewsets.ModelViewSet):
-    queryset = nom_producto.objects.all()
+    queryset = nom_producto.objects.all().order_by('nombre_producto')  # Orden obligatorio
     serializer_class = nom_producto_serializer
 
     def get_queryset(self):

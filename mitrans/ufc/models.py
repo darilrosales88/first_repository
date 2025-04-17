@@ -101,15 +101,80 @@ class vagon_cargado_descargado(models.Model):
     destino = models.CharField(max_length=40)
     causas_incumplimiento = models.TextField(null=True, blank=True, max_length = 100)
     # Cambiamos ForeignKey a ManyToManyField, es posible que un vagon tenga mas de un producto
-    producto = models.ManyToManyField(productos_vagones_cargados_descargados)
+    producto = models.ManyToManyField(
+        productos_vagones_cargados_descargados,
+        blank=True,
+        related_name='vagones_asociados'
+    )
+
+    registros_vagones = models.ManyToManyField(
+        'registro_vagones_cargados',
+        blank=True,
+        related_name='vagon_principal',
+        verbose_name="Registros de vagones asociados"
+    )
 
     class Meta:
         verbose_name_plural = "Vagones cargados/descargados"
-        verbose_name = "Vagón cargado/descargado"         
+        verbose_name = "Vagón cargado/descargado"   
+
+    def delete(self, *args, **kwargs):
+        # Eliminar primero los registros_vagones asociados
+        self.registros_vagones.all().delete()
+        # Luego eliminar el registro padre
+        super().delete(*args, **kwargs)     
 
     def __str__(self):
         return f"Vagón {self.id} - {self.get_estado_display()}"
+    
+# modelo para registrar los vagones asociados al estado vagones cargados/descargados
+class registro_vagones_cargados(models.Model):
+    # Opciones para el campo tipo_origen
+    TIPO_ORIGEN_CHOICES = [
+        ('puerto', 'Puerto'),
+        ('ac_ccd', 'Acceso comercial/CCD'),
+    ]
 
+    no_id = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        unique=True,
+        verbose_name="Número de identificación",
+        help_text="Valores definidos en el nomenclador de equipos ferroviarios (excepto 'Locomotora')"
+    )
+    
+    fecha_despacho = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Fecha de despacho"
+    )
+    
+    tipo_origen = models.CharField(choices=TIPO_ORIGEN_CHOICES, max_length = 50,null=True,blank=True)
+    
+    origen = models.CharField(max_length=40,null=True,blank=True)
+    
+    fecha_llegada = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Fecha de llegada"
+    )
+    
+    observaciones = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="Observaciones",
+        help_text="Admite letras, números y caracteres especiales"
+    )
+
+    class Meta:
+        verbose_name = "Registro de vagón cargado"
+        verbose_name_plural = "Registros de vagones cargados"
+        db_table = "registro_vagones_cargados"
+
+    def __str__(self):
+        return f"Vagón {self.no_id}" if self.no_id else "Registro sin ID"
+#************************************************************************************************************************************
 #Modelo para representar en_trenes
 class en_trenes(models.Model):
     

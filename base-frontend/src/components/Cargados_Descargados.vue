@@ -2,11 +2,10 @@
     <div class="container py-3">
       <!-- Encabezado con acciones -->
       <div class="d-flex justify-content-between align-items-center mb-4">
-        <!-- Botón de agregar - más destacado -->
-  
+        <!-- Botón de agregar - más destacado -->  
         <button class="btn btn-link p-0" @click="showModal = true">
           <router-link
-            v-if="hasPermission"
+           v-if="hasGroup('AdminUFC')"
             to="AdicionarVagonCargadoDescargado"
             title="Agregar nuevo vagón cargado/descargado"
           >
@@ -38,18 +37,13 @@
         <table class="table table-hover mb-0">
           <thead>
             <tr>
-              <th scope="col" style="width: 50px">#</th>
-              <th scope="col">Locomotora</th>
-              <th scope="col">Tipo</th>
-              <th scope="col">Estado</th>
-              <th scope="col">Producto</th>
-              <th scope="col" class="text-end">Cant. Vagones</th>
+              <th scope="col" style="width: 50px">No</th>
+              <th scope="col">TEF</th>
               <th scope="col">Origen</th>
               <th scope="col">Destino</th>
-              <th scope="col" v-if="showNoId">Descripción</th>
-              <th scope="col" v-if="hasPermission" style="width: 120px">
-                Acciones
-              </th>
+              <th scope="col">Estado</th>
+              <th scope="col">Productos</th>
+              <th scope="col" > Acciones </th>
             </tr>
             <tr v-if="!busqueda_existente">
               <td colspan="8" class="text-center text-muted py-4">
@@ -62,52 +56,45 @@
           </thead>
           <tbody>
             <tr
-              v-for="(tren, index) in en_trenes"
-              :key="tren.id"
+              v-for="(vagon, index) in cargados_descargados"
+              :key="vagon.id"
               class="align-middle"
             >
               <th scope="row">{{ index + 1 }}</th>
-              <td>{{ tren.numero_identificacion_locomotora || "-" }}</td>
-              <td>{{ tren.tipo_equipo || "-" }}</td>
+              <td>{{ vagon.tipo_equipo_ferroviario_name }}</td>
+              <td>{{ vagon.origen }}</td>
               <td>
                 <span>
-                  {{ tren.estado || "-" }}
+                  {{ vagon.destino }}
                 </span>
-              </td>
-              <td>{{ tren.producto_name || "-" }}</td>
-              <td class="text-end">{{ tren.cantidad_vagones || "0" }}</td>
-              <td>{{ tren.origen || "-" }}</td>
-              <td>{{ tren.destino || "-" }}</td>
-              <td v-if="showNoId">{{ tren.descripcion || "-" }}</td>
-              <td v-if="hasPermission">
-                <div class="d-flex">
-                  <button
-                    @click="openVagonDetailsModal(tren)"
-                    class="btn btn-sm btn-outline-info me-2"
-                    :title="showNoId ? 'Ocultar detalles' : 'Ver detalles'"
-                  >
-                    <i
-                      :class="
-                        showNoId ? 'bi bi-eye-slash-fill' : 'bi bi-eye-fill'
-                      "
-                    ></i>
-                  </button>
-                  <router-link
-                    :to="{ name: 'EditarEnTren', params: { id: tren.id } }"
-                    class="btn btn-sm btn-outline-warning me-2"
-                    title="Editar"
-                  >
-                    <i class="bi bi-pencil-square"></i>
-                  </router-link>
-                  <button
-                    @click.prevent="confirmDelete(tren.id)"
-                    class="btn btn-sm btn-outline-danger"
-                    title="Eliminar"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
-              </td>
+              </td>              
+              <td>{{ vagon.estado }}</td>
+              <td>{{ vagon.productos_list }}</td>
+              <td v-if="hasGroup('AdminUFC')">
+              <div class="d-flex">
+                <button
+                  @click="viewDetails(tren)"
+                  class="btn btn-sm btn-outline-info me-2"
+                  title="Ver detalles"
+                >
+                  <i class="bi bi-eye-fill"></i>
+                </button>
+                <button
+                  @click="editTren(vagon)"
+                  class="btn btn-sm btn-outline-warning me-2"
+                  title="Editar"
+                >
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+                <button
+                  @click="confirmDelete(vagon.id)"
+                  class="btn btn-sm btn-outline-danger"
+                  title="Eliminar"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
             </tr>
           </tbody>
         </table>
@@ -116,7 +103,7 @@
       <!-- Paginación mejorada -->
       <div class="d-flex justify-content-between align-items-center">
         <div class="text-muted small">
-          Mostrando {{ en_trenes.length }} de {{ totalItems }} registros
+          Mostrando {{ cargados_descargados.length }} de {{ totalItems }} registros
         </div>
         <nav aria-label="Page navigation">
           <ul class="pagination pagination-sm mb-0">
@@ -144,12 +131,6 @@
       </div>
       <!-- Termina la paginacion -->
   
-      <!-- Modal para detalles -->
-      <ModalEnTrenes
-        v-if="mostrarModal"
-        :visible="mostrarModal"
-        @cerrar-modal="cerrarModal"
-      />
     </div>
   </template>
   
@@ -193,14 +174,13 @@
   <script>
   import axios from "axios";
   import Swal from "sweetalert2";
-  import ModalEnTrenes from "@/components/ModalViewEnTrenes.vue";
   
   export default {
     name: "EnTrenes",
   
     data() {
       return {
-        en_trenes: [], // Lista de trenes
+        cargados_descargados: [], // Lista de trenes
         currentPage: 1, // Página actual
         itemsPerPage: 10, // Elementos por página
         totalItems: 0, // Total de elementos
@@ -213,64 +193,57 @@
         mostrarModal: false,
         mostrarModal: false,
       };
-    },
+    },    
   
     async mounted() {
       // Cuando el componente se monta, llamamos a las funciones necesarias// Obtener el rol del usuario
-      await this.getTrenes();
-      await this.hasGroup(); // Obtener la lista de trenes
+      await this.getVagonesCargadosDescargados();
       await this.fetchUserPermissionsAndGroups();
-      console.log(this.user_role);
+      
     },
   
     methods: {
-      // Verifica si el usuario tiene un permiso específico
-  
-      hasPermission() {
-        if (this.user_role === "role") {
-          return true;
-        } else {
-          return this.user_role === "admin";
-        }
-      },
+      
       toggleContentVisibility() {
         this.showContent = !this.showContent; // Alternar la visibilidad de las columnas No e Id
       },
+      
       hasGroup(group) {
-        return this.userGroups.some((g) => g.name === group);
-      },
-      // Obtiene los permisos y grupos del usuario desde el backend
-      async fetchUserPermissionsAndGroups() {
-        try {
-          const userId = localStorage.getItem("userid");
-          if (userId) {
-            const response = await axios.get(`/apiAdmin/users/${userId}/`);
-            this.userPermissions = response.data.permissions;
-            this.userGroups = response.data.groups;
-            this.user_role = response.data.role;
-          }
-        } catch (error) {
-          console.error("Error al obtener permisos y grupos:", error);
+      return this.userGroups.some((g) => g.name === group);
+    },
+    // Obtiene los permisos y grupos del usuario desde el backend
+    async fetchUserPermissionsAndGroups() {
+      try {
+        const userId = localStorage.getItem("userid");
+        if (userId) {
+          const response = await axios.get(
+            `/apiAdmin/user/${userId}/permissions-and-groups/`
+          );
+          this.userPermissions = response.data.permissions;
+          this.userGroups = response.data.groups;
         }
-      },
+      } catch (error) {
+        console.error("Error al obtener permisos y grupos:", error);
+      }
+    },
   
-      async getTrenes() {
+      async getVagonesCargadosDescargados() {
         try {
-          const response = await axios.get("/ufc/en-trenes/", {
+          const response = await axios.get("/ufc/vagones-cargados-descargados/", {
             params: {
               page: this.currentPage, // Página actual
               page_size: this.itemsPerPage, // Elementos por página
             },
           });
-          this.en_trenes = response.data.results; // Datos de la página actual
+          this.cargados_descargados = response.data.results; // Datos de la página actual
           this.totalItems = response.data.count; // Total de elementos
-          console.log("Trenes obtenidos:", this.en_trenes);
+          console.log("Trenes obtenidos:", this.cargados_descargados);
         } catch (error) {
           console.error("Error al obtener los trenes:", error);
         }
       },
   
-      async searchTrenes() {
+      async searchVagones() {
         this.$store.commit("setIsLoading", true);
         try {
           const response = await axios.get("/ufc/en-trenes/", {
@@ -280,9 +253,9 @@
               page_size: this.itemsPerPage, // Elementos por página
             },
           });
-          this.en_trenes = response.data.results; // Datos de la página actual
+          this.cargados_descargados = response.data.results; // Datos de la página actual
           this.totalItems = response.data.count; // Total de elementos
-          this.busqueda_existente = this.en_trenes.length > 0;
+          this.busqueda_existente = this.cargados_descargados.length > 0;
         } catch (error) {
           console.error("Error al buscar trenes", error);
           this.busqueda_existente = false;
@@ -293,13 +266,13 @@
       handleSearchInput() {
         clearTimeout(this.debounceTimeout);
         this.debounceTimeout = setTimeout(() => {
-          this.searchTrenes();
+          this.searchVagones();
         }, 300);
       },
       previousPage() {
         if (this.currentPage > 1) {
           this.currentPage--;
-          this.getTrenes();
+          this.getVagonesCargadosDescargados();
         }
       },
   
@@ -307,20 +280,20 @@
       nextPage() {
         if (this.currentPage * this.itemsPerPage < this.totalItems) {
           this.currentPage++;
-          this.getTrenes();
+          this.getVagonesCargadosDescargados();
         }
       },
   
       // Cambiar a una página específica
       goToPage(page) {
         this.currentPage = page;
-        this.getTrenes();
+        this.getVagonesCargadosDescargados();
       },
       async delete_tren(id) {
         try {
-          await axios.delete(`/ufc/en-trenes/${id}/`);
+          await axios.delete(`/ufc/vagones-cargados-descargados/${id}/`);
           // Actualizar la lista de productos eliminando el que se ha borrado
-          this.en_trenes = this.en_trenes.filter((tren) => tren.id !== id);
+          this.cargados_descargados = this.cargados_descargados.filter((objeto) => objeto.id !== id);
   
           Swal.fire(
             "Eliminado!",
@@ -358,17 +331,17 @@
           title: "Detalles del Vagon",
           html: `
               <div style="text-align: left;">
-                  <p><strong>No Id Locomotora:</strong> ${tren.numero_identificacion_locomotora}</p>
-                  <p><strong>Tipo de equipo:</strong> ${tren.tipo_equipo}</p>
-                  <p><strong>Estado:</strong> ${tren.estado}</p>
-                  <p><strong>Producto Id:</strong> ${tren.producto}</p>
-                  <p><strong>Producto nombre:</strong> ${tren.producto_name}</p>
-                  <p><strong>Tipo de origen:</strong> ${tren.tipo_origen}</p>
-                  <p><strong>Origen:</strong> ${tren.origen}</p>
-                  <p><strong>Tipo de destino:</strong> ${tren.tipo_destino}</p>
-                  <p><strong>Destino:</strong> ${tren.destino}</p> 
-                  <p><strong>Nombre del equipo de carga:</strong> ${tren.equipo_carga_name}</p>
-                  <p><strong>Observaciones:</strong> ${tren.observaciones}</p>
+                  <p><strong>No Id Locomotora:</strong> ${vagon.numero_identificacion_locomotora}</p>
+                  <p><strong>Tipo de equipo:</strong> ${vagon.tipo_equipo}</p>
+                  <p><strong>Estado:</strong> ${vagon.estado}</p>
+                  <p><strong>Producto Id:</strong> ${vagon.producto}</p>
+                  <p><strong>Producto nombre:</strong> ${vagon.producto_name}</p>
+                  <p><strong>Tipo de origen:</strong> ${vagon.tipo_origen}</p>
+                  <p><strong>Origen:</strong> ${vagon.origen}</p>
+                  <p><strong>Tipo de destino:</strong> ${vagon.tipo_destino}</p>
+                  <p><strong>Destino:</strong> ${vagon.destino}</p> 
+                  <p><strong>Nombre del equipo de carga:</strong> ${vagon.equipo_carga_name}</p>
+                  <p><strong>Observaciones:</strong> ${vagon.observaciones}</p>
                   
               </div>
           `,
@@ -380,17 +353,11 @@
           },
         });
       },
-      abrirModalEnTren() {
-        this.mostrarModal = true;
-        console.log("Abriendo Modal....");
-      },
+      
       cerrarModal() {
         this.mostrarModal = false;
       },
-      abrirModalEnTren() {
-        this.mostrarModal = true;
-        console.log("Abriendo Modal....");
-      },
+      
       cerrarModal() {
         this.mostrarModal = false;
       },

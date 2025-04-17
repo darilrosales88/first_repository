@@ -3,7 +3,6 @@
       <h6>Bienvenido:</h6>
     </div>
     <Navbar-Component />
-    <Producto-Vagones />
     <div class="container mt-2 px-6" style="padding-left: 10%">
       <div class="row mb-4">
         <h2 class="mb-4">Nuevo registro de vagón cargado/descargado</h2>
@@ -11,25 +10,25 @@
           <div class="row">
             <!-- Columna 1 -->
             <div class="col-md-6">
-              <!-- Campo: locomotora -->
+              <!-- Campo: TEF -->
               <div class="mb-3">
-                <label for="locomotora" class="form-label"
-                  >Locomotora <span style="color: red">*</span></label
+                <label for="tipo_equipo_ferroviario" class="form-label"
+                  >Tipo de equipo ferroviario <span style="color: red">*</span></label
                 >
                 <select
                   class="form-select"
-                  v-model="formData.locomotora"
-                  id="locomotora"
-                  name="Locomotora"
+                  v-model="formData.tipo_equipo_ferroviario"
+                  id="tipo_equipo_ferroviario"
+                  name="tipo_equipo_ferroviario"
                   required
                 >
                   <option
-                    v-for="locomotora in locomotoras"
-                    :key="locomotora.id"
-                    :value="locomotora.id"
+                    v-for="tipo_equipo_ferroviario in tipos_equipos_ferroviarios"
+                    :key="tipo_equipo_ferroviario.id"
+                    :value="tipo_equipo_ferroviario.id"
                   >
-                    {{ locomotora.id }}-{{ locomotora.numero_identificacion }} -
-                    {{ locomotora.tipo_equipo_name }}
+                    {{ tipo_equipo_ferroviario.id }}-{{ tipo_equipo_ferroviario.tipo_equipo_name }} -
+                    {{ tipo_equipo_ferroviario.descripcion }}
                   </option>
                 </select>
               </div>
@@ -87,88 +86,7 @@
                   </option>
                 </select>
               </div>
-  
-              <!-- Campo: tipo_equipo -->
-              <div class="mb-3">
-                <label for="tipo_equipo" class="form-label"
-                  >Tipo de Equipo <span style="color: red">*</span></label
-                >
-                <select
-                  class="form-select"
-                  v-model="formData.tipo_equipo"
-                  id="tipo_equipo"
-                  name="tipo_equipo"
-                  @click="buscarEquipos"
-                  required
-                >
-                  <option
-                    v-for="equipo in equipos"
-                    :key="equipo.id"
-                    :value="equipo.id"
-                  >
-                    {{ equipo.id }}-{{ equipo.tipo_equipo_name }}-
-                    {{ equipo.tipo_carga_name }}
-                  </option>
-                </select>
-              </div>
-  
-              <!-- Campo: estado -->
-              <div class="mb-3">
-                <label for="estado" class="form-label"
-                  >Estado <span style="color: red">*</span></label
-                >
-                <select
-                  class="form-select"
-                  v-model="formData.estado"
-                  id="estado"
-                  name="estado"
-                  required
-                >
-                  <option value="cargado">Cargado</option>
-                  <option value="vacio">Vacio</option>
-                </select>
-              </div>
-  
-              <!-- Campo: Vagon No ID -->
-              <div class="mb-3">
-                <label for="equipo_vagon" class="form-label"
-                  >Vagon No ID <span style="color: red">*</span></label
-                >
-                <select
-                  class="form-select"
-                  v-model="formData.equipo_vagon"
-                  id="equipo_vagon"
-                  name="equipo_vagon"
-                  required
-                  @click="onVagonChange"
-                >
-                  <option v-for="item in equipos_vagones" :value="item.id">
-                    {{ item.id }}-{{ item.numero_identificacion }}
-                  </option>
-                </select>
-              </div>
-            </div>
-  
-            <!--   <div class="mb-3">
-              <label for="equipo_id" class="form-label">Vagon No ID</label>
-              <select
-                @click="buscarEquipos"
-                class="form-select"
-                v-model="formData.equipo_vagon"
-                id="equipo_vagon"
-                name="equipo_vagon"
-              >
-                <option
-                  v-for="equipo_vagon in equipos_vagones"
-                  :value="equipo_vagon.id"
-                >
-                  {{ equipo_vagon.id }}-{{ equipo_vagon.numero_identificacion }}
-                </option>
-              </select>
-            </div> -->
-  
-            <!-- Columna 2 -->
-            <div class="col-md-6">
+
               <!-- Campo: tipo_destino -->
               <div class="mb-3">
                 <label for="tipo_destino" class="form-label"
@@ -195,8 +113,8 @@
                   v-if="formData.tipo_destino !== 'puerto'"
                   class="form-select"
                   v-model="formData.destino"
-                  id="destino"
-                  name="destino"
+                  id="tipo_destino"
+                  name="tipo_destino"
                 >
                   <option
                     v-for="entidad in entidades"
@@ -222,60 +140,124 @@
                     {{ puerto.id }}- {{ puerto.nombre_puerto }}
                   </option>
                 </select>
-              </div>
+              </div>             
   
-              <!-- Campo: producto -->
+              <!-- Campo: estado -->
               <div class="mb-3">
-                <label for="producto" class="form-label"
-                  >Producto<button
-                    class="create-button ms-2"
-                    @click="abrirModalAgregarProducto"
-                  >
-                    <i class="bi bi-plus-circle large-icon"></i></button
-                ></label>
-                <select
-                  v-if="formData.estado === 'cargado'"
-                  class="form-select"
-                  v-model="formData.producto"
-                  id="producto"
-                  name="producto"
+                <label for="estado" class="form-label"
+                  >Estado <span style="color: red">*</span></label
                 >
-                  <option v-for="producto in productos" :value="producto.id">
-                    {{ producto.id }}-{{ producto.producto_name }} -{{
-                      producto.producto_codigo
-                    }}-{{ producto.tipo_embalaje_name }}
-                  </option>
+                <select
+                  class="form-select"
+                  v-model="formData.estado"
+                  id="estado"
+                  name="estado"
+                  required
+                >
+                  <option value="cargado">Cargado</option>
+                  <option value="vacio">Vacio</option>
                 </select>
               </div>
-              <ModalAgregarProducto
-                v-if="mostrarModal"
-                :visible="mostrarModal"
-                @cerrar-modal="cerrarModal"
-              />
-              <!-- Campo: cantidad_vagones -->
+              
+            </div>
+  
+            
+            <!-- Columna 2 -->
+            <div class="col-md-6">              
+
+              <!-- Campo: operacion -->
               <div class="mb-3">
-                <label for="cantidad_vagones" class="form-label"
-                  >Cantidad de Vagones <span style="color: red">*</span></label
+                <label for="operacion" class="form-label"
+                  >Operación <span style="color: red">*</span></label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  v-model="formData.operacion"
+                  id="operacion"
+                  name="operacion" readonly
+                />
+              </div>
+              <!-- Campo: plan_diario_carga -->
+              <div class="mb-3">
+                <label for="plan_diario_carga" class="form-label"
+                  >Plan diario de carga/descarga <span style="color: red">*</span></label
                 >
                 <input
                   type="number"
                   class="form-control"
-                  v-model="formData.cantidad_vagones"
-                  id="cantidad_vagones"
-                  name="cantidad_vagones"
+                  v-model="formData.plan_diario_carga_descarga"
+                  id="plan_diario_carga_descarga"
+                  name="plan_diario_carga_descarga"
                 />
               </div>
-  
-              <!-- Campo: observaciones -->
+
+              <!-- Campo: plan_diario_carga -->
               <div class="mb-3">
-                <label for="observaciones" class="form-label"
-                  >Observaciones
+                <label for="real_carga_descarga" class="form-label"
+                  >Real de carga/descarga <span style="color: red">*</span></label
+                >
+                <input
+                  type="number"
+                  class="form-control"
+                  v-model="formData.real_carga_descarga"
+                  id="real_carga_descarga"
+                  name="real_carga_descarga" readonly
+                />
+              </div>
+              <!-- Campo: producto -->
+              <div class="mb-3" v-if="formData.estado === 'cargado'">
+                <label for="producto" class="form-label">
+                  Productos
+                  <button class="create-button ms-2" @click="abrirModalAgregarProducto">
+                    <i class="bi bi-plus-circle large-icon"></i>
+                  </button>
+                </label>
+                <select
+                  class="form-select"
+                  v-model="formData.lista_productos"
+                  id="producto"
+                  name="producto"
+                  multiple
+                  size="4"
+                >
+                  <option 
+                    v-for="producto in productos" 
+                    :key="producto.id" 
+                    :value="producto.id"
+                  >
+                    {{ producto.id }}-{{ producto.producto_name }} -
+                    {{ producto.producto_codigo }}-{{ producto.tipo_embalaje_name }}
+                  </option>
+                </select>
+                <small class="text-muted">Mantén presionado Ctrl (Windows) para seleccionar múltiples productos</small>
+              </div>
+
+              <!-- Modal para agregar producto cargado/descargado -->
+              <ModalAgregarProductoCargadoDescargado
+                v-if="mostrarModalProducto"
+                :visible="mostrarModalProducto"
+                @cerrar-modal="cerrarModalAddProductoCargado"
+              /> 
+              
+              <!-- Modal para agregar vagon a estado cargado/descargado -->
+              <ModalAgregarVagonCargado
+                v-if="mostrarModalVagon"
+                :visible="mostrarModalVagon"
+                @cerrar-modal="cerrarModalAddVagonCargado"
+                @vagon-agregado="handleVagonAgregado"
+              />
+  
+              <!-- Campo: causas_incumplimiento -->
+              <div class="mb-3">
+                <label for="causas_incumplimiento" class="form-label"
+                  >Causas del incumplimiento
                 </label>
                 <textarea
                   class="form-control"
-                  v-model="formData.observaciones"
-                  id="observaciones"
-                  name="observaciones"
+                  v-model="causas_incumplimiento"
+                  id="causas_incumplimiento"
+                  name="causas_incumplimiento"
                   rows="3"
                   required
                 ></textarea>
@@ -284,68 +266,72 @@
           </div>
   
           <!-- Botón de envío -->
-        </form>
-        <div class="text-center">
-          <button @click="agregarVagon" class="btn btn-primary">
-            Agregar Vagon
-          </button>
-          <button @click="submitForm" class="btn btn-primary">Guardar</button>
-          <button @click="volverEnTren" class="btn btn-secondary">Volver</button>
+           <div class="text-center">          
+          <button 
+          type="submit" 
+          class="btn btn-primary"
+          :disabled="registros_vagones_temporales.length === 0"
+          >Guardar</button>
+          <button @click="volver_principal" class="btn btn-secondary">Volver</button>
         </div>
+        </form>
+        
       </div>
-  
+  <br>
       <!-- Segunda fila: Lista de vagones -->
       <div class="row">
         <div class="col-md-12">
-          <h3>Vagones agregados</h3>
-          <table class="table table-striped">
+          <h4 v-if="registros_vagones_temporales.length > 0"> Cargados/descargados</h4>
+          <h4 v-else style="color: red;">* Debe agregar al menos un vagón</h4>
+          <button class="create-button ms-2" @click="abrirModalAgregarVagon">
+                    <i class="bi bi-plus-circle large-icon"></i>
+          </button>
+          <table class="table table-hover mb-0">
             <thead>
               <tr>
-                <th>No.</th>
-                <th>No. ID en trenes</th>
-                <th>Acciones</th>
+                <th>No ID</th>
+                <th>Fecha de despacho</th>
+                <th>Origen</th>
+                <th>Fecha de llegada</th>
+                <th>Observaciones</th>
+                <th v-if="hasGroup('AdminUFC')">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(vagon, index) in vagonesAgregados" :key="index">
-                <td>{{ index + 1 }}</td>
-                <td>
-                  {{ vagon["datos"]["equipo_vagon"] }}-{{ vagon["vagon_id"] }}
-                </td>
-                <td>
-                  <button
-                    class="btn btn-danger btn-sm"
-                    @click="eliminarVagon(index)"
-                  >
-                    Eliminar
-                  </button>
+              <tr v-if="hasGroup('AdminUFC')" v-for="(item, index) in registros_vagones_cargados" :key="index"> <!-- usar id como llave -->
+                <td>{{ item.no_id || 'Sin ID' }}</td> <!-- Manejo de null -->
+                <td>{{ item.fecha_despacho }}</td>
+                <td>{{ item.origen }}</td>
+                <td>{{ item.fecha_llegada }}</td>
+                <td>{{ item.observaciones }}</td>
+                <td>                  
+                  <span v-if="hasGroup('AdminUFC')">
+                    <button class="btn btn-warning btn-small">
+                      <!-- <router-link
+                        :to="{ name: 'EditarDestino', params: { id: item.id } }"
+                      >
+                        <i style="color: black" class="bi bi-pencil-square"></i>
+                      </router-link> -->
+                    </button>
+                    <button
+                      @click.prevent="confirmDeleteVagonAsignado(item.id)"
+                      class="btn btn-danger btn-small"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </span>
                 </td>
               </tr>
             </tbody>
-          </table>
+      </table>
+
   
-          <!-- Validación de cantidad de vagones -->
-          <div v-if="vagonesAgregados.length < formData.cantidad_vagones">
-            <p class="text-warning">
-              Faltan
-              {{ formData.cantidad_vagones - vagonesAgregados.length }} vagones
-              por agregar.
-            </p>
-          </div>
-          <div v-else-if="vagonesAgregados.length === formData.cantidad_vagones">
-            <p class="text-success">Todos los vagones han sido agregados.</p>
-          </div>
-          <div v-else>
-            <p class="text-danger">
-              Se han agregado más vagones de los permitidos o no ha especificado una cantidad.
-            </p>
-          </div>
         </div>
       </div>
     </div>
   </template>
   
-  <style scoped>
+<style scoped>
   .create-button {
     text-decoration: none;
     color: green;
@@ -419,56 +405,228 @@
     background-color: #007bff;
     color: white;
   }
-  </style>
+</style>
   
   <script>
   import axios from "axios";
   import Swal from "sweetalert2";
   import NavbarComponent from "@/components/NavbarComponent.vue";
-  import ModalAgregarProducto from "@/components/ModalAgregarProducto.vue";
+  import ModalAgregarProductoCargadoDescargado from "@/components/ModaAgregarProductoCargadoDescargado.vue";
+  import ModalAgregarVagonCargado from "@/components/ModaAgregarVagonCargado.vue";
   export default {
     name: "AdicionarVagonCargadoDescargado",
     components: {
       NavbarComponent,
-      ModalAgregarProducto,
+      ModalAgregarProductoCargadoDescargado,
+      ModalAgregarVagonCargado,
     },
     data() {
-      return {
+      return {        
         formData: {
-          locomotora: "",
-          tipo_origen: "acc_d",
-          origen: "",
-          tipo_equipo: "",
-          estado: "cargado",
-          tipo_destino: "ac_ccd",
-          destino: "",
-          producto: "",
-          cantidad_vagones: 0,
-          observaciones: "",
-          equipo_vagon: "",
-        },
-        mostrarModal: false,
+      tipo_equipo_ferroviario: "",
+      tipo_origen: "ac_ccd",
+      origen: "",
+      tipo_destino: "ac_ccd",
+      destino: "",
+      estado: "cargado",
+      lista_productos: [], 
+      plan_diario_carga_descarga: "",
+      real_carga_descarga: "",
+      operacion: "",
+      causas_incumplimiento: "" // Asegúrate de incluir este campo
+    },
+        registros_vagones_temporales: [], // Asegúrate de inicializarlo como array vacío
+        //vagonPrincipalId: null, // Para almacenar el ID del vagon principal
+        userGroups: [], // Inicializa como array vacío
+        userPermissions: [], // Inicializa como array vacío        
+        registros_vagones_cargados: [], // Lista filtrada de resitros de vagones en el estado cargado/descargado
+        mostrarModalProducto: false,
+        mostrarModalVagon: false,
         productos: [],
         equipos: [],
         equipos_vagones: [],
-        locomotoras: [],
+        tipos_equipos_ferroviarios: [],
         puertos: [],
         entidades: [],
-        vagonesAgregados: [],
-        numeroIdentificacionSeleccionado: null,
       };
     },
   
     mounted() {
       // Llama al método para obtener los puertos
       this.getProductos();
-      this.getEquipos();
-      this.getLocomotoras();
+      this.getNoLocomotoras();
       this.getEntidades();
-      this.getPuertos();
+      this.getPuertos();    
     },
+
+      /*actualizando automaticamente el valor del campo operacion a partir del campo estado */
+            watch: {
+          'formData.estado': {
+            immediate: true,
+            handler(newVal) {
+              if (newVal === 'vacio') {
+                this.formData.operacion = 'carga';
+              } else if (newVal === 'cargado') {
+                this.formData.operacion = 'descarga';
+              }
+            }
+          },
+
+          'formData.lista_productos': {
+              handler() {
+                  this.calcularRealCargaDescarga();
+              },
+              deep: true
+          },
+        },
+      async created() {
+        await this.fetchUserPermissionsAndGroups(); // Espera a que se carguen los permisos
+        //await this.GetRegistroVagonesCargadosDescargados(); // Luego carga los registros
+      },
   
     methods: {
+      // Verifica si el usuario tiene un permiso específico
+    hasPermission(permission) {
+      return this.userPermissions.some((p) => p.name === permission);
+    },
+    // Verifica si el usuario pertenece a un grupo específico
+    hasGroup(group) {
+          return this.userGroups.some((g) => g.name === group);
+        },
+        // Obtiene los permisos y grupos del usuario
+        async fetchUserPermissionsAndGroups() {
+          try {
+            const userId = localStorage.getItem("userid");
+            if (userId) {
+              const response = await axios.get(
+                `/apiAdmin/user/${userId}/permissions-and-groups/`
+              );
+              this.userPermissions = response.data.permissions;
+              this.userGroups = response.data.groups;
+            }
+          } catch (error) {
+            console.error("Error al obtener permisos y grupos:", error);
+          }
+        },
+
+        handleVagonAgregado(nuevoVagon) {
+  // Verificar si el vagón ya está en la lista temporal
+  const existe = this.registros_vagones_temporales.some(v => v.no_id === nuevoVagon.no_id);
+  
+  if (existe) {
+    Swal.fire("Advertencia", "Este vagón ya fue agregado a la lista", "warning");
+    return;
+  }
+
+  // Agregar a la lista temporal (sin ID, se creará al guardar el formulario principal)
+  this.registros_vagones_temporales.push({
+    ...nuevoVagon,
+    id: null // Asegurarse que no tenga ID
+  });
+
+  // Actualizar lista de visualización
+  this.registros_vagones_cargados = [...this.registros_vagones_temporales];
+},
+
+    async calcularRealCargaDescarga() {
+            if (!this.formData.lista_productos || this.formData.lista_productos.length === 0) {
+                this.formData.real_carga_descarga = 0;
+                return;
+            }
+            
+            try {
+                const response = await axios.post(
+                    '/ufc/vagones-cargados-descargados/calcular_total_vagones_por_productos/',
+                    { producto_ids: this.formData.lista_productos }
+                );
+                
+                this.formData.real_carga_descarga = response.data.total;
+            } catch (error) {
+                console.error('Error al calcular el total de vagones:', error);
+                this.formData.real_carga_descarga = 0;
+            }
+        },
+
+        async submitForm() {
+        // Asegurar que tenemos el cálculo más reciente
+        await this.calcularRealCargaDescarga();
+        
+        // Resto del código de envío del formulario...
+        try {
+            const datosEnvio = {
+                ...this.formData,
+                producto_ids: Array.isArray(this.formData.lista_productos)
+                    ? this.formData.lista_productos
+                    : [this.formData.lista_productos],
+                registros_vagones_data: this.registros_vagones_temporales.map(v => ({
+                    no_id: v.no_id,
+                    fecha_despacho: v.fecha_despacho,
+                    tipo_origen: v.tipo_origen,
+                    origen: v.origen,
+                    fecha_llegada: v.fecha_llegada,
+                    observaciones: v.observaciones
+                }))
+            };
+            
+            const response = await axios.post("/ufc/vagones-cargados-descargados/", datosEnvio);
+            
+            // Limpiar después del éxito
+            this.registros_vagones_temporales = [];
+            this.formData.lista_productos = [];
+            this.resetForm();
+            
+            Swal.fire("Éxito", "Registro creado correctamente", "success");
+            
+        } catch (error) {
+            console.error("Error al guardar:", error.response);
+            let errorMsg = "No se pudo guardar el registro";
+            
+            if (error.response?.data) {
+                errorMsg += `: ${JSON.stringify(error.response.data)}`;
+            }
+            
+            Swal.fire("Error", errorMsg, "error");
+        }
+    },
+
+      // Método para agregar registros temporales desde el modal
+      agregarRegistroTemporal(registro) {
+        this.registros_vagones_temporales.push(registro);
+      },
+
+  resetForm() {
+    this.formData = {
+      tipo_equipo_ferroviario: "",
+      tipo_origen: "ac_ccd",
+      origen: "",
+      tipo_destino: "ac_ccd",
+      destino: "",
+      estado: "cargado",
+      lista_productos: [], // Ahora es un array vacío en lugar de string vacío
+      plan_diario_carga_descarga: "",
+      real_carga_descarga: "",
+      operacion: "",
+      causas_incumplimiento: ""
+    };
+  },
+
+ /*        // Obtiene los registros de los vagones del estado cargado/descargado
+        async GetRegistroVagonesCargadosDescargados() {
+  try {
+    const response = await axios.get("/ufc/registro-vagones-cargados/");
+    
+    // Actualizar ambas listas
+    this.registros_vagones_cargados = response.data.results || [];
+    this.registros_vagones_temporales = [...this.registros_vagones_cargados];
+    
+  } catch (error) {
+    console.error("Error al cargar registros:", error);
+    this.registros_vagones_cargados = [];
+    this.registros_vagones_temporales = [];
+    Swal.fire("Error", "No se pudieron cargar los vagones", "error");
+  }
+}, */
+      
       confirmCancel() {
         Swal.fire({
           title: "¿Está seguro de que quiere cancelar la operación?",
@@ -484,124 +642,64 @@
           }
         });
       },
-  
-      resetForm() {
-        // Restablece los valores del formulario
-        this.formData = {
-          locomotora: "puerto",
-          tipo_origen: "acc_d",
-          origen: "",
-          tipo_equipo: "",
-          estado: "cargado",
-          tipo_destino: "ac_ccd",
-          destino: "",
-          producto: "",
-          cantidad_vagones: 0,
-          observaciones: "",
-          equipo_vagon: "",
-        };
-        this.vagonesAgregados = [];
-  
-        // Restablecer el número de identificación seleccionado
-        this.numeroIdentificacionSeleccionado = null;
-  
-        // Opcional: Limpiar el localStorage si es necesario
-        localStorage.removeItem("vagonesAgregados");
-        localStorage.removeItem("formData");
-      },
-  
-      async submitForm() {
-        const vagonesJson = localStorage.getItem("vagonesAgregados");
-        if (vagonesJson) {
-          const vagones = JSON.parse(vagonesJson);
-          for (const vagon in vagones) {
-            console.log(vagon["datos"]);
-          }
-          try {
-            for (const vagon of vagones) {
-              // Acceder a los datos del vagón
-              await axios.post("/ufc/en-trenes/", vagon.datos); // Enviar los datos al servidor
+      async delete_vagon_asignado(id) {
+        try {
+            await axios.delete(`/ufc/vagones-cargados-descargados/${id}/`);
+            
+            // Actualizar la lista eliminando el registro borrado
+            this.registros_vagones_cargados = this.registros_vagones_cargados.filter(
+                (vagon) => vagon.id !== id
+            );
+            
+            Swal.fire(
+                "Eliminado!",
+                "El registro principal y todos sus vagones asociados han sido eliminados exitosamente.",
+                "success"
+            );
+        } catch (error) {
+            console.error("Error al eliminar el vagon asignado:", error);
+            Swal.fire(
+                "Error", 
+                "Hubo un error al eliminar el registro principal y sus vagones asociados.", 
+                "error"
+            );
+        }
+    },
+    
+    confirmDeleteVagonAsignado(id) {
+        Swal.fire({
+            title: "¿Estás seguro?",
+            text: "¡Esta acción eliminará el registro principal y todos los vagones asociados!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, eliminar todo",
+            cancelButtonText: "Cancelar",
+            reverseButtons: true,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                this.delete_vagon_asignado(id);
             }
-            Swal.fire(
-              "Agregado!",
-              "El formulario sido añadido exitosamente.",
-              "success"
-            );
-            this.resetForm();
-          } catch (error) {
-            console.error("Error al agregar el formulario:", error);
-            console.log("Este es el error", error);
-            Swal.fire(
-              "Error",
-              `${error["response"]["data"]["non_field_errors"][0]}`,
-              "error"
-            );
-          }
-        } else {
-          Swal.fire("Error", "No hay vagones para agregar", "error");
-        }
-      },
+        });
+    },
   
-      onVagonChange(event) {
-        // Obtener el ID seleccionado
-        const selectedId = this.formData.equipo_vagon;
-  
-        // Buscar el objeto correspondiente en equipos_vagones
-        const selectedVagon = this.equipos_vagones.find(
-          (vagon) => vagon.id === selectedId
-        );
-  
-        // Guardar el número de identificación en una variable
-        if (selectedVagon) {
-          this.numeroIdentificacionSeleccionado =
-            selectedVagon.numero_identificacion;
-          console.log( "Número de identificación seleccionado:", this.numeroIdentificacionSeleccionado);
-        } else {
-          this.numeroIdentificacionSeleccionado = null;
-        }
-      },
-      /* Asi se capturan todos los objetos con paginado, Reproducir esta estructura en todos los demas Formularios */
-      async getLocomotoras() {
+      async getNoLocomotoras() {
         try {
-          let allLocomotoras = [];
-          let nextPage =
-            "/api/equipos_ferroviarios/?id_tipo_equipo_territorio=locomo"; // URL inicial con el filtro
-  
-          while (nextPage) {
-            const response = await axios.get(nextPage);
-            allLocomotoras = [...allLocomotoras, ...response.data.results];
-  
-            // Actualizamos nextPage con la URL de la siguiente página (o null si no hay más)
-            nextPage = response.data.next;
-          }
-  
-          this.locomotoras = allLocomotoras;
+            // Hacemos la petición al nuevo endpoint que ya filtra las locomotoras
+            const response = await axios.get("/api/tipo-e-f-no-locomotora/");
+            
+            // La respuesta ya contiene todos los datos filtrados (no es paginada)
+            this.tipos_equipos_ferroviarios = response.data;
+            
         } catch (error) {
-          console.error("Error al obtener las Locomotoras:", error);
-          Swal.fire(
-            "Error",
-            "Hubo un error al obtener las Locomotoras.",
-            "error"
-          );
+            console.error("Error al obtener los equipos ferroviarios:", error);
+            Swal.fire(
+                "Error",
+                "Hubo un error al obtener los equipos ferroviarios.",
+                "error"
+            );
         }
-      },
-  
-      async buscarEquipos() {
-        try {
-          let peticion = `/api/equipos_ferroviarios/?id_tipo_equipo_territorio=${this.formData["tipo_equipo"]}`;
-          let allEquipos = [];
-          while (peticion) {
-            const response = await axios.get(peticion);
-            allEquipos = [...allEquipos, ...response.data.results];
-  
-            peticion = response.data.next;
-          }
-          this.equipos_vagones = allEquipos;
-        } catch (error) {
-          console.error("Error al obtener los equipos:", error);
-          Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
-        }
-      },
+    },
+      
       async getEntidades() {
         try {
           let allEntidades = [];
@@ -621,8 +719,7 @@
           Swal.fire("Error", "Hubo un error al obtener las entidades.", "error");
         }
       },
-      volverEnTren() {
-        // Redirige a la vista "AdicionarProductoVagon"
+      volver_principal() {
         this.$router.push({ name: "InfoOperativo" });
       },
   
@@ -644,22 +741,12 @@
           console.error("Error al obtener los puertos:", error);
           Swal.fire("Error", "Hubo un error al obtener los puertos.", "error");
         }
-      },
-  
-      async getEquipos() {
-        try {
-          const response = await axios.get("/api/tipo-e-f-no-locomotora/");
-          this.equipos = response.data;
-        } catch (error) {
-          console.error("Error al obtener los equipos:", error);
-          Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
-        }
-      },
+      },      
   
       async getProductos() {
         try {
           let allProductos = [];
-          let nextPage = "/ufc/producto-vagon/"; // URL inicial
+          let nextPage = "/ufc/productos-vagones-cargados-descargados/"; // URL inicial
   
           while (nextPage) {
             const response = await axios.get(nextPage);
@@ -675,49 +762,26 @@
           Swal.fire("Error", "Hubo un error al obtener los productos.", "error");
         }
       },
+
+      /* abrir y cerrar modal de agregar producto en estado de vagones cargados */
       abrirModalAgregarProducto() {
-        this.mostrarModal = true;
+        this.mostrarModalProducto = true;
       },
-      cerrarModal() {
-        this.mostrarModal = false;
+      cerrarModalAddProductoCargado() {
+        this.mostrarModalProducto = false;
         this.getProductos();
+      }, 
+      
+      /* abrir y cerrar modal de agregar vagon en estado de vagones cargados */
+      abrirModalAgregarVagon() {
+        this.mostrarModalVagon = true;
       },
-  
-      agregarVagon() {
-        // Validar que no se exceda la cantidad máxima de vagones
-        if (this.vagonesAgregados.length >= this.formData.cantidad_vagones) {
-          Swal.fire(
-            "Error",
-            "Ya has agregado la cantidad máxima de vagones permitida.",
-            "error"
-          );
-          return;
-        }
-        const datosVagon = JSON.parse(JSON.stringify(this.formData));
-        // Agregar un nuevo vagón basado en los datos seleccionados
-        const nuevoVagon = {
-          datos: datosVagon,
-          vagon_id: this.numeroIdentificacionSeleccionado,
-        };
-  
-        this.vagonesAgregados.push(nuevoVagon);
-  
-        Swal.fire("Éxito", "Vagón agregado correctamente.", "success");
-        localStorage.setItem(
-          "vagonesAgregados",
-          JSON.stringify(this.vagonesAgregados)
-        );
-      },
-  
-      eliminarVagon(index) {
-        // Eliminar un vagón de la lista
-        this.vagonesAgregados.splice(index, 1);
-        localStorage.setItem(
-          "vagonesAgregados",
-          JSON.stringify(this.vagonesAgregados)
-        );
-        Swal.fire("Éxito", "Vagón eliminado correctamente.", "success");
-      },
+      
+        
+        cerrarModalAddVagonCargado() {
+          this.mostrarModalVagon = false;
+          // No necesitas llamar a getProductos() aquí a menos que sea realmente necesario
+        }, 
   
       validateForm() {
         const nombre_atraque_regex = /^[A-Z][A-Za-z ]{2,99}$/;
@@ -740,6 +804,26 @@
   
         return true; // El formulario es válido
       },
+
+      openVagonesCargadosDetailsModal(vagon) {      
+
+      Swal.fire({
+        title: "Detalles del Vagón",
+        html: `
+            <div style="text-align: left;">
+                <p><strong>Nombre:</strong> ${vagon.cliente_name}</p>
+                <p><strong>Puerto:</strong> ${vagon.destino}</p>
+                
+            </div>
+        `,
+        width: "600px",
+        customClass: {
+          popup: "custom-swal-popup",
+          title: "custom-swal-title",
+          htmlContainer: "custom-swal-html",
+        },
+      });
+    },
     },
   };
   </script>

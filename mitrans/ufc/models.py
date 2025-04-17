@@ -218,7 +218,7 @@ class por_situar(models.Model):
     
     operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion")
     
-    producto = models.ForeignKey(producto_en_vagon, null=False, blank=False, on_delete=models.CASCADE)
+    producto = models.ForeignKey(producto_en_vagon, null=True, blank=True, on_delete=models.CASCADE)
     
     por_situar = models.CharField( max_length=10, validators=[ RegexValidator(
                 regex='^-?\d+$',  # Acepta positivos y negativos
@@ -238,7 +238,7 @@ class Situado_Carga_Descarga(models.Model):
     
     t_origen = (
         ('puerto', 'Puerto'),
-        ('acceso comercial', 'Acceso Comercial')
+        ('ac_ccd', 'Acceso Comercial')
     )
     
     tipo_origen = models.CharField(max_length=100, choices=t_origen, verbose_name="Tipo de origen", blank=True, null=True)
@@ -277,7 +277,7 @@ class Situado_Carga_Descarga(models.Model):
     
     operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion", blank=True, null=True)
     
-    producto = models.ForeignKey(producto_en_vagon, null=False, blank=False, on_delete=models.CASCADE)
+    producto = models.ForeignKey(producto_en_vagon, null=True, blank=True, on_delete=models.CASCADE)
     
     situados = models.CharField( max_length=10, validators=[ RegexValidator(
                 regex='^-?\d+$',  # Acepta positivos y negativos

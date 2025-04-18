@@ -25,7 +25,7 @@
                 required
                 :disabled="isSubmitting"
               >
-                <option value="acceso comercial">Acceso Comercial</option>
+                <option value="acceso_comercial">Acceso Comercial</option>
                 <option value="puerto">Puerto</option>
               </select>
             </div>

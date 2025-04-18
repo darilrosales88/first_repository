@@ -33,15 +33,47 @@
 
             <!-- Campo: origen -->
             <div class="mb-3">
-              <label for="origen" class="form-label">Origen:<span style="color: red;">*</span></label>
-              <input 
-                type="text" 
-                class="form-control" 
-                id="origen" 
-                v-model="formData.origen" 
-                required 
-                :disabled="loading"
-              />
+              <label for="origen" class="form-label"
+                >Origen <span style="color: red">*</span></label
+              >
+              <select
+              v-if="formData.tipo_origen !== 'puerto'"
+              class="form-select"
+              v-model="formData.origen"
+              id="origen"
+              name="origen"
+              required
+              :disabled="isSubmitting"
+            >
+              <option value="" disabled>Seleccione un origen</option>
+              <option 
+                v-for="entidad in entidades"
+                :key="entidad.id"
+                :value="entidad.nombre"
+                :selected="entidad.nombre === formData.origen"
+              >
+                {{ entidad.id }}-{{ entidad.nombre }}
+              </option>
+            </select>
+
+              <select
+                v-else
+                class="form-select"
+                v-model="formData.origen"
+                id="origen"
+                name="origen"
+                required
+                :disabled="isSubmitting"
+              >
+                <option value="" disabled>Seleccione un puerto</option>
+                <option
+                  v-for="puerto in puertos"
+                  :key="puerto.id"
+                  :value="puerto.nombre_puerto"
+                >
+                  {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                </option>
+              </select>
             </div>
 
             <!-- Campo: tipo_equipo -->
@@ -282,60 +314,85 @@ export default {
   },
   methods: {
     async cargarRegistro() {
-      this.loading = true;
-      try {
-        const response = await axios.get(`http://127.0.0.1:8000/ufc/situados/${this.registroId}/`);
-        const registro = response.data;
-        
-        // Mapear los datos del registro al formulario
-        this.formData = {
-          id: registro.id,
-          tipo_origen: registro.tipo_origen || "",
-          origen: registro.origen || "",
-          tipo_equipo: registro.tipo_equipo || "",
-          estado: registro.estado || "cargado",
-          operacion: registro.operacion || "",
-          producto: registro.producto || "",
-          situados: registro.situados || 0,
-          pendiente_proximo_dia: registro.pendiente_proximo_dia || 0,
-          observaciones: registro.observaciones || "",
-        };
-      } catch (error) {
-        console.error("Error al cargar el registro:", error);
-        Swal.fire("Error", "No se pudo cargar el registro para editar", "error");
-        this.$router.push({ name: "InfoOperativo" });
-      } finally {
-        this.loading = false;
-      }
-    },
+  this.loading = true;
+  try {
+    const response = await axios.get(`http://127.0.0.1:8000/ufc/situados/${this.registroId}/`);
+    const registro = response.data;
     
-    async getEntidades() {
-      try {
-        const response = await axios.get("/api/entidades/");
-        this.entidades = response.data.results;
-      } catch (error) {
-        console.error("Error al obtener entidades:", error);
-        Swal.fire("Error", "No se pudieron obtener las entidades", "error");
-      }
-    },
+    // Primero asignar tipo_origen
+    this.formData.tipo_origen = registro.tipo_origen || "";
     
-    async getProductos() {
+    // Esperar a que se carguen las entidades/puertos
+    await Promise.all([this.getEntidades(), this.getPuertos()]);
+    
+    // Luego asignar el origen (esto asegura que las opciones ya estén cargadas)
+    this.formData = {
+      id: registro.id,
+      tipo_origen: registro.tipo_origen || "",
+      origen: registro.origen || "",  // Esto ahora debería coincidir con las opciones cargadas
+      tipo_equipo: registro.tipo_equipo || "",
+      estado: registro.estado || "cargado",
+      operacion: registro.operacion || "",
+      producto: registro.producto || "",
+      situados: registro.situados || 0,
+      pendiente_proximo_dia: registro.pendiente_proximo_dia || 0,
+      observaciones: registro.observaciones || "",
+    };
+  } catch (error) {
+    console.error("Error al cargar el registro:", error);
+    Swal.fire("Error", "No se pudo cargar el registro para editar", "error");
+    this.$router.push({ name: "InfoOperativo" });
+  } finally {
+    this.loading = false;
+  }
+},
+
+async getEntidades() {
+  try {
+    let allEntidades = [];
+    let nextPage = "/api/entidades/";
+    
+    while (nextPage) {
+      const response = await axios.get(nextPage);
+      allEntidades = [...allEntidades, ...response.data.results];
+      nextPage = response.data.next;
+    }
+    
+    this.entidades = allEntidades;
+    return allEntidades;
+  } catch (error) {
+    console.error("Error al obtener entidades:", error);
+    Swal.fire("Error", "No se pudieron obtener las entidades", "error");
+    return [];
+  }
+},
+
+async getProductos() {
       try {
-        let allProductos = [];
-        let nextPage = "/ufc/producto-vagon/"; // URL inicial
+        this.loading = true;
+        const response = await axios.get("/ufc/producto-vagon/", {
+          params: { limit: 100 },
+        });
 
-        while (nextPage) {
-          const response = await axios.get(nextPage);
-          allProductos = [...allProductos, ...response.data.results];
+        if (response.status === 200) {
+          this.productos = response.data.results.map(producto => ({
+            id: producto.id,
+            producto_name: producto.nombre_producto || producto.descripcion || `Producto ${producto.id}`,
+            producto_codigo: producto.codigo || 'N/A',
+            tipo_embalaje_name: producto.tipo_embalaje?.nombre || 'N/A'
+          }));
+        }
+      } catch (error) {
+        console.error("Error al obtener productos:", error);
+        let errorMsg = "Error al cargar productos";
 
-          // Actualiza nextPage con la URL de la siguiente página (null si no hay más)
-          nextPage = response.data.next;
+        if (error.response?.data?.detail) {
+          errorMsg += `: ${error.response.data.detail}`;
         }
 
-        this.productos = allProductos;
-      } catch (error) {
-        console.error("Error al obtener los productos:", error);
-        Swal.fire("Error", "Hubo un error al obtener los productos.", "error");
+        Swal.fire("Error", errorMsg, "error");
+      } finally {
+        this.loading = false;
       }
     },
 

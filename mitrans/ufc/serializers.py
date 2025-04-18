@@ -76,19 +76,18 @@ class productos_vagones_cargados_descargados_serializer(serializers.ModelSeriali
 #****************-------------------------********************--------------------***************-----------------********************************
 #serializador para el estado de vagones cargados/descargados
 class vagon_cargado_descargado_filter(filters.FilterSet):
-    origen_t_e_ferroviario = filters.CharFilter(method='filtrado_por_origen_t_e_ferroviario',lookup_expr = 'icontains') 
+    tef_prod_estado = filters.CharFilter(method='filtrado_por_tef_prod_estado', lookup_expr='icontains')
     
-
-    def filtrado_por_origen_t_e_ferroviario(self,queryset,value):        
-        return queryset.filter(origen__icontains = value) | queryset.filter(tipo_equipo_ferroviario_name__icontains = value)
-        
+    def filtrado_por_tef_prod_estado(self, queryset, name, value):        
+        return queryset.filter(
+            Q(tipo_equipo_ferroviario_name__icontains=value) | 
+            Q(productos_list__icontains=value) | 
+            Q(estado_name__icontains=value)
+        )
     
     class Meta:
-  
-        model : vagon_cargado_descargado    
-        fields:{
-            'origen_t_e_ferroviario':['icontains'],        
-        }
+        model = vagon_cargado_descargado
+        fields = ['tef_prod_estado']
 
 
 

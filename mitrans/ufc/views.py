@@ -63,14 +63,12 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
     
     def get_queryset(self):
         queryset = super().get_queryset()
-
-        search = self.request.query_params.get('origen_t_e_ferroviario', None)
-
+        search = self.request.query_params.get('tef_prod_estado', None)
+        
+        # Utiliza el filtro definido en vagon_cargado_descargado_filter
         if search is not None:
-            #filtrado por origen y por tipo de equipo ferroviario
-            queryset = queryset.filter( Q(origen__icontains=search) | Q(tipo_equipo_ferroviario_name__icontains=search) 
-            )
-
+            return self.filter_class({'tef_prod_estado': search}, queryset=queryset).qs
+        
         return queryset
 
     def create(self, request, *args, **kwargs):

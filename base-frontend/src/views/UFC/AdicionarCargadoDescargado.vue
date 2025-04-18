@@ -230,7 +230,7 @@
                     {{ producto.producto_codigo }}-{{ producto.tipo_embalaje_name }}
                   </option>
                 </select>
-                <small class="text-muted">Mantén presionado Ctrl o Shift (Windows) para seleccionar múltiples productos</small>
+                <small class="text-muted">Mantén presionado Ctrl o Shift para seleccionar múltiples productos</small>
               </div>
 
               <!-- Modal para agregar producto cargado/descargado -->

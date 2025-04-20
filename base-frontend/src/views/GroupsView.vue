@@ -46,27 +46,57 @@
   </table>
   </template>
 <style scoped>
-.search-container {
-  padding: 10px;
+.search-container input::placeholder {
+  font-size: 14px;
+  color: #999;
 }
 
-.search-form {
+body {
+  overflow: scroll;
+}
+
+.search-container {
   display: flex;
   justify-content: flex-end;
-  margin-left: auto;
+  margin-bottom: 5px;
 }
 
-@media (max-width: 768px) {
-  .search-form {
-    margin-left: auto;
-    margin-right: 10px;
-  }
+.table-container {
+  overflow-x: auto;
+  max-width: 100%;
 }
-</style>
 
+.input-container {
+  position: relative;
+  display: inline-block;
+}
 
-<style scoped>
+.input-container .bi {
+  position: absolute;
+  left: 180px;
+  color: #999;
+  margin-top: -55px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
 
+.large-icon {
+  font-size: 1.7rem;
+}
+
+table {
+  width: 84%;
+  border-collapse: collapse;
+  margin-left: 190px;
+  margin-bottom: 10px;
+  font-size: 0.875rem;
+}
+
+th,
+td {
+  padding: 0.15rem;
+  white-space: nowrap;
+}
 
 th {
   background-color: #f2f2f2;
@@ -74,18 +104,45 @@ th {
 
 .btn {
   cursor: pointer;
-  font-weight: bold;
+}
+
+.btn-small {
+  font-size: 22px;
+  color: black;
+  margin-right: 5px;
+  outline: none;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.btn-eye {
+  font-size: 22px;
+  margin-right: 5px;
+  outline: none;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.btn:hover {
+  background: none;
+}
+
+.btn:focus {
+  outline: none;
+  box-shadow: none;
 }
 
 .create-button-container {
-  margin-top: -40px;
+  margin-top: -80px;
   text-align: left;
 }
 
 .create-button {
   text-decoration: none;
-  color: black;
-  padding-bottom: 2em;
+  color: green;
+  margin-left: 940px;
 }
 
 @media (max-width: 768px) {
@@ -93,6 +150,22 @@ th {
     text-align: left;
     margin-right: 0;
   }
+}
+
+/*estilos para el modal */
+.custom-swal-popup {
+  border-radius: 10px;
+  font-family: Arial, sans-serif;
+}
+
+.custom-swal-title {
+  font-size: 24px;
+  color: #333;
+}
+
+.custom-swal-html {
+  font-size: 16px;
+  color: #555;
 }
 </style>
   <script>
@@ -124,10 +197,10 @@ th {
             this.$store.commit('setIsLoading', true)
   
             axios
-                .get('/api/groups/')
+                .get('/apiAdmin/groups/')
                 .then(response => {
                     console.log(response.data)
-                    this.grupos = response.data
+                    this.grupos = response.data.results
                 })
                 .catch(error => {
                     console.log("Error al obtener los grupos:",error)

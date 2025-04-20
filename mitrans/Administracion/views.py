@@ -151,6 +151,7 @@ class UserCreateView(APIView):
         email = request.data.get('email')
         first_name = request.data.get('first_name')
         last_name = request.data.get('last_name')
+        role = request.data.get('role')
         password = request.data.get('password')
         entidad_id = request.data.get('entidad')
         cargo_id = request.data.get('cargo')
@@ -166,6 +167,7 @@ class UserCreateView(APIView):
             email=email,
             first_name=first_name,
             last_name=last_name,
+            role=role,
             password=password,
             entidad=entidad,
             cargo=cargo
@@ -196,6 +198,7 @@ def obtener_usuario(request, user_id):
             'username': user.username,
             'first_name': user.first_name,            
             'last_name': user.last_name,
+            'role': user.role,
             'entidad': {
                 'id': user.entidad.id,
                 'nombre': user.entidad.nombre  # Asegúrate de que 'nombre' es el campo correcto

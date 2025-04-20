@@ -41,7 +41,7 @@ from Administracion.serializers import GroupSerializer
 from django.contrib.auth.models import Group
 from rest_framework.permissions import IsAuthenticated  # Importa IsAuthenticated
 
-
+from ufc.models import registro_vagones_cargados  # Importar el modelo de la app ufc
 
 #para el filtrado
 from django_filters.rest_framework import DjangoFilterBackend
@@ -56,6 +56,19 @@ from django.utils import timezone
 #Para la paginacion
 from rest_framework.pagination import PageNumberPagination
 
+#Para el tratado de los permisos en el backend
+from .permissions import IsAdminNomenladoresPermission,IsVisualizadorNomencladoresPermission
+
+
+
+#asignando a permission_classes los permisos asociados
+def get_permissions(self):
+    if self.action in ['create', 'update', 'partial_update', 'destroy']:
+        permission_classes = [IsAdminNomenladoresPermission]
+    else:  # Para list y retrieve
+        # Permitir tanto a AdminNomencladores como a VisualizadorNomencladores visualizar
+        permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
+    return [permission() for permission in permission_classes]
 
           
     #*****************************************************************************************************************************
@@ -63,6 +76,8 @@ from rest_framework.pagination import PageNumberPagination
 class nom_pais_view_set(viewsets.ModelViewSet):
     queryset = nom_pais.objects.all()
     serializer_class = nom_pais_serializer
+
+    
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -88,6 +103,13 @@ class nom_pais_view_set(viewsets.ModelViewSet):
         return queryset
     
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         pais = serializer.save()
@@ -101,12 +123,18 @@ class nom_pais_view_set(viewsets.ModelViewSet):
             direccion_ip=direccion_ip,
             navegador=navegador,
         )
-        print("El usuario es ",request.user if request.user.is_authenticated else None)
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -126,6 +154,12 @@ class nom_pais_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         instance = self.get_object()
         nombre_pais = instance.nombre_pais
 
@@ -143,6 +177,12 @@ class nom_pais_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -191,6 +231,12 @@ class nom_provincia_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -210,6 +256,11 @@ class nom_provincia_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         nombre_provincia = instance.nombre_provincia
 
@@ -227,6 +278,11 @@ class nom_provincia_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -259,6 +315,13 @@ class nom_municipio_view_set(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         municipio = serializer.save()
@@ -277,6 +340,12 @@ class nom_municipio_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -296,6 +365,11 @@ class nom_municipio_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         nombre_municipio = instance.nombre_municipio
 
@@ -313,6 +387,11 @@ class nom_municipio_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -346,6 +425,13 @@ class nom_tipo_maniobra_portuaria_view_set(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         tipo_maniobra = serializer.save()
@@ -364,6 +450,12 @@ class nom_tipo_maniobra_portuaria_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -383,6 +475,11 @@ class nom_tipo_maniobra_portuaria_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         nombre_maniobra = instance.nombre_maniobra
 
@@ -400,6 +497,11 @@ class nom_tipo_maniobra_portuaria_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -420,6 +522,11 @@ class nom_contenedor_view_set(viewsets.ModelViewSet):
     lookup_field = 'id_contenedor'  # Especifica el campo de búsqueda
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         print('Eliminando contenedor con ID:', kwargs.get('pk'));  # Verifica el ID
 
         # Registrar la acción en el modelo de Auditoria antes de eliminar
@@ -446,6 +553,13 @@ class nom_contenedor_view_set(viewsets.ModelViewSet):
         return queryset
     
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         contenedor = serializer.save()
@@ -464,6 +578,12 @@ class nom_contenedor_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -485,6 +605,11 @@ class nom_contenedor_view_set(viewsets.ModelViewSet):
     
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -512,6 +637,13 @@ class nom_cargo_view_set(viewsets.ModelViewSet):
         return queryset
     
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         cargo = serializer.save()
@@ -530,6 +662,12 @@ class nom_cargo_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -549,6 +687,11 @@ class nom_cargo_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         nombre_cargo = instance.nombre_cargo
 
@@ -566,6 +709,11 @@ class nom_cargo_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -590,6 +738,13 @@ class nom_territorio_view_set(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         territorio = serializer.save()
@@ -608,6 +763,12 @@ class nom_territorio_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -627,6 +788,11 @@ class nom_territorio_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         nombre_territorio= instance.nombre_territorio
 
@@ -643,6 +809,11 @@ class nom_territorio_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -674,6 +845,13 @@ class nom_puerto_view_set(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         puerto = serializer.save()
@@ -692,6 +870,12 @@ class nom_puerto_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -711,6 +895,11 @@ class nom_puerto_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         nombre_puerto= instance.nombre_puerto
 
@@ -727,6 +916,11 @@ class nom_puerto_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -757,6 +951,13 @@ class nom_terminal_view_set(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         terminal = serializer.save()
@@ -775,6 +976,12 @@ class nom_terminal_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -794,6 +1001,11 @@ class nom_terminal_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         nombre_terminal= instance.nombre_terminal
 
@@ -810,6 +1022,11 @@ class nom_terminal_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -846,6 +1063,13 @@ class nom_atraque_view_set(viewsets.ModelViewSet):
         return queryset.order_by('id')  # Asegurar que el QuerySet esté ordenado,hacer esto en cada get_queryset
 
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         atraque = serializer.save() 
@@ -864,6 +1088,12 @@ class nom_atraque_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -883,6 +1113,11 @@ class nom_atraque_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         nombre_atraque= instance.nombre_atraque
 
@@ -899,6 +1134,11 @@ class nom_atraque_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -929,6 +1169,13 @@ class nom_unidad_medida_view_set(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         unidad_medida = serializer.save() 
@@ -947,6 +1194,12 @@ class nom_unidad_medida_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -966,6 +1219,11 @@ class nom_unidad_medida_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         unidad_medida= instance.unidad_medida
 
@@ -982,6 +1240,11 @@ class nom_unidad_medida_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -1014,6 +1277,13 @@ class nom_osde_oace_organismo_view_set(viewsets.ModelViewSet):
         return queryset
     
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         o_o_organismo = serializer.save() 
@@ -1032,6 +1302,12 @@ class nom_osde_oace_organismo_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -1051,6 +1327,11 @@ class nom_osde_oace_organismo_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         nombre_o_o_o= instance.nombre
 
@@ -1067,6 +1348,11 @@ class nom_osde_oace_organismo_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -1098,6 +1384,13 @@ class nom_entidades_view_set(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         entidad = serializer.save() 
@@ -1116,6 +1409,12 @@ class nom_entidades_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -1135,6 +1434,11 @@ class nom_entidades_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         entidad_nombre= instance.nombre
 
@@ -1151,6 +1455,11 @@ class nom_entidades_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -1203,6 +1512,13 @@ class nom_destino_view_set(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         destino = serializer.save()
@@ -1221,6 +1537,12 @@ class nom_destino_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -1240,6 +1562,11 @@ class nom_destino_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         destino = instance.destino
 
@@ -1257,6 +1584,11 @@ class nom_destino_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -1300,6 +1632,13 @@ class nom_tipo_equipo_ferroviario_view_set(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         tipo_equipo = serializer.save()
@@ -1318,6 +1657,12 @@ class nom_tipo_equipo_ferroviario_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -1337,6 +1682,11 @@ class nom_tipo_equipo_ferroviario_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         tipo_equipo = instance.tipo_equipo
 
@@ -1354,6 +1704,11 @@ class nom_tipo_equipo_ferroviario_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -1366,7 +1721,7 @@ class nom_tipo_equipo_ferroviario_view_set(viewsets.ModelViewSet):
 
         return super().list(request, *args, **kwargs)
 
-#retorna solo las entidades cuyo tipo sean de acceso comercial o de ccd
+#retorna los tipos de equipo
 class tipo_equipo_ferroviario_no_locomotora(APIView):
     def get(self, request):
         # Excluir los tipos de equipos ferroviarios cuyo tipo sea "locomotora"
@@ -1395,6 +1750,13 @@ class nom_embarcacion_view_set(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         print(request.data)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -1414,6 +1776,12 @@ class nom_embarcacion_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -1433,6 +1801,11 @@ class nom_embarcacion_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         nombre_embarcacion = instance.nombre_embarcacion
 
@@ -1450,6 +1823,11 @@ class nom_embarcacion_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -1462,6 +1840,27 @@ class nom_embarcacion_view_set(viewsets.ModelViewSet):
 
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
+
+#retorna todos los equipos ferroviarios excepto los de tipo "Locomotora", y que no se encuentren presentes en el estado 
+#vagones cargados/descargados
+class equipo_ferroviario_no_locomotora(APIView):
+    def get(self, request):
+        tipos_no_locomotoras = nom_tipo_equipo_ferroviario.objects.exclude(tipo_equipo='locomotora')
+        
+        # Usamos subquery para mejor rendimiento
+        vagones_registrados = registro_vagones_cargados.objects.exclude(
+            Q(no_id__isnull=True) | Q(no_id__exact='')
+        ).values('no_id')
+        
+        equipos_no_locomotoras = nom_equipo_ferroviario.objects.filter(
+            tipo_equipo__in=tipos_no_locomotoras
+        ).exclude(
+            numero_identificacion__in=vagones_registrados
+        )
+        
+        serializer = nom_equipo_ferroviario_serializer(equipos_no_locomotoras, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
 class nom_equipo_ferroviario_view_set(viewsets.ModelViewSet):
     queryset = nom_equipo_ferroviario.objects.all()
     serializer_class = nom_equipo_ferroviario_serializer
@@ -1485,6 +1884,13 @@ class nom_equipo_ferroviario_view_set(viewsets.ModelViewSet):
         return queryset
     
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         equipo_ferroviario = serializer.save() 
@@ -1503,6 +1909,12 @@ class nom_equipo_ferroviario_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -1522,6 +1934,11 @@ class nom_equipo_ferroviario_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         numero_identificacion= instance.numero_identificacion
 
@@ -1538,6 +1955,11 @@ class nom_equipo_ferroviario_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -1561,6 +1983,11 @@ class nom_estado_tecnico_view_set(viewsets.ModelViewSet):
     lookup_field = 'codigo_estado_tecnico'  # Especifica el campo a usar como clave primaria
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         print('Eliminando estado tecnico con ID:', kwargs.get('pk'));  # Verifica el ID
         return super().destroy(request, *args, **kwargs);
 
@@ -1572,6 +1999,13 @@ class nom_estado_tecnico_view_set(viewsets.ModelViewSet):
         return queryset 
 
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         estado_tecnico = serializer.save()
@@ -1590,6 +2024,12 @@ class nom_estado_tecnico_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -1609,6 +2049,11 @@ class nom_estado_tecnico_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         nombre_estado_tecnico = instance.nombre_estado_tecnico
 
@@ -1626,6 +2071,11 @@ class nom_estado_tecnico_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -1640,7 +2090,7 @@ class nom_estado_tecnico_view_set(viewsets.ModelViewSet):
 
 #/*********************************************************************************************************************************************
 class nom_producto_view_set(viewsets.ModelViewSet):
-    queryset = nom_producto.objects.all()
+    queryset = nom_producto.objects.all().order_by('nombre_producto')  # Orden obligatorio
     serializer_class = nom_producto_serializer
 
     def get_queryset(self):
@@ -1667,6 +2117,13 @@ class nom_producto_view_set(viewsets.ModelViewSet):
         return queryset
     
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         producto = serializer.save() 
@@ -1685,6 +2142,12 @@ class nom_producto_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -1704,6 +2167,11 @@ class nom_producto_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         nombre_producto= instance.nombre_producto
 
@@ -1720,6 +2188,11 @@ class nom_producto_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -1749,6 +2222,13 @@ class nom_tipo_embalaje_view_set(viewsets.ModelViewSet):
 
         return queryset
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         tipo_embalaje = serializer.save() 
@@ -1767,6 +2247,12 @@ class nom_tipo_embalaje_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -1786,6 +2272,11 @@ class nom_tipo_embalaje_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         nombre_tipo_embalaje= instance.nombre_tipo_embalaje
 
@@ -1802,6 +2293,11 @@ class nom_tipo_embalaje_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -1832,6 +2328,13 @@ class nom_incidencia_view_set(viewsets.ModelViewSet):
         return queryset
     
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         incidencia = serializer.save() 
@@ -1850,6 +2353,12 @@ class nom_incidencia_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -1869,6 +2378,11 @@ class nom_incidencia_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         nombre_incidencia= instance.nombre_incidencia
 
@@ -1885,6 +2399,11 @@ class nom_incidencia_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -1914,6 +2433,13 @@ class nom_tipo_estructura_ubicacion_view_set(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         tipo_estructura = serializer.save()
@@ -1932,6 +2458,12 @@ class nom_tipo_estructura_ubicacion_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -1951,6 +2483,11 @@ class nom_tipo_estructura_ubicacion_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         nombre_tipo_estructura = instance.nombre_tipo_estructura_ubicacion
 
@@ -1968,6 +2505,11 @@ class nom_tipo_estructura_ubicacion_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -1996,6 +2538,13 @@ class nom_estructura_ubicacion_view_set(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         estructura = serializer.save() 
@@ -2014,6 +2563,12 @@ class nom_estructura_ubicacion_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -2033,6 +2588,11 @@ class nom_estructura_ubicacion_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance = self.get_object()
         nombre_estructura_ubicacion= instance.nombre_estructura_ubicacion
 
@@ -2049,6 +2609,11 @@ class nom_estructura_ubicacion_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')

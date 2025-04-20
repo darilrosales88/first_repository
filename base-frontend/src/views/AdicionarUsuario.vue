@@ -65,6 +65,15 @@
           :class="{ 'input-error': !passwordsMatch && password && confirmPassword, 'input-success': passwordsMatch }"
         />
       </div>
+       <!-- campo rol añadido -->
+      <div class="form-group">
+        <label for="role">Rol</label>
+        <select v-model="role" required>
+          <option value="operador">Operador</option>
+          <option value="ufc">UFC</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
 
       <!-- Contenedor principal para grupos y permisos -->
       <div class="groups-permissions-container">
@@ -348,6 +357,7 @@ export default {
       entidades: [], // Almacena todas las entidades del nomenclador
       cargo:'',
       cargos: [], // Almacena todos los cargos del nomenclador
+      role: 'operador', // Valor por defecto para el rol
       password: '',
       confirmPassword: '', // Nuevo campo de confirmación
       errors: '',      
@@ -408,7 +418,7 @@ export default {
     async fetchGroups() {
       try {
         const response = await axios.get('/apiAdmin/groups/'); // Asegúrate de que esta ruta devuelva los grupos
-        this.groupsDisponibles = response.data;
+        this.groupsDisponibles = response.data.results;
       } catch (error) {
         console.error('Error al obtener los grupos:', error);
         Swal.fire('Error', 'No se pudieron cargar los grupos.', 'error');
@@ -452,7 +462,7 @@ export default {
     async getEntidades() {
       try {
         const response = await axios.get('/api/entidades/');
-        this.entidades = response.data;
+        this.entidades = response.data.results;
       } catch (error) {
         console.error('Error al obtener la entidad:', error);
       }
@@ -460,7 +470,7 @@ export default {
     async getCargos() {
       try {
         const response = await axios.get('/api/cargos/');
-        this.cargos = response.data;
+        this.cargos = response.data.results;
       } catch (error) {
         console.error('Error al obtener la entidad:', error);
       }
@@ -522,6 +532,12 @@ export default {
         valid = false;
       }
 
+      // Validación opcional para el rol
+      if (!['operador', 'ufc', 'admin'].includes(this.role)) {
+        this.errors += 'Seleccione un rol válido.'+'\n';
+        valid = false;
+      }
+
       if (!valid) {
         Swal.fire('Error!', this.errors, 'error');       
       }
@@ -542,7 +558,8 @@ export default {
           last_name: this.last_name,
           entidad: this.entidad, // Asegúrate de que sea un ID válido
           cargo: this.cargo, // Asegúrate de que sea un ID válido
-          password: this.password,
+          password: this.password,          
+          role: this.role, // Nuevo campo de rol
           groups: this.groupsAsignados.map(g => g.id), // Grupos asignados
           permissions: this.permisosAsignados.map(p => p.id), // Permisos asignados
         };

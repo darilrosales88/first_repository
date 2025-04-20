@@ -28,8 +28,7 @@
                   :key="locomotora.id"
                   :value="locomotora.id"
                 >
-                  {{ locomotora.id }}-{{ locomotora.numero_identificacion }} -
-                  {{ locomotora.tipo_equipo_name }}
+                  {{ locomotora.id }}-{{ locomotora.numero_identificacion }}
                 </option>
               </select>
             </div>
@@ -460,7 +459,8 @@ export default {
           observaciones: this.vagon["observaciones"],
           equipo_vagon: this.vagon["equipo_vagon"],
         };
-        console.log(formData);
+        alert(this.formData);
+        console.log(this.formData);
       } catch (error) {
         console.error("Error al obtener el vagon:", error);
       }
@@ -480,11 +480,7 @@ export default {
         );
       } catch (error) {
         console.error("Error al agregar el formulario:", error);
-        Swal.fire(
-          "Error",
-          `${error["response"]["data"]["non_field_errors"][0]}`,
-          "error"
-        );
+        Swal.fire("Error", `${error["response"]["data"]}`, "error");
       }
     },
 
@@ -635,7 +631,7 @@ export default {
       this.mostrarModal = false;
       this.getProductos();
     },
-
+    /* 
     eliminarVagon(index) {
       // Eliminar un vagón de la lista
       this.vagonesAgregados.splice(index, 1);
@@ -645,7 +641,7 @@ export default {
       );
       Swal.fire("Éxito", "Vagón eliminado correctamente.", "success");
     },
-
+ */
     validateForm() {
       const nombre_atraque_regex = /^[A-Z][A-Za-z ]{2,99}$/;
       let errorMessage = "";

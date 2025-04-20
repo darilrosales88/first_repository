@@ -179,6 +179,7 @@ class en_trenes_serializer(serializers.ModelSerializer):
             )
     def validate(self, data):
         # Validar combinación única de Tipo equipo ferroviario, Estado, Producto, Origen, Destino
+        print(data)
         if en_trenes.objects.filter(
             tipo_equipo=data['tipo_equipo'],
             estado=data['estado'],
@@ -189,12 +190,7 @@ class en_trenes_serializer(serializers.ModelSerializer):
             raise serializers.ValidationError("La combinación de Tipo equipo ferroviario, Estado, Producto, Origen y Destino ya existe.")
         
         # Validar combinación única de Tipo equipo ferroviario y No. ID
-        if en_trenes.objects.filter(
-            tipo_equipo=data['tipo_equipo'],
-            equipo_vagon=data['equipo_vagon']
-        ).exists():
-            raise serializers.ValidationError("La combinación de Tipo equipo ferroviario y No. ID ya existe.")
-        return data
+       
                 
                 
 class producto_vagon_serializer(serializers.ModelSerializer):

@@ -3,10 +3,11 @@
     <!-- Encabezado con acciones -->
     <div class="d-flex justify-content-between align-items-center mb-4">
       <!-- Botón de agregar - más destacado -->
-      
 
       <button class="btn btn-link p-0">
-        <router-link to="AdicionarVagon"><i class="bi bi-plus-circle fs-3"></i></router-link>
+        <router-link to="AdicionarVagon"
+          ><i class="bi bi-plus-circle fs-3"></i
+        ></router-link>
       </button>
 
       <!-- Buscador mejorado -->
@@ -81,7 +82,9 @@
                 >
                   <i
                     :class="
-                      showNoId ? 'bi bi-eye-slash-fill text-white' : 'bi bi-eye-fill text-white'
+                      showNoId
+                        ? 'bi bi-eye-slash-fill text-white'
+                        : 'bi bi-eye-fill text-white'
                     "
                   ></i>
                 </button>
@@ -145,11 +148,19 @@
     </div>
 
     <!-- Modal para detalles -->
-    <div v-if="showDetailsModal" class="modal-backdrop" @click.self="closeDetailsModal">
+    <div
+      v-if="showDetailsModal"
+      class="modal-backdrop"
+      @click.self="closeDetailsModal"
+    >
       <div class="modal-content">
         <div class="modal-header bg-primary text-white">
           <h5 class="modal-title">Info del vagon</h5>
-          <button type="button" class="btn-close btn-close-white" @click="closeDetailsModal">
+          <button
+            type="button"
+            class="btn-close btn-close-white"
+            @click="closeDetailsModal"
+          >
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -158,45 +169,65 @@
             <div class="col-md-6 mb-3">
               <div class="detail-item">
                 <span class="detail-label">No Id Locomotora:</span>
-                <span class="detail-value">{{ currentTren.numero_identificacion_locomotora || 'N/A' }}</span>
+                <span class="detail-value">{{
+                  currentTren.numero_identificacion_locomotora || "N/A"
+                }}</span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">Tipo de equipo:</span>
-                <span class="detail-value">{{ currentTren.tipo_equipo || 'N/A' }}</span>
+                <span class="detail-value">{{
+                  currentTren.tipo_equipo || "N/A"
+                }}</span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">Estado:</span>
-                <span class="detail-value">{{ currentTren.estado || 'N/A' }}</span>
+                <span class="detail-value">{{
+                  currentTren.estado || "N/A"
+                }}</span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">Producto Id:</span>
-                <span class="detail-value">{{ currentTren.producto || 'N/A' }}</span>
+                <span class="detail-value">{{
+                  currentTren.producto || "N/A"
+                }}</span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">Producto nombre:</span>
-                <span class="detail-value">{{ currentTren.producto_name || 'N/A' }}</span>
+                <span class="detail-value">{{
+                  currentTren.producto_name || "N/A"
+                }}</span>
               </div>
             </div>
             <div class="col-md-6 mb-3">
               <div class="detail-item">
                 <span class="detail-label">Tipo de origen:</span>
-                <span class="detail-value">{{ currentTren.tipo_origen || 'N/A' }}</span>
+                <span class="detail-value">{{
+                  currentTren.tipo_origen || "N/A"
+                }}</span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">Origen:</span>
-                <span class="detail-value">{{ currentTren.origen || 'N/A' }}</span>
+                <span class="detail-value">{{
+                  currentTren.origen || "N/A"
+                }}</span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">Tipo de destino:</span>
-                <span class="detail-value">{{ currentTren.tipo_destino || 'N/A' }}</span>
+                <span class="detail-value">{{
+                  currentTren.tipo_destino || "N/A"
+                }}</span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">Destino:</span>
-                <span class="detail-value">{{ currentTren.destino || 'N/A' }}</span>
+                <span class="detail-value">{{
+                  currentTren.destino || "N/A"
+                }}</span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">Equipo de carga:</span>
-                <span class="detail-value">{{ currentTren.equipo_carga_name || 'N/A' }}</span>
+                <span class="detail-value">{{
+                  currentTren.equipo_carga_name || "N/A"
+                }}</span>
               </div>
             </div>
           </div>
@@ -204,13 +235,17 @@
             <div class="col-md-6">
               <div class="detail-item">
                 <span class="detail-label">Cantidad de vagones:</span>
-                <span class="detail-value">{{ currentTren.cantidad_vagones || '0' }}</span>
+                <span class="detail-value">{{
+                  currentTren.cantidad_vagones || "0"
+                }}</span>
               </div>
             </div>
             <div class="col-md-6">
               <div class="detail-item">
                 <span class="detail-label">Descripción:</span>
-                <span class="detail-value">{{ currentTren.descripcion || 'Ninguna' }}</span>
+                <span class="detail-value">{{
+                  currentTren.descripcion || "Ninguna"
+                }}</span>
               </div>
             </div>
           </div>
@@ -218,14 +253,21 @@
             <div class="col-12">
               <div class="detail-item">
                 <span class="detail-label">Observaciones:</span>
-                <span class="detail-value">{{ currentTren.observaciones || 'Ninguna' }}</span>
+                <span class="detail-value">{{
+                  currentTren.observaciones || "Ninguna"
+                }}</span>
               </div>
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" @click="closeDetailsModal">Cerrar</button>
-          
+          <button
+            type="button"
+            class="btn btn-secondary"
+            @click="closeDetailsModal"
+          >
+            Cerrar
+          </button>
         </div>
       </div>
     </div>
@@ -240,7 +282,7 @@ import ModalEnTrenes from "@/components/ModalViewEnTrenes.vue";
 export default {
   name: "EnTrenes",
   components: {
-    ModalEnTrenes
+    ModalEnTrenes,
   },
 
   data() {
@@ -260,7 +302,7 @@ export default {
       user_role: "",
       showNoId: false,
       showDetailsModal: false, // <-- Añade esta línea
-      currentTren: {} // <-- Añade esta línea si no está
+      currentTren: {}, // <-- Añade esta línea si no está
     };
   },
 
@@ -383,17 +425,14 @@ export default {
     openVagonDetailsModal(tren) {
       this.currentTren = { ...tren };
       this.showDetailsModal = true; // <-- Asegúrate que esta línea está así
-      
+
       // Opcional: Cargar datos completos del servidor
-      
     },
 
     closeDetailsModal() {
       this.showDetailsModal = false;
       this.currentTren = {};
     },
-
-    
 
     confirmDelete(id) {
       Swal.fire({
@@ -491,7 +530,9 @@ export default {
   border-color: #dc3545;
 }
 
-.btn-info:hover, .btn-warning:hover, .btn-danger:hover {
+.btn-info:hover,
+.btn-warning:hover,
+.btn-danger:hover {
   opacity: 0.9;
 }
 
@@ -588,25 +629,26 @@ export default {
     flex-direction: column;
     gap: 15px;
   }
-  
+
   .search-container {
     max-width: 100%;
   }
-  
+
   .btn-primary {
     width: 100%;
     text-align: center;
   }
-  
+
   .table-responsive {
     overflow-x: auto;
   }
-  
-  .table th, .table td {
+
+  .table th,
+  .table td {
     padding: 8px 10px;
     font-size: 0.9rem;
   }
-  
+
   .btn-sm {
     padding: 4px 8px;
     font-size: 0.8rem;

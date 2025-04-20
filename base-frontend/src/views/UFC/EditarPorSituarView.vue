@@ -32,9 +32,47 @@
   
               <!-- Campo: origen -->
               <div class="mb-3">
-          <label for="nombre" class="form-label">Nombre:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="nombre" v-model="formData.origen" required />
-        </div>
+              <label for="origen" class="form-label"
+                >Origen <span style="color: red">*</span></label
+              >
+              <select
+                v-if="formData.tipo_origen !== 'puerto'"
+                class="form-select"
+                v-model="formData.origen"
+                id="origen"
+                name="origen"
+                required
+                :disabled="isSubmitting"
+              >
+                <option value="" disabled>Seleccione un origen</option>
+                <option
+                  v-for="entidad in entidades"
+                  :key="entidad.id"
+                  :value="entidad.nombre"
+                >
+                  {{ entidad.id }}-{{ entidad.nombre }}
+                </option>
+              </select>
+
+              <select
+                v-else
+                class="form-select"
+                v-model="formData.origen"
+                id="origen"
+                name="origen"
+                required
+                :disabled="isSubmitting"
+              >
+                <option value="" disabled>Seleccione un puerto</option>
+                <option
+                  v-for="puerto in puertos"
+                  :key="puerto.id"
+                  :value="puerto.nombre_puerto"
+                >
+                  {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                </option>
+              </select>
+            </div>
   
               <!-- Campo: tipo_equipo -->
               <div class="mb-3">

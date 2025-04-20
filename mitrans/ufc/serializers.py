@@ -253,9 +253,10 @@ class PorSituarCargaDescargaFilter(filters.FilterSet):
 
 class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
     producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')
+    tipo_origen_name = serializers.ReadOnlyField(source='tipo_origen')
     class Meta:
         model = por_situar  # Usa "=", no ":"
-        fields = ('id','tipo_origen', 'origen','tipo_equipo', 'estado', 'operacion', 'producto', 'por_situar','producto_name')
+        fields = ('id','tipo_origen','tipo_origen_name','origen','tipo_equipo', 'estado', 'operacion', 'producto', 'por_situar','producto_name')
         filterset_class = PorSituarCargaDescargaFilter
         
 

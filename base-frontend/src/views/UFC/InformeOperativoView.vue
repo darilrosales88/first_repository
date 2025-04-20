@@ -4,10 +4,10 @@
       background-color: #002a68;
       color: white;
       text-align: right;
-      
+      padding: 10px;
     "
   >
-       <h6>Informe operativo</h6> 
+    <!--   <h6>Bienvenido: {{ username }}</h6> -->
   </div>
   <br />
   <Navbar-Component /><br />

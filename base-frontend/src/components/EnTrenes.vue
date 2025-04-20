@@ -1,124 +1,158 @@
 <template>
-  <div class="container py-3">
-    <!-- Encabezado con acciones -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <!-- Botón de agregar - más destacado -->
+  <div class="por-situar-container">
+    <!-- Header con título y acciones -->
+    <div class="ps-header">
+      <h1 class="ps-title">
+        <i class="bi bi-train-front-fill ps-title-icon"></i>
+        Vagones en Tren
+      </h1>
 
-      <button class="btn btn-link p-0">
-        <router-link to="AdicionarVagon"
-          ><i class="bi bi-plus-circle fs-3"></i
-        ></router-link>
-      </button>
+      <div class="ps-actions">
+        <button class="btn btn-link p-0">
+          <router-link to="/AdicionarVagon"
+            ><i class="bi bi-plus-circle fs-3"></i
+          ></router-link>
+        </button>
 
-      <!-- Buscador mejorado -->
-      <form @submit.prevent="search_producto" class="search-container">
-        <div class="input-group">
-          <span class="input-group-text bg-white border-end-0">
-            <i class="bi bi-search"></i>
-          </span>
+        <!-- Buscador moderno -->
+        <div class="ps-search-container">
+          <i class="bi bi-search ps-search-icon"></i>
           <input
             type="search"
-            class="form-control border-start-0"
-            placeholder="Buscar..."
+            class="ps-search-input"
+            placeholder="Buscar registros..."
             v-model="searchQuery"
             @input="handleSearchInput"
           />
+          <div class="ps-search-border"></div>
         </div>
-      </form>
+      </div>
     </div>
 
-    <!-- Tabla responsive con mejoras -->
-    <div class="table-responsive rounded-3 shadow-sm">
-      <table class="table table-hover mb-0">
-        <thead class="table-light">
-          <tr>
-            <th scope="col" style="width: 50px">#</th>
-            <th scope="col">Código Locomotora</th>
-            <th scope="col">Tipo</th>
-            <th scope="col">Estado</th>
-            <th scope="col">Producto</th>
-            <th scope="col" class="text-end">Cant. Vagones</th>
-            <th scope="col">Origen</th>
-            <th scope="col">Destino</th>
-            <th scope="col" v-if="showNoId">Descripción</th>
-            <th scope="col" v-if="hasPermission" style="width: 120px">
-              Acciones
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-if="loading">
-            <td colspan="10" class="text-center py-4">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Cargando...</span>
-              </div>
-            </td>
-          </tr>
+    <!-- Tarjeta contenedora de la tabla -->
+    <div class="ps-card">
+      <!-- Tabla con diseño moderno -->
+      <div class="ps-table-container">
+        <table class="ps-table">
+          <thead>
+            <tr>
+              <th class="ps-th">#</th>
+              <th class="ps-th">Código Locomotora</th>
+              <th class="ps-th">Tipo</th>
+              <th class="ps-th">Estado</th>
+              <th class="ps-th">Producto</th>
+              <th class="ps-th">Cant. Vagones</th>
+              <th class="ps-th">Origen</th>
+              <th class="ps-th">Destino</th>
+              <th class="ps-th" v-if="showNoId">Descripción</th>
+              <th class="ps-th ps-th-actions" v-if="hasPermission">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Estado de carga -->
+            <tr v-if="loading">
+              <td :colspan="showNoId ? 10 : 9" class="ps-loading-td">
+                <div class="ps-loading">
+                  <div class="ps-spinner"></div>
+                  <span>Cargando registros...</span>
+                </div>
+              </td>
+            </tr>
 
-          <tr
-            v-for="(tren, index) in en_trenes"
-            :key="tren.id"
-            class="align-middle"
-          >
-            <th scope="row">{{ index + 1 }}</th>
-            <td>{{ tren.numero_identificacion_locomotora || "-" }}</td>
-            <td>{{ tren.tipo_equipo || "-" }}</td>
-            <td>
-              <span>
-                {{ tren.estado || "-" }}
-              </span>
-            </td>
-            <td>{{ tren.producto_name || "-" }}</td>
-            <td class="text-end">{{ tren.cantidad_vagones || "0" }}</td>
-            <td>{{ tren.origen || "-" }}</td>
-            <td>{{ tren.destino || "-" }}</td>
-            <td v-if="showNoId">{{ tren.descripcion || "-" }}</td>
-            <td v-if="hasPermission">
-              <div class="d-flex">
-                <button
-                  @click="openVagonDetailsModal(tren)"
-                  class="btn btn-sm btn-info me-1"
-                  :title="showNoId ? 'Ocultar detalles' : 'Ver detalles'"
+            <!-- Filas de datos -->
+            <tr
+              v-for="(tren, index) in filteredRecords"
+              :key="tren.id"
+              class="ps-tr"
+            >
+              <td class="ps-td ps-td-index">{{ index + 1 }}</td>
+              <td class="ps-td">
+                {{ tren.numero_identificacion_locomotora || "-" }}
+              </td>
+              <td class="ps-td">{{ tren.tipo_equipo || "-" }}</td>
+              <td class="ps-td">
+                <span
+                  :class="`ps-status ps-status-${getStatusClass(tren.estado)}`"
                 >
-                  <i
-                    :class="
-                      showNoId
-                        ? 'bi bi-eye-slash-fill text-white'
-                        : 'bi bi-eye-fill text-white'
-                    "
-                  ></i>
-                </button>
-                <router-link
-                  :to="{ name: 'EditarEnTren', params: { id: tren.id } }"
-                  class="btn btn-sm btn-warning me-1"
-                  title="Editar"
-                >
-                  <i class="bi bi-pencil-square text-white"></i>
-                </router-link>
-                <button
-                  @click.prevent="confirmDelete(tren.id)"
-                  class="btn btn-sm btn-danger"
-                  title="Eliminar"
-                >
-                  <i class="bi bi-trash text-white"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
-          <tr v-if="!busqueda_existente && en_trenes.length === 0">
-            <td colspan="10" class="text-center text-muted py-4">
-              <i class="bi bi-exclamation-circle fs-4"></i>
-              <p class="mt-2 mb-0">
-                No se encontraron resultados para "{{ searchQuery }}"
-              </p>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                  {{ tren.estado || "-" }}
+                </span>
+              </td>
+              <td class="ps-td">{{ tren.producto_name || "-" }}</td>
+              <td class="ps-td">
+                <span class="ps-badge">{{ tren.cantidad_vagones || "0" }}</span>
+              </td>
+              <td class="ps-td">{{ tren.origen || "-" }}</td>
+              <td class="ps-td">{{ tren.destino || "-" }}</td>
+              <td class="ps-td" v-if="showNoId">
+                {{ tren.descripcion || "-" }}
+              </td>
+
+              <td class="ps-td ps-td-actions" v-if="hasPermission">
+                <div class="d-flex gap-2">
+                  <button
+                    @click="openVagonDetailsModal(tren)"
+                    class="ps-action-btn ps-action-view"
+                    :title="showNoId ? 'Ocultar detalles' : 'Ver detalles'"
+                  >
+                    <i
+                      :class="
+                        showNoId ? 'bi bi-eye-slash-fill' : 'bi bi-eye-fill'
+                      "
+                    ></i>
+                  </button>
+                  <router-link
+                    :to="{ name: 'EditarEnTren', params: { id: tren.id } }"
+                    class="ps-action-btn ps-action-edit"
+                    title="Editar"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </router-link>
+                  <button
+                    @click="confirmDelete(tren.id)"
+                    class="ps-action-btn ps-action-delete"
+                    title="Eliminar"
+                    :disabled="loading"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Estado vacío -->
+            <tr v-if="!loading && filteredRecords.length === 0">
+              <td :colspan="showNoId ? 10 : 9" class="ps-empty-td">
+                <div class="ps-empty-state">
+                  <i class="bi bi-database-exclamation"></i>
+                  <h3>
+                    {{
+                      searchQuery ? "No hay coincidencias" : "No hay registros"
+                    }}
+                  </h3>
+                  <p>
+                    {{
+                      searchQuery
+                        ? `No encontramos resultados para "${searchQuery}"`
+                        : "No hay vagones registrados en este momento"
+                    }}
+                  </p>
+                  <router-link
+                    to="/AdicionarVagon"
+                    class="ps-empty-action"
+                    v-if="!searchQuery"
+                  >
+                    <i class="bi bi-plus-circle"></i> Crear primer registro
+                  </router-link>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Paginación mejorada -->
-    <div class="d-flex justify-content-between align-items-center mt-3">
+    <div class="ps-pagination">
       <div class="text-muted small">
         Mostrando {{ en_trenes.length }} de {{ totalItems }} registros
       </div>
@@ -147,126 +181,176 @@
       </nav>
     </div>
 
-    <!-- Modal para detalles -->
+    <!-- Modal de detalles - Versión mejorada con más color -->
     <div
       v-if="showDetailsModal"
-      class="modal-backdrop"
+      class="ps-modal-overlay"
       @click.self="closeDetailsModal"
     >
-      <div class="modal-content">
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title">Info del vagon</h5>
-          <button
-            type="button"
-            class="btn-close btn-close-white"
-            @click="closeDetailsModal"
-          >
+      <div class="ps-modal">
+        <div class="ps-modal-header">
+          <div class="ps-modal-header-content">
+            <div class="ps-modal-icon-container">
+              <i class="bi bi-info-circle-fill ps-modal-icon"></i>
+            </div>
+            <div>
+              <h2>Detalles del Vagon</h2>
+              <p class="ps-modal-subtitle">
+                Información completa del registro seleccionado
+              </p>
+            </div>
+          </div>
+          <button class="ps-modal-close" @click="closeDetailsModal">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
-        <div class="modal-body">
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <div class="detail-item">
-                <span class="detail-label">No Id Locomotora:</span>
-                <span class="detail-value">{{
-                  currentTren.numero_identificacion_locomotora || "N/A"
-                }}</span>
+
+        <div class="ps-modal-body">
+          <div class="ps-detail-grid">
+            <div class="ps-detail-card">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-tag-fill"></i>
+                <h4>Información Básica</h4>
               </div>
-              <div class="detail-item">
-                <span class="detail-label">Tipo de equipo:</span>
-                <span class="detail-value">{{
-                  currentTren.tipo_equipo || "N/A"
-                }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Estado:</span>
-                <span class="detail-value">{{
-                  currentTren.estado || "N/A"
-                }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Producto Id:</span>
-                <span class="detail-value">{{
-                  currentTren.producto || "N/A"
-                }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Producto nombre:</span>
-                <span class="detail-value">{{
-                  currentTren.producto_name || "N/A"
-                }}</span>
-              </div>
-            </div>
-            <div class="col-md-6 mb-3">
-              <div class="detail-item">
-                <span class="detail-label">Tipo de origen:</span>
-                <span class="detail-value">{{
-                  currentTren.tipo_origen || "N/A"
-                }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Origen:</span>
-                <span class="detail-value">{{
-                  currentTren.origen || "N/A"
-                }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Tipo de destino:</span>
-                <span class="detail-value">{{
-                  currentTren.tipo_destino || "N/A"
-                }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Destino:</span>
-                <span class="detail-value">{{
-                  currentTren.destino || "N/A"
-                }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Equipo de carga:</span>
-                <span class="detail-value">{{
-                  currentTren.equipo_carga_name || "N/A"
-                }}</span>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">No Id Locomotora:</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.numero_identificacion_locomotora || "N/A"
+                  }}</span>
+                </div>
+
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Tipo de equipo:</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.tipo_equipo || "N/A"
+                  }}</span>
+                </div>
+
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Estado:</span>
+                  <span class="ps-detail-value">
+                    <span
+                      :class="`ps-status ps-status-${getStatusClass(
+                        currentTren.estado
+                      )}`"
+                    >
+                      {{ currentTren.estado || "N/A" }}
+                    </span>
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="row">
-            <div class="col-md-6">
-              <div class="detail-item">
-                <span class="detail-label">Cantidad de vagones:</span>
-                <span class="detail-value">{{
-                  currentTren.cantidad_vagones || "0"
-                }}</span>
+
+            <div class="ps-detail-card">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-clipboard2-data-fill"></i>
+                <h4>Producto y Cantidad</h4>
+              </div>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Producto Id:</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.producto || "N/A"
+                  }}</span>
+                </div>
+
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Producto nombre:</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.producto_name || "N/A"
+                  }}</span>
+                </div>
+
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Cantidad de vagones:</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.cantidad_vagones || "0"
+                  }}</span>
+                </div>
               </div>
             </div>
-            <div class="col-md-6">
-              <div class="detail-item">
-                <span class="detail-label">Descripción:</span>
-                <span class="detail-value">{{
-                  currentTren.descripcion || "Ninguna"
-                }}</span>
+
+            <div class="ps-detail-card">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-geo-alt-fill"></i>
+                <h4>Origen y Destino</h4>
+              </div>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Tipo de origen:</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.tipo_origen || "N/A"
+                  }}</span>
+                </div>
+
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Origen:</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.origen || "N/A"
+                  }}</span>
+                </div>
+
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Tipo de destino:</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.tipo_destino || "N/A"
+                  }}</span>
+                </div>
+
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Destino:</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.destino || "N/A"
+                  }}</span>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="row">
-            <div class="col-12">
-              <div class="detail-item">
-                <span class="detail-label">Observaciones:</span>
-                <span class="detail-value">{{
-                  currentTren.observaciones || "Ninguna"
-                }}</span>
+
+            <div class="ps-detail-card ps-detail-card-highlight">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-gear-fill"></i>
+                <h4>Equipo</h4>
+              </div>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Equipo de carga:</span>
+                  <span class="ps-detail-value ps-highlight-value">
+                    {{ currentTren.equipo_carga_name || "N/A" }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ps-detail-card ps-detail-card-full">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-chat-square-text-fill"></i>
+                <h4>Descripción y Observaciones</h4>
+              </div>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Descripción:</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.descripcion || "Ninguna"
+                  }}</span>
+                </div>
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Observaciones:</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.observaciones || "Ninguna"
+                  }}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="modal-footer">
+
+        <div class="ps-modal-footer">
           <button
-            type="button"
-            class="btn btn-secondary"
+            class="ps-modal-btn ps-modal-btn-secondary"
             @click="closeDetailsModal"
           >
-            Cerrar
+            <i class="bi bi-x-circle"></i> Cerrar
           </button>
         </div>
       </div>
@@ -277,14 +361,9 @@
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
-import ModalEnTrenes from "@/components/ModalViewEnTrenes.vue";
 
 export default {
   name: "EnTrenes",
-  components: {
-    ModalEnTrenes,
-  },
-
   data() {
     return {
       en_trenes: [],
@@ -301,9 +380,42 @@ export default {
       loading: false,
       user_role: "",
       showNoId: false,
-      showDetailsModal: false, // <-- Añade esta línea
-      currentTren: {}, // <-- Añade esta línea si no está
+      showDetailsModal: false,
+      currentTren: {},
+      allRecords: [],
     };
+  },
+
+  computed: {
+    filteredRecords() {
+      if (!this.searchQuery) return this.en_trenes;
+
+      const query = this.searchQuery.toLowerCase();
+      return this.en_trenes.filter((item) => {
+        const fieldsToSearch = [
+          item.numero_identificacion_locomotora,
+          item.tipo_equipo,
+          item.estado,
+          item.producto_name,
+          item.cantidad_vagones?.toString(),
+          item.origen,
+          item.destino,
+          item.descripcion,
+          item.observaciones,
+        ];
+
+        return fieldsToSearch.some(
+          (field) => field && field.toString().toLowerCase().includes(query)
+        );
+      });
+    },
+    hasPermission() {
+      if (this.user_role === "role") {
+        return true;
+      } else {
+        return this.user_role === "admin";
+      }
+    },
   },
 
   async mounted() {
@@ -312,14 +424,6 @@ export default {
   },
 
   methods: {
-    hasPermission() {
-      if (this.user_role === "role") {
-        return true;
-      } else {
-        return this.user_role === "admin";
-      }
-    },
-
     toggleContentVisibility() {
       this.showNoId = !this.showNoId;
     },
@@ -352,9 +456,11 @@ export default {
           },
         });
         this.en_trenes = response.data.results;
+        this.allRecords = response.data.results;
         this.totalItems = response.data.count;
       } catch (error) {
         console.error("Error al obtener los trenes:", error);
+        this.showErrorToast("No se pudieron cargar los registros");
       } finally {
         this.loading = false;
       }
@@ -376,6 +482,7 @@ export default {
       } catch (error) {
         console.error("Error al buscar trenes", error);
         this.busqueda_existente = false;
+        this.showErrorToast("Error al buscar registros");
       } finally {
         this.loading = false;
       }
@@ -411,22 +518,16 @@ export default {
       try {
         await axios.delete(`/ufc/en-trenes/${id}/`);
         this.en_trenes = this.en_trenes.filter((tren) => tren.id !== id);
-        Swal.fire(
-          "Eliminado!",
-          "El producto ha sido eliminado exitosamente.",
-          "success"
-        );
+        this.showSuccessToast("Registro eliminado");
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
-        Swal.fire("Error", "Hubo un error al eliminar el producto.", "error");
+        this.showErrorToast("Error al eliminar el registro");
       }
     },
 
     openVagonDetailsModal(tren) {
       this.currentTren = { ...tren };
-      this.showDetailsModal = true; // <-- Asegúrate que esta línea está así
-
-      // Opcional: Cargar datos completos del servidor
+      this.showDetailsModal = true;
     },
 
     closeDetailsModal() {
@@ -434,224 +535,714 @@ export default {
       this.currentTren = {};
     },
 
+    getStatusClass(status) {
+      if (!status) return "default";
+      const statusLower = status.toLowerCase();
+
+      if (statusLower.includes("activo")) return "success";
+      if (statusLower.includes("pendiente")) return "warning";
+      if (statusLower.includes("inactivo") || statusLower.includes("cancelado"))
+        return "danger";
+
+      return "info";
+    },
+
     confirmDelete(id) {
       Swal.fire({
-        title: "¿Estás seguro?",
-        text: "¡No podrás revertir esta acción!",
-        icon: "warning",
+        title: "¿Eliminar registro?",
+        text: "Esta acción no se puede deshacer",
+        icon: "question",
         showCancelButton: true,
+        confirmButtonColor: "#ff4444",
+        cancelButtonColor: "#33b5e5",
         confirmButtonText: "Sí, eliminar",
         cancelButtonText: "Cancelar",
-        reverseButtons: true,
+        customClass: {
+          popup: "ps-swal-popup",
+          confirmButton: "ps-swal-confirm",
+          cancelButton: "ps-swal-cancel",
+        },
       }).then((result) => {
         if (result.isConfirmed) {
           this.delete_tren(id);
         }
       });
     },
+
+    showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
+      });
+    },
+
+    handleApiError(error, action) {
+      let errorMsg = `Error al ${action}`;
+      if (error.response) {
+        errorMsg += ` (${error.response.status})`;
+        if (error.response.data) {
+          errorMsg += `: ${JSON.stringify(error.response.data)}`;
+        }
+      } else {
+        errorMsg += `: ${error.message}`;
+      }
+      console.error(errorMsg, error);
+      this.showErrorToast(errorMsg);
+    },
   },
 };
 </script>
 
 <style scoped>
-/* Estilos generales */
-.container {
-  max-width: 1200px;
+/* Variables de color */
+:root {
+  --ps-primary: #4361ee;
+  --ps-primary-hover: #3a56d4;
+  --ps-secondary: #3f37c9;
+  --ps-accent: #4895ef;
+  --ps-danger: #f72585;
+  --ps-success: #4cc9f0;
+  --ps-warning: #f8961e;
+  --ps-info: #4895ef;
+  --ps-light: #f8f9fa;
+  --ps-dark: #212529;
+  --ps-gray: #6c757d;
+  --ps-light-gray: #e9ecef;
+  --ps-border-radius: 12px;
+  --ps-box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  --ps-transition: all 0.3s ease;
+}
+
+/* Estilos base */
+.por-situar-container {
+  padding: 2rem;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Botón de agregar */
-.btn-primary {
-  padding: 8px 16px;
-  border-radius: 20px;
+/* Header */
+.ps-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1.5rem;
 }
 
-/* Buscador */
-.search-container {
-  width: 100%;
-  max-width: 400px;
-}
-
-.search-container .input-group-text {
-  border-radius: 20px 0 0 20px;
-  border-right: none;
-}
-
-.search-container input {
-  border-radius: 0 20px 20px 0;
-  border-left: none;
-  padding: 8px 15px;
-}
-
-/* Tabla */
-.table-responsive {
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.table {
-  margin-bottom: 0;
-}
-
-.table th {
-  font-weight: 600;
-  background-color: #f8f9fa;
-  padding: 12px 15px;
-}
-
-.table td {
-  padding: 12px 15px;
-  vertical-align: middle;
-}
-
-.table-hover tbody tr:hover {
-  background-color: rgba(0, 123, 255, 0.05);
-}
-
-/* Botones de acción */
-.btn-sm {
-  padding: 5px 10px;
-  border-radius: 4px;
-}
-
-.btn-info {
-  background-color: #0dcaf0;
-  border-color: #0dcaf0;
-}
-
-.btn-warning {
-  background-color: #ffc107;
-  border-color: #ffc107;
-}
-
-.btn-danger {
-  background-color: #dc3545;
-  border-color: #dc3545;
-}
-
-.btn-info:hover,
-.btn-warning:hover,
-.btn-danger:hover {
-  opacity: 0.9;
-}
-
-/* Paginación */
-.pagination {
+.ps-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--ps-dark);
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.page-link {
-  padding: 6px 12px;
-  border-radius: 4px;
-  margin: 0 2px;
+.ps-title-icon {
+  color: var(--ps-primary);
 }
 
-/* Mensaje de no resultados */
-.text-muted {
-  color: #6c757d !important;
+.ps-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
 }
 
-/* Modal personalizado */
-.modal-backdrop {
-  position: fixed;
+/* Botón de agregar como icono */
+.ps-add-icon {
+  background: var(--ps-primary);
+  color: white;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  transition: var(--ps-transition);
+  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+  position: relative;
+  overflow: hidden;
+  border: none;
+}
+
+.ps-add-icon::after {
+  content: "";
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1050;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  opacity: 0;
+  transition: var(--ps-transition);
 }
 
-.modal-content {
+.ps-add-icon:hover {
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: 0 6px 16px rgba(67, 97, 238, 0.4);
+}
+
+.ps-add-icon:hover::after {
+  opacity: 1;
+}
+
+/* Buscador */
+.ps-search-container {
+  position: relative;
+  width: 280px;
+}
+
+.ps-search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ps-gray);
+  font-size: 1rem;
+}
+
+.ps-search-input {
+  width: 100%;
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
+  border: 1px solid var(--ps-light-gray);
+  border-radius: var(--ps-border-radius);
+  font-size: 0.95rem;
+  transition: var(--ps-transition);
   background-color: white;
+}
+
+.ps-search-input:focus {
+  outline: none;
+  border-color: var(--ps-primary);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+}
+
+.ps-search-border {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--ps-primary);
+  transition: var(--ps-transition);
+}
+
+.ps-search-input:focus ~ .ps-search-border {
+  width: 100%;
+}
+
+/* Tarjeta contenedora */
+.ps-card {
+  background: white;
+  border-radius: var(--ps-border-radius);
+  box-shadow: var(--ps-box-shadow);
+  overflow: hidden;
+  transition: var(--ps-transition);
+}
+
+.ps-card:hover {
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.12);
+}
+
+/* Tabla */
+.ps-table-container {
+  overflow-x: auto;
+  padding: 0.5rem;
+}
+
+.ps-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 1000px;
+}
+
+.ps-th {
+  padding: 1rem 1.2rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--ps-dark);
+  background-color: #f9fafb;
+  border-bottom: 2px solid var(--ps-light-gray);
+  position: sticky;
+  top: 0;
+}
+
+.ps-th-actions {
+  text-align: center;
+}
+
+.ps-tr {
+  transition: var(--ps-transition);
+}
+
+.ps-tr:hover {
+  background-color: rgba(67, 97, 238, 0.03);
+}
+
+.ps-td {
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--ps-light-gray);
+  color: var(--ps-dark);
+}
+
+.ps-td-index {
+  font-weight: 600;
+  color: var(--ps-gray);
+}
+
+.ps-td-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+/* Botones de acción con efecto transparente al hover */
+.ps-action-btn {
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: var(--ps-transition);
+  background: transparent;
+  color: var(--ps-gray);
+  position: relative;
+  overflow: hidden;
+}
+
+.ps-action-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: currentColor;
+  opacity: 0.1;
+  transition: var(--ps-transition);
+}
+
+.ps-action-btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.8;
+}
+
+.ps-action-btn:hover::before {
+  opacity: 0.2;
+}
+
+.ps-action-view {
+  color: var(--ps-info);
+}
+
+.ps-action-edit {
+  color: var(--ps-warning);
+}
+
+.ps-action-delete {
+  color: var(--ps-danger);
+}
+
+.ps-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.ps-action-btn i {
+  position: relative;
+  z-index: 1;
+}
+
+/* Badges y estados */
+.ps-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  background: var(--ps-primary);
+  color: white;
+}
+
+.ps-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.ps-status-success {
+  background: rgba(76, 201, 240, 0.1);
+  color: #06d6a0;
+  border: 1px solid rgba(6, 214, 160, 0.2);
+}
+
+.ps-status-warning {
+  background: rgba(248, 150, 30, 0.1);
+  color: #f8961e;
+  border: 1px solid rgba(248, 150, 30, 0.2);
+}
+
+.ps-status-danger {
+  background: rgba(247, 37, 133, 0.1);
+  color: #f72585;
+  border: 1px solid rgba(247, 37, 133, 0.2);
+}
+
+.ps-status-info {
+  background: rgba(72, 149, 239, 0.1);
+  color: #4895ef;
+  border: 1px solid rgba(72, 149, 239, 0.2);
+}
+
+.ps-status-default {
+  background: rgba(108, 117, 125, 0.1);
+  color: var(--ps-gray);
+  border: 1px solid rgba(108, 117, 125, 0.2);
+}
+
+/* Estados de carga y vacío */
+.ps-loading-td,
+.ps-empty-td {
+  padding: 3rem !important;
+}
+
+.ps-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: var(--ps-gray);
+}
+
+.ps-spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 4px solid rgba(67, 97, 238, 0.1);
+  border-top-color: var(--ps-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.ps-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  color: var(--ps-gray);
+}
+
+.ps-empty-state i {
+  font-size: 2.5rem;
+  color: var(--ps-accent);
+}
+
+.ps-empty-state h3 {
+  color: var(--ps-dark);
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.ps-empty-state p {
+  margin: 0;
+  max-width: 400px;
+}
+
+.ps-empty-action {
+  margin-top: 1rem;
+  color: var(--ps-primary);
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: var(--ps-transition);
+}
+
+.ps-empty-action:hover {
+  color: var(--ps-primary-hover);
+  transform: translateY(-2px);
+}
+
+.ps-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  color: var(--ps-gray);
+}
+
+.ps-empty-state i {
+  font-size: 2.5rem;
+  color: var(--ps-accent);
+}
+
+.ps-empty-state h3 {
+  color: var(--ps-dark);
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.ps-empty-state p {
+  margin: 0;
+  max-width: 400px;
+}
+
+.ps-empty-action {
+  margin-top: 1rem;
+  color: var(--ps-primary);
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: var(--ps-transition);
+}
+
+.ps-empty-action:hover {
+  color: var(--ps-primary-hover);
+  transform: translateY(-2px);
+}
+
+/* Paginación */
+.ps-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding: 0 0.5rem;
+}
+
+.page-link {
+  border-radius: var(--ps-border-radius) !important;
+  margin: 0 2px;
+  transition: var(--ps-transition);
+}
+
+.page-link:hover {
+  background-color: var(--ps-light-gray);
+}
+
+/* Modal mejorado */
+.ps-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.ps-modal {
+  background: white;
+  border-radius: var(--ps-border-radius);
   width: 90%;
   max-width: 800px;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-  animation: modalFadeIn 0.3s ease-out;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.modal-header {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #dee2e6;
-}
-
-.modal-title {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.modal-body {
+.ps-modal-header {
   padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, var(--ps-primary), var(--ps-secondary));
+  color: white;
+  position: relative;
 }
 
-.modal-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #dee2e6;
+.ps-modal-header::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  background: linear-gradient(to bottom, rgba(67, 97, 238, 0.2), transparent);
 }
 
-/* Detalles en el modal */
-.detail-item {
-  margin-bottom: 1rem;
+.ps-modal-header-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.detail-label {
-  font-weight: 600;
-  color: #495057;
-  display: inline-block;
-  min-width: 140px;
+.ps-modal-icon-container {
+  background: rgba(255, 255, 255, 0.2);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.detail-value {
-  color: #212529;
+.ps-modal-icon {
+  font-size: 1.5rem;
 }
 
-/* Animación del modal */
-@keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.ps-modal h2 {
+  margin: 0;
+  font-size: 1.4rem;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .d-flex.justify-content-between {
-    flex-direction: column;
-    gap: 15px;
-  }
+.ps-modal-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+  font-weight: 400;
+}
 
-  .search-container {
-    max-width: 100%;
-  }
+.ps-modal-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: var(--ps-transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
 
-  .btn-primary {
-    width: 100%;
-    text-align: center;
-  }
+.ps-modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
 
-  .table-responsive {
-    overflow-x: auto;
-  }
+.ps-modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  background: #f9fafb;
+}
 
-  .table th,
-  .table td {
-    padding: 8px 10px;
-    font-size: 0.9rem;
-  }
+.ps-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
 
-  .btn-sm {
-    padding: 4px 8px;
-    font-size: 0.8rem;
-  }
+.ps-detail-card {
+  background: white;
+  border-radius: var(--ps-border-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: var(--ps-transition);
+  border: 1px solid var(--ps-light-gray);
+}
+
+.ps-detail-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.ps-detail-card-header {
+  padding: 1rem;
+  background: linear-gradient(to right, #f8f9fa, white);
+  border-bottom: 1px solid var(--ps-light-gray);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ps-modal-footer {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  background: white;
+  border-top: 1px solid var(--ps-light-gray);
+}
+
+.ps-modal-btn {
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--ps-border-radius);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--ps-transition);
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ps-modal-btn-secondary {
+  background: white;
+  color: var(--ps-gray);
+  border: 1px solid var(--ps-light-gray);
+}
+
+.ps-modal-btn-secondary:hover {
+  background: #f1f3f5;
+  color: var(--ps-dark);
 }
 </style>

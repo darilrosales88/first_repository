@@ -68,6 +68,39 @@ class productos_vagones_cargados_descargados(models.Model):
     def __str__(self):
         return f"tipo de producto {self.get_tipo_producto_display()} - {self.producto.nombre_producto}"
 
+#Modelo creado para los productos asociados al modelo vagones y productos
+class productos_vagones_productos(models.Model):
+    TIPO_PROD_CHOICES = [
+        ('producto', 'Producto'),
+        ('contenedor', 'Contenedor'),
+    ]
+
+    ESTADO_CHOICES = [
+        ('vacio', 'Vacío'),
+        ('lleno', 'lleno'),
+    ]
+
+    CONTIENE_CHOICES = [
+        ('alimentos', 'Alimentos'),
+        ('productos_varios', 'Productos varios'),
+    ]
+
+    tipo_producto = models.CharField(choices=TIPO_PROD_CHOICES, max_length = 20)
+    producto = models.ForeignKey(nom_producto, on_delete=models.CASCADE)
+    tipo_embalaje = models.ForeignKey(nom_tipo_embalaje, on_delete=models.CASCADE)
+    unidad_medida = models.ForeignKey(nom_unidad_medida, on_delete=models.CASCADE)
+    cantidad = models.IntegerField()
+    estado = models.CharField(choices=ESTADO_CHOICES, null=True, blank=True, max_length = 20)
+    contiene = models.CharField(choices=CONTIENE_CHOICES, null=True, blank=True, max_length = 20)
+
+    class Meta:
+        verbose_name = "Producto de vagones y productos"
+        verbose_name_plural = "Productos de vagones y productos"
+        #unique_together = [['cliente', 'destino']] 
+
+    
+    def __str__(self):
+        return f"tipo de producto {self.get_tipo_producto_display()} - {self.producto.nombre_producto}"
 # Modelo para representar el estado vagones cargados/descargados
 class vagon_cargado_descargado(models.Model):
     TIPO_ORIGEN_DESTINO_CHOICES = [
@@ -174,6 +207,70 @@ class registro_vagones_cargados(models.Model):
 
     def __str__(self):
         return f"Vagón {self.no_id}" if self.no_id else "Registro sin ID"
+    
+#**************************************************************************************************
+#Modelo destinado a vagones y productos
+class vagones_productos(models.Model):
+    TIPO_ORIGEN_CHOICES = [
+        ('puerto', 'Puerto'),
+        ('ac_ccd', 'Acceso comercial/CCD'),
+    ]
+    
+    TIPO_PRODUCTO_CHOICES = [
+        ('producto', 'Producto'),
+        ('contenedor', 'Contenedor'),
+    ]
+    TIPO_COMBUSTIBLE_CHOICES = [
+        ('combustible_blanco', 'Combustible blanco'),
+        ('combustible_negro', 'Combustible negro'),
+        ('combustible_turbo', 'Combustible turbo'),
+    ]
+
+    
+    tipo_origen = models.CharField(choices=TIPO_ORIGEN_CHOICES, max_length = 50)
+    origen = models.CharField(max_length=40)
+    tipo_producto = models.CharField(choices=TIPO_PRODUCTO_CHOICES, max_length = 20,blank=True,null=True)
+    tipo_combustible = models.CharField(choices=TIPO_COMBUSTIBLE_CHOICES, max_length = 20,blank=True,null=True)
+    tipo_equipo_ferroviario = models.ForeignKey(nom_tipo_equipo_ferroviario, on_delete=models.CASCADE,blank=True,null=True)
+    plan_mensual = models.IntegerField()
+    plan_dia = models.IntegerField(editable=False,default=0)
+    vagones_situados = models.IntegerField(editable=False,default=0)
+    vagones_cargados = models.IntegerField(editable=False,default=0)
+    plan_aseguramiento_proximos_dias = models.IntegerField(editable=False,default=0)
+    observaciones = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="Observaciones",
+        help_text="Admite letras, números y caracteres especiales"
+    )
+
+    #ManyToManyField, es posible que un vagon tenga mas de un producto
+    producto = models.ManyToManyField(
+        productos_vagones_productos,
+        blank=True,
+        related_name='producto_vagones_productos'
+    )
+    plan_anual = models.IntegerField()
+    plan_acumulado_dia_anterior = models.IntegerField()
+    real_acumulado_dia_anterior = models.IntegerField()
+
+    class Meta:
+        verbose_name_plural = "Vagones y productos"
+        verbose_name = "Vagón y producto"
+         
+
+    def __str__(self):
+        # Obtener todos los productos relacionados
+        productos = self.producto.all()
+        
+        # Crear una lista con los nombres de los productos,el primer producto es el objeto local,
+        #el segundo es el nombre del atrib en el modelo al que se llama de tipo nom_producto
+        nombres_productos = [str(producto.producto.nombre_producto) for producto in productos]
+        
+        # Unir los nombres con comas si hay más de uno
+        productos_str = ", ".join(nombres_productos) if nombres_productos else "Sin productos"
+        
+        return f"Vagones y productos: {productos_str}"
 #************************************************************************************************************************************
 #Modelo para representar en_trenes
 class en_trenes(models.Model):
@@ -443,9 +540,3 @@ class arrastres(models.Model):
     
     def __str__(self):
         return f"Arrastre Pendiente{self.id} - {self.origen}"
-    
-    
-    
-    
-    
-    

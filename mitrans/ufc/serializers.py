@@ -6,7 +6,7 @@ from django.db.models import Q
 from nomencladores.models import nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_tipo_equipo_ferroviario
 from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados, en_trenes,nom_equipo_ferroviario, producto_en_vagon
 from .models import por_situar_carga_descarga,Situado_Carga_Descarga,arrastres
-from .models import registro_vagones_cargados
+from .models import registro_vagones_cargados,vagones_productos,productos_vagones_productos
 
 from Administracion.models import Auditoria 
 from rest_framework.response import Response
@@ -73,7 +73,148 @@ class productos_vagones_cargados_descargados_serializer(serializers.ModelSeriali
             'estado': {'allow_null': True},
             'contiene': {'allow_null': True},
         }
+
+#****************************************************************************************************************
+#serializador para los productos del modelo vagones y  productos
+class producto_vagones_productos_filter(filters.FilterSet):
+    producto_contenido = filters.CharFilter(method='filtrado_por_producto_contenido',lookup_expr = 'icontains') 
+    
+
+    def filtrado_por_producto_contenido(self,queryset,value):        
+        return queryset.filter(producto__icontains = value) | queryset.filter(contenido__icontains = value)
+        
+    
+    class Meta:
+  
+        model : productos_vagones_productos    
+        fields:{
+            'producto_contenido':['icontains'],        
+        }
+
+
+
+class producto_vagones_productos_serializer(serializers.ModelSerializer):
+    tipo_producto_name = serializers.ReadOnlyField(source='get_tipo_producto_display')
+    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
+    tipo_embalaje_name = serializers.ReadOnlyField(source='tipo_embalaje.nombre_tipo_embalaje')
+    tipo_embalaje_name = serializers.ReadOnlyField(source='tipo_embalaje.nombre_tipo_embalaje')
+    unidad_medida_name = serializers.ReadOnlyField(source='unidad_medida.unidad_medida')
+    estado_name = serializers.ReadOnlyField(source='get_estado_display')
+    contiene_name = serializers.ReadOnlyField(source='get_contiene_display')
+
+    class Meta:
+        model = productos_vagones_cargados_descargados
+        fields = (
+            'id', 
+            'tipo_producto', 
+            'tipo_producto_name', 
+            'producto', 
+            'producto_name', 
+            'tipo_embalaje', 
+            'tipo_embalaje_name', 
+            'unidad_medida', 
+            'unidad_medida_name', 
+            'cantidad', 
+            'estado', 
+            'estado_name', 
+            'contiene', 
+            'contiene_name',
+        )
+        extra_kwargs = {
+            'estado': {'allow_null': True},
+            'contiene': {'allow_null': True},
+        }
 #****************-------------------------********************--------------------***************-----------------********************************
+#serializador para el modelo vagones y productos de vagones cargados/descargados
+class vagones_productos_filter(filters.FilterSet):
+    origen_tipo_prod_tef = filters.CharFilter(method='filtrado_por_origen_tipo_prod_tef', lookup_expr='icontains')
+    
+    def filtrado_por_origen_tipo_prod_tef(self, queryset, name, value):        
+        return queryset.filter(
+            Q(tipo_equipo_ferroviario_name__icontains=value) | 
+            Q(productos_list__icontains=value) | 
+            Q(tipo_origen_name__icontains=value)
+        )
+    
+    class Meta:
+        model = vagones_productos
+        fields = ['origen_tipo_prod_tef']
+
+
+
+class vagones_productos_serializer(serializers.ModelSerializer):
+    tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
+    tipo_equipo_ferroviario_name = serializers.ReadOnlyField(source='tipo_equipo_ferroviario.get_tipo_equipo_display')
+    tipo_combustible_name = serializers.ReadOnlyField(source='get_tipo_combustible_display')    
+    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
+    productos_list = serializers.SerializerMethodField()  # Campo custom para nombres
+
+    producto_ids = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=productos_vagones_cargados_descargados.objects.all(),
+        source='producto',  # Esto mapea al campo ManyToManyField
+        write_only=True,
+        required=False
+    )   
+    
+
+    class Meta:
+        model = vagon_cargado_descargado
+        fields = '__all__'  # O lista explícita incluyendo 'productos_list'
+        extra_kwargs = {
+            'producto': {'read_only': True},
+            'registros_vagones': {'read_only': True}
+        }
+
+    def create(self, validated_data):
+        try:
+            with transaction.atomic():
+                # Extraer datos para relaciones
+                productos_ids = validated_data.pop('producto_ids', [])
+                registros_data = validated_data.pop('registros_vagones_data', [])
+                
+                # Crear instancia principal
+                instance = super().create(validated_data)
+                
+                # Asignar productos
+                if productos_ids:
+                    instance.producto.set(productos_ids)
+                
+                return instance
+                
+        except Exception as e:
+            raise serializers.ValidationError(f"Error al crear el registro: {str(e)}")
+                
+        except Exception as e:
+            raise serializers.ValidationError(
+                f"Error al crear el registro: {str(e)}"
+            )    
+
+    def get_productos_list(self, obj):
+        return ", ".join([
+            p.producto.nombre_producto 
+            for p in obj.producto.all() 
+            if hasattr(p, 'producto')
+        ])
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        
+        # Registrar acción de auditoría antes de eliminar
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            direccion_ip=direccion_ip,
+            accion=f"Eliminar vanones y productos: {instance.id}",
+            navegador=navegador,
+        )
+        
+        # Esto activará el método delete() del modelo que maneja la eliminación en cascada
+        instance.delete()
+        
+        return Response(status=status.HTTP_204_NO_CONTENT)
+#**************************************************************************************************************************************
 #serializador para el estado de vagones cargados/descargados
 class vagon_cargado_descargado_filter(filters.FilterSet):
     tef_prod_estado = filters.CharFilter(method='filtrado_por_tef_prod_estado', lookup_expr='icontains')
@@ -400,5 +541,3 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
         model = arrastres
         fields= ('tipo_origen','tipo_equipo','estado','producto','cantidad_vagones','destino')
         filterset_class = PendienteArrastreFilter
-    
-        

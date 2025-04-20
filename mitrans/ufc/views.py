@@ -217,7 +217,7 @@ class en_trenes_view_set(viewsets.ModelViewSet):
     queryset = en_trenes.objects.all().order_by('-id') # Definir el queryset
     serializer_class = en_trenes_serializer
     pagination_class = en_trenes_paginator
-    permission_classes = [IsUFCPermission]
+
     ordering_fields = ['id'] 
     ordering = ['-id']  # Orden por defecto (descendente por id)
     def get_queryset(self):
@@ -411,23 +411,30 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
     
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        objeto_por_situar = serializer.save()
+        try:
+            # Permitir producto nulo
+            if 'producto' not in request.data or not request.data['producto']:
+                request.data['producto'] = None
+                
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            objeto_por_situar = serializer.save()
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Insertado formulario en Por Situar carga o descarga: {objeto_por_situar.id}",
-            navegador=navegador,
-        )
+            # Registrar la acción en el modelo de Auditoria
+            navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+            direccion_ip = request.META.get('REMOTE_ADDR')
+            Auditoria.objects.create(
+                usuario=request.user if request.user.is_authenticated else None,
+                direccion_ip=direccion_ip,
+                accion=f"Insertado formulario en Por Situar carga o descarga: {objeto_por_situar.id}",
+                navegador=navegador,
+            )
 
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except Exception as e:
+            # Manejo de excepciones para errores de validación
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)  
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
@@ -571,5 +578,4 @@ class PendienteArrastreViewset(viewsets.ModelViewSet):
     queryset = arrastres.objects.all()
     a=arrastres.objects.create
     serializer_class = PendienteArrastreSerializer
-    
-    
+

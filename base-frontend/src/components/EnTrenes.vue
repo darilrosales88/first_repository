@@ -45,7 +45,7 @@
               <th class="ps-th">Origen</th>
               <th class="ps-th">Destino</th>
               <th class="ps-th" v-if="showNoId">Descripción</th>
-              <th class="ps-th ps-th-actions" v-if="hasPermission">Acciones</th>
+              <th class="ps-th ps-th-actions">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -87,35 +87,32 @@
                 {{ tren.descripcion || "-" }}
               </td>
 
-              <td class="ps-td ps-td-actions" v-if="hasPermission">
-                <div class="d-flex gap-2">
-                  <button
-                    @click="openVagonDetailsModal(tren)"
-                    class="ps-action-btn ps-action-view"
-                    :title="showNoId ? 'Ocultar detalles' : 'Ver detalles'"
-                  >
-                    <i
-                      :class="
-                        showNoId ? 'bi bi-eye-slash-fill' : 'bi bi-eye-fill'
-                      "
-                    ></i>
-                  </button>
-                  <router-link
-                    :to="{ name: 'EditarEnTren', params: { id: tren.id } }"
-                    class="ps-action-btn ps-action-edit"
-                    title="Editar"
-                  >
-                    <i class="bi bi-pencil"></i>
-                  </router-link>
-                  <button
-                    @click="confirmDelete(tren.id)"
-                    class="ps-action-btn ps-action-delete"
-                    title="Eliminar"
-                    :disabled="loading"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
+              <td class="ps-td ps-td-actions">
+                <button
+                  @click="viewDetails(tren)"
+                  class="ps-action-btn ps-action-view"
+                  title="Ver detalles"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+                <router-link
+                  :to="{
+                    name: 'EditarPorSituar',
+                    params: { id: tren.id || 'default-id' },
+                  }"
+                  class="ps-action-btn ps-action-edit"
+                  title="Editar"
+                >
+                  <i class="bi bi-pencil"></i>
+                </router-link>
+                <button
+                  @click="confirmDelete(tren.id)"
+                  class="ps-action-btn ps-action-delete"
+                  title="Eliminar"
+                  :disabled="loading"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
               </td>
             </tr>
 

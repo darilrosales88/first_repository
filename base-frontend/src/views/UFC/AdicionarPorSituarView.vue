@@ -14,21 +14,26 @@
           <div class="col-md-6">
             <!-- Campo: tipo_origen -->
             <div class="mb-3">
-                <label for="tipo_origen" class="form-label"
-                  >Tipo de Origen <span style="color: red">*</span></label
+              <label for="tipo_origen" class="form-label"
+                >Tipo de Origen <span style="color: red">*</span></label
+              >
+              <select
+                class="form-select"
+                v-model="formData.tipo_origen"
+                id="tipo_origen"
+                name="tipo_origen"
+                required
+                :disabled="loading"
+              >
+                <option
+                  v-for="item in tipo_origen_options"
+                  :key="item.id"
+                  :value="item.id"
                 >
-                <select
-                  class="form-select"
-                  v-model="formData.tipo_origen"
-                  id="tipo_origen"
-                  name="tipo_origen"
-                  required
-                  :disabled="loading"
-                >
-                  <option v-for="item in tipo_origen_options" :key="item.id" :value="item.id">{{ item.text }}</option>
-                  
-                </select>
-              </div>
+                  {{ item.text }}
+                </option>
+              </select>
+            </div>
 
             <!-- Campo: origen -->
             <div class="mb-3">
@@ -389,24 +394,30 @@ export default {
           tipo_equipo: this.formData.tipo_equipo,
           estado: this.formData.estado,
           operacion: this.formData.operacion,
-          producto: this.formData.producto,
-          por_situar: this.formData.por_situar, // Aquí mapeamos al nombre que espera el backend
-          observaciones: this.formData.observaciones,
+          producto: this.formData.producto || null,
+          por_situar: this.formData.por_situar.toString(), // Convertir a string como espera el backend
+          observaciones: this.formData.observaciones || "",
         };
-        await axios.post("/ufc/por-situar/", payload);
-        Swal.fire(
+
+        console.log("Enviando payload:", payload); // Para debug
+
+        const response = await axios.post("/ufc/por-situar/", payload);
+        console.log("Respuesta:", response.data); // Para debug
+
+        await Swal.fire(
           "Agregado!",
-          "El formulario sido añadido exitosamente.",
+          "El formulario ha sido añadido exitosamente.",
           "success"
         );
-        // ... (resto del método submitForm permanece igual)
+
+        this.$router.push({ name: "InfoOperativo" });
       } catch (error) {
         console.error("Error al agregar el formulario:", error);
-        Swal.fire(
-          "Error",
-          `Hubo un error al agregar el formulario.\n`,
-          "error"
-        );
+        let errorMessage = "Hubo un error al agregar el formulario.";
+        if (error.response?.data) {
+          errorMessage += "\nDetalles: " + JSON.stringify(error.response.data);
+        }
+        Swal.fire("Error", errorMessage, "error");
       }
     },
 

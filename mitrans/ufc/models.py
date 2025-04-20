@@ -218,21 +218,41 @@ class por_situar(models.Model):
     
     operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion")
     
-    producto = models.ForeignKey(producto_en_vagon, null=True, blank=True, on_delete=models.CASCADE)
+    producto = models.ForeignKey(
+        producto_en_vagon,
+        on_delete=models.SET_NULL,  # Cambiado a SET_NULL para mayor seguridad
+        null=True,
+        blank=True,
+        related_name="producto_por_situar",
+        verbose_name="Producto"
+    )
     
-    por_situar = models.CharField( max_length=10, validators=[ RegexValidator(
-                regex='^-?\d+$',  # Acepta positivos y negativos
+    por_situar = models.CharField(
+        max_length=10,
+        validators=[
+            RegexValidator(
+                regex='^-?\d+$',
                 message='Solo se permiten números enteros (ej: 5, -10).',
                 code='numero_invalido'
             )
-        ]
+        ],
+        verbose_name="Por situar"
     )
+
     observaciones = models.TextField(
         verbose_name="Observaciones",
         help_text="Ingrese observaciones adicionales. Admite letras, números y caracteres especiales.",
-        blank=True,  # Permite que el campo esté vacío
-        null=True,   # Permite valores nulos en la base de datos
+        blank=True,
+        null=True,
     )
+
+    class Meta:
+        verbose_name = "Por situar"
+        verbose_name_plural = "Por situar"
+        ordering = ['tipo_origen', 'origen']
+
+    def __str__(self):
+        return f"{self.tipo_origen} - {self.origen} - {self.tipo_equipo}"
 
 class Situado_Carga_Descarga(models.Model):
     
@@ -394,9 +414,8 @@ class arrastres(models.Model):
     
     def __str__(self):
         return f"Arrastre Pendiente{self.id} - {self.origen}"
-    
-    
-    
-    
-    
-    
+
+
+
+
+

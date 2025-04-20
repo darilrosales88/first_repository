@@ -4,7 +4,7 @@ from django_filters import rest_framework as filters
 from django.db.models import Q
 from nomencladores.models import nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_tipo_equipo_ferroviario
 from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados, en_trenes,nom_equipo_ferroviario, producto_en_vagon
-from .models import por_situar_carga_descarga,Situado_Carga_Descarga,arrastres
+from .models import por_situar,Situado_Carga_Descarga,arrastres
 from .models import registro_vagones_cargados
 
 from Administracion.models import Auditoria 

@@ -650,24 +650,25 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
     
 
     def create(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        objeto_por_situar = serializer.save()
+        try:
+            if not request.user.groups.filter(name='AdminUFC').exists():
+                return Response(
+                    {"detail": "No tiene permiso para realizar esta acción."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            objeto_por_situar = serializer.save()
 
-            # Registrar la acción en el modelo de Auditoria
+                # Registrar la acción en el modelo de Auditoria
             navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
             direccion_ip = request.META.get('REMOTE_ADDR')
             Auditoria.objects.create(
-                usuario=request.user if request.user.is_authenticated else None,
-                direccion_ip=direccion_ip,
-                accion=f"Insertado formulario en Por Situar carga o descarga: {objeto_por_situar.id}",
-                navegador=navegador,
-            )
+                    usuario=request.user if request.user.is_authenticated else None,
+                    direccion_ip=direccion_ip,
+                    accion=f"Insertado formulario en Por Situar carga o descarga: {objeto_por_situar.id}",
+                    navegador=navegador,
+                )
 
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

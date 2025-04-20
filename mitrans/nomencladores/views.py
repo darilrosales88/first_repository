@@ -57,7 +57,7 @@ from django.utils import timezone
 from rest_framework.pagination import PageNumberPagination
 
 #Para el tratado de los permisos en el backend
-from ..ufc.permissions import IsAdminNomenladoresPermission,IsVisualizadorNomencladoresPermission
+from .permissions import IsAdminNomenladoresPermission,IsVisualizadorNomencladoresPermission
 
 
 

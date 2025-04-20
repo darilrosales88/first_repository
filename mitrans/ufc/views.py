@@ -31,7 +31,7 @@ from django.utils import timezone
 #Actualizando el ModelViewSet para usar diferentes permisos según la acción
 from .permissions import IsAdminUFCPermission,IsVisualizadorUFCPermission
 
-from rest_framework.decorators import action  # Importa el decorador action
+from rest_framework.decorators import action,api_view  # Importa el decorador action
 
 
 
@@ -509,6 +509,17 @@ class productos_vagones_productos_view_set(viewsets.ModelViewSet):
         )
 
         return super().list(request, *args, **kwargs)
+    
+@api_view(['POST'])
+def verificar_productos_vagonesyproductos(request):
+    producto_ids = request.data.get('producto_ids', [])
+    existentes = productos_vagones_productos.objects.filter(id__in=producto_ids).values_list('id', flat=True)
+    return Response({
+        'todos_existen': len(existentes) == len(producto_ids),
+        'ids_existentes': list(existentes),
+        'ids_faltantes': list(set(producto_ids) - set(existentes))
+    })
+
     
 #para vagones agregados a cargados/descargados
 class registro_vagones_cargados_view_set(viewsets.ModelViewSet):

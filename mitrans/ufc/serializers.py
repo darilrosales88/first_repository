@@ -103,7 +103,7 @@ class producto_vagones_productos_serializer(serializers.ModelSerializer):
     contiene_name = serializers.ReadOnlyField(source='get_contiene_display')
 
     class Meta:
-        model = productos_vagones_cargados_descargados
+        model = productos_vagones_productos
         fields = (
             'id', 
             'tipo_producto', 
@@ -124,8 +124,9 @@ class producto_vagones_productos_serializer(serializers.ModelSerializer):
             'estado': {'allow_null': True},
             'contiene': {'allow_null': True},
         }
+
 #****************-------------------------********************--------------------***************-----------------********************************
-#serializador para el modelo vagones y productos de vagones cargados/descargados
+#serializador para el modelo vagones y productos
 class vagones_productos_filter(filters.FilterSet):
     origen_tipo_prod_tef = filters.CharFilter(method='filtrado_por_origen_tipo_prod_tef', lookup_expr='icontains')
     
@@ -143,7 +144,7 @@ class vagones_productos_filter(filters.FilterSet):
 
 
 class vagones_productos_serializer(serializers.ModelSerializer):
-    tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
+    tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')    
     tipo_equipo_ferroviario_name = serializers.ReadOnlyField(source='tipo_equipo_ferroviario.get_tipo_equipo_display')
     tipo_combustible_name = serializers.ReadOnlyField(source='get_tipo_combustible_display')    
     producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
@@ -151,7 +152,7 @@ class vagones_productos_serializer(serializers.ModelSerializer):
 
     producto_ids = serializers.PrimaryKeyRelatedField(
         many=True,
-        queryset=productos_vagones_cargados_descargados.objects.all(),
+        queryset=productos_vagones_productos.objects.all(),
         source='producto',  # Esto mapea al campo ManyToManyField
         write_only=True,
         required=False
@@ -159,7 +160,7 @@ class vagones_productos_serializer(serializers.ModelSerializer):
     
 
     class Meta:
-        model = vagon_cargado_descargado
+        model = vagones_productos
         fields = '__all__'  # O lista explícita incluyendo 'productos_list'
         extra_kwargs = {
             'producto': {'read_only': True},
@@ -206,7 +207,7 @@ class vagones_productos_serializer(serializers.ModelSerializer):
         Auditoria.objects.create(
             usuario=request.user if request.user.is_authenticated else None,
             direccion_ip=direccion_ip,
-            accion=f"Eliminar vanones y productos: {instance.id}",
+            accion=f"Eliminar vagones y productos: {instance.id}",
             navegador=navegador,
         )
         

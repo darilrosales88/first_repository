@@ -12,6 +12,11 @@
   <br />
   <Navbar-Component /><br />
 
+  <h4>Transportación de las cargas</h4>
+  <div>        
+      <Vagones_productos />
+  </div>
+
   <div style="margin-left: 12em">
     <!-- Navbar con enlaces -->
     <nav>
@@ -59,6 +64,15 @@
             :class="{ active: currentComponent === 'EnTrenes' }"
           >
             En Trenes
+          </a>
+        </li>
+        <li>
+          <a
+            href="#"
+            @click.prevent="currentComponent = 'AdicionarVagonProducto'"
+            :class="{ active: currentComponent === 'AdicionarVagonProducto' }"
+          >
+            Vagones y productos
           </a>
         </li>
       </ul>
@@ -148,6 +162,8 @@ import SituadoCarga_Descarga from "@/components/SituadoCarga_Descarga.vue";
 import Cargados_Descargados from "@/components/Cargados_Descargados.vue";
 import PendientesArrastre from "@/components/PendientesArrastre.vue";
 import EnTrenes from "@/components/EnTrenes.vue";
+import Vagones_productos from "@/components/Vagones_productos.vue";
+import AdicionarVagonProducto from "@/views/UFC/AdicionarVagonesProductos.vue";
 
 export default {
   name: "UFCView",
@@ -158,6 +174,8 @@ export default {
     Cargados_Descargados,
     PendientesArrastre,
     EnTrenes,
+    Vagones_productos,
+    AdicionarVagonProducto,
   },
   data() {
     return {

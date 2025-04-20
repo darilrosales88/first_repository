@@ -667,8 +667,7 @@ const routes = [
     },
   },
 
-  /*A partir de aqui Cargado/descargado */
-
+  /* Cargado/descargado */
 {
   path: "/AdicionarVagonCargadoDescargado",
   name: "AdicionarVagonCargadoDescargado",
@@ -677,7 +676,25 @@ const routes = [
     requireLogin: true,
   },
 },
-/*Hatsa aqui es Cargado/descargado */
+  /* Vagones y productos */
+   {
+    path: "/AdicionarVagon_producto",
+    name: "AdicionarVagonProducto",
+    component: () => import("../views/UFC/AdicionarVagonesProductos.vue"),
+    meta: {
+      requireLogin: true,
+    },
+    
+  },
+  {
+    path: "/EditarVagonesyProductos/:id/edit",
+    name: "EditarVagonesyProductos",
+    component: () => import("../views/UFC/EditarVagonesyProductos.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  }, 
+
 ];
 
 

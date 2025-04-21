@@ -154,139 +154,139 @@
 
     <!-- Modal de detalles - Versión mejorada -->
     <div v-if="showModal" class="ps-modal-overlay" @click.self="closeModal">
-      <div class="ps-modal">
-        <div class="ps-modal-header">
-          <div class="ps-modal-header-content">
-            <div class="ps-modal-icon-container">
-              <i class="bi bi-info-circle-fill ps-modal-icon"></i>
-            </div>
-            <div>
-              <h2>Detalles del Registro</h2>
-              <p class="ps-modal-subtitle">Información completa del registro situado</p>
-            </div>
+    <div class="ps-modal">
+      <div class="ps-modal-header">
+        <div class="ps-modal-header-content">
+          <div class="ps-modal-icon-container">
+            <i class="bi bi-info-circle-fill ps-modal-icon"></i>
           </div>
-          <button class="ps-modal-close" @click="closeModal">
-            <i class="bi bi-x-lg"></i>
-          </button>
+          <div>
+            <h2>Detalles del Registro</h2>
+            <p class="ps-modal-subtitle">Información completa del registro situado</p>
+          </div>
         </div>
-        
-        <div class="ps-modal-body">
-          <div class="ps-detail-grid">
-            <div class="ps-detail-card">
-              <div class="ps-detail-card-header">
-                <i class="bi bi-tag-fill"></i>
-                <h4>Información Básica</h4>
-              </div>
-              <div class="ps-detail-card-body">
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Tipo Origen:</span>
-                  <span class="ps-detail-value">{{ selectedItem.tipo_origen || 'N/A' }}</span>
-                </div>
-                
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Origen:</span>
-                  <span class="ps-detail-value">{{ selectedItem.origen || 'N/A' }}</span>
-                </div>
-                
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Tipo de Equipo:</span>
-                  <span class="ps-detail-value">{{ selectedItem.tipo_equipo || 'N/A' }}</span>
-                </div>
-              </div>
+        <button class="ps-modal-close" @click="closeModal">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      
+      <div class="ps-modal-body">
+        <div class="ps-detail-grid">
+          <div class="ps-detail-card">
+            <div class="ps-detail-card-header">
+              <i class="bi bi-tag-fill"></i>
+              <h4>Información Básica</h4>
             </div>
-            
-            <div class="ps-detail-card">
-              <div class="ps-detail-card-header">
-                <i class="bi bi-clipboard2-data-fill"></i>
-                <h4>Estado y Operación</h4>
+            <div class="ps-detail-card-body">
+              <div class="ps-detail-item">
+                <span class="ps-detail-label">Tipo Origen:</span>
+                <span class="ps-detail-value">{{ selectedItem.tipo_origen || 'N/A' }}</span>
               </div>
-              <div class="ps-detail-card-body">
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Estado:</span>
-                  <span class="ps-detail-value">
-                    <span :class="`ps-status ps-status-${getStatusClass(selectedItem.estado)}`">
-                      {{ selectedItem.estado || 'N/A' }}
-                    </span>
-                  </span>
-                </div>
-                
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Operación:</span>
-                  <span class="ps-detail-value">{{ selectedItem.operacion || 'N/A' }}</span>
-                </div>
-                
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Producto:</span>
-                  <span class="ps-detail-value">{{ selectedItem.producto_name || 'N/A' }}</span>
-                </div>
+              
+              <div class="ps-detail-item">
+                <span class="ps-detail-label">Origen:</span>
+                <span class="ps-detail-value">{{ selectedItem.origen || 'N/A' }}</span>
               </div>
-            </div>
-            
-            <div class="ps-detail-card ps-detail-card-highlight">
-              <div class="ps-detail-card-header">
-                <i class="bi bi-check-circle-fill"></i>
-                <h4>Cantidades</h4>
-              </div>
-              <div class="ps-detail-card-body">
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Situados:</span>
-                  <span class="ps-detail-value ps-highlight-value ps-badge-success">
-                    {{ selectedItem.situados || '0' }}
-                  </span>
-                </div>
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Pendientes:</span>
-                  <span class="ps-detail-value ps-badge-warning">
-                    {{ selectedItem.pendiente_proximo_dia || '0' }}
-                  </span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="ps-detail-card ps-detail-card-full">
-              <div class="ps-detail-card-header">
-                <i class="bi bi-chat-square-text-fill"></i>
-                <h4>Observaciones</h4>
-              </div>
-              <div class="ps-detail-card-body">
-                <div class="ps-detail-item">
-                  <span class="ps-detail-value">{{ selectedItem.observaciones || 'Ninguna observación registrada' }}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="ps-detail-card">
-              <div class="ps-detail-card-header">
-                <i class="bi bi-calendar-event-fill"></i>
-                <h4>Meta Información</h4>
-              </div>
-              <div class="ps-detail-card-body">
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Fecha Creación:</span>
-                  <span class="ps-detail-value">
-                    {{ selectedItem.created_at ? formatDate(selectedItem.created_at) : 'N/A' }}
-                  </span>
-                </div>
+              
+              <div class="ps-detail-item">
+                <span class="ps-detail-label">Tipo de Equipo:</span>
+                <span class="ps-detail-value">{{ selectedItem.tipo_equipo || 'N/A' }}</span>
               </div>
             </div>
           </div>
-        </div>
-        
-        <div class="ps-modal-footer">
-          <button class="ps-modal-btn ps-modal-btn-secondary" @click="closeModal">
-            <i class="bi bi-x-circle"></i> Cerrar
-          </button>
-          <router-link 
-            v-if="selectedItem.id"
-            :to="{ name: 'EditarSituados', params: { id: selectedItem.id } }"
-            class="ps-modal-btn ps-modal-btn-primary"
-            @click="closeModal"
-          >
-            <i class="bi bi-pencil-square"></i> Editar Registro
-          </router-link>
+          
+          <div class="ps-detail-card">
+            <div class="ps-detail-card-header">
+              <i class="bi bi-clipboard2-data-fill"></i>
+              <h4>Estado y Operación</h4>
+            </div>
+            <div class="ps-detail-card-body">
+              <div class="ps-detail-item">
+                <span class="ps-detail-label">Estado:</span>
+                <span class="ps-detail-value">
+                  <span :class="`ps-status ps-status-${getStatusClass(selectedItem.estado)}`">
+                    {{ selectedItem.estado || 'N/A' }}
+                  </span>
+                </span>
+              </div>
+              
+              <div class="ps-detail-item">
+                <span class="ps-detail-label">Operación:</span>
+                <span class="ps-detail-value">{{ selectedItem.operacion || 'N/A' }}</span>
+              </div>
+              
+              <div class="ps-detail-item">
+                <span class="ps-detail-label">Producto:</span>
+                <span class="ps-detail-value">{{ selectedItem.producto_name || 'N/A' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="ps-detail-card ps-detail-card-highlight">
+            <div class="ps-detail-card-header">
+              <i class="bi bi-check-circle-fill"></i>
+              <h4>Cantidades</h4>
+            </div>
+            <div class="ps-detail-card-body">
+              <div class="ps-detail-item">
+                <span class="ps-detail-label">Situados:</span>
+                <span class="ps-detail-value ps-highlight-value ps-badge-success">
+                  {{ selectedItem.situados || '0' }}
+                </span>
+              </div>
+              <div class="ps-detail-item">
+                <span class="ps-detail-label">Pendientes:</span>
+                <span class="ps-detail-value ps-badge-warning">
+                  {{ selectedItem.pendiente_proximo_dia || '0' }}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="ps-detail-card ps-detail-card-full">
+            <div class="ps-detail-card-header">
+              <i class="bi bi-chat-square-text-fill"></i>
+              <h4>Observaciones</h4>
+            </div>
+            <div class="ps-detail-card-body">
+              <div class="ps-detail-item">
+                <span class="ps-detail-value">{{ selectedItem.observaciones || 'Ninguna observación registrada' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="ps-detail-card">
+            <div class="ps-detail-card-header">
+              <i class="bi bi-calendar-event-fill"></i>
+              <h4>Fecha de Creación</h4>
+            </div>
+            <div class="ps-detail-card-body">
+              <div class="ps-detail-item">
+                <span class="ps-detail-label">Fecha y Hora:</span>
+                <span class="ps-detail-value">
+                  {{ selectedItem.created_at ? formatDateTime(selectedItem.created_at) : 'N/A' }}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+      
+      <div class="ps-modal-footer">
+        <button class="ps-modal-btn ps-modal-btn-secondary" @click="closeModal">
+          <i class="bi bi-x-circle"></i> Cerrar
+        </button>
+        <router-link 
+          v-if="selectedItem.id"
+          :to="{ name: 'EditarSituados', params: { id: selectedItem.id } }"
+          class="ps-modal-btn ps-modal-btn-primary"
+          @click="closeModal"
+        >
+          <i class="bi bi-pencil-square"></i> Editar Registro
+        </router-link>
+      </div>
     </div>
+  </div>
   </div>
 </template>
 

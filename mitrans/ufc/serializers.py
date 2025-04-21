@@ -1,11 +1,10 @@
-
 from rest_framework import serializers
 from django_filters import rest_framework as filters
 
 from django.db.models import Q
 from nomencladores.models import nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_tipo_equipo_ferroviario
 from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados, en_trenes,nom_equipo_ferroviario, producto_en_vagon
-from .models import por_situar_carga_descarga,Situado_Carga_Descarga,arrastres
+from .models import por_situar,Situado_Carga_Descarga,arrastres
 from .models import registro_vagones_cargados,vagones_productos,productos_vagones_productos
 
 from Administracion.models import Auditoria 
@@ -443,24 +442,9 @@ class en_trenes_serializer(serializers.ModelSerializer):
                 self.fields['locomotora'].queryset = nom_equipo_ferroviario.objects.filter(
                 tipo_equipo__tipo_equipo='locomotora'
             )
-    def validate(self, data):
-        # Validar combinación única de Tipo equipo ferroviario, Estado, Producto, Origen, Destino
-        if en_trenes.objects.filter(
-            tipo_equipo=data['tipo_equipo'],
-            estado=data['estado'],
-            producto=data['producto'],
-            origen=data['origen'],
-            destino=data['destino']
-        ).exists():
-            raise serializers.ValidationError("La combinación de Tipo equipo ferroviario, Estado, Producto, Origen y Destino ya existe.")
-        
+  
         # Validar combinación única de Tipo equipo ferroviario y No. ID
-        if en_trenes.objects.filter(
-            tipo_equipo=data['tipo_equipo'],
-            equipo_vagon=data['equipo_vagon']
-        ).exists():
-            raise serializers.ValidationError("La combinación de Tipo equipo ferroviario y No. ID ya existe.")
-        return data
+       
                 
                 
 class producto_vagon_serializer(serializers.ModelSerializer):
@@ -499,15 +483,15 @@ class SituadoCargaDescargaFilter(filters.FilterSet):
     
     
     class Meta:
-        model = por_situar_carga_descarga
+        model = por_situar
         fields = ['tipo_equipo']  # Campos filtrables
         
         
 class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
-    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
+    producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')
     class Meta:
         model = Situado_Carga_Descarga
-        fields = ('id','tipo_origen', 'tipo_equipo', 'estado', 'operacion', 'producto','producto_name', 'situados','pendiente_proximo_dia')
+        fields = ('id','tipo_origen','origen', 'tipo_equipo', 'estado', 'operacion', 'producto','producto_name', 'situados','pendiente_proximo_dia')
         filterset_class = SituadoCargaDescargaFilter
         
         
@@ -515,19 +499,32 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
         
 class PorSituarCargaDescargaFilter(filters.FilterSet):
     tipo_equipo = filters.CharFilter(lookup_expr='icontains')  # Filtro exacto (puedes usar 'icontains' para parcial
-    
+   
     class Meta:
-        model = por_situar_carga_descarga
+        model = por_situar
         fields = ['tipo_equipo']  # Campos filtrables
 
 
 class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
-    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
+    producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')
+    tipo_origen_name = serializers.ReadOnlyField(source='tipo_origen')
+    
     class Meta:
-        model = por_situar_carga_descarga  # Usa "=", no ":"
-        fields = ('id','tipo_origen', 'tipo_equipo', 'estado', 'operacion', 'producto', 'por_situar','producto_name')
+        model = por_situar
+        fields = ('id','tipo_origen','tipo_origen_name','origen','tipo_equipo', 'estado', 'operacion', 'producto', 'por_situar','producto_name')
         filterset_class = PorSituarCargaDescargaFilter
-        
+        extra_kwargs = {
+            'producto': {'allow_null': True, 'required': False},
+            'observaciones': {'allow_null': True, 'required': False}
+        }
+
+    def validate(self, data):
+        # Validar que el producto sea opcional
+        if 'producto' not in data:
+            data['producto'] = None
+            
+        return data
+
 
 class PendienteArrastreFilter(filters.FilterSet):
     tipo_equipo = filters.CharFilter(lookup_expr='icontains')  # Filtro exacto (puedes usar 'icontains' para parcial
@@ -540,5 +537,5 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = arrastres
-        fields= ('tipo_origen','tipo_equipo','estado','producto','cantidad_vagones','destino')
+        fields= ('id','tipo_origen','tipo_equipo','estado','producto','cantidad_vagones','destino')
         filterset_class = PendienteArrastreFilter

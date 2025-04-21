@@ -5,7 +5,7 @@ from rest_framework.pagination import PageNumberPagination
 #importacion de modelos
 from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados,en_trenes,producto_en_vagon
 from .models import registro_vagones_cargados,vagones_productos,productos_vagones_productos
-from .models import por_situar_carga_descarga,Situado_Carga_Descarga,arrastres
+from .models import por_situar,Situado_Carga_Descarga,arrastres
 #importacion de serializadores asociados a los modelos
 from .serializers import vagon_cargado_descargado_filter,vagon_cargado_descargado_serializer,producto_vagon_serializer
 from .serializers import producto_vagon_cargado_descargado_filter,productos_vagones_cargados_descargados_serializer,en_trenes_serializer
@@ -639,6 +639,7 @@ class en_trenes_view_set(viewsets.ModelViewSet):
     queryset = en_trenes.objects.all().order_by('-id') # Definir el queryset
     serializer_class = en_trenes_serializer
     pagination_class = en_trenes_paginator
+
     ordering_fields = ['id'] 
     ordering = ['-id']  # Orden por defecto (descendente por id)    
 
@@ -863,7 +864,7 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
 
 #Voy a agregar los modulos de auditoria a los que hizo Karmal
 class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
-    queryset = por_situar_carga_descarga.objects.all().order_by("-id")
+    queryset = por_situar.objects.all().order_by("-id")
     serializer_class = PorSituarCargaDescargaSerializer
     filter_backends = [DjangoFilterBackend]
     
@@ -879,28 +880,31 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
     
 
     def create(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        objeto_por_situar = serializer.save()
+        try:
+            if not request.user.groups.filter(name='AdminUFC').exists():
+                return Response(
+                    {"detail": "No tiene permiso para realizar esta acción."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            objeto_por_situar = serializer.save()
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Insertado formulario en Por Situar carga o descarga: {objeto_por_situar.id}",
-            navegador=navegador,
-        )
+                # Registrar la acción en el modelo de Auditoria
+            navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+            direccion_ip = request.META.get('REMOTE_ADDR')
+            Auditoria.objects.create(
+                    usuario=request.user if request.user.is_authenticated else None,
+                    direccion_ip=direccion_ip,
+                    accion=f"Insertado formulario en Por Situar carga o descarga: {objeto_por_situar.id}",
+                    navegador=navegador,
+                )
 
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except Exception as e:
+            # Manejo de excepciones para errores de validación
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)  
     def update(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
@@ -1083,5 +1087,4 @@ class PendienteArrastreViewset(viewsets.ModelViewSet):
     queryset = arrastres.objects.all()
     a=arrastres.objects.create
     serializer_class = PendienteArrastreSerializer
-    
-    
+

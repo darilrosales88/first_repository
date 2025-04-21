@@ -1,285 +1,292 @@
 <template>
-  <div class="container">
-    <!-- Fila para el icono y el buscador -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <!-- Icono de agregar (a la izquierda) -->
-      <button class="btn btn-link p-0" @click="showModal = true">
-        <i class="bi bi-plus-circle fs-3"></i>
-        <!-- Icono grande -->
-      </button>
+  <div class="por-situar-container">
+    <!-- Header con título y acciones -->
+    <div class="ps-header">
+      <h1 class="ps-title">
+        <i class="bi bi-check2-square ps-title-icon"></i>
+        Registros Situados
+      </h1>
+      
+      <div class="ps-actions">
+        
 
-      <!-- Buscador (a la derecha) -->
-      <form @submit.prevent="search_por_situar" class="search-container">
-        <div class="input-group">
+        <button class="btn btn-link p-0">
+          <router-link to="/AdicionarSituados"><i class="bi bi-plus-circle fs-3"></i></router-link>
+        </button>
+        
+        <!-- Buscador moderno -->
+        <div class="ps-search-container">
+          <i class="bi bi-search ps-search-icon"></i>
           <input
             type="search"
-            class="form-control"
-            placeholder="Buscar por tipo de equipo..."
+            class="ps-search-input"
+            placeholder="Buscar registros..."
             v-model="searchQuery"
             @input="handleSearchInput"
           />
-          <span
-            class="position-absolute top-50 start-0 translate-middle-y ps-2"
-          >
-            <i class="bi bi-search"></i>
-          </span>
-        </div>
-      </form>
-    </div>
-
-    <!-- Tabla -->
-    <table class="table table-responsive">
-      <thead>
-        <tr>
-          <th scope="col">#</th>
-          <th scope="col">Origen</th>
-          <th scope="col">Tipo de equipo</th>
-          <th scope="col">Estado</th>
-          <th scope="col">Operacion</th>
-          <th scope="col">Producto</th>
-          <th scope="col">Situados</th>
-          <th scope="col">Pendientes por situar</th>
-
-          <th scope="col">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-if="loading">
-          <td colspan="8" class="text-center">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Cargando...</span>
-            </div>
-          </td>
-        </tr>
-
-        <tr v-for="(item, index) in registrosPorSituar" :key="item.id">
-          <th scope="row">{{ index + 1 }}</th>
-          <td>{{ item.tipo_origen }}</td>
-          <td>{{ item.tipo_equipo }}</td>
-          <td>{{ item.estado }}</td>
-          <td>{{ item.operacion }}</td>
-          <td>{{ item.producto }}</td>
-          <td>{{ item.situados }}</td>
-          <td>{{ item.pendiente_proximo_dia }}</td>
-
-          <td>
-            <button
-              class="btn btn-warning btn-small"
-              @click="openEditModal(item)"
-            >
-              <i style="color: black" class="bi bi-pencil-square"></i>
-            </button>
-            <button
-              style="margin-left: 1em"
-              class="btn btn-danger btn-small"
-              @click="confirmDelete(item.id)"
-              :disabled="loading"
-            >
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        </tr>
-        <tr v-if="!busqueda_existente && registrosPorSituar.length === 0">
-          <td colspan="8" class="text-center text-muted py-4">
-            <i class="bi bi-exclamation-circle fs-4"></i>
-            <p class="mt-2">
-              No se encontraron resultados para "{{ searchQuery }}"
-            </p>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- Modal para agregar nuevos datos -->
-    <div v-if="showModal" class="modal-backdrop">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">
-            {{ isEditing ? "Editar Registro" : "Agregar nuevo registro" }}
-          </h5>
-          <button type="button" class="btn-close" @click="closeModal"></button>
-        </div>
-        <div class="modal-body">
-          <form @submit.prevent="isEditing ? updateItem() : addNewItem()">
-            <!-- Campos del formulario (igual que antes) -->
-            <div class="mb-3">
-              <label for="origen" class="form-label">Origen</label>
-              <select
-                class="form-select"
-                id="origen"
-                v-model="nuevoRegistro.tipo_origen"
-                required
-              >
-                <option value="">Seleccione un origen</option>
-                <option
-                  v-for="item in tipo_origen_options"
-                  :key="item.id"
-                  :value="item.id"
-                >
-                  {{ item.text }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="tipoEquipo" class="form-label">Tipo de equipo</label>
-              <select
-                class="form-select"
-                id="tipoEquipo"
-                v-model="nuevoRegistro.tipo_equipo"
-                required
-              >
-                <option value="">Seleccione un tipo</option>
-                <option
-                  v-for="item in tipo_equipo_options"
-                  :key="item.id"
-                  :value="item.id"
-                >
-                  {{ item.text }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="estado" class="form-label">Estado</label>
-              <select
-                class="form-select"
-                id="estado"
-                v-model="nuevoRegistro.estado"
-                required
-              >
-                <option value="">Seleccione un estado</option>
-                <option
-                  v-for="item in estado_options"
-                  :key="item.id"
-                  :value="item.id"
-                >
-                  {{ item.text }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="operacion" class="form-label">Operacion</label>
-              <select
-                class="form-select"
-                id="operacion"
-                v-model="nuevoRegistro.operacion"
-                required
-              >
-                <option value="">Seleccione una operación</option>
-                <option
-                  v-for="item in t_operacion_options"
-                  :key="item.id"
-                  :value="item.id"
-                >
-                  {{ item.text }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="producto" class="form-label">Producto</label>
-              <select
-                class="form-select"
-                id="producto"
-                v-model="nuevoRegistro.producto"
-                required
-              >
-                <option value="">Seleccione un producto</option>
-                <option
-                  v-for="item in producto_options"
-                  :key="item.id"
-                  :value="item.id"
-                >
-                  {{ item.producto }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="situados" class="form-label">Situados</label>
-              <input
-                type="text"
-                class="form-control"
-                id="situados"
-                v-model="nuevoRegistro.situados"
-                required
-              />
-            </div>
-
-            <div class="mb-3">
-              <label for="situados" class="form-label"
-                >Pendientes al proximo dia</label
-              >
-              <input
-                type="text"
-                class="form-control"
-                id="situados"
-                v-model="nuevoRegistro.pendiente_proximo_dia"
-                required
-              />
-            </div>
-
-            <button
-              style="margin-right: 1em"
-              type="submit"
-              class="btn btn-primary btn-sm"
-              :disabled="loading"
-            >
-              <span
-                v-if="loading"
-                class="spinner-border spinner-border-sm"
-                role="status"
-                aria-hidden="true"
-              ></span>
-              {{
-                isEditing
-                  ? loading
-                    ? "Actualizando..."
-                    : "Actualizar"
-                  : loading
-                  ? "Procesando..."
-                  : "Agregar"
-              }}
-            </button>
-            <button
-              type="button"
-              class="btn btn-secondary btn-sm"
-              @click="showModal = false"
-              :disabled="loading"
-            >
-              Cancelar
-            </button>
-          </form>
+          <div class="ps-search-border"></div>
         </div>
       </div>
     </div>
+
+    <!-- Tarjeta contenedora de la tabla -->
+    <div class="ps-card">
+      <!-- Tabla con diseño moderno -->
+      <div class="ps-table-container">
+        <table class="ps-table">
+          <thead>
+            <tr>
+              <th class="ps-th">#</th>
+              <th class="ps-th">Tipo Origen</th>
+              <th class="ps-th">Origen</th>
+              <th class="ps-th">Tipo Equipo</th>
+              <th class="ps-th">Estado</th>
+              <th class="ps-th">Operación</th>
+              <th class="ps-th">Producto</th>
+              <th class="ps-th">Situados</th>
+              <th class="ps-th">Pendientes</th>
+              <th class="ps-th ps-th-actions">Acciones</th>        
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Estado de carga -->
+            <tr v-if="loading">
+              <td colspan="10" class="ps-loading-td">
+                <div class="ps-loading">
+                  <div class="ps-spinner"></div>
+                  <span>Cargando registros...</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Filas de datos -->
+            <tr 
+              v-for="(item, index) in registrosPorSituar" 
+              :key="item.id"
+              class="ps-tr"
+            >
+              <th scope="row" class="ps-td ps-td-index">{{ index + 1 }}</th>
+              <td class="ps-td">{{ item.tipo_origen }}</td>
+              <td class="ps-td">{{ item.origen }}</td>
+              <td class="ps-td">{{ item.tipo_equipo }}</td>
+              <td class="ps-td">
+                <span :class="`ps-status ps-status-${getStatusClass(item.estado)}`">
+                  {{ item.estado }}
+                </span>
+              </td>
+              <td class="ps-td">{{ item.operacion }}</td>
+              <td class="ps-td">{{ item.producto_name || "-" }}</td>
+              <td class="ps-td">
+                <span class="ps-badge ps-badge-success">{{ item.situados }}</span>
+              </td>
+              <td class="ps-td">
+                <span class="ps-badge ps-badge-warning">{{ item.pendiente_proximo_dia }}</span>
+              </td>
+
+              <td class="ps-td ps-td-actions">
+                <button
+                  @click="showDetails(item)"
+                  class="ps-action-btn ps-action-view"
+                  title="Ver detalles"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+                <router-link
+                  :to="{ name: 'EditarSituados', params: { id: item.id } }"
+                  class="ps-action-btn ps-action-edit"
+                  title="Editar"
+                >
+                  <i class="bi bi-pencil"></i>
+                </router-link>
+                <button
+                  @click="confirmDelete(item.id)"
+                  class="ps-action-btn ps-action-delete"
+                  title="Eliminar"
+                  :disabled="loading"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <!-- Estado vacío -->
+            <tr v-if="!loading && !busqueda_existente">
+              <td colspan="10" class="ps-empty-td">
+                <div class="ps-empty-state">
+                  <i class="bi bi-database-exclamation"></i>
+                  <h3>No se encontraron resultados</h3>
+                  <p>
+                    No encontramos coincidencias para "{{ searchQuery }}"
+                  </p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- Paginación mejorada -->
-    <div class="d-flex justify-content-between align-items-center">
-      <div class="text-muted small">
-        Mostrando {{ allRecords.length }} de {{ totalItems }} registros
+    <div class="ps-pagination">
+      <div class="ps-pagination-info">
+        Mostrando {{ registrosPorSituar.length }} de {{ totalItems }} registros
       </div>
-      <nav aria-label="Page navigation">
-        <ul class="pagination pagination-sm mb-0">
-          <li class="page-item" :class="{ disabled: currentPage === 1 }">
-            <button class="page-link" @click="previousPage">
-              <i class="bi bi-chevron-left"></i>
-            </button>
-          </li>
-          <li class="page-item disabled">
-            <span class="page-link">
-              Página {{ currentPage }} de
-              {{ Math.ceil(totalItems / itemsPerPage) }}
-            </span>
-          </li>
-          <li
-            class="page-item"
-            :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
-          >
-            <button class="page-link" @click="nextPage">
-              <i class="bi bi-chevron-right"></i>
-            </button>
-          </li>
-        </ul>
-      </nav>
+      <div class="ps-pagination-controls">
+        <button 
+          class="ps-pagination-btn"
+          :class="{ 'ps-pagination-disabled': currentPage === 1 }"
+          @click="previousPage"
+        >
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <span class="ps-pagination-page">
+          Página {{ currentPage }} de {{ Math.ceil(totalItems / itemsPerPage) }}
+        </span>
+        <button 
+          class="ps-pagination-btn"
+          :class="{ 'ps-pagination-disabled': currentPage * itemsPerPage >= totalItems }"
+          @click="nextPage"
+        >
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
     </div>
-    <!-- Termina la paginacion -->
+
+    <!-- Modal de detalles - Versión mejorada -->
+    <div v-if="showModal" class="ps-modal-overlay" @click.self="closeModal">
+    <div class="ps-modal">
+      <div class="ps-modal-header">
+        <div class="ps-modal-header-content">
+          <div class="ps-modal-icon-container">
+            <i class="bi bi-info-circle-fill ps-modal-icon"></i>
+          </div>
+          <div>
+            <h2>Detalles del Registro</h2>
+            <p class="ps-modal-subtitle">Información completa del registro situado</p>
+          </div>
+        </div>
+        <button class="ps-modal-close" @click="closeModal">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      
+      <div class="ps-modal-body">
+        <div class="ps-detail-grid">
+          <div class="ps-detail-card">
+            <div class="ps-detail-card-header">
+              <i class="bi bi-tag-fill"></i>
+              <h4>Información Básica</h4>
+            </div>
+            <div class="ps-detail-card-body">
+              <div class="ps-detail-item">
+                <span class="ps-detail-label">Tipo Origen:</span>
+                <span class="ps-detail-value">{{ selectedItem.tipo_origen || 'N/A' }}</span>
+              </div>
+              
+              <div class="ps-detail-item">
+                <span class="ps-detail-label">Origen:</span>
+                <span class="ps-detail-value">{{ selectedItem.origen || 'N/A' }}</span>
+              </div>
+              
+              <div class="ps-detail-item">
+                <span class="ps-detail-label">Tipo de Equipo:</span>
+                <span class="ps-detail-value">{{ selectedItem.tipo_equipo || 'N/A' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="ps-detail-card">
+            <div class="ps-detail-card-header">
+              <i class="bi bi-clipboard2-data-fill"></i>
+              <h4>Estado y Operación</h4>
+            </div>
+            <div class="ps-detail-card-body">
+              <div class="ps-detail-item">
+                <span class="ps-detail-label">Estado:</span>
+                <span class="ps-detail-value">
+                  <span :class="`ps-status ps-status-${getStatusClass(selectedItem.estado)}`">
+                    {{ selectedItem.estado || 'N/A' }}
+                  </span>
+                </span>
+              </div>
+              
+              <div class="ps-detail-item">
+                <span class="ps-detail-label">Operación:</span>
+                <span class="ps-detail-value">{{ selectedItem.operacion || 'N/A' }}</span>
+              </div>
+              
+              <div class="ps-detail-item">
+                <span class="ps-detail-label">Producto:</span>
+                <span class="ps-detail-value">{{ selectedItem.producto_name || 'N/A' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="ps-detail-card ps-detail-card-highlight">
+            <div class="ps-detail-card-header">
+              <i class="bi bi-check-circle-fill"></i>
+              <h4>Cantidades</h4>
+            </div>
+            <div class="ps-detail-card-body">
+              <div class="ps-detail-item">
+                <span class="ps-detail-label">Situados:</span>
+                <span class="ps-detail-value ps-highlight-value ps-badge-success">
+                  {{ selectedItem.situados || '0' }}
+                </span>
+              </div>
+              <div class="ps-detail-item">
+                <span class="ps-detail-label">Pendientes:</span>
+                <span class="ps-detail-value ps-badge-warning">
+                  {{ selectedItem.pendiente_proximo_dia || '0' }}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="ps-detail-card ps-detail-card-full">
+            <div class="ps-detail-card-header">
+              <i class="bi bi-chat-square-text-fill"></i>
+              <h4>Observaciones</h4>
+            </div>
+            <div class="ps-detail-card-body">
+              <div class="ps-detail-item">
+                <span class="ps-detail-value">{{ selectedItem.observaciones || 'Ninguna observación registrada' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="ps-detail-card">
+            <div class="ps-detail-card-header">
+              <i class="bi bi-calendar-event-fill"></i>
+              <h4>Fecha de Creación</h4>
+            </div>
+            <div class="ps-detail-card-body">
+              <div class="ps-detail-item">
+                <span class="ps-detail-label">Fecha y Hora:</span>
+                <span class="ps-detail-value">
+                  {{ selectedItem.created_at ? formatDateTime(selectedItem.created_at) : 'N/A' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="ps-modal-footer">
+        <button class="ps-modal-btn ps-modal-btn-secondary" @click="closeModal">
+          <i class="bi bi-x-circle"></i> Cerrar
+        </button>
+        <router-link 
+          v-if="selectedItem.id"
+          :to="{ name: 'EditarSituados', params: { id: selectedItem.id } }"
+          class="ps-modal-btn ps-modal-btn-primary"
+          @click="closeModal"
+        >
+          <i class="bi bi-pencil-square"></i> Editar Registro
+        </router-link>
+      </div>
+    </div>
+  </div>
   </div>
 </template>
 
@@ -292,55 +299,23 @@ export default {
     return {
       allRecords: [],
       debounceTimeout: null,
-      isEditing: false,
-      currentItemId: null,
       searchQuery: "",
       registrosPorSituar: [],
       loading: false,
       busqueda_existente: true,
       showModal: false,
+      selectedItem: {},
       totalItems: 0,
-      currentPage: 1, // Página actual
+      currentPage: 1,
       itemsPerPage: 10,
-
-      // Opciones para los selects
-      tipo_origen_options: [
-        { id: "puerto", text: "Puerto" },
-        { id: "acceso comercial", text: "Acceso Comercial" },
-      ],
-      tipo_equipo_options: [
-        { id: "casilla", text: "Casilla" },
-        { id: "caj_gon", text: "Cajon o Gondola" },
-      ],
-      estado_options: [
-        { id: "vacio", text: "Vacio" },
-        { id: "cargado", text: "Cargado" },
-      ],
-      t_operacion_options: [
-        { id: "carga", text: "Carga" },
-        { id: "descarga", text: "Descarga" },
-      ],
-      producto_options: [],
-
-      nuevoRegistro: {
-        tipo_origen: "",
-        tipo_equipo: "",
-        estado: "",
-        operacion: "",
-        producto: "",
-        situados: "",
-        pendiente_proximo_dia: "",
-      },
     };
   },
 
   mounted() {
     this.getPorSituar();
-    this.loadProductos();
   },
 
   methods: {
-    // Obtener todos los registros
     async getPorSituar() {
       this.loading = true;
       try {
@@ -354,12 +329,15 @@ export default {
           this.allRecords = data.map((item) => ({
             id: item.id,
             tipo_origen: item.tipo_origen || "",
+            origen: item.origen || "",
             tipo_equipo: item.tipo_equipo || "",
             estado: item.estado || "",
             operacion: item.operacion || "",
-            producto: item.producto_name || "",
+            producto_name: item.producto_name || "",
             situados: item.situados || 0,
             pendiente_proximo_dia: item.pendiente_proximo_dia || 0,
+            observaciones: item.observaciones || "",
+            created_at: item.created_at || null,
           }));
 
           this.registrosPorSituar = [...this.allRecords];
@@ -373,34 +351,38 @@ export default {
       }
     },
 
-    // Cargar productos para el select
-    async loadProductos() {
+    getStatusClass(status) {
+      if (!status) return 'default';
+      const statusLower = status.toLowerCase();
+      
+      if (statusLower.includes('activo')) return 'success';
+      if (statusLower.includes('pendiente')) return 'warning';
+      if (statusLower.includes('inactivo') || statusLower.includes('cancelado')) return 'danger';
+      
+      return 'info';
+    },
+
+    async showDetails(item) {
       try {
         this.loading = true;
-        const response = await axios.get("/api/productos/", {
-          params: { limit: 100 },
-        });
-
-        if (
-          response.data &&
-          Array.isArray(response.data.results || response.data)
-        ) {
-          const productos = response.data.results || response.data;
-          this.producto_options = productos.map((p) => ({
-            id: p.id,
-            producto:
-              /*  p.codigo_producto || */
-              p.nombre_producto || p.descripcion || `Producto ${p.id}`,
-          }));
-        }
+        this.selectedItem = { ...item };
+        this.showModal = true;
+        
+        const response = await axios.get(`http://127.0.0.1:8000/ufc/situados/${item.id}/`);
+        this.selectedItem = response.data;
       } catch (error) {
-        this.handleApiError(error, "cargar productos");
+        console.error("Error al cargar detalles:", error);
+        this.showErrorToast('No se pudieron cargar los detalles completos');
       } finally {
         this.loading = false;
       }
     },
 
-    // Buscar por tipo de equipo
+    closeModal() {
+      this.showModal = false;
+      this.selectedItem = {};
+    },
+
     handleSearchInput() {
       clearTimeout(this.debounceTimeout);
       this.debounceTimeout = setTimeout(() => {
@@ -412,123 +394,119 @@ export default {
 
         const query = this.searchQuery.toLowerCase();
         this.registrosPorSituar = this.allRecords.filter((item) => {
-          const tipoEquipo = item.tipo_equipo?.toLowerCase() || "";
-          return tipoEquipo.includes(query);
+          const fieldsToSearch = [
+            item.tipo_origen,
+            item.origen,
+            item.tipo_equipo,
+            item.estado,
+            item.operacion,
+            item.producto_name,
+            item.situados?.toString(),
+            item.pendiente_proximo_dia?.toString(),
+            item.observaciones,
+          ];
+
+          return fieldsToSearch.some(
+            (field) => field && field.toString().toLowerCase().includes(query)
+          );
         });
 
         this.busqueda_existente = this.registrosPorSituar.length > 0;
       }, 300);
     },
 
-    // Abrir modal para editar
-    openEditModal(item) {
-      this.isEditing = true;
-      this.currentItemId = item.id;
-      this.nuevoRegistro = { ...item };
-      this.showModal = true;
-    },
-
-    // Cerrar modal
-    closeModal() {
-      this.showModal = false;
-      this.isEditing = false;
-      this.currentItemId = null;
-      this.resetForm();
-    },
-
-    // Resetear formulario
-    resetForm() {
-      this.nuevoRegistro = {
-        tipo_origen: "",
-        tipo_equipo: "",
-        estado: "",
-        operacion: "",
-        producto: "",
-        situados: "",
-        pendiente_proximo_dia: "",
-      };
-    },
-
     // Agregar nuevo registro
-    async addNewItem() {
-      try {
-        this.loading = true;
-        const response = await axios.post(
-          "http://127.0.0.1:8000/ufc/situados/",
-          this.nuevoRegistro
-        );
-
-        if (response.status === 201) {
-          Swal.fire("Éxito", "Registro creado correctamente", "success");
-          this.closeModal();
-          await this.getPorSituar();
-        }
-      } catch (error) {
-        this.handleApiError(error, "crear registro");
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    // Actualizar registro existente
-    async updateItem() {
-      try {
-        this.loading = true;
-        const response = await axios.put(
-          `http://127.0.0.1:8000/ufc/situados/${this.currentItemId}/`,
-          this.nuevoRegistro
-        );
-
-        if (response.status === 200) {
-          Swal.fire("Éxito", "Registro actualizado correctamente", "success");
-          this.closeModal();
-          await this.getPorSituar();
-        }
-      } catch (error) {
-        this.handleApiError(error, "actualizar registro");
-      } finally {
-        this.loading = false;
-      }
-    },
 
     // Confirmar eliminación
     async confirmDelete(id) {
       const result = await Swal.fire({
-        title: "¿Estás seguro?",
-        text: "¡No podrás revertir esta acción!",
-        icon: "warning",
+        title: "¿Eliminar registro?",
+        text: "Esta acción no se puede deshacer",
+        icon: "question",
         showCancelButton: true,
-        confirmButtonColor: "#d33",
-        cancelButtonColor: "#3085d6",
+        confirmButtonColor: "#ff4444",
+        cancelButtonColor: "#33b5e5",
         confirmButtonText: "Sí, eliminar",
         cancelButtonText: "Cancelar",
+        customClass: {
+          popup: 'ps-swal-popup',
+          confirmButton: 'ps-swal-confirm',
+          cancelButton: 'ps-swal-cancel'
+        }
       });
 
       if (result.isConfirmed) {
-        await this.deleteItem(id);
-      }
-    },
-
-    // Eliminar registro
-    async deleteItem(id) {
-      try {
-        this.loading = true;
-        const response = await axios.delete(
-          `http://127.0.0.1:8000/ufc/situados/${id}/`
-        );
-
-        if (response.status === 204) {
-          Swal.fire("Eliminado", "El registro ha sido eliminado", "success");
+        try {
+          this.loading = true;
+          await axios.delete(`http://127.0.0.1:8000/ufc/situados/${id}/`);
+          this.showSuccessToast('Registro eliminado');
           await this.getPorSituar();
+        } catch (error) {
+          this.handleApiError(error, "eliminar registro");
+        } finally {
+          this.loading = false;
         }
-      } catch (error) {
-        this.handleApiError(error, "eliminar registro");
-      } finally {
-        this.loading = false;
       }
     },
 
-    // Manejo de errores
+    previousPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+        this.getPorSituar();
+      }
+    },
+
+    nextPage() {
+      if (this.currentPage * this.itemsPerPage < this.totalItems) {
+        this.currentPage++;
+        this.getPorSituar();
+      }
+    },
+
+    showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: '#4BB543',
+        color: '#fff',
+        iconColor: '#fff',
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer);
+          toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+      });
+      
+      Toast.fire({
+        icon: 'success',
+        title: message
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: '#ff4444',
+        color: '#fff',
+        iconColor: '#fff',
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer);
+          toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+      });
+      
+      Toast.fire({
+        icon: 'error',
+        title: message
+      });
+    },
+
     handleApiError(error, action) {
       let errorMsg = `Error al ${action}`;
       if (error.response) {
@@ -540,114 +518,770 @@ export default {
         errorMsg += `: ${error.message}`;
       }
       console.error(errorMsg, error);
-      Swal.fire("Error", errorMsg, "error");
+      this.showErrorToast(errorMsg);
+    },
+
+    formatDate(dateString) {
+      if (!dateString) return "N/A";
+      const options = {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      };
+      return new Date(dateString).toLocaleDateString("es-ES", options);
     },
   },
 };
 </script>
 
 <style scoped>
-/* Estilos para el contenedor del buscador */
-.search-container {
+/* Variables de color */
+:root {
+  --ps-primary: #4361ee;
+  --ps-primary-hover: #3a56d4;
+  --ps-secondary: #3f37c9;
+  --ps-accent: #4895ef;
+  --ps-danger: #f72585;
+  --ps-success: #4cc9f0;
+  --ps-warning: #f8961e;
+  --ps-info: #4895ef;
+  --ps-light: #f8f9fa;
+  --ps-dark: #212529;
+  --ps-gray: #6c757d;
+  --ps-light-gray: #e9ecef;
+  --ps-border-radius: 12px;
+  --ps-box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  --ps-transition: all 0.3s ease;
+}
+
+/* Estilos base */
+.por-situar-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Header */
+.ps-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1.5rem;
+}
+
+.ps-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--ps-dark);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ps-title-icon {
+  color: var(--ps-primary);
+}
+
+.ps-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* Botón de agregar como icono */
+.ps-add-icon {
+  background: var(--ps-primary);
+  color: white;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  transition: var(--ps-transition);
+  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
   position: relative;
-  width: 100%;
-  max-width: 300px; /* Ancho máximo del buscador */
+  overflow: hidden;
+  border: none;
 }
 
-/* Estilos para el input del buscador */
-.search-container input {
-  padding-right: 40px; /* Espacio para el icono de lupa */
-  border-radius: 20px; /* Bordes redondeados */
-}
-
-/* Estilos para el icono de lupa */
-.search-icon {
+.ps-add-icon::after {
+  content: '';
   position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #888; /* Color del icono */
-  pointer-events: none; /* Evita que el icono interfiera con el input */
-}
-
-/* Estilos para la tabla responsive */
-.table-responsive {
-  overflow-x: auto; /* Permite desplazamiento horizontal en pantallas pequeñas */
-}
-
-/* Estilos para el modal */
-.modal-backdrop {
   top: 0;
   left: 0;
   width: 100%;
-  height: 90%;
-  background-color: transparent; /* Fondo semitransparente */
+  height: 100%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+  opacity: 0;
+  transition: var(--ps-transition);
+}
+
+.ps-add-icon:hover {
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: 0 6px 16px rgba(67, 97, 238, 0.4);
+}
+
+.ps-add-icon:hover::after {
+  opacity: 1;
+}
+
+/* Buscador */
+.ps-search-container {
+  position: relative;
+  width: 280px;
+}
+
+.ps-search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ps-gray);
+  font-size: 1rem;
+}
+
+.ps-search-input {
+  width: 100%;
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
+  border: 1px solid var(--ps-light-gray);
+  border-radius: var(--ps-border-radius);
+  font-size: 0.95rem;
+  transition: var(--ps-transition);
+  background-color: white;
+}
+
+.ps-search-input:focus {
+  outline: none;
+  border-color: var(--ps-primary);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+}
+
+.ps-search-border {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--ps-primary);
+  transition: var(--ps-transition);
+}
+
+.ps-search-input:focus ~ .ps-search-border {
+  width: 100%;
+}
+
+/* Tarjeta contenedora */
+.ps-card {
+  background: white;
+  border-radius: var(--ps-border-radius);
+  box-shadow: var(--ps-box-shadow);
+  overflow: hidden;
+  transition: var(--ps-transition);
+}
+
+.ps-card:hover {
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.12);
+}
+
+/* Tabla */
+.ps-table-container {
+  overflow-x: auto;
+  padding: 0.5rem;
+}
+
+.ps-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 1000px;
+}
+
+.ps-th {
+  padding: 1rem 1.2rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--ps-dark);
+  background-color: #f9fafb;
+  border-bottom: 2px solid var(--ps-light-gray);
+  position: sticky;
+  top: 0;
+}
+
+.ps-th-actions {
+  text-align: center;
+}
+
+.ps-tr {
+  transition: var(--ps-transition);
+}
+
+.ps-tr:hover {
+  background-color: rgba(67, 97, 238, 0.03);
+}
+
+.ps-td {
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--ps-light-gray);
+  color: var(--ps-dark);
+}
+
+.ps-td-index {
+  font-weight: 600;
+  color: var(--ps-gray);
+}
+
+.ps-td-actions {
   display: flex;
+  gap: 0.5rem;
   justify-content: center;
+}
+
+/* Badges y estados */
+.ps-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.ps-badge-success {
+  background: rgba(76, 201, 240, 0.1);
+  color: #06d6a0;
+  border: 1px solid rgba(6, 214, 160, 0.2);
+}
+
+.ps-badge-warning {
+  background: rgba(248, 150, 30, 0.1);
+  color: #f8961e;
+  border: 1px solid rgba(248, 150, 30, 0.2);
+}
+
+.ps-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.ps-status-success {
+  background: rgba(76, 201, 240, 0.1);
+  color: #06d6a0;
+  border: 1px solid rgba(6, 214, 160, 0.2);
+}
+
+.ps-status-warning {
+  background: rgba(248, 150, 30, 0.1);
+  color: #f8961e;
+  border: 1px solid rgba(248, 150, 30, 0.2);
+}
+
+.ps-status-danger {
+  background: rgba(247, 37, 133, 0.1);
+  color: #f72585;
+  border: 1px solid rgba(247, 37, 133, 0.2);
+}
+
+.ps-status-info {
+  background: rgba(72, 149, 239, 0.1);
+  color: #4895ef;
+  border: 1px solid rgba(72, 149, 239, 0.2);
+}
+
+.ps-status-default {
+  background: rgba(108, 117, 125, 0.1);
+  color: var(--ps-gray);
+  border: 1px solid rgba(108, 117, 125, 0.2);
+}
+
+/* Botones de acción con efecto transparente */
+.ps-action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
   align-items: center;
-  z-index: 1000; /* Asegura que el modal esté por encima de todo */
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: var(--ps-transition);
+  background: transparent;
+  color: var(--ps-gray);
+  position: relative;
+  overflow: hidden;
 }
 
-.modal-content {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  width: 90%;
-  max-width: 500px; /* Ancho máximo del modal */
+.ps-action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: currentColor;
+  opacity: 0.1;
+  transition: var(--ps-transition);
 }
 
-.modal-header {
+.ps-action-btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.8;
+}
+
+.ps-action-btn:hover::before {
+  opacity: 0.2;
+}
+
+.ps-action-view {
+  color: var(--ps-info);
+}
+
+.ps-action-edit {
+  color: var(--ps-warning);
+}
+
+.ps-action-delete {
+  color: var(--ps-danger);
+}
+
+.ps-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.ps-action-btn i {
+  position: relative;
+  z-index: 1;
+}
+
+/* Estados de carga y vacío */
+.ps-loading-td, .ps-empty-td {
+  padding: 3rem !important;
+}
+
+.ps-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: var(--ps-gray);
+}
+
+.ps-spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 4px solid rgba(67, 97, 238, 0.1);
+  border-top-color: var(--ps-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.ps-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  color: var(--ps-gray);
+}
+
+.ps-empty-state i {
+  font-size: 2.5rem;
+  color: var(--ps-accent);
+}
+
+.ps-empty-state h3 {
+  color: var(--ps-dark);
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.ps-empty-state p {
+  margin: 0;
+  max-width: 400px;
+}
+
+/* Paginación mejorada */
+.ps-pagination {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
+  margin-top: 1.5rem;
+  padding: 0.75rem 1rem;
+  background: white;
+  border-radius: var(--ps-border-radius);
+  box-shadow: var(--ps-box-shadow);
 }
 
-.modal-title {
-  margin: 0;
+.ps-pagination-info {
+  font-size: 0.9rem;
+  color: var(--ps-gray);
 }
 
-.btn-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
+.ps-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ps-pagination-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ps-light-gray);
+  background: white;
+  color: var(--ps-dark);
   cursor: pointer;
+  transition: var(--ps-transition);
 }
 
-.modal-body {
-  margin-bottom: 20px;
+.ps-pagination-btn:hover:not(.ps-pagination-disabled) {
+  background: var(--ps-light-gray);
+  color: var(--ps-primary);
 }
 
-/* Estilos para el icono de agregar */
-.btn-link {
-  color: #007bff; /* Color azul para el icono */
-  text-decoration: none; /* Sin subrayado */
+.ps-pagination-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.btn-link:hover {
-  color: #0056b3; /* Color azul más oscuro al pasar el mouse */
+.ps-pagination-page {
+  font-size: 0.9rem;
+  padding: 0 0.5rem;
+  color: var(--ps-gray);
 }
 
-.search-container {
+/* Modal mejorado */
+.ps-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.ps-modal {
+  background: white;
+  border-radius: var(--ps-border-radius);
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.ps-modal-header {
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, var(--ps-primary), var(--ps-secondary));
+  color: white;
   position: relative;
+}
+
+.ps-modal-header::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
   width: 100%;
-  max-width: 300px;
+  height: 20px;
+  background: linear-gradient(to bottom, rgba(67, 97, 238, 0.2), transparent);
 }
 
-.search-container input {
-  padding-left: 2.5rem !important; /* Espacio para el icono */
-  border-radius: 20px !important;
+.ps-modal-header-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.search-container .bi-search {
-  color: #6c757d; /* Color gris para el icono */
-  z-index: 10;
+.ps-modal-icon-container {
+  background: rgba(255, 255, 255, 0.2);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Para asegurar que el input group conserve los estilos */
-.input-group {
-  width: 100%;
+.ps-modal-icon {
+  font-size: 1.5rem;
+}
+
+.ps-modal h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.ps-modal-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+.ps-modal-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: var(--ps-transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+.ps-modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.ps-modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  background: #f9fafb;
+}
+
+.ps-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.ps-detail-card {
+  background: white;
+  border-radius: var(--ps-border-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: var(--ps-transition);
+  border: 1px solid var(--ps-light-gray);
+}
+
+.ps-detail-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.ps-detail-card-header {
+  padding: 1rem;
+  background: linear-gradient(to right, #f8f9fa, white);
+  border-bottom: 1px solid var(--ps-light-gray);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ps-detail-card-header i {
+  font-size: 1.2rem;
+  color: var(--ps-primary);
+}
+
+.ps-detail-card-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--ps-dark);
+}
+
+.ps-detail-card-body {
+  padding: 1rem;
+}
+
+.ps-detail-card-highlight {
+  border: 1px solid rgba(67, 97, 238, 0.3);
+}
+
+.ps-detail-card-highlight .ps-detail-card-header {
+  background: linear-gradient(to right, rgba(67, 97, 238, 0.05), white);
+}
+
+.ps-detail-card-highlight .ps-detail-card-header i {
+  color: var(--ps-accent);
+}
+
+.ps-detail-card-full {
+  grid-column: 1 / -1;
+}
+
+.ps-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.ps-detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.ps-detail-label {
+  font-size: 0.85rem;
+  color: var(--ps-gray);
+  font-weight: 500;
+}
+
+.ps-detail-value {
+  font-size: 1rem;
+  color: var(--ps-dark);
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.ps-highlight-value {
+  color: var(--ps-primary);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.ps-modal-footer {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  background: white;
+  border-top: 1px solid var(--ps-light-gray);
+}
+
+.ps-modal-btn {
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--ps-border-radius);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--ps-transition);
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ps-modal-btn-secondary {
+  background: white;
+  color: var(--ps-gray);
+  border: 1px solid var(--ps-light-gray);
+}
+
+.ps-modal-btn-secondary:hover {
+  background: #f1f3f5;
+  color: var(--ps-dark);
+}
+
+.ps-modal-btn-primary {
+  background: var(--ps-primary);
+  color: white;
+  box-shadow: 0 2px 6px rgba(67, 97, 238, 0.2);
+}
+
+.ps-modal-btn-primary:hover {
+  background: var(--ps-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+}
+
+/* Animaciones */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .ps-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .ps-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .ps-search-container {
+    width: 100%;
+  }
+  
+  .ps-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .por-situar-container {
+    padding: 1.5rem 1rem;
+  }
+  
+  .ps-title {
+    font-size: 1.5rem;
+  }
+  
+  .ps-pagination {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .ps-modal {
+    width: 95%;
+  }
+  
+  .ps-modal-body {
+    padding: 1.25rem 1rem;
+  }
+  
+  .ps-modal-footer {
+    padding: 1rem;
+    flex-direction: column;
+  }
+  
+  .ps-modal-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 </style>

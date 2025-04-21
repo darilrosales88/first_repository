@@ -668,23 +668,22 @@ const routes = [
   },
 
   /* Cargado/descargado */
-{
-  path: "/AdicionarVagonCargadoDescargado",
-  name: "AdicionarVagonCargadoDescargado",
-  component: () => import("../views/UFC/AdicionarCargadoDescargado.vue"),
-  meta: {
-    requireLogin: true,
+  {
+    path: "/AdicionarVagonCargadoDescargado",
+    name: "AdicionarVagonCargadoDescargado",
+    component: () => import("../views/UFC/AdicionarCargadoDescargado.vue"),
+    meta: {
+      requireLogin: true,
+    },
   },
-},
   /* Vagones y productos */
-   {
+  {
     path: "/AdicionarVagon_producto",
     name: "AdicionarVagonProducto",
     component: () => import("../views/UFC/AdicionarVagonesProductos.vue"),
     meta: {
       requireLogin: true,
     },
-    
   },
   {
     path: "/EditarVagonesyProductos/:id/edit",
@@ -693,10 +692,41 @@ const routes = [
     meta: {
       requireLogin: true,
     },
-  }, 
+  },
 
+  {
+    path: "/AdicionarPorSituar",
+    name: "AdicionarPorSituar",
+    component: () => import("../views/UFC/AdicionarPorSituarView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/EditarPorSituar/:id",
+    name: "EditarPorSituar",
+    component: () => import("../views/UFC/EditarPorSituarView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/EditarSituados/:id",
+    name: "EditarSituados",
+    component: () => import("../views/UFC/EditarSituadosView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/AdicionarSituados",
+    name: "AdicionarSituados",
+    component: () => import("../views/UFC/AdicionarSituadosView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
 ];
-
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),

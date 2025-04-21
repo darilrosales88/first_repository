@@ -6,14 +6,14 @@
         <i class="bi bi-inboxes-fill ps-title-icon"></i>
         Registros Por Situar
       </h1>
-      
-      <div class="ps-actions">
-        
 
+      <div class="ps-actions">
         <button class="btn btn-link p-0">
-        <router-link to="/AdicionarPorSituar"><i class="bi bi-plus-circle fs-3"></i></router-link>
-      </button>
-        
+          <router-link to="/AdicionarPorSituar"
+            ><i class="bi bi-plus-circle fs-3"></i
+          ></router-link>
+        </button>
+
         <!-- Buscador moderno -->
         <div class="ps-search-container">
           <i class="bi bi-search ps-search-icon"></i>
@@ -44,7 +44,7 @@
               <th class="ps-th">Operación</th>
               <th class="ps-th">Producto</th>
               <th class="ps-th">Por Situar</th>
-              <th class="ps-th ps-th-actions">Acciones</th>        
+              <th class="ps-th ps-th-actions">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -59,8 +59,8 @@
             </tr>
 
             <!-- Filas de datos -->
-            <tr 
-              v-for="(item, index) in filteredRecords" 
+            <tr
+              v-for="(item, index) in filteredRecords"
               :key="item.id"
               class="ps-tr"
             >
@@ -69,7 +69,9 @@
               <td class="ps-td">{{ item.origen }}</td>
               <td class="ps-td">{{ item.tipo_equipo }}</td>
               <td class="ps-td">
-                <span :class="`ps-status ps-status-${getStatusClass(item.estado)}`">
+                <span
+                  :class="`ps-status ps-status-${getStatusClass(item.estado)}`"
+                >
                   {{ item.estado }}
                 </span>
               </td>
@@ -88,7 +90,10 @@
                   <i class="bi bi-eye"></i>
                 </button>
                 <router-link
-                  :to="{ name: 'EditarPorSituar', params: { id: item.id || 'default-id' } }"
+                  :to="{
+                    name: 'EditarPorSituar',
+                    params: { id: item.id || 'default-id' },
+                  }"
                   class="ps-action-btn ps-action-edit"
                   title="Editar"
                 >
@@ -110,15 +115,20 @@
               <td colspan="9" class="ps-empty-td">
                 <div class="ps-empty-state">
                   <i class="bi bi-database-exclamation"></i>
-                  <h3>{{ searchQuery ? 'No hay coincidencias' : 'No hay registros' }}</h3>
+                  <h3>
+                    {{
+                      searchQuery ? "No hay coincidencias" : "No hay registros"
+                    }}
+                  </h3>
                   <p>
-                    {{ searchQuery 
-                      ? `No encontramos resultados para "${searchQuery}"` 
-                      : 'No hay registros por situar en este momento' 
+                    {{
+                      searchQuery
+                        ? `No encontramos resultados para "${searchQuery}"`
+                        : "No hay registros por situar en este momento"
                     }}
                   </p>
-                  <router-link 
-                    to="/AdicionarPorSituar" 
+                  <router-link
+                    to="/AdicionarPorSituar"
                     class="ps-empty-action"
                     v-if="!searchQuery"
                   >
@@ -133,7 +143,11 @@
     </div>
 
     <!-- Modal de detalles - Versión mejorada con más color -->
-    <div v-if="showDetailsModal" class="ps-modal-overlay" @click.self="closeModal">
+    <div
+      v-if="showDetailsModal"
+      class="ps-modal-overlay"
+      @click.self="closeModal"
+    >
       <div class="ps-modal">
         <div class="ps-modal-header">
           <div class="ps-modal-header-content">
@@ -142,14 +156,16 @@
             </div>
             <div>
               <h2>Detalles del Registro</h2>
-              <p class="ps-modal-subtitle">Información completa del registro seleccionado</p>
+              <p class="ps-modal-subtitle">
+                Información completa del registro seleccionado
+              </p>
             </div>
           </div>
           <button class="ps-modal-close" @click="closeModal">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
-        
+
         <div class="ps-modal-body">
           <div class="ps-detail-grid">
             <div class="ps-detail-card">
@@ -160,21 +176,27 @@
               <div class="ps-detail-card-body">
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Tipo Origen:</span>
-                  <span class="ps-detail-value">{{ currentRecord.tipo_origen || 'N/A' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentRecord.tipo_origen || "N/A"
+                  }}</span>
                 </div>
-                
+
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Origen:</span>
-                  <span class="ps-detail-value">{{ currentRecord.origen || 'N/A' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentRecord.origen || "N/A"
+                  }}</span>
                 </div>
-                
+
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Tipo de Equipo:</span>
-                  <span class="ps-detail-value">{{ currentRecord.tipo_equipo || 'N/A' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentRecord.tipo_equipo || "N/A"
+                  }}</span>
                 </div>
               </div>
             </div>
-            
+
             <div class="ps-detail-card">
               <div class="ps-detail-card-header">
                 <i class="bi bi-clipboard2-data-fill"></i>
@@ -184,24 +206,32 @@
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Estado:</span>
                   <span class="ps-detail-value">
-                    <span :class="`ps-status ps-status-${getStatusClass(currentRecord.estado)}`">
-                      {{ currentRecord.estado || 'N/A' }}
+                    <span
+                      :class="`ps-status ps-status-${getStatusClass(
+                        currentRecord.estado
+                      )}`"
+                    >
+                      {{ currentRecord.estado || "N/A" }}
                     </span>
                   </span>
                 </div>
-                
+
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Operación:</span>
-                  <span class="ps-detail-value">{{ currentRecord.operacion || 'N/A' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentRecord.operacion || "N/A"
+                  }}</span>
                 </div>
-                
+
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Producto:</span>
-                  <span class="ps-detail-value">{{ currentRecord.producto_name || 'N/A' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentRecord.producto_name || "N/A"
+                  }}</span>
                 </div>
               </div>
             </div>
-            
+
             <div class="ps-detail-card ps-detail-card-highlight">
               <div class="ps-detail-card-header">
                 <i class="bi bi-exclamation-square-fill"></i>
@@ -211,12 +241,12 @@
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Por Situar:</span>
                   <span class="ps-detail-value ps-highlight-value">
-                    {{ currentRecord.por_situar || '0' }}
+                    {{ currentRecord.por_situar || "0" }}
                   </span>
                 </div>
               </div>
             </div>
-            
+
             <div class="ps-detail-card ps-detail-card-full">
               <div class="ps-detail-card-header">
                 <i class="bi bi-chat-square-text-fill"></i>
@@ -224,11 +254,14 @@
               </div>
               <div class="ps-detail-card-body">
                 <div class="ps-detail-item">
-                  <span class="ps-detail-value">{{ currentRecord.observaciones || 'Ninguna observación registrada' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentRecord.observaciones ||
+                    "Ninguna observación registrada"
+                  }}</span>
                 </div>
               </div>
             </div>
-            
+
             <div class="ps-detail-card">
               <div class="ps-detail-card-header">
                 <i class="bi bi-calendar-event-fill"></i>
@@ -238,19 +271,26 @@
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Fecha Creación:</span>
                   <span class="ps-detail-value">
-                    {{ currentRecord.created_at ? formatDate(currentRecord.created_at) : 'N/A' }}
+                    {{
+                      currentRecord.created_at
+                        ? formatDate(currentRecord.created_at)
+                        : "N/A"
+                    }}
                   </span>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        
+
         <div class="ps-modal-footer">
-          <button class="ps-modal-btn ps-modal-btn-secondary" @click="closeModal">
+          <button
+            class="ps-modal-btn ps-modal-btn-secondary"
+            @click="closeModal"
+          >
             <i class="bi bi-x-circle"></i> Cerrar
           </button>
-          <router-link 
+          <router-link
             v-if="currentRecord.id"
             :to="{ name: 'EditarPorSituar', params: { id: currentRecord.id } }"
             class="ps-modal-btn ps-modal-btn-primary"
@@ -287,7 +327,7 @@ export default {
       if (!this.searchQuery) return this.registrosPorSituar;
 
       const query = this.searchQuery.toLowerCase();
-      return this.registrosPorSituar.filter(item => {
+      return this.registrosPorSituar.filter((item) => {
         const fieldsToSearch = [
           item.tipo_origen,
           item.origen,
@@ -313,7 +353,8 @@ export default {
   methods: {
     getPorSituar() {
       this.loading = true;
-      axios.get('http://127.0.0.1:8000/ufc/por-situar/')
+      axios
+        .get("http://127.0.0.1:8000/ufc/por-situar/")
         .then((response) => {
           this.registrosPorSituar = response.data.results;
           this.loading = false;
@@ -322,19 +363,20 @@ export default {
           console.error("Error al obtener datos:", error);
           this.errorLoading = true;
           this.loading = false;
-          this.showErrorToast('No se pudieron cargar los registros');
+          this.showErrorToast("No se pudieron cargar los registros");
         });
     },
 
     getStatusClass(status) {
-      if (!status) return 'default';
+      if (!status) return "default";
       const statusLower = status.toLowerCase();
-      
-      if (statusLower.includes('activo')) return 'success';
-      if (statusLower.includes('pendiente')) return 'warning';
-      if (statusLower.includes('inactivo') || statusLower.includes('cancelado')) return 'danger';
-      
-      return 'info';
+
+      if (statusLower.includes("activo")) return "success";
+      if (statusLower.includes("pendiente")) return "warning";
+      if (statusLower.includes("inactivo") || statusLower.includes("cancelado"))
+        return "danger";
+
+      return "info";
     },
 
     async viewDetails(item) {
@@ -342,12 +384,14 @@ export default {
       try {
         this.currentRecord = { ...item };
         this.showDetailsModal = true;
-        
-        const response = await axios.get(`http://127.0.0.1:8000/ufc/por-situar/${item.id}/`);
+
+        const response = await axios.get(
+          `http://127.0.0.1:8000/ufc/por-situar/${item.id}/`
+        );
         this.currentRecord = response.data;
       } catch (error) {
         console.error("Error al cargar detalles:", error);
-        this.showErrorToast('No se pudieron cargar los detalles completos');
+        this.showErrorToast("No se pudieron cargar los detalles completos");
       } finally {
         this.loading = false;
       }
@@ -369,17 +413,17 @@ export default {
         confirmButtonText: "Sí, eliminar",
         cancelButtonText: "Cancelar",
         customClass: {
-          popup: 'ps-swal-popup',
-          confirmButton: 'ps-swal-confirm',
-          cancelButton: 'ps-swal-cancel'
-        }
+          popup: "ps-swal-popup",
+          confirmButton: "ps-swal-confirm",
+          cancelButton: "ps-swal-cancel",
+        },
       });
 
       if (result.isConfirmed) {
         try {
           this.loading = true;
           await axios.delete(`http://127.0.0.1:8000/ufc/por-situar/${id}/`);
-          this.showSuccessToast('Registro eliminado');
+          this.showSuccessToast("Registro eliminado");
           await this.getPorSituar();
         } catch (error) {
           this.handleApiError(error, "eliminar registro");
@@ -392,44 +436,44 @@ export default {
     showSuccessToast(message) {
       const Toast = Swal.mixin({
         toast: true,
-        position: 'top-end',
+        position: "top-end",
         showConfirmButton: false,
         timer: 3000,
         timerProgressBar: true,
-        background: '#4BB543',
-        color: '#fff',
-        iconColor: '#fff',
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
         didOpen: (toast) => {
-          toast.addEventListener('mouseenter', Swal.stopTimer);
-          toast.addEventListener('mouseleave', Swal.resumeTimer);
-        }
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
       });
-      
+
       Toast.fire({
-        icon: 'success',
-        title: message
+        icon: "success",
+        title: message,
       });
     },
 
     showErrorToast(message) {
       const Toast = Swal.mixin({
         toast: true,
-        position: 'top-end',
+        position: "top-end",
         showConfirmButton: false,
         timer: 4000,
         timerProgressBar: true,
-        background: '#ff4444',
-        color: '#fff',
-        iconColor: '#fff',
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
         didOpen: (toast) => {
-          toast.addEventListener('mouseenter', Swal.stopTimer);
-          toast.addEventListener('mouseleave', Swal.resumeTimer);
-        }
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
       });
-      
+
       Toast.fire({
-        icon: 'error',
-        title: message
+        icon: "error",
+        title: message,
       });
     },
 
@@ -487,7 +531,7 @@ export default {
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* Header */
@@ -539,13 +583,17 @@ export default {
 }
 
 .ps-add-icon::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
   opacity: 0;
   transition: var(--ps-transition);
 }
@@ -688,7 +736,7 @@ export default {
 }
 
 .ps-action-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -781,7 +829,8 @@ export default {
 }
 
 /* Estados de carga y vacío */
-.ps-loading-td, .ps-empty-td {
+.ps-loading-td,
+.ps-empty-td {
   padding: 3rem !important;
 }
 
@@ -884,7 +933,7 @@ export default {
 }
 
 .ps-modal-header::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -10px;
   left: 0;
@@ -1088,20 +1137,26 @@ export default {
 
 /* Animaciones */
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { 
+  from {
     opacity: 0;
     transform: translateY(20px);
   }
-  to { 
+  to {
     opacity: 1;
     transform: translateY(0);
   }
@@ -1113,18 +1168,18 @@ export default {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .ps-actions {
     width: 100%;
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .ps-search-container {
     width: 100%;
   }
-  
+
   .ps-detail-grid {
     grid-template-columns: 1fr;
   }
@@ -1134,24 +1189,24 @@ export default {
   .por-situar-container {
     padding: 1.5rem 1rem;
   }
-  
+
   .ps-title {
     font-size: 1.5rem;
   }
-  
+
   .ps-modal {
     width: 95%;
   }
-  
+
   .ps-modal-body {
     padding: 1.25rem 1rem;
   }
-  
+
   .ps-modal-footer {
     padding: 1rem;
     flex-direction: column;
   }
-  
+
   .ps-modal-btn {
     width: 100%;
     justify-content: center;

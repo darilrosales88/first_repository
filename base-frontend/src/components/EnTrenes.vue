@@ -97,8 +97,8 @@
                 </button>
                 <router-link
                   :to="{
-                    name: 'EditarPorSituar',
-                    params: { id: tren.id || 'default-id' },
+                    name: 'EditarEnTren',
+                    params: { id: tren.id },
                   }"
                   class="ps-action-btn ps-action-edit"
                   title="Editar"
@@ -440,6 +440,22 @@ export default {
         }
       } catch (error) {
         console.error("Error al obtener permisos y grupos:", error);
+      }
+    },
+    async viewDetails(item) {
+      this.loading = true;
+      try {
+        this.currentTren = { ...item };
+        const response = await axios.get(
+          `http://127.0.0.1:8000/ufc/en-trenes/${item.id}/`
+        );
+        this.currentTren = response.data;
+        this.showDetailsModal = true;
+      } catch (error) {
+        console.error("Error al cargar detalles:", error);
+        this.showErrorToast("No se pudieron cargar los detalles completos");
+      } finally {
+        this.loading = false;
       }
     },
 
@@ -908,7 +924,7 @@ export default {
   font-weight: 600;
   font-size: 0.8rem;
   background: var(--ps-primary);
-  color: white;
+  color: rgb(186, 59, 59);
 }
 
 .ps-status {

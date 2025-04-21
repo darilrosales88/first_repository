@@ -459,8 +459,7 @@ export default {
           observaciones: this.vagon["observaciones"],
           equipo_vagon: this.vagon["equipo_vagon"],
         };
-        alert(this.formData);
-        console.log(this.formData);
+        // Removed console.log(this.formData);
       } catch (error) {
         console.error("Error al obtener el vagon:", error);
       }
@@ -478,6 +477,8 @@ export default {
           "El formulario sido añadido exitosamente.",
           "success"
         );
+        // Volver a InformeOperativo
+        this.volverEnTren(); // Call the volverEnTren method to navigate back
       } catch (error) {
         console.error("Error al agregar el formulario:", error);
         Swal.fire("Error", `${error["response"]["data"]}`, "error");

@@ -183,7 +183,7 @@ export default {
     async getClientes() {
       try {
         const response = await axios.get('/api/entidades/');
-        this.clienteOptions = response.data;
+        this.clienteOptions = response.data.results;
       } catch (error) {
         console.error('Error al obtener los clientes:', error);
       }

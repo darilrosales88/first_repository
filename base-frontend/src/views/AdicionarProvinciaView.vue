@@ -197,7 +197,7 @@ export default {
     async getPaises() {
       try {
         const response = await axios.get('/api/paises/');
-        this.paisOptions = response.data;
+        this.paisOptions = response.data.results;
       } catch (error) {
         console.error('Error al obtener los países:', error);
       }

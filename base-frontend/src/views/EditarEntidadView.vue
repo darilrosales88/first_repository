@@ -248,7 +248,7 @@ export default {
     async getOsdeOaceOrganismos() {
       try {
         const response = await axios.get('/api/osde/');
-        this.osdeOaceOrganismoOptions = response.data;
+        this.osdeOaceOrganismoOptions = response.data.results;
       } catch (error) {
         console.error('Error al obtener los OSDE/OACE organismos:', error);
       }
@@ -257,7 +257,7 @@ export default {
     async getProvincias() {
       try {
         const response = await axios.get('/api/provincias/');
-        this.provinciaOptions = response.data;
+        this.provinciaOptions = response.data.results;
       } catch (error) {
         console.error('Error al obtener las provincias:', error);
       }
@@ -281,7 +281,7 @@ export default {
     async getTerritorios() {
       try {
         const response = await axios.get('/api/territorios/');
-        this.territoriosOptions = response.data;
+        this.territoriosOptions = response.data.results;
       } catch (error) {
         console.error('Error al obtener los territorios:', error);
       }

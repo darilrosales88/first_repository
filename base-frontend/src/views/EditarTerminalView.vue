@@ -209,7 +209,7 @@ export default {
     async getPuertos() {
       try {
         const response = await axios.get('/api/puertos/');
-        this.puertoOptions = response.data;
+        this.puertoOptions = response.data.results;
       } catch (error) {
         console.error('Error al obtener los puertos:', error);
       }

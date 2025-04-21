@@ -2,16 +2,14 @@
   <div class="container py-3">
     <!-- Encabezado con acciones -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <!-- Botón de agregar - más destacado -->
-      <button
+      <router-link
         v-if="hasPermission"
-        @click="showAddModal = true"
+        to="/AgregarArrastre"
         class="btn btn-link"
         title="Agregar nuevo vagón"
       >
         <i class="bi bi-plus-circle fs-3"></i>
-        <!-- Icono grande -->
-      </button>
+      </router-link>
 
       <form @submit.prevent="searchTrenes" class="search-container">
         <div class="input-group">
@@ -29,7 +27,7 @@
       </form>
     </div>
 
-    <!-- Tabla responsive con mejoras -->
+    <!-- Tabla responsive -->
     <div class="table-responsive">
       <table class="table table-hover mb-0">
         <thead>
@@ -67,20 +65,13 @@
             <td>{{ tren.destino || "-" }}</td>
             <td v-if="hasPermission">
               <div class="d-flex">
-                <button
-                  @click="viewDetails(tren)"
-                  class="btn btn-sm btn-outline-info me-2"
-                  title="Ver detalles"
-                >
-                  <i class="bi bi-eye-fill"></i>
-                </button>
-                <button
-                  @click="editTren(tren)"
+                <router-link
+                  :to="`/editar/${tren.id}`"
                   class="btn btn-sm btn-outline-warning me-2"
                   title="Editar"
                 >
                   <i class="bi bi-pencil-square"></i>
-                </button>
+                </router-link>
                 <button
                   @click="confirmDelete(tren.id)"
                   class="btn btn-sm btn-outline-danger"
@@ -100,7 +91,7 @@
       </table>
     </div>
 
-    <!-- Paginación mejorada -->
+    <!-- Paginación -->
     <div class="d-flex justify-content-between align-items-center mt-3">
       <div class="text-muted small">
         Mostrando {{ paginatedTrenes.length }} de
@@ -129,187 +120,15 @@
         </ul>
       </nav>
     </div>
-
-    <!-- Modal para agregar/editar -->
-    <div v-if="showAddModal || showEditModal" class="modal-backdrop">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">
-            {{ isEditing ? "Editar" : "Agregar" }} Tren
-          </h5>
-          <button @click="closeModal" class="btn-close"></button>
-        </div>
-        <div class="modal-body">
-          <form @submit.prevent="isEditing ? updateTren() : createTren()">
-            <div class="mb-3">
-              <label class="form-label">Origen</label>
-              <input
-                v-model="currentTren.origen"
-                type="text"
-                class="form-control"
-                required
-              />
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Tipo de Origen</label>
-              <select
-                v-model="currentTren.tipo_origen"
-                class="form-select"
-                required
-              >
-                <option
-                  v-for="option in tipo_origen_options"
-                  :value="option.id"
-                  :key="option.id"
-                >
-                  {{ option.text }}
-                </option>
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Tipo de Equipo</label>
-              <select
-                v-model="currentTren.tipo_equipo"
-                class="form-select"
-                required
-              >
-                <option
-                  v-for="option in tipo_equipo_options"
-                  :value="option.id"
-                  :key="option.id"
-                >
-                  {{ option.text }}
-                </option>
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Estado</label>
-              <select v-model="currentTren.estado" class="form-select" required>
-                <option
-                  v-for="option in estado_options"
-                  :value="option.id"
-                  :key="option.id"
-                >
-                  {{ option.text }}
-                </option>
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Cantidad de Vagones</label>
-              <input
-                v-model="currentTren.cantidad_vagones"
-                type="number"
-                class="form-control"
-                required
-              />
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Producto</label>
-              <select
-                v-model="currentTren.producto"
-                class="form-select"
-                required
-              >
-                <option
-                  v-for="option in producto_options"
-                  :value="option.id"
-                  :key="option.id"
-                >
-                  {{ option.text }}
-                </option>
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Destino</label>
-              <input
-                v-model="currentTren.destino"
-                type="text"
-                class="form-control"
-                required
-              />
-            </div>
-
-            <div class="d-flex justify-content-end">
-              <button
-                type="button"
-                @click="closeModal"
-                class="btn btn-outline-secondary me-2"
-              >
-                Cancelar
-              </button>
-              <button type="submit" class="btn btn-primary" :disabled="loading">
-                <span
-                  v-if="loading"
-                  class="spinner-border spinner-border-sm"
-                  role="status"
-                  aria-hidden="true"
-                ></span>
-                {{ isEditing ? "Actualizar" : "Guardar" }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal para detalles -->
-    <div v-if="showDetailModal" class="modal-backdrop">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Detalles del Tren</h5>
-          <button @click="showDetailModal = false" class="btn-close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label fw-bold">Origen:</label>
-            <p>{{ currentTren.origen }}</p>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-bold">Tipo de Origen:</label>
-            <p>{{ getTipoOrigenText(currentTren.tipo_origen) }}</p>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-bold">Estado:</label>
-            <p>{{ getEstadoText(currentTren.estado) }}</p>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-bold">Producto:</label>
-            <p>{{ getProductoText(currentTren.producto) }}</p>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-bold">Cantidad de Vagones:</label>
-            <p>{{ currentTren.cantidad_vagones }}</p>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-bold">Destino:</label>
-            <p>{{ currentTren.destino }}</p>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button @click="showDetailModal = false" class="btn btn-primary">
-            Cerrar
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script>
-import axios from "axios";
-import Swal from "sweetalert2";
-
-const API_URL =
-  "/ufc/pendiente-arrastre/"; /* Esto no se puede usar , no lo pongas mas en el codigo mejor usar un let , era una de las cosas que te estaba dando bateo, lo segundo era el paginado */
+import axios from 'axios'
+import Swal from 'sweetalert2'
 
 export default {
-  name: "GestionTrenes",
+  name: "PendientesArrastre",
   data() {
     return {
       en_trenes: [],
@@ -319,25 +138,6 @@ export default {
       hasPermission: true,
       loading: false,
 
-      // Modales
-      showAddModal: false,
-      showEditModal: false,
-      showDetailModal: false,
-      isEditing: false,
-
-      // Datos del tren actual
-      currentTren: {
-        id: null,
-        origen: "",
-        tipo_origen: "",
-        tipo_equipo: "",
-        estado: "",
-        cantidad_vagones: "",
-        producto: "",
-        destino: "",
-      },
-
-      // Opciones para los selects
       tipo_origen_options: [
         { id: "puerto", text: "Puerto" },
         { id: "acceso_comercial", text: "Acceso Comercial" },
@@ -355,7 +155,7 @@ export default {
         { id: "minerales", text: "Minerales" },
         { id: "combustible", text: "Combustible" },
       ],
-    };
+    }
   },
   computed: {
     filteredTrenes() {
@@ -401,28 +201,7 @@ export default {
         this.loading = false;
       }
     },
-    /* Esta es la logicapara hacer el paginado y que capture todos los elementos */
-    /*   async getPuertos() {
-      try {
-        let allPuertos = [];
-        let nextPage = "/api/puertos/"; // URL inicial
 
-        while (nextPage) {
-          const response = await axios.get(nextPage);
-          allPuertos = [...allPuertos, ...response.data.results];
-
-          // Actualizamos nextPage con la URL de la siguiente página (o null si no hay más)
-          nextPage = response.data.next;
-        }
-
-        this.puertos = allPuertos;
-      } catch (error) {
-        console.error("Error al obtener los puertos:", error);
-        Swal.fire("Error", "Hubo un error al obtener los puertos.", "error");
-      }
-    },
-        
-      */
     getTipoOrigenText(id) {
       const option = this.tipo_origen_options.find((o) => o.id === id);
       return option ? option.text : id;
@@ -453,53 +232,6 @@ export default {
       this.currentPage = 1;
     },
 
-    async createTren() {
-      this.loading = true;
-      try {
-        const response = await axios.post(
-          "/ufc/pendiente-arrastre/",
-          this.currentTren
-        );
-        this.en_trenes.unshift(response.data.results);
-        this.closeModal();
-        Swal.fire("Éxito", "Tren creado correctamente", "success");
-      } catch (error) {
-        console.error("Error al crear el tren:", error);
-        Swal.fire("Error", "No se pudo crear el tren", "error");
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    editTren(tren) {
-      this.currentTren = { ...tren };
-      this.isEditing = true;
-      this.showEditModal = true;
-    },
-
-    async updateTren() {
-      this.loading = true;
-      try {
-        const response = await axios.put(
-          `${"/ufc/pendiente-arrastre/"}/${this.currentTren.id}`,
-          this.currentTren
-        );
-        const index = this.en_trenes.findIndex(
-          (t) => t.id === this.currentTren.id
-        );
-        if (index !== -1) {
-          this.en_trenes.splice(index, 1, response.data);
-        }
-        this.closeModal();
-        Swal.fire("Éxito", "Tren actualizado correctamente", "success");
-      } catch (error) {
-        console.error("Error al actualizar el tren:", error);
-        Swal.fire("Error", "No se pudo actualizar el tren", "error");
-      } finally {
-        this.loading = false;
-      }
-    },
-
     confirmDelete(id) {
       Swal.fire({
         title: "¿Estás seguro?",
@@ -519,18 +251,13 @@ export default {
 
     async deleteTren(id) {
       try {
-        await axios.delete(`${"/ufc/pendiente-arrastre/"}/${id}`);
+        await axios.delete(`/ufc/pendiente-arrastre/${id}/`);
         this.en_trenes = this.en_trenes.filter((t) => t.id !== id);
         Swal.fire("Eliminado", "El tren ha sido eliminado", "success");
       } catch (error) {
         console.error("Error al eliminar el tren:", error);
         Swal.fire("Error", "No se pudo eliminar el tren", "error");
       }
-    },
-
-    viewDetails(tren) {
-      this.currentTren = { ...tren };
-      this.showDetailModal = true;
     },
 
     nextPage() {
@@ -544,24 +271,8 @@ export default {
         this.currentPage--;
       }
     },
-
-    closeModal() {
-      this.showAddModal = false;
-      this.showEditModal = false;
-      this.currentTren = {
-        id: null,
-        origen: "",
-        tipo_origen: "",
-        tipo_equipo: "",
-        estado: "",
-        cantidad_vagones: "",
-        producto: "",
-        destino: "",
-      };
-      this.isEditing = false;
-    },
-  },
-};
+  }
+}
 </script>
 
 <style scoped>
@@ -582,53 +293,13 @@ export default {
   font-weight: 600;
 }
 
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1050;
-}
-
-.modal-content {
-  background-color: #fff;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 600px;
-  padding: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-.modal-header {
-  border-bottom: 1px solid #dee2e6;
-  padding-bottom: 15px;
-  margin-bottom: 20px;
-}
-
-.modal-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.btn-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  opacity: 0.7;
-}
 .btn-link {
-  color: #007bff; /* Color azul para el icono */
-  text-decoration: none; /* Sin subrayado */
+  color: #007bff;
+  text-decoration: none;
 }
 
 .btn-link:hover {
-  color: #0056b3; /* Color azul más oscuro al pasar el mouse */
+  color: #0056b3;
 }
 
 .badge {
@@ -656,9 +327,5 @@ export default {
 
 .pagination .page-item:not(.disabled) .page-link:hover {
   background-color: #f8f9fa;
-}
-
-.spinner-border {
-  margin-right: 5px;
 }
 </style>

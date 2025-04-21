@@ -292,6 +292,12 @@
   position: relative; /* Asegura que el dropdown esté posicionado relativamente al nav-item */
 }
 
+.nav-item.dropdown:hover .dropdown-menu {
+  display: block !important;
+  opacity: 1;
+  visibility: visible;
+}
+
 .dropdown-menu {
   position: absolute; /* Posicionamiento absoluto para evitar que mueva otros elementos */
   left: 100%; /* Coloca el dropdown a la derecha del nav-item */
@@ -303,6 +309,9 @@
   max-height: 230px; /* Altura máxima antes de mostrar el scroll */
   overflow-y: auto; /* Habilitar scroll vertical */
   z-index: 1000; /* Asegura que el dropdown esté por encima de otros elementos */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 .bi {
   color: #eeeded;

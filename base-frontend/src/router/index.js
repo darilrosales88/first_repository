@@ -10,6 +10,7 @@ import GroupsView from "@/views/GroupsView.vue";
 import EditGroup from "@/views/EditGroup.vue";
 import CreateGroup from "@/views/CreateGroup.vue";
 import TrazasAuditoria from "@/views/TrazasAuditoria.vue";
+import NavbarComponent from "@/components/NavbarComponent.vue";
 
 const routes = [
   //para la gestion de los usuarios
@@ -73,7 +74,7 @@ const routes = [
   {
     path: "/home",
     name: "home",
-    component: HomeView,
+    component: NavbarComponent,
   },
   {
     path: "/about",

@@ -666,6 +666,18 @@ const routes = [
       requireLogin: true,
     },
   },
+
+  /*A partir de aqui Cargado/descargado */
+
+  {
+    path: "/AdicionarVagonCargadoDescargado",
+    name: "AdicionarVagonCargadoDescargado",
+    component: () => import("../views/UFC/AdicionarCargadoDescargado.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  /*Hatsa aqui es Cargado/descargado */
   {
     path: "/AdicionarPorSituar",
     name: "AdicionarPorSituar",

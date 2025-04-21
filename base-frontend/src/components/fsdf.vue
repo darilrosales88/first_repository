@@ -1,36 +1,31 @@
 <template>
     <div class="container py-3">
-      <!-- Encabezado con acciones -->
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <!-- Botón de agregar - más destacado -->  
-        <button class="btn btn-link p-0" @click="showModal = true">
-          <router-link
-           v-if="hasGroup('AdminUFC')"
-            to="AdicionarVagonCargadoDescargado"
-            title="Agregar nuevo vagón cargado/descargado"
+      <!-- Fila para el icono y el buscador -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <!-- Icono de agregar (a la izquierda) -->
+      <button class="btn btn-link p-0" @click="showModal = true">
+        <i class="bi bi-plus-circle fs-3"></i>
+        <!-- Icono grande -->
+      </button>
+
+      <!-- Buscador (a la derecha) -->
+      <form @submit.prevent="search_por_situar" class="search-container">
+        <div class="input-group">
+          <input
+            type="search"
+            class="form-control"
+            placeholder="TEF, Producto, Estado"
+            v-model="searchQuery"
+            @input="handleSearchInput"
+          />
+          <span
+            class="position-absolute top-50 start-0 translate-middle-y ps-2"
           >
-            <i class="bi bi-plus-circle fs-3"></i>
-          </router-link>
-          <!-- Icono grande -->
-        </button>
-  
-        <form @submit.prevent="search_producto" class="search-container">
-          <div class="input-group">
-            <input
-              type="search"
-              class="form-control"
-              placeholder="Origen, Destino, Producto, Locomotora"
-              v-model="searchQuery"
-              @input="handleSearchInput"
-            />
-            <span
-              class="position-absolute top-50 start-0 translate-middle-y ps-2"
-            >
-              <i class="bi bi-search"></i>
-            </span>
-          </div>
-        </form>
-      </div>
+            <i class="bi bi-search"></i>
+          </span>
+        </div>
+      </form>
+    </div>  
   
       <!-- Tabla responsive con mejoras -->
       <div class="table table-responsive">

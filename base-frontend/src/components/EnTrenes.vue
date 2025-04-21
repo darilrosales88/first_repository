@@ -6,12 +6,14 @@
         <i class="bi bi-train-front-fill ps-title-icon"></i>
         Vagones en Tren
       </h1>
-      
+
       <div class="ps-actions">
         <button class="btn btn-link p-0">
-          <router-link to="/AdicionarVagon"><i class="bi bi-plus-circle fs-3"></i></router-link>
+          <router-link to="/AdicionarVagon"
+            ><i class="bi bi-plus-circle fs-3"></i
+          ></router-link>
         </button>
-        
+
         <!-- Buscador moderno -->
         <div class="ps-search-container">
           <i class="bi bi-search ps-search-icon"></i>
@@ -43,7 +45,7 @@
               <th class="ps-th">Origen</th>
               <th class="ps-th">Destino</th>
               <th class="ps-th" v-if="showNoId">Descripción</th>
-              <th class="ps-th ps-th-actions" v-if="hasPermission">Acciones</th>
+              <th class="ps-th ps-th-actions">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -58,16 +60,20 @@
             </tr>
 
             <!-- Filas de datos -->
-            <tr 
-              v-for="(tren, index) in filteredRecords" 
+            <tr
+              v-for="(tren, index) in filteredRecords"
               :key="tren.id"
               class="ps-tr"
             >
               <td class="ps-td ps-td-index">{{ index + 1 }}</td>
-              <td class="ps-td">{{ tren.numero_identificacion_locomotora || "-" }}</td>
+              <td class="ps-td">
+                {{ tren.numero_identificacion_locomotora || "-" }}
+              </td>
               <td class="ps-td">{{ tren.tipo_equipo || "-" }}</td>
               <td class="ps-td">
-                <span :class="`ps-status ps-status-${getStatusClass(tren.estado)}`">
+                <span
+                  :class="`ps-status ps-status-${getStatusClass(tren.estado)}`"
+                >
                   {{ tren.estado || "-" }}
                 </span>
               </td>
@@ -77,33 +83,36 @@
               </td>
               <td class="ps-td">{{ tren.origen || "-" }}</td>
               <td class="ps-td">{{ tren.destino || "-" }}</td>
-              <td class="ps-td" v-if="showNoId">{{ tren.descripcion || "-" }}</td>
+              <td class="ps-td" v-if="showNoId">
+                {{ tren.descripcion || "-" }}
+              </td>
 
-              <td class="ps-td ps-td-actions" v-if="hasPermission">
-                <div class="d-flex gap-2">
-                  <button
-                    @click="openVagonDetailsModal(tren)"
-                    class="ps-action-btn ps-action-view"
-                    :title="showNoId ? 'Ocultar detalles' : 'Ver detalles'"
-                  >
-                    <i :class="showNoId ? 'bi bi-eye-slash-fill' : 'bi bi-eye-fill'"></i>
-                  </button>
-                  <router-link
-                    :to="{ name: 'EditarEnTren', params: { id: tren.id } }"
-                    class="ps-action-btn ps-action-edit"
-                    title="Editar"
-                  >
-                    <i class="bi bi-pencil"></i>
-                  </router-link>
-                  <button
-                    @click="confirmDelete(tren.id)"
-                    class="ps-action-btn ps-action-delete"
-                    title="Eliminar"
-                    :disabled="loading"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
+              <td class="ps-td ps-td-actions">
+                <button
+                  @click="viewDetails(tren)"
+                  class="ps-action-btn ps-action-view"
+                  title="Ver detalles"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+                <router-link
+                  :to="{
+                    name: 'EditarEnTren',
+                    params: { id: tren.id },
+                  }"
+                  class="ps-action-btn ps-action-edit"
+                  title="Editar"
+                >
+                  <i class="bi bi-pencil"></i>
+                </router-link>
+                <button
+                  @click="confirmDelete(tren.id)"
+                  class="ps-action-btn ps-action-delete"
+                  title="Eliminar"
+                  :disabled="loading"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
               </td>
             </tr>
 
@@ -112,15 +121,20 @@
               <td :colspan="showNoId ? 10 : 9" class="ps-empty-td">
                 <div class="ps-empty-state">
                   <i class="bi bi-database-exclamation"></i>
-                  <h3>{{ searchQuery ? 'No hay coincidencias' : 'No hay registros' }}</h3>
+                  <h3>
+                    {{
+                      searchQuery ? "No hay coincidencias" : "No hay registros"
+                    }}
+                  </h3>
                   <p>
-                    {{ searchQuery 
-                      ? `No encontramos resultados para "${searchQuery}"` 
-                      : 'No hay vagones registrados en este momento' 
+                    {{
+                      searchQuery
+                        ? `No encontramos resultados para "${searchQuery}"`
+                        : "No hay vagones registrados en este momento"
                     }}
                   </p>
-                  <router-link 
-                    to="/AdicionarVagon" 
+                  <router-link
+                    to="/AdicionarVagon"
                     class="ps-empty-action"
                     v-if="!searchQuery"
                   >
@@ -165,7 +179,11 @@
     </div>
 
     <!-- Modal de detalles - Versión mejorada con más color -->
-    <div v-if="showDetailsModal" class="ps-modal-overlay" @click.self="closeDetailsModal">
+    <div
+      v-if="showDetailsModal"
+      class="ps-modal-overlay"
+      @click.self="closeDetailsModal"
+    >
       <div class="ps-modal">
         <div class="ps-modal-header">
           <div class="ps-modal-header-content">
@@ -174,14 +192,16 @@
             </div>
             <div>
               <h2>Detalles del Vagon</h2>
-              <p class="ps-modal-subtitle">Información completa del registro seleccionado</p>
+              <p class="ps-modal-subtitle">
+                Información completa del registro seleccionado
+              </p>
             </div>
           </div>
           <button class="ps-modal-close" @click="closeDetailsModal">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
-        
+
         <div class="ps-modal-body">
           <div class="ps-detail-grid">
             <div class="ps-detail-card">
@@ -192,25 +212,33 @@
               <div class="ps-detail-card-body">
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">No Id Locomotora:</span>
-                  <span class="ps-detail-value">{{ currentTren.numero_identificacion_locomotora || 'N/A' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.numero_identificacion_locomotora || "N/A"
+                  }}</span>
                 </div>
-                
+
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Tipo de equipo:</span>
-                  <span class="ps-detail-value">{{ currentTren.tipo_equipo || 'N/A' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.tipo_equipo || "N/A"
+                  }}</span>
                 </div>
-                
+
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Estado:</span>
                   <span class="ps-detail-value">
-                    <span :class="`ps-status ps-status-${getStatusClass(currentTren.estado)}`">
-                      {{ currentTren.estado || 'N/A' }}
+                    <span
+                      :class="`ps-status ps-status-${getStatusClass(
+                        currentTren.estado
+                      )}`"
+                    >
+                      {{ currentTren.estado || "N/A" }}
                     </span>
                   </span>
                 </div>
               </div>
             </div>
-            
+
             <div class="ps-detail-card">
               <div class="ps-detail-card-header">
                 <i class="bi bi-clipboard2-data-fill"></i>
@@ -219,21 +247,27 @@
               <div class="ps-detail-card-body">
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Producto Id:</span>
-                  <span class="ps-detail-value">{{ currentTren.producto || 'N/A' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.producto || "N/A"
+                  }}</span>
                 </div>
-                
+
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Producto nombre:</span>
-                  <span class="ps-detail-value">{{ currentTren.producto_name || 'N/A' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.producto_name || "N/A"
+                  }}</span>
                 </div>
-                
+
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Cantidad de vagones:</span>
-                  <span class="ps-detail-value">{{ currentTren.cantidad_vagones || '0' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.cantidad_vagones || "0"
+                  }}</span>
                 </div>
               </div>
             </div>
-            
+
             <div class="ps-detail-card">
               <div class="ps-detail-card-header">
                 <i class="bi bi-geo-alt-fill"></i>
@@ -242,26 +276,34 @@
               <div class="ps-detail-card-body">
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Tipo de origen:</span>
-                  <span class="ps-detail-value">{{ currentTren.tipo_origen || 'N/A' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.tipo_origen || "N/A"
+                  }}</span>
                 </div>
-                
+
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Origen:</span>
-                  <span class="ps-detail-value">{{ currentTren.origen || 'N/A' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.origen || "N/A"
+                  }}</span>
                 </div>
-                
+
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Tipo de destino:</span>
-                  <span class="ps-detail-value">{{ currentTren.tipo_destino || 'N/A' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.tipo_destino || "N/A"
+                  }}</span>
                 </div>
-                
+
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Destino:</span>
-                  <span class="ps-detail-value">{{ currentTren.destino || 'N/A' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.destino || "N/A"
+                  }}</span>
                 </div>
               </div>
             </div>
-            
+
             <div class="ps-detail-card ps-detail-card-highlight">
               <div class="ps-detail-card-header">
                 <i class="bi bi-gear-fill"></i>
@@ -271,12 +313,12 @@
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Equipo de carga:</span>
                   <span class="ps-detail-value ps-highlight-value">
-                    {{ currentTren.equipo_carga_name || 'N/A' }}
+                    {{ currentTren.equipo_carga_name || "N/A" }}
                   </span>
                 </div>
               </div>
             </div>
-            
+
             <div class="ps-detail-card ps-detail-card-full">
               <div class="ps-detail-card-header">
                 <i class="bi bi-chat-square-text-fill"></i>
@@ -285,22 +327,28 @@
               <div class="ps-detail-card-body">
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Descripción:</span>
-                  <span class="ps-detail-value">{{ currentTren.descripcion || 'Ninguna' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.descripcion || "Ninguna"
+                  }}</span>
                 </div>
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Observaciones:</span>
-                  <span class="ps-detail-value">{{ currentTren.observaciones || 'Ninguna' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentTren.observaciones || "Ninguna"
+                  }}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        
+
         <div class="ps-modal-footer">
-          <button class="ps-modal-btn ps-modal-btn-secondary" @click="closeDetailsModal">
+          <button
+            class="ps-modal-btn ps-modal-btn-secondary"
+            @click="closeDetailsModal"
+          >
             <i class="bi bi-x-circle"></i> Cerrar
           </button>
-          
         </div>
       </div>
     </div>
@@ -331,16 +379,16 @@ export default {
       showNoId: false,
       showDetailsModal: false,
       currentTren: {},
-      allRecords: []
+      allRecords: [],
     };
   },
 
   computed: {
     filteredRecords() {
       if (!this.searchQuery) return this.en_trenes;
-      
+
       const query = this.searchQuery.toLowerCase();
-      return this.en_trenes.filter(item => {
+      return this.en_trenes.filter((item) => {
         const fieldsToSearch = [
           item.numero_identificacion_locomotora,
           item.tipo_equipo,
@@ -350,11 +398,11 @@ export default {
           item.origen,
           item.destino,
           item.descripcion,
-          item.observaciones
+          item.observaciones,
         ];
-        
-        return fieldsToSearch.some(field => 
-          field && field.toString().toLowerCase().includes(query)
+
+        return fieldsToSearch.some(
+          (field) => field && field.toString().toLowerCase().includes(query)
         );
       });
     },
@@ -364,7 +412,7 @@ export default {
       } else {
         return this.user_role === "admin";
       }
-    }
+    },
   },
 
   async mounted() {
@@ -394,6 +442,22 @@ export default {
         console.error("Error al obtener permisos y grupos:", error);
       }
     },
+    async viewDetails(item) {
+      this.loading = true;
+      try {
+        this.currentTren = { ...item };
+        const response = await axios.get(
+          `http://127.0.0.1:8000/ufc/en-trenes/${item.id}/`
+        );
+        this.currentTren = response.data;
+        this.showDetailsModal = true;
+      } catch (error) {
+        console.error("Error al cargar detalles:", error);
+        this.showErrorToast("No se pudieron cargar los detalles completos");
+      } finally {
+        this.loading = false;
+      }
+    },
 
     async getTrenes() {
       this.loading = true;
@@ -409,7 +473,7 @@ export default {
         this.totalItems = response.data.count;
       } catch (error) {
         console.error("Error al obtener los trenes:", error);
-        this.showErrorToast('No se pudieron cargar los registros');
+        this.showErrorToast("No se pudieron cargar los registros");
       } finally {
         this.loading = false;
       }
@@ -431,7 +495,7 @@ export default {
       } catch (error) {
         console.error("Error al buscar trenes", error);
         this.busqueda_existente = false;
-        this.showErrorToast('Error al buscar registros');
+        this.showErrorToast("Error al buscar registros");
       } finally {
         this.loading = false;
       }
@@ -467,10 +531,10 @@ export default {
       try {
         await axios.delete(`/ufc/en-trenes/${id}/`);
         this.en_trenes = this.en_trenes.filter((tren) => tren.id !== id);
-        this.showSuccessToast('Registro eliminado');
+        this.showSuccessToast("Registro eliminado");
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
-        this.showErrorToast('Error al eliminar el registro');
+        this.showErrorToast("Error al eliminar el registro");
       }
     },
 
@@ -485,14 +549,15 @@ export default {
     },
 
     getStatusClass(status) {
-      if (!status) return 'default';
+      if (!status) return "default";
       const statusLower = status.toLowerCase();
-      
-      if (statusLower.includes('activo')) return 'success';
-      if (statusLower.includes('pendiente')) return 'warning';
-      if (statusLower.includes('inactivo') || statusLower.includes('cancelado')) return 'danger';
-      
-      return 'info';
+
+      if (statusLower.includes("activo")) return "success";
+      if (statusLower.includes("pendiente")) return "warning";
+      if (statusLower.includes("inactivo") || statusLower.includes("cancelado"))
+        return "danger";
+
+      return "info";
     },
 
     confirmDelete(id) {
@@ -506,10 +571,10 @@ export default {
         confirmButtonText: "Sí, eliminar",
         cancelButtonText: "Cancelar",
         customClass: {
-          popup: 'ps-swal-popup',
-          confirmButton: 'ps-swal-confirm',
-          cancelButton: 'ps-swal-cancel'
-        }
+          popup: "ps-swal-popup",
+          confirmButton: "ps-swal-confirm",
+          cancelButton: "ps-swal-cancel",
+        },
       }).then((result) => {
         if (result.isConfirmed) {
           this.delete_tren(id);
@@ -520,44 +585,44 @@ export default {
     showSuccessToast(message) {
       const Toast = Swal.mixin({
         toast: true,
-        position: 'top-end',
+        position: "top-end",
         showConfirmButton: false,
         timer: 3000,
         timerProgressBar: true,
-        background: '#4BB543',
-        color: '#fff',
-        iconColor: '#fff',
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
         didOpen: (toast) => {
-          toast.addEventListener('mouseenter', Swal.stopTimer);
-          toast.addEventListener('mouseleave', Swal.resumeTimer);
-        }
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
       });
-      
+
       Toast.fire({
-        icon: 'success',
-        title: message
+        icon: "success",
+        title: message,
       });
     },
 
     showErrorToast(message) {
       const Toast = Swal.mixin({
         toast: true,
-        position: 'top-end',
+        position: "top-end",
         showConfirmButton: false,
         timer: 4000,
         timerProgressBar: true,
-        background: '#ff4444',
-        color: '#fff',
-        iconColor: '#fff',
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
         didOpen: (toast) => {
-          toast.addEventListener('mouseenter', Swal.stopTimer);
-          toast.addEventListener('mouseleave', Swal.resumeTimer);
-        }
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
       });
-      
+
       Toast.fire({
-        icon: 'error',
-        title: message
+        icon: "error",
+        title: message,
       });
     },
 
@@ -573,8 +638,8 @@ export default {
       }
       console.error(errorMsg, error);
       this.showErrorToast(errorMsg);
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -603,7 +668,7 @@ export default {
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* Header */
@@ -655,13 +720,17 @@ export default {
 }
 
 .ps-add-icon::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
   opacity: 0;
   transition: var(--ps-transition);
 }
@@ -804,7 +873,7 @@ export default {
 }
 
 .ps-action-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -855,7 +924,7 @@ export default {
   font-weight: 600;
   font-size: 0.8rem;
   background: var(--ps-primary);
-  color: white;
+  color: rgb(76, 40, 40);
 }
 
 .ps-status {
@@ -897,7 +966,8 @@ export default {
 }
 
 /* Estados de carga y vacío */
-.ps-loading-td, .ps-empty-td {
+.ps-loading-td,
+.ps-empty-td {
   padding: 3rem !important;
 }
 
@@ -916,6 +986,47 @@ export default {
   border-top-color: var(--ps-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+.ps-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  color: var(--ps-gray);
+}
+
+.ps-empty-state i {
+  font-size: 2.5rem;
+  color: var(--ps-accent);
+}
+
+.ps-empty-state h3 {
+  color: var(--ps-dark);
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.ps-empty-state p {
+  margin: 0;
+  max-width: 400px;
+}
+
+.ps-empty-action {
+  margin-top: 1rem;
+  color: var(--ps-primary);
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: var(--ps-transition);
+}
+
+.ps-empty-action:hover {
+  color: var(--ps-primary-hover);
+  transform: translateY(-2px);
 }
 
 .ps-empty-state {
@@ -1019,7 +1130,7 @@ export default {
 }
 
 .ps-modal-header::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -10px;
   left: 0;
@@ -1147,5 +1258,4 @@ export default {
   background: #f1f3f5;
   color: var(--ps-dark);
 }
-
 </style>

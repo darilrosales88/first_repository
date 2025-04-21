@@ -49,7 +49,7 @@ base-frontend/src-2/
 .env.local
 
 # Ignorar archivos de caché de Python
-mitrans
+migrations
 __pycache__
 *.pyc
 *.pyo

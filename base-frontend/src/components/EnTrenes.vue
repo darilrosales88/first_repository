@@ -924,7 +924,7 @@ export default {
   font-weight: 600;
   font-size: 0.8rem;
   background: var(--ps-primary);
-  color: rgb(186, 59, 59);
+  color: rgb(76, 40, 40);
 }
 
 .ps-status {

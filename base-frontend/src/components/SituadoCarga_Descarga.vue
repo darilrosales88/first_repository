@@ -6,14 +6,14 @@
         <i class="bi bi-check2-square ps-title-icon"></i>
         Registros Situados
       </h1>
-      
-      <div class="ps-actions">
-        
 
+      <div class="ps-actions">
         <button class="btn btn-link p-0">
-          <router-link to="/AdicionarSituados"><i class="bi bi-plus-circle fs-3"></i></router-link>
+          <router-link to="/AdicionarSituados"
+            ><i class="bi bi-plus-circle fs-3"></i
+          ></router-link>
         </button>
-        
+
         <!-- Buscador moderno -->
         <div class="ps-search-container">
           <i class="bi bi-search ps-search-icon"></i>
@@ -45,7 +45,7 @@
               <th class="ps-th">Producto</th>
               <th class="ps-th">Situados</th>
               <th class="ps-th">Pendientes</th>
-              <th class="ps-th ps-th-actions">Acciones</th>        
+              <th class="ps-th ps-th-actions">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -60,17 +60,19 @@
             </tr>
 
             <!-- Filas de datos -->
-            <tr 
-              v-for="(item, index) in registrosPorSituar" 
+            <tr
+              v-for="(item, index) in filteredRecords"
               :key="item.id"
               class="ps-tr"
             >
-              <th scope="row" class="ps-td ps-td-index">{{ index + 1 }}</th>
+              <td class="ps-td ps-td-index">{{ index + 1 }}</td>
               <td class="ps-td">{{ item.tipo_origen }}</td>
               <td class="ps-td">{{ item.origen }}</td>
               <td class="ps-td">{{ item.tipo_equipo }}</td>
               <td class="ps-td">
-                <span :class="`ps-status ps-status-${getStatusClass(item.estado)}`">
+                <span
+                  :class="`ps-status ps-status-${getStatusClass(item.estado)}`"
+                >
                   {{ item.estado }}
                 </span>
               </td>
@@ -85,14 +87,14 @@
 
               <td class="ps-td ps-td-actions">
                 <button
-                  @click="showDetails(item)"
+                  @click="viewDetails(item)"
                   class="ps-action-btn ps-action-view"
                   title="Ver detalles"
                 >
                   <i class="bi bi-eye"></i>
                 </button>
                 <router-link
-                  :to="{ name: 'EditarSituados', params: { id: item.id } }"
+                  :to="{ name: 'EditarSituados', params: { id: item.id || 'default-id' } }"
                   class="ps-action-btn ps-action-edit"
                   title="Editar"
                 >
@@ -110,14 +112,29 @@
             </tr>
 
             <!-- Estado vacío -->
-            <tr v-if="!loading && !busqueda_existente">
+            <tr v-if="!loading && filteredRecords.length === 0">
               <td colspan="10" class="ps-empty-td">
                 <div class="ps-empty-state">
                   <i class="bi bi-database-exclamation"></i>
-                  <h3>No se encontraron resultados</h3>
+                  <h3>
+                    {{
+                      searchQuery ? "No hay coincidencias" : "No hay registros"
+                    }}
+                  </h3>
                   <p>
-                    No encontramos coincidencias para "{{ searchQuery }}"
+                    {{
+                      searchQuery
+                        ? `No encontramos resultados para "${searchQuery}"`
+                        : "No hay registros situados en este momento"
+                    }}
                   </p>
+                  <router-link
+                    to="/AdicionarSituados"
+                    class="ps-empty-action"
+                    v-if="!searchQuery"
+                  >
+                    <i class="bi bi-plus-circle"></i> Crear primer registro
+                  </router-link>
                 </div>
               </td>
             </tr>
@@ -129,10 +146,10 @@
     <!-- Paginación mejorada -->
     <div class="ps-pagination">
       <div class="ps-pagination-info">
-        Mostrando {{ registrosPorSituar.length }} de {{ totalItems }} registros
+        Mostrando {{ filteredRecords.length }} de {{ totalItems }} registros
       </div>
       <div class="ps-pagination-controls">
-        <button 
+        <button
           class="ps-pagination-btn"
           :class="{ 'ps-pagination-disabled': currentPage === 1 }"
           @click="previousPage"
@@ -142,7 +159,7 @@
         <span class="ps-pagination-page">
           Página {{ currentPage }} de {{ Math.ceil(totalItems / itemsPerPage) }}
         </span>
-        <button 
+        <button
           class="ps-pagination-btn"
           :class="{ 'ps-pagination-disabled': currentPage * itemsPerPage >= totalItems }"
           @click="nextPage"
@@ -152,141 +169,141 @@
       </div>
     </div>
 
-    <!-- Modal de detalles - Versión mejorada -->
-    <div v-if="showModal" class="ps-modal-overlay" @click.self="closeModal">
-    <div class="ps-modal">
-      <div class="ps-modal-header">
-        <div class="ps-modal-header-content">
-          <div class="ps-modal-icon-container">
-            <i class="bi bi-info-circle-fill ps-modal-icon"></i>
+    <!-- Modal de detalles - Versión mejorada con más color -->
+    <div v-if="showDetailsModal" class="ps-modal-overlay" @click.self="closeModal">
+      <div class="ps-modal">
+        <div class="ps-modal-header">
+          <div class="ps-modal-header-content">
+            <div class="ps-modal-icon-container">
+              <i class="bi bi-info-circle-fill ps-modal-icon"></i>
+            </div>
+            <div>
+              <h2>Detalles del Registro</h2>
+              <p class="ps-modal-subtitle">Información completa del registro situado</p>
+            </div>
           </div>
-          <div>
-            <h2>Detalles del Registro</h2>
-            <p class="ps-modal-subtitle">Información completa del registro situado</p>
-          </div>
+          <button class="ps-modal-close" @click="closeModal">
+            <i class="bi bi-x-lg"></i>
+          </button>
         </div>
-        <button class="ps-modal-close" @click="closeModal">
-          <i class="bi bi-x-lg"></i>
-        </button>
-      </div>
-      
-      <div class="ps-modal-body">
-        <div class="ps-detail-grid">
-          <div class="ps-detail-card">
-            <div class="ps-detail-card-header">
-              <i class="bi bi-tag-fill"></i>
-              <h4>Información Básica</h4>
-            </div>
-            <div class="ps-detail-card-body">
-              <div class="ps-detail-item">
-                <span class="ps-detail-label">Tipo Origen:</span>
-                <span class="ps-detail-value">{{ selectedItem.tipo_origen || 'N/A' }}</span>
+        
+        <div class="ps-modal-body">
+          <div class="ps-detail-grid">
+            <div class="ps-detail-card">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-tag-fill"></i>
+                <h4>Información Básica</h4>
               </div>
-              
-              <div class="ps-detail-item">
-                <span class="ps-detail-label">Origen:</span>
-                <span class="ps-detail-value">{{ selectedItem.origen || 'N/A' }}</span>
-              </div>
-              
-              <div class="ps-detail-item">
-                <span class="ps-detail-label">Tipo de Equipo:</span>
-                <span class="ps-detail-value">{{ selectedItem.tipo_equipo || 'N/A' }}</span>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Tipo Origen:</span>
+                  <span class="ps-detail-value">{{ currentRecord.tipo_origen || 'N/A' }}</span>
+                </div>
+                
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Origen:</span>
+                  <span class="ps-detail-value">{{ currentRecord.origen || 'N/A' }}</span>
+                </div>
+                
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Tipo de Equipo:</span>
+                  <span class="ps-detail-value">{{ currentRecord.tipo_equipo || 'N/A' }}</span>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div class="ps-detail-card">
-            <div class="ps-detail-card-header">
-              <i class="bi bi-clipboard2-data-fill"></i>
-              <h4>Estado y Operación</h4>
-            </div>
-            <div class="ps-detail-card-body">
-              <div class="ps-detail-item">
-                <span class="ps-detail-label">Estado:</span>
-                <span class="ps-detail-value">
-                  <span :class="`ps-status ps-status-${getStatusClass(selectedItem.estado)}`">
-                    {{ selectedItem.estado || 'N/A' }}
+            
+            <div class="ps-detail-card">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-clipboard2-data-fill"></i>
+                <h4>Estado y Operación</h4>
+              </div>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Estado:</span>
+                  <span class="ps-detail-value">
+                    <span :class="`ps-status ps-status-${getStatusClass(currentRecord.estado)}`">
+                      {{ currentRecord.estado || 'N/A' }}
+                    </span>
                   </span>
-                </span>
-              </div>
-              
-              <div class="ps-detail-item">
-                <span class="ps-detail-label">Operación:</span>
-                <span class="ps-detail-value">{{ selectedItem.operacion || 'N/A' }}</span>
-              </div>
-              
-              <div class="ps-detail-item">
-                <span class="ps-detail-label">Producto:</span>
-                <span class="ps-detail-value">{{ selectedItem.producto_name || 'N/A' }}</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="ps-detail-card ps-detail-card-highlight">
-            <div class="ps-detail-card-header">
-              <i class="bi bi-check-circle-fill"></i>
-              <h4>Cantidades</h4>
-            </div>
-            <div class="ps-detail-card-body">
-              <div class="ps-detail-item">
-                <span class="ps-detail-label">Situados:</span>
-                <span class="ps-detail-value ps-highlight-value ps-badge-success">
-                  {{ selectedItem.situados || '0' }}
-                </span>
-              </div>
-              <div class="ps-detail-item">
-                <span class="ps-detail-label">Pendientes:</span>
-                <span class="ps-detail-value ps-badge-warning">
-                  {{ selectedItem.pendiente_proximo_dia || '0' }}
-                </span>
+                </div>
+                
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Operación:</span>
+                  <span class="ps-detail-value">{{ currentRecord.operacion || 'N/A' }}</span>
+                </div>
+                
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Producto:</span>
+                  <span class="ps-detail-value">{{ currentRecord.producto_name || 'N/A' }}</span>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div class="ps-detail-card ps-detail-card-full">
-            <div class="ps-detail-card-header">
-              <i class="bi bi-chat-square-text-fill"></i>
-              <h4>Observaciones</h4>
-            </div>
-            <div class="ps-detail-card-body">
-              <div class="ps-detail-item">
-                <span class="ps-detail-value">{{ selectedItem.observaciones || 'Ninguna observación registrada' }}</span>
+            
+            <div class="ps-detail-card ps-detail-card-highlight">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-check-circle-fill"></i>
+                <h4>Cantidades</h4>
+              </div>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Situados:</span>
+                  <span class="ps-detail-value ps-highlight-value ps-badge-success">
+                    {{ currentRecord.situados || '0' }}
+                  </span>
+                </div>
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Pendientes:</span>
+                  <span class="ps-detail-value ps-badge-warning">
+                    {{ currentRecord.pendiente_proximo_dia || '0' }}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div class="ps-detail-card">
-            <div class="ps-detail-card-header">
-              <i class="bi bi-calendar-event-fill"></i>
-              <h4>Fecha de Creación</h4>
+            
+            <div class="ps-detail-card ps-detail-card-full">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-chat-square-text-fill"></i>
+                <h4>Observaciones</h4>
+              </div>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-value">{{ currentRecord.observaciones || 'Ninguna observación registrada' }}</span>
+                </div>
+              </div>
             </div>
-            <div class="ps-detail-card-body">
-              <div class="ps-detail-item">
-                <span class="ps-detail-label">Fecha y Hora:</span>
-                <span class="ps-detail-value">
-                  {{ selectedItem.created_at ? formatDateTime(selectedItem.created_at) : 'N/A' }}
-                </span>
+            
+            <div class="ps-detail-card">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-calendar-event-fill"></i>
+                <h4>Fecha de Creación</h4>
+              </div>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Fecha y Hora:</span>
+                  <span class="ps-detail-value">
+                    {{ currentRecord.created_at ? formatDateTime(currentRecord.created_at) : 'N/A' }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      
-      <div class="ps-modal-footer">
-        <button class="ps-modal-btn ps-modal-btn-secondary" @click="closeModal">
-          <i class="bi bi-x-circle"></i> Cerrar
-        </button>
-        <router-link 
-          v-if="selectedItem.id"
-          :to="{ name: 'EditarSituados', params: { id: selectedItem.id } }"
-          class="ps-modal-btn ps-modal-btn-primary"
-          @click="closeModal"
-        >
-          <i class="bi bi-pencil-square"></i> Editar Registro
-        </router-link>
+        
+        <div class="ps-modal-footer">
+          <button class="ps-modal-btn ps-modal-btn-secondary" @click="closeModal">
+            <i class="bi bi-x-circle"></i> Cerrar
+          </button>
+          <router-link 
+            v-if="currentRecord.id"
+            :to="{ name: 'EditarSituados', params: { id: currentRecord.id } }"
+            class="ps-modal-btn ps-modal-btn-primary"
+            @click="closeModal"
+          >
+            <i class="bi bi-pencil-square"></i> Editar Registro
+          </router-link>
+        </div>
       </div>
     </div>
-  </div>
   </div>
 </template>
 
@@ -298,17 +315,41 @@ export default {
   data() {
     return {
       allRecords: [],
-      debounceTimeout: null,
       searchQuery: "",
       registrosPorSituar: [],
       loading: false,
-      busqueda_existente: true,
-      showModal: false,
-      selectedItem: {},
+      showDetailsModal: false,
+      errorLoading: false,
+      currentRecord: {},
+      debounceTimeout: null,
       totalItems: 0,
       currentPage: 1,
       itemsPerPage: 10,
     };
+  },
+
+  computed: {
+    filteredRecords() {
+      if (!this.searchQuery) return this.registrosPorSituar;
+      const query = this.searchQuery.toLowerCase();
+      return this.registrosPorSituar.filter((item) => {
+        const fieldsToSearch = [
+          item.tipo_origen,
+          item.origen,
+          item.tipo_equipo,
+          item.estado,
+          item.operacion,
+          item.producto_name,
+          item.situados?.toString(),
+          item.pendiente_proximo_dia?.toString(),
+          item.observaciones,
+        ];
+
+        return fieldsToSearch.some(
+          (field) => field && field.toString().toLowerCase().includes(query)
+        );
+      });
+    },
   },
 
   mounted() {
@@ -341,7 +382,6 @@ export default {
           }));
 
           this.registrosPorSituar = [...this.allRecords];
-          this.busqueda_existente = true;
         }
       } catch (error) {
         this.handleApiError(error, "cargar registros");
@@ -352,35 +392,60 @@ export default {
     },
 
     getStatusClass(status) {
-      if (!status) return 'default';
+      if (!status) return "default";
       const statusLower = status.toLowerCase();
-      
-      if (statusLower.includes('activo')) return 'success';
-      if (statusLower.includes('pendiente')) return 'warning';
-      if (statusLower.includes('inactivo') || statusLower.includes('cancelado')) return 'danger';
-      
-      return 'info';
+
+      if (statusLower.includes("activo")) return "success";
+      if (statusLower.includes("pendiente")) return "warning";
+      if (statusLower.includes("inactivo") || statusLower.includes("cancelado"))
+        return "danger";
+
+      return "info";
     },
 
-    async showDetails(item) {
+    async viewDetails(item) {
       try {
         this.loading = true;
-        this.selectedItem = { ...item };
-        this.showModal = true;
+        this.currentRecord = { ...item };
+        this.showDetailsModal = true;
         
         const response = await axios.get(`http://127.0.0.1:8000/ufc/situados/${item.id}/`);
-        this.selectedItem = response.data;
+        this.currentRecord = {
+          ...response.data,
+          observaciones: response.data.observaciones || 'Ninguna observación registrada',
+          created_at: response.data.created_at || new Date().toISOString()
+        };
       } catch (error) {
         console.error("Error al cargar detalles:", error);
-        this.showErrorToast('No se pudieron cargar los detalles completos');
+        this.showErrorToast("No se pudieron cargar los detalles completos");
       } finally {
         this.loading = false;
       }
     },
 
+    formatDateTime(dateString) {
+      if (!dateString) return "N/A";
+      try {
+        const date = new Date(dateString);
+        const options = {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true
+        };
+        return date.toLocaleDateString('es-ES', options);
+      } catch (e) {
+        console.error("Error formateando fecha:", e);
+        return dateString;
+      }
+    },
+
     closeModal() {
-      this.showModal = false;
-      this.selectedItem = {};
+      this.showDetailsModal = false;
+      this.currentRecord = {};
     },
 
     handleSearchInput() {
@@ -388,7 +453,6 @@ export default {
       this.debounceTimeout = setTimeout(() => {
         if (!this.searchQuery.trim()) {
           this.registrosPorSituar = [...this.allRecords];
-          this.busqueda_existente = true;
           return;
         }
 
@@ -410,14 +474,9 @@ export default {
             (field) => field && field.toString().toLowerCase().includes(query)
           );
         });
-
-        this.busqueda_existente = this.registrosPorSituar.length > 0;
       }, 300);
     },
 
-    // Agregar nuevo registro
-
-    // Confirmar eliminación
     async confirmDelete(id) {
       const result = await Swal.fire({
         title: "¿Eliminar registro?",
@@ -429,17 +488,17 @@ export default {
         confirmButtonText: "Sí, eliminar",
         cancelButtonText: "Cancelar",
         customClass: {
-          popup: 'ps-swal-popup',
-          confirmButton: 'ps-swal-confirm',
-          cancelButton: 'ps-swal-cancel'
-        }
+          popup: "ps-swal-popup",
+          confirmButton: "ps-swal-confirm",
+          cancelButton: "ps-swal-cancel",
+        },
       });
 
       if (result.isConfirmed) {
         try {
           this.loading = true;
           await axios.delete(`http://127.0.0.1:8000/ufc/situados/${id}/`);
-          this.showSuccessToast('Registro eliminado');
+          this.showSuccessToast("Registro eliminado");
           await this.getPorSituar();
         } catch (error) {
           this.handleApiError(error, "eliminar registro");
@@ -466,44 +525,44 @@ export default {
     showSuccessToast(message) {
       const Toast = Swal.mixin({
         toast: true,
-        position: 'top-end',
+        position: "top-end",
         showConfirmButton: false,
         timer: 3000,
         timerProgressBar: true,
-        background: '#4BB543',
-        color: '#fff',
-        iconColor: '#fff',
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
         didOpen: (toast) => {
-          toast.addEventListener('mouseenter', Swal.stopTimer);
-          toast.addEventListener('mouseleave', Swal.resumeTimer);
-        }
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
       });
-      
+
       Toast.fire({
-        icon: 'success',
-        title: message
+        icon: "success",
+        title: message,
       });
     },
 
     showErrorToast(message) {
       const Toast = Swal.mixin({
         toast: true,
-        position: 'top-end',
+        position: "top-end",
         showConfirmButton: false,
         timer: 4000,
         timerProgressBar: true,
-        background: '#ff4444',
-        color: '#fff',
-        iconColor: '#fff',
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
         didOpen: (toast) => {
-          toast.addEventListener('mouseenter', Swal.stopTimer);
-          toast.addEventListener('mouseleave', Swal.resumeTimer);
-        }
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
       });
-      
+
       Toast.fire({
-        icon: 'error',
-        title: message
+        icon: "error",
+        title: message,
       });
     },
 
@@ -519,18 +578,6 @@ export default {
       }
       console.error(errorMsg, error);
       this.showErrorToast(errorMsg);
-    },
-
-    formatDate(dateString) {
-      if (!dateString) return "N/A";
-      const options = {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      };
-      return new Date(dateString).toLocaleDateString("es-ES", options);
     },
   },
 };
@@ -561,7 +608,7 @@ export default {
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* Header */
@@ -613,13 +660,17 @@ export default {
 }
 
 .ps-add-icon::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
   opacity: 0;
   transition: var(--ps-transition);
 }
@@ -744,66 +795,7 @@ export default {
   justify-content: center;
 }
 
-/* Badges y estados */
-.ps-badge {
-  display: inline-block;
-  padding: 0.25rem 0.6rem;
-  border-radius: 50px;
-  font-weight: 600;
-  font-size: 0.8rem;
-}
-
-.ps-badge-success {
-  background: rgba(76, 201, 240, 0.1);
-  color: #06d6a0;
-  border: 1px solid rgba(6, 214, 160, 0.2);
-}
-
-.ps-badge-warning {
-  background: rgba(248, 150, 30, 0.1);
-  color: #f8961e;
-  border: 1px solid rgba(248, 150, 30, 0.2);
-}
-
-.ps-status {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 50px;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.ps-status-success {
-  background: rgba(76, 201, 240, 0.1);
-  color: #06d6a0;
-  border: 1px solid rgba(6, 214, 160, 0.2);
-}
-
-.ps-status-warning {
-  background: rgba(248, 150, 30, 0.1);
-  color: #f8961e;
-  border: 1px solid rgba(248, 150, 30, 0.2);
-}
-
-.ps-status-danger {
-  background: rgba(247, 37, 133, 0.1);
-  color: #f72585;
-  border: 1px solid rgba(247, 37, 133, 0.2);
-}
-
-.ps-status-info {
-  background: rgba(72, 149, 239, 0.1);
-  color: #4895ef;
-  border: 1px solid rgba(72, 149, 239, 0.2);
-}
-
-.ps-status-default {
-  background: rgba(108, 117, 125, 0.1);
-  color: var(--ps-gray);
-  border: 1px solid rgba(108, 117, 125, 0.2);
-}
-
-/* Botones de acción con efecto transparente */
+/* Botones de acción con efecto transparente al hover */
 .ps-action-btn {
   width: 32px;
   height: 32px;
@@ -821,7 +813,7 @@ export default {
 }
 
 .ps-action-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -864,8 +856,58 @@ export default {
   z-index: 1;
 }
 
+/* Badges y estados */
+.ps-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  background: var(--ps-primary);
+  color: white;
+}
+
+.ps-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.ps-status-success {
+  background: rgba(76, 201, 240, 0.1);
+  color: #06d6a0;
+  border: 1px solid rgba(6, 214, 160, 0.2);
+}
+
+.ps-status-warning {
+  background: rgba(248, 150, 30, 0.1);
+  color: #f8961e;
+  border: 1px solid rgba(248, 150, 30, 0.2);
+}
+
+.ps-status-danger {
+  background: rgba(247, 37, 133, 0.1);
+  color: #f72585;
+  border: 1px solid rgba(247, 37, 133, 0.2);
+}
+
+.ps-status-info {
+  background: rgba(72, 149, 239, 0.1);
+  color: #4895ef;
+  border: 1px solid rgba(72, 149, 239, 0.2);
+}
+
+.ps-status-default {
+  background: rgba(108, 117, 125, 0.1);
+  color: var(--ps-gray);
+  border: 1px solid rgba(108, 117, 125, 0.2);
+}
+
 /* Estados de carga y vacío */
-.ps-loading-td, .ps-empty-td {
+.ps-loading-td,
+.ps-empty-td {
   padding: 3rem !important;
 }
 
@@ -911,57 +953,20 @@ export default {
   max-width: 400px;
 }
 
-/* Paginación mejorada */
-.ps-pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 1.5rem;
-  padding: 0.75rem 1rem;
-  background: white;
-  border-radius: var(--ps-border-radius);
-  box-shadow: var(--ps-box-shadow);
-}
-
-.ps-pagination-info {
-  font-size: 0.9rem;
-  color: var(--ps-gray);
-}
-
-.ps-pagination-controls {
-  display: flex;
+.ps-empty-action {
+  margin-top: 1rem;
+  color: var(--ps-primary);
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.ps-pagination-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--ps-light-gray);
-  background: white;
-  color: var(--ps-dark);
-  cursor: pointer;
   transition: var(--ps-transition);
 }
 
-.ps-pagination-btn:hover:not(.ps-pagination-disabled) {
-  background: var(--ps-light-gray);
-  color: var(--ps-primary);
-}
-
-.ps-pagination-disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.ps-pagination-page {
-  font-size: 0.9rem;
-  padding: 0 0.5rem;
-  color: var(--ps-gray);
+.ps-empty-action:hover {
+  color: var(--ps-primary-hover);
+  transform: translateY(-2px);
 }
 
 /* Modal mejorado */
@@ -1005,7 +1010,7 @@ export default {
 }
 
 .ps-modal-header::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -10px;
   left: 0;
@@ -1209,20 +1214,26 @@ export default {
 
 /* Animaciones */
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { 
+  from {
     opacity: 0;
     transform: translateY(20px);
   }
-  to { 
+  to {
     opacity: 1;
     transform: translateY(0);
   }
@@ -1234,18 +1245,18 @@ export default {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .ps-actions {
     width: 100%;
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .ps-search-container {
     width: 100%;
   }
-  
+
   .ps-detail-grid {
     grid-template-columns: 1fr;
   }
@@ -1255,30 +1266,24 @@ export default {
   .por-situar-container {
     padding: 1.5rem 1rem;
   }
-  
+
   .ps-title {
     font-size: 1.5rem;
   }
-  
-  .ps-pagination {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-  
+
   .ps-modal {
     width: 95%;
   }
-  
+
   .ps-modal-body {
     padding: 1.25rem 1rem;
   }
-  
+
   .ps-modal-footer {
     padding: 1rem;
     flex-direction: column;
   }
-  
+
   .ps-modal-btn {
     width: 100%;
     justify-content: center;

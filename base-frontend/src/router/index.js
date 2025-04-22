@@ -710,6 +710,14 @@ const routes = [
       requireLogin: true,
     },
   },
+  {
+    path: "/recuperar-contrasena", // Cambié a formato kebab-case
+    name: "RecuperarContrasena",
+    component: () => import("../views/RecuperacionContrasenaView.vue"),
+    meta: {
+      requireLogin: false // Esto DEBE ser false para una página de recuperación
+    }
+  }
 ];
 
 const router = createRouter({

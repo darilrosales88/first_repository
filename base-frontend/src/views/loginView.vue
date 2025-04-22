@@ -135,7 +135,15 @@
       </form>
 
       <div class="card-footer">
-        <p>¿Necesita ayuda? <a href="#" class="help-link">Contacte al soporte</a></p>
+        <p>¿Olvidaste la contraseña? 
+          <router-link 
+            :to="{ name: 'RecuperarContrasena' }" 
+            class="help-link"
+            @click.native="testLink"
+          >
+            Haga click aquí
+          </router-link>
+        </p>
       </div>
     </div>
   </div>
@@ -156,6 +164,17 @@ export default {
     };
   },
   methods: {
+
+    testLink() {
+    console.log('Router link clicked');
+    console.log('Current route:', this.$route);
+    console.log('Router instance:', this.$router);
+    this.$router.push({ name: 'RecuperarContrasena' }).catch(err => {
+      console.error('Navigation error:', err);
+    });
+  },
+
+
     async submitForm() {
       this.isLoading = true;
       axios.defaults.headers.common["Authorization"] = "";

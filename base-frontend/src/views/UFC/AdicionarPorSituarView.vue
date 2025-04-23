@@ -123,21 +123,24 @@
                 </select>
               </div>
 
-              <!-- Campo: producto -->
               <div class="ufc-input-group">
-                <label for="producto">Producto</label>
+                <label for="producto">Productos</label>
                 <div class="ufc-input-with-action">
                   <select
                     v-if="formData.estado === 'cargado'"
                     class="ufc-select"
-                    v-model="formData.producto"
-                    :required="formData.estado === 'cargado'">
-                    <option value="" disabled>Seleccione un producto</option>
+                    v-model="formData.productos"
+                    multiple
+                    :required="formData.estado === 'cargado' && formData.productos.length === 0">
+                    <option value="" disabled>Seleccione uno o más productos</option>
                     <option
                       v-for="producto in productos"
                       :key="producto.id"
                       :value="producto.id">
                       {{ producto.id }}-{{ producto.producto_name }} - {{ producto.producto_codigo }}
+                      <template v-if="producto.tipo_embalaje">
+                        (Embalaje: {{ producto.tipo_embalaje.nombre || producto.tipo_embalaje.nombre_embalaje || 'N/A' }})
+                      </template>
                     </option>
                   </select>
                   <div v-else class="ufc-disabled">
@@ -230,7 +233,7 @@ export default {
         tipo_equipo: "",
         operacion: "",
         estado: "cargado",
-        producto: "",
+        productos: [], 
         por_situar: 1,
         observaciones: "",
       },
@@ -272,19 +275,25 @@ export default {
     async getProductos() {
       this.loading = true;
       try {
-        let allProductos = [];
-        let nextPage = "/ufc/producto-vagon/";
-
-        while (nextPage) {
-          const response = await axios.get(nextPage);
-          allProductos = [...allProductos, ...response.data.results];
-          nextPage = response.data.next;
-        }
-
-        this.productos = allProductos;
+        const response = await axios.get("/ufc/producto-vagon/", {
+          params: {
+            include_details: true // Asegúrate que tu backend incluya los datos relacionados
+          }
+        });
+        
+        this.productos = response.data.results.map(p => {
+          // Asegurar que tipo_embalaje esté definido
+          const tipoEmbalaje = p.tipo_embalaje || {};
+          return {
+            ...p,
+            tipo_embalaje: {
+              nombre: tipoEmbalaje.nombre || tipoEmbalaje.nombre_embalaje || 'Sin embalaje'
+            }
+          };
+        });
       } catch (error) {
-        console.error("Error al obtener los productos:", error);
-        Swal.fire("Error", "Hubo un error al obtener los productos.", "error");
+        console.error("Error al obtener productos:", error);
+        Swal.fire("Error", "No se pudieron cargar los productos", "error");
       } finally {
         this.loading = false;
       }
@@ -319,7 +328,7 @@ export default {
 
     handleEstadoChange() {
       if (this.formData.estado !== 'cargado') {
-        this.formData.producto = '';
+        this.formData.productos = []; 
       }
     },
 
@@ -342,8 +351,8 @@ export default {
           throw new Error("El campo Operación es requerido");
         }
         
-        if (this.formData.estado === 'cargado' && !this.formData.producto) {
-          throw new Error("El campo Producto es requerido cuando el estado es Cargado");
+        if (this.formData.estado === 'cargado' && this.formData.productos.length === 0) {
+          throw new Error("Debe seleccionar al menos un producto cuando el estado es Cargado");
         }
         
         if (!this.formData.por_situar || this.formData.por_situar < 1) {
@@ -357,11 +366,10 @@ export default {
           tipo_equipo: this.formData.tipo_equipo,
           operacion: this.formData.operacion,
           estado: this.formData.estado,
-          producto: this.formData.estado === 'cargado' ? this.formData.producto : null,
+          producto: this.formData.productos, // Array de IDs de productos
           por_situar: this.formData.por_situar,
           observaciones: this.formData.observaciones,
         };
-
         // Enviar los datos al backend
         const response = await axios.post("/ufc/por-situar/", payload);
         
@@ -406,7 +414,7 @@ export default {
         tipo_equipo: "",
         operacion: "",
         estado: "cargado",
-        producto: "",
+        productos: [], // Cambiado a array vacío
         por_situar: 1,
         observaciones: "",
       };
@@ -432,6 +440,23 @@ export default {
 </script>
 
 <style scoped>
+.ufc-select[multiple] {
+  height: auto;
+  min-height: 100px;
+  padding: 8px;
+}
+
+.ufc-select[multiple] option {
+  padding: 6px 8px;
+  margin: 2px 0;
+  border-radius: 4px;
+}
+
+.ufc-select[multiple] option:checked {
+  background-color: #002a68;
+  color: white;
+}
+
 .ufc-form-container {
   font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;
   color: #333;

@@ -77,7 +77,12 @@
                 </span>
               </td>
               <td class="ps-td">{{ item.operacion }}</td>
-              <td class="ps-td">{{ item.producto_name || "-" }}</td>
+              <td class="ps-td">
+                <span v-if="item.productos_info && item.productos_info.length > 0">
+                  {{ getNombresProductos(item.productos_info) }}
+                </span>
+                <span v-else>-</span>
+              </td>
               <td class="ps-td">
                 <span class="ps-badge ps-badge-success">{{ item.situados }}</span>
               </td>
@@ -215,7 +220,7 @@
             <div class="ps-detail-card">
               <div class="ps-detail-card-header">
                 <i class="bi bi-clipboard2-data-fill"></i>
-                <h4>Estado y Operación</h4>
+                <h4>Estado,Operación y Producto</h4>
               </div>
               <div class="ps-detail-card-body">
                 <div class="ps-detail-item">
@@ -233,9 +238,18 @@
                 </div>
                 
                 <div class="ps-detail-item">
-                  <span class="ps-detail-label">Producto:</span>
-                  <span class="ps-detail-value">{{ currentRecord.producto_name || 'N/A' }}</span>
+                  <span class="ps-detail-label">Productos:</span>
+                  <span class="ps-detail-value">
+                    <template v-if="currentRecord.productos_info && currentRecord.productos_info.length > 0">
+                      <div v-for="producto in currentRecord.productos_info" :key="producto.id" class="producto-item">
+                        • {{ producto.nombre_producto }} 
+                        <span v-if="producto.tipo_embalaje">({{ producto.tipo_embalaje }})</span>
+                      </div>
+                    </template>
+                    <span v-else>N/A</span>
+                  </span>
                 </div>
+A
               </div>
             </div>
             
@@ -293,14 +307,7 @@
           <button class="ps-modal-btn ps-modal-btn-secondary" @click="closeModal">
             <i class="bi bi-x-circle"></i> Cerrar
           </button>
-          <router-link 
-            v-if="currentRecord.id"
-            :to="{ name: 'EditarSituados', params: { id: currentRecord.id } }"
-            class="ps-modal-btn ps-modal-btn-primary"
-            @click="closeModal"
-          >
-            <i class="bi bi-pencil-square"></i> Editar Registro
-          </router-link>
+          
         </div>
       </div>
     </div>
@@ -358,38 +365,43 @@ export default {
 
   methods: {
     async getPorSituar() {
-      this.loading = true;
-      try {
-        const response = await axios.get("http://127.0.0.1:8000/ufc/situados/");
-        this.totalItems = response.data.count;
-        if (
-          response.data &&
-          Array.isArray(response.data.results || response.data)
-        ) {
-          const data = response.data.results || response.data;
-          this.allRecords = data.map((item) => ({
-            id: item.id,
-            tipo_origen: item.tipo_origen || "",
-            origen: item.origen || "",
-            tipo_equipo: item.tipo_equipo || "",
-            estado: item.estado || "",
-            operacion: item.operacion || "",
-            producto_name: item.producto_name || "",
-            situados: item.situados || 0,
-            pendiente_proximo_dia: item.pendiente_proximo_dia || 0,
-            observaciones: item.observaciones || "",
-            created_at: item.created_at || null,
-          }));
+  this.loading = true;
+  try {
+    const response = await axios.get("http://127.0.0.1:8000/ufc/situados/");
+    this.totalItems = response.data.count;
+    
+    if (response.data && Array.isArray(response.data.results || response.data)) {
+      const data = response.data.results || response.data;
+      this.allRecords = data.map((item) => ({
+        id: item.id,
+        tipo_origen: item.tipo_origen || "",
+        origen: item.origen || "",
+        tipo_equipo: item.tipo_equipo || "",
+        estado: item.estado || "",
+        operacion: item.operacion || "",
+        productos_info: item.productos_info || [],
+        situados: parseInt(item.situados) || 0, // Convertir a número
+        pendiente_proximo_dia: parseInt(item.pendiente_proximo_dia) || 0, // Convertir a número
+        observaciones: item.observaciones || "",
+        created_at: item.created_at || null,
+      }));
 
-          this.registrosPorSituar = [...this.allRecords];
-        }
-      } catch (error) {
-        this.handleApiError(error, "cargar registros");
-        this.registrosPorSituar = [];
-      } finally {
-        this.loading = false;
-      }
-    },
+      this.registrosPorSituar = [...this.allRecords];
+    }
+  } catch (error) {
+    this.handleApiError(error, "cargar registros");
+    this.registrosPorSituar = [];
+  } finally {
+    this.loading = false;
+  }
+},
+
+getNombresProductos(productos) {
+    if (!productos || !Array.isArray(productos)) return "-";
+    return productos
+      .map(p => p.nombre_producto || `Producto ${p.id}`)
+      .join(", ");
+  },
 
     getStatusClass(status) {
       if (!status) return "default";
@@ -584,6 +596,14 @@ export default {
 </script>
 
 <style scoped>
+
+.producto-item {
+  padding: 0.25rem 0;
+  border-bottom: 1px dashed #eee;
+}
+.producto-item:last-child {
+  border-bottom: none;
+}
 /* Variables de color */
 :root {
   --ps-primary: #4361ee;

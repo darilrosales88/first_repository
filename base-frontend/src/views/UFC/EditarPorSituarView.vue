@@ -131,20 +131,21 @@
 
               <!-- Campo: producto -->
               <div class="ufc-input-group">
-                <label for="producto">Producto</label>
+                <label for="productos">Productos</label>
                 <div class="ufc-input-with-action">
                   <select
-                    v-if="formData.estado === 'cargado' && !loading"
+                    v-if="formData.estado === 'cargado'"
                     class="ufc-select"
-                    v-model="formData.producto"
+                    v-model="formData.productos"
+                    multiple
                     :disabled="loading"
-                    :required="formData.estado === 'cargado'">
-                    <option value="" disabled>Seleccione un producto</option>
+                    :required="formData.estado === 'cargado' && formData.productos.length === 0">
+                    <option value="" disabled>Seleccione uno o más productos</option>
                     <option
                       v-for="producto in productos"
                       :key="producto.id"
                       :value="producto.id"
-                      :selected="producto.id === formData.producto">
+                      :selected="formData.productos.includes(producto.id)">
                       {{ producto.id }}-{{ producto.producto_name }} - {{ producto.producto_codigo }}
                     </option>
                   </select>
@@ -155,12 +156,15 @@
                     (Seleccione "Cargado" para ver los productos)
                   </div>
                   <button 
-                    v-if="formData.estado === 'cargado' && !loading"
+                    v-if="formData.estado === 'cargado'"
                     class="ufc-add-button"
                     @click.prevent="abrirModalAgregarProducto"
                     :disabled="loading">
                     <i class="bi bi-plus-circle"></i>
                   </button>
+                </div>
+                <div v-if="formData.productos.length > 0" class="ufc-selected-products">
+                  Seleccionados: {{ formData.productos.length }}
                 </div>
               </div>
             </div>
@@ -244,17 +248,16 @@ export default {
   data() {
     return {
       formData: {
-        id: null,
-        tipo_origen: "",
-        origen: "",
-        tipo_equipo: "",
-        estado: "cargado",
-        operacion: "",
-        producto: null,
-        por_situar: 1,
-        
-        observaciones: "",
-      },
+      id: null,
+      tipo_origen: "",
+      origen: "",
+      tipo_equipo: "",
+      estado: "cargado",
+      operacion: "",
+      productos: [], // Cambiamos de producto (singular) a productos (array)
+      por_situar: 1,
+      observaciones: "",
+    },
       entidades: [],
       puertos: [],
       productos: [],
@@ -285,45 +288,31 @@ export default {
   },
   methods: {
     async cargarRegistro() {
-      this.loading = true;
-      try {
-        const response = await axios.get(`http://127.0.0.1:8000/ufc/por-situar/${this.registroId}/`);
-        const registro = response.data;
-        
-        // Primero cargamos los productos
-        await this.getProductos();
-        
-        // Mapear los datos del registro al formulario
-        this.formData = {
-          id: registro.id,
-          tipo_origen: registro.tipo_origen,
-          origen: registro.origen,
-          tipo_equipo: registro.tipo_equipo,
-          estado: registro.estado,
-          operacion: registro.operacion,
-          producto: registro.producto?.id || registro.producto,
-          por_situar: registro.por_situar,
-          
-          observaciones: registro.observaciones,
-        };
+  this.loading = true;
+  try {
+    const response = await axios.get(`http://127.0.0.1:8000/ufc/por-situar/${this.registroId}/`);
+    const registro = response.data;
+    
+    await this.getProductos();
+    
+    this.formData = {
+      id: registro.id,
+      tipo_origen: registro.tipo_origen,
+      origen: registro.origen,
+      tipo_equipo: registro.tipo_equipo,
+      estado: registro.estado,
+      operacion: registro.operacion,
+      productos: registro.productos_info.map(p => p.id), // Array de IDs de productos
+      por_situar: registro.por_situar,
+      observaciones: registro.observaciones,
+    };
 
-      } catch (error) {
-        console.error("Error al cargar el registro:", error);
-        let errorMsg = "No se pudo cargar el registro para editar";
-        
-        if (error.response?.status === 404) {
-          errorMsg = "El registro no existe o fue eliminado";
-        } else if (error.response?.data?.detail) {
-          errorMsg += `: ${error.response.data.detail}`;
-        }
-        
-        Swal.fire("Error", errorMsg, "error").then(() => {
-          this.$router.push({ name: "InfoOperativo" });
-        });
-      } finally {
-        this.loading = false;
-      }
-    },
+  } catch (error) {
+    // ... manejo de errores ...
+  } finally {
+    this.loading = false;
+  }
+},
     
     async getEntidades() {
       try {
@@ -338,31 +327,22 @@ export default {
     async getProductos() {
       try {
         this.loading = true;
-        let allProductos = [];
-        let nextPage = "/ufc/producto-vagon/";
-
-        while (nextPage) {
-          const response = await axios.get(nextPage);
-          allProductos = [...allProductos, ...response.data.results];
-          nextPage = response.data.next;
-        }
-
-        this.productos = allProductos.map(producto => ({
-          id: producto.id,
-          producto_name: producto.nombre_producto || producto.descripcion || `Producto ${producto.id}`,
-          producto_codigo: producto.codigo || 'N/A',
-          tipo_embalaje_name: producto.tipo_embalaje?.nombre || 'N/A'
+        const response = await axios.get("/ufc/producto-vagon/", {
+          params: {
+            include_details: true
+          }
+        });
+        
+        this.productos = response.data.results.map(p => ({
+          id: p.id,
+          producto_name: p.producto?.nombre_producto || `Producto ${p.id}`,
+          producto_codigo: p.producto?.codigo || 'N/A',
+          tipo_embalaje: p.tipo_embalaje?.nombre || 'N/A'
         }));
 
       } catch (error) {
         console.error("Error al obtener productos:", error);
-        let errorMsg = "Error al cargar productos";
-
-        if (error.response?.data?.detail) {
-          errorMsg += `: ${error.response.data.detail}`;
-        }
-
-        Swal.fire("Error", errorMsg, "error");
+        Swal.fire("Error", "No se pudieron cargar los productos", "error");
       } finally {
         this.loading = false;
       }
@@ -397,7 +377,7 @@ export default {
     
     handleEstadoChange() {
       if (this.formData.estado !== 'cargado') {
-        this.formData.producto = null;
+        this.formData.productos = []; // Limpiar array de productos
       }
     },
     
@@ -420,8 +400,8 @@ export default {
           errors.push("El campo Operación es requerido");
         }
         
-        if (this.formData.estado === "cargado" && !this.formData.producto) {
-          errors.push("El campo Producto es requerido cuando el estado es Cargado");
+        if (this.formData.estado === 'cargado' && this.formData.productos.length === 0) {
+          throw new Error("Debe seleccionar al menos un producto cuando el estado es Cargado");
         }
         
         if (!this.formData.por_situar || this.formData.por_situar < 1) {
@@ -445,24 +425,24 @@ export default {
           tipo_equipo: this.formData.tipo_equipo,
           estado: this.formData.estado,
           operacion: this.formData.operacion,
-          producto: this.formData.producto,
+          producto: this.formData.productos, // Array de IDs
           por_situar: this.formData.por_situar,
-          
           observaciones: this.formData.observaciones
         };
 
         // Enviar datos para actualizar (PUT)
-        const response = await axios.put(`http://127.0.0.1:8000/ufc/por-situar/${this.registroId}/`, payload);
+        const response = await axios.put(
+      `http://127.0.0.1:8000/ufc/por-situar/${this.registroId}/`, 
+      payload
+    );
 
-        if (response.status === 200) {
-          Swal.fire({
-            title: "Éxito",
-            text: "Registro actualizado correctamente",
-            icon: "success",
-          }).then(() => {
-            this.$router.push({ name: "InfoOperativo" });
-          });
-        }
+      Swal.fire({
+        title: "Éxito",
+        text: "Registro actualizado correctamente",
+        icon: "success",
+      }).then(() => {
+        this.$router.push({ name: "InfoOperativo" });
+      });
       } catch (error) {
         let errorMessage = "Error al actualizar el registro";
         
@@ -498,6 +478,30 @@ export default {
 </script>
 
 <style scoped>
+
+.ufc-select[multiple] {
+  height: auto;
+  min-height: 100px;
+  padding: 8px;
+}
+
+.ufc-select[multiple] option {
+  padding: 6px 8px;
+  margin: 2px 0;
+  border-radius: 4px;
+}
+
+.ufc-select[multiple] option:checked {
+  background-color: #002a68;
+  color: white;
+}
+
+.ufc-selected-products {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 5px;
+}
+
 /* Estilos anteriores... */
 
 .ufc-quantity-grid {

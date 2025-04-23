@@ -76,7 +76,12 @@
                 </span>
               </td>
               <td class="ps-td">{{ item.operacion }}</td>
-              <td class="ps-td">{{ item.producto_name || "-" }}</td>
+              <td class="ps-td">
+                  <span v-if="item.productos_info && item.productos_info.length > 0">
+                    {{ getNombresProductos(item.productos_info) }}
+                  </span>
+                  <span v-else>-</span>
+              </td>
               <td class="ps-td">
                 <span class="ps-badge">{{ item.por_situar }}</span>
               </td>
@@ -260,14 +265,7 @@
         <button class="ps-modal-btn ps-modal-btn-secondary" @click="closeModal">
           <i class="bi bi-x-circle"></i> Cerrar
         </button>
-        <router-link 
-          v-if="currentRecord.id"
-          :to="{ name: 'EditarPorSituar', params: { id: currentRecord.id } }"
-          class="ps-modal-btn ps-modal-btn-primary"
-          @click="closeModal"
-        >
-          <i class="bi bi-pencil-square"></i> Editar Registro
-        </router-link>
+        
       </div>
     </div>
   </div>
@@ -333,6 +331,14 @@ export default {
           this.loading = false;
           this.showErrorToast("No se pudieron cargar los registros");
         });
+    },
+
+    getNombresProductos(productos) {
+      if (!productos || !Array.isArray(productos)) return '-';
+      return productos
+        .filter(p => p && p.nombre_producto)
+        .map(p => p.nombre_producto)
+        .join(', ');
     },
 
     getStatusClass(status) {
@@ -510,6 +516,15 @@ export default {
 </script>
 
 <style scoped>
+
+.producto-item {
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed #eee;
+}
+.producto-item:last-child {
+  border-bottom: none;
+}
+
 /* Variables de color */
 :root {
   --ps-primary: #4361ee;

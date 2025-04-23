@@ -346,12 +346,72 @@ class SituadoCargaDescargaFilter(filters.FilterSet):
         
         
 class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
-    producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')
+    productos_info = serializers.SerializerMethodField()
+    producto = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=producto_en_vagon.objects.all(),
+        required=False
+    )
+    situados = serializers.IntegerField()
+    pendiente_proximo_dia = serializers.IntegerField()
+    
     class Meta:
         model = Situado_Carga_Descarga
-        fields = ('id','tipo_origen','origen', 'tipo_equipo', 'estado', 'operacion', 'producto','producto_name', 'situados','pendiente_proximo_dia')
-        filterset_class = SituadoCargaDescargaFilter
+        fields = ('id', 'tipo_origen', 'origen', 'tipo_equipo', 'estado', 
+                 'operacion', 'producto', 'productos_info', 'situados', 
+                 'pendiente_proximo_dia', 'observaciones')
+        extra_kwargs = {
+            'producto': {'required': False},
+            'observaciones': {'required': False, 'allow_null': True}
+        }
+
+    def get_productos_info(self, obj):
+        productos = obj.producto.all()
+        return [{
+            'id': p.id,
+            'nombre_producto': getattr(p.producto, 'nombre_producto', 'N/A'),
+            'tipo_embalaje': getattr(p.tipo_embalaje, 'nombre_embalaje', 'N/A'),
+            'unidad_medida': getattr(p.unidad_medida, 'nombre_unidad_medida', 'N/A'),
+            'cantidad': p.cantidad,
+            'estado': p.estado,
+            'contiene': p.contiene
+        } for p in productos]
         
+    def to_internal_value(self, data):
+        # Convertir los valores de string a integer antes de la validación
+        if 'situados' in data:
+            data['situados'] = int(data['situados']) if data['situados'] else 0
+        if 'pendiente_proximo_dia' in data:
+            data['pendiente_proximo_dia'] = int(data['pendiente_proximo_dia']) if data['pendiente_proximo_dia'] else 0
+        return super().to_internal_value(data)
+        
+    def validate(self, data):
+        # Validar que el producto sea opcional
+        if 'producto' not in data:
+            data['producto'] = []
+        return data
+
+    def create(self, validated_data):
+        # Extraer los productos si vienen en los datos
+        productos_data = validated_data.pop('producto', [])
+        instance = super().create(validated_data)
+        
+        # Asignar los productos al modelo
+        if productos_data:
+            instance.producto.set(productos_data)
+        return instance
+
+    def update(self, instance, validated_data):
+        # Extraer los productos si vienen en los datos
+        productos_data = validated_data.pop('producto', None)
+        
+        # Actualizar los otros campos
+        instance = super().update(instance, validated_data)
+        
+        # Actualizar los productos si se proporcionaron
+        if productos_data is not None:
+            instance.producto.set(productos_data)
+        return instance        
         
         
         
@@ -364,24 +424,47 @@ class PorSituarCargaDescargaFilter(filters.FilterSet):
 
 
 class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
-    producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')
+    productos_info = serializers.SerializerMethodField()
     tipo_origen_name = serializers.ReadOnlyField(source='tipo_origen')
+    producto = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=producto_en_vagon.objects.all(),
+        required=False
+    )
     
     class Meta:
         model = por_situar
-        fields = ('id','tipo_origen','tipo_origen_name','origen','tipo_equipo', 'estado', 'operacion', 'producto', 'por_situar','producto_name')
-        filterset_class = PorSituarCargaDescargaFilter
+        fields = ('id', 'tipo_origen', 'tipo_origen_name', 'origen', 'tipo_equipo', 
+                 'estado', 'operacion', 'producto', 'por_situar', 'productos_info', 'observaciones')
         extra_kwargs = {
-            'producto': {'allow_null': True, 'required': False},
-            'observaciones': {'allow_null': True, 'required': False}
+            'producto': {'required': False},
+            'observaciones': {'required': False, 'allow_null': True}
         }
 
-    def validate(self, data):
-        # Validar que el producto sea opcional
-        if 'producto' not in data:
-            data['producto'] = None
-            
-        return data
+    def get_productos_info(self, obj):
+        productos = obj.producto.all()
+        return [{
+            'id': p.id,
+            'nombre_producto': p.producto.nombre_producto,
+            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
+            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
+            'cantidad': p.cantidad,
+            'estado': p.estado,
+            'contiene': p.contiene
+        } for p in productos]
+
+    def create(self, validated_data):
+        productos_data = validated_data.pop('producto', [])
+        instance = por_situar.objects.create(**validated_data)
+        instance.producto.set(productos_data)
+        return instance
+
+    def update(self, instance, validated_data):
+        productos_data = validated_data.pop('producto', None)
+        instance = super().update(instance, validated_data)
+        if productos_data is not None:
+            instance.producto.set(productos_data)
+        return instance
 
 
 class PendienteArrastreFilter(filters.FilterSet):

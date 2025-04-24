@@ -78,16 +78,22 @@
               </td>
               <td class="ps-td">{{ item.operacion }}</td>
               <td class="ps-td">
-                <span v-if="item.productos_info && item.productos_info.length > 0">
+                <span
+                  v-if="item.productos_info && item.productos_info.length > 0"
+                >
                   {{ getNombresProductos(item.productos_info) }}
                 </span>
                 <span v-else>-</span>
               </td>
               <td class="ps-td">
-                <span class="ps-badge ps-badge-success">{{ item.situados }}</span>
+                <span class="ps-badge ps-badge-success">{{
+                  item.situados
+                }}</span>
               </td>
               <td class="ps-td">
-                <span class="ps-badge ps-badge-warning">{{ item.pendiente_proximo_dia }}</span>
+                <span class="ps-badge ps-badge-warning">{{
+                  item.pendiente_proximo_dia
+                }}</span>
               </td>
 
               <td class="ps-td ps-td-actions">
@@ -99,7 +105,10 @@
                   <i class="bi bi-eye"></i>
                 </button>
                 <router-link
-                  :to="{ name: 'EditarSituados', params: { id: item.id || 'default-id' } }"
+                  :to="{
+                    name: 'EditarSituados',
+                    params: { id: item.id || 'default-id' },
+                  }"
                   class="ps-action-btn ps-action-edit"
                   title="Editar"
                 >
@@ -166,7 +175,9 @@
         </span>
         <button
           class="ps-pagination-btn"
-          :class="{ 'ps-pagination-disabled': currentPage * itemsPerPage >= totalItems }"
+          :class="{
+            'ps-pagination-disabled': currentPage * itemsPerPage >= totalItems,
+          }"
           @click="nextPage"
         >
           <i class="bi bi-chevron-right"></i>
@@ -175,7 +186,11 @@
     </div>
 
     <!-- Modal de detalles - Versión mejorada con más color -->
-    <div v-if="showDetailsModal" class="ps-modal-overlay" @click.self="closeModal">
+    <div
+      v-if="showDetailsModal"
+      class="ps-modal-overlay"
+      @click.self="closeModal"
+    >
       <div class="ps-modal">
         <div class="ps-modal-header">
           <div class="ps-modal-header-content">
@@ -184,14 +199,16 @@
             </div>
             <div>
               <h2>Detalles del Registro</h2>
-              <p class="ps-modal-subtitle">Información completa del registro situado</p>
+              <p class="ps-modal-subtitle">
+                Información completa del registro situado
+              </p>
             </div>
           </div>
           <button class="ps-modal-close" @click="closeModal">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
-        
+
         <div class="ps-modal-body">
           <div class="ps-detail-grid">
             <div class="ps-detail-card">
@@ -202,21 +219,27 @@
               <div class="ps-detail-card-body">
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Tipo Origen:</span>
-                  <span class="ps-detail-value">{{ currentRecord.tipo_origen || 'N/A' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentRecord.tipo_origen || "N/A"
+                  }}</span>
                 </div>
-                
+
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Origen:</span>
-                  <span class="ps-detail-value">{{ currentRecord.origen || 'N/A' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentRecord.origen || "N/A"
+                  }}</span>
                 </div>
-                
+
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Tipo de Equipo:</span>
-                  <span class="ps-detail-value">{{ currentRecord.tipo_equipo || 'N/A' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentRecord.tipo_equipo || "N/A"
+                  }}</span>
                 </div>
               </div>
             </div>
-            
+
             <div class="ps-detail-card">
               <div class="ps-detail-card-header">
                 <i class="bi bi-clipboard2-data-fill"></i>
@@ -226,33 +249,50 @@
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Estado:</span>
                   <span class="ps-detail-value">
-                    <span :class="`ps-status ps-status-${getStatusClass(currentRecord.estado)}`">
-                      {{ currentRecord.estado || 'N/A' }}
+                    <span
+                      :class="`ps-status ps-status-${getStatusClass(
+                        currentRecord.estado
+                      )}`"
+                    >
+                      {{ currentRecord.estado || "N/A" }}
                     </span>
                   </span>
                 </div>
-                
+
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Operación:</span>
-                  <span class="ps-detail-value">{{ currentRecord.operacion || 'N/A' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentRecord.operacion || "N/A"
+                  }}</span>
                 </div>
-                
+
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Productos:</span>
                   <span class="ps-detail-value">
-                    <template v-if="currentRecord.productos_info && currentRecord.productos_info.length > 0">
-                      <div v-for="producto in currentRecord.productos_info" :key="producto.id" class="producto-item">
-                        • {{ producto.nombre_producto }} 
-                        <span v-if="producto.tipo_embalaje">({{ producto.tipo_embalaje }})</span>
+                    <template
+                      v-if="
+                        currentRecord.productos_info &&
+                        currentRecord.productos_info.length > 0
+                      "
+                    >
+                      <div
+                        v-for="producto in currentRecord.productos_info"
+                        :key="producto.id"
+                        class="producto-item"
+                      >
+                        • {{ producto.nombre_producto }}
+                        <span v-if="producto.tipo_embalaje"
+                          >({{ producto.tipo_embalaje }})</span
+                        >
                       </div>
                     </template>
                     <span v-else>N/A</span>
                   </span>
                 </div>
-A
+                A
               </div>
             </div>
-            
+
             <div class="ps-detail-card ps-detail-card-highlight">
               <div class="ps-detail-card-header">
                 <i class="bi bi-check-circle-fill"></i>
@@ -261,19 +301,21 @@ A
               <div class="ps-detail-card-body">
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Situados:</span>
-                  <span class="ps-detail-value ps-highlight-value ps-badge-success">
-                    {{ currentRecord.situados || '0' }}
+                  <span
+                    class="ps-detail-value ps-highlight-value ps-badge-success"
+                  >
+                    {{ currentRecord.situados || "0" }}
                   </span>
                 </div>
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Pendientes:</span>
                   <span class="ps-detail-value ps-badge-warning">
-                    {{ currentRecord.pendiente_proximo_dia || '0' }}
+                    {{ currentRecord.pendiente_proximo_dia || "0" }}
                   </span>
                 </div>
               </div>
             </div>
-            
+
             <div class="ps-detail-card ps-detail-card-full">
               <div class="ps-detail-card-header">
                 <i class="bi bi-chat-square-text-fill"></i>
@@ -281,11 +323,14 @@ A
               </div>
               <div class="ps-detail-card-body">
                 <div class="ps-detail-item">
-                  <span class="ps-detail-value">{{ currentRecord.observaciones || 'Ninguna observación registrada' }}</span>
+                  <span class="ps-detail-value">{{
+                    currentRecord.observaciones ||
+                    "Ninguna observación registrada"
+                  }}</span>
                 </div>
               </div>
             </div>
-            
+
             <div class="ps-detail-card">
               <div class="ps-detail-card-header">
                 <i class="bi bi-calendar-event-fill"></i>
@@ -295,19 +340,25 @@ A
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Fecha y Hora:</span>
                   <span class="ps-detail-value">
-                    {{ currentRecord.created_at ? formatDateTime(currentRecord.created_at) : 'N/A' }}
+                    {{
+                      currentRecord.created_at
+                        ? formatDateTime(currentRecord.created_at)
+                        : "N/A"
+                    }}
                   </span>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        
+
         <div class="ps-modal-footer">
-          <button class="ps-modal-btn ps-modal-btn-secondary" @click="closeModal">
+          <button
+            class="ps-modal-btn ps-modal-btn-secondary"
+            @click="closeModal"
+          >
             <i class="bi bi-x-circle"></i> Cerrar
           </button>
-          
         </div>
       </div>
     </div>
@@ -365,43 +416,46 @@ export default {
 
   methods: {
     async getPorSituar() {
-  this.loading = true;
-  try {
-    const response = await axios.get("http://127.0.0.1:8000/ufc/situados/");
-    this.totalItems = response.data.count;
-    
-    if (response.data && Array.isArray(response.data.results || response.data)) {
-      const data = response.data.results || response.data;
-      this.allRecords = data.map((item) => ({
-        id: item.id,
-        tipo_origen: item.tipo_origen || "",
-        origen: item.origen || "",
-        tipo_equipo: item.tipo_equipo || "",
-        estado: item.estado || "",
-        operacion: item.operacion || "",
-        productos_info: item.productos_info || [],
-        situados: parseInt(item.situados) || 0, // Convertir a número
-        pendiente_proximo_dia: parseInt(item.pendiente_proximo_dia) || 0, // Convertir a número
-        observaciones: item.observaciones || "",
-        created_at: item.created_at || null,
-      }));
+      this.loading = true;
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/ufc/situados/");
+        this.totalItems = response.data.count;
 
-      this.registrosPorSituar = [...this.allRecords];
-    }
-  } catch (error) {
-    this.handleApiError(error, "cargar registros");
-    this.registrosPorSituar = [];
-  } finally {
-    this.loading = false;
-  }
-},
+        if (
+          response.data &&
+          Array.isArray(response.data.results || response.data)
+        ) {
+          const data = response.data.results || response.data;
+          this.allRecords = data.map((item) => ({
+            id: item.id,
+            tipo_origen: item.tipo_origen || "",
+            origen: item.origen || "",
+            tipo_equipo: item.tipo_equipo || "",
+            estado: item.estado || "",
+            operacion: item.operacion || "",
+            productos_info: item.productos_info || [],
+            situados: parseInt(item.situados) || 0, // Convertir a número
+            pendiente_proximo_dia: parseInt(item.pendiente_proximo_dia) || 0, // Convertir a número
+            observaciones: item.observaciones || "",
+            created_at: item.created_at || null,
+          }));
 
-getNombresProductos(productos) {
-    if (!productos || !Array.isArray(productos)) return "-";
-    return productos
-      .map(p => p.nombre_producto || `Producto ${p.id}`)
-      .join(", ");
-  },
+          this.registrosPorSituar = [...this.allRecords];
+        }
+      } catch (error) {
+        this.handleApiError(error, "cargar registros");
+        this.registrosPorSituar = [];
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    getNombresProductos(productos) {
+      if (!productos || !Array.isArray(productos)) return "-";
+      return productos
+        .map((p) => p.nombre_producto || `Producto ${p.id}`)
+        .join(", ");
+    },
 
     getStatusClass(status) {
       if (!status) return "default";
@@ -420,12 +474,15 @@ getNombresProductos(productos) {
         this.loading = true;
         this.currentRecord = { ...item };
         this.showDetailsModal = true;
-        
-        const response = await axios.get(`http://127.0.0.1:8000/ufc/situados/${item.id}/`);
+
+        const response = await axios.get(
+          `http://127.0.0.1:8000/ufc/situados/${item.id}/`
+        );
         this.currentRecord = {
           ...response.data,
-          observaciones: response.data.observaciones || 'Ninguna observación registrada',
-          created_at: response.data.created_at || new Date().toISOString()
+          observaciones:
+            response.data.observaciones || "Ninguna observación registrada",
+          created_at: response.data.created_at || new Date().toISOString(),
         };
       } catch (error) {
         console.error("Error al cargar detalles:", error);
@@ -440,15 +497,15 @@ getNombresProductos(productos) {
       try {
         const date = new Date(dateString);
         const options = {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: true
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
         };
-        return date.toLocaleDateString('es-ES', options);
+        return date.toLocaleDateString("es-ES", options);
       } catch (e) {
         console.error("Error formateando fecha:", e);
         return dateString;
@@ -596,7 +653,6 @@ getNombresProductos(productos) {
 </script>
 
 <style scoped>
-
 .producto-item {
   padding: 0.25rem 0;
   border-bottom: 1px dashed #eee;
@@ -884,7 +940,7 @@ getNombresProductos(productos) {
   font-weight: 600;
   font-size: 0.8rem;
   background: var(--ps-primary);
-  color: white;
+  color: rgb(11, 7, 7);
 }
 
 .ps-status {
@@ -909,7 +965,7 @@ getNombresProductos(productos) {
 
 .ps-status-danger {
   background: rgba(247, 37, 133, 0.1);
-  color: #f72585;
+  color: #ff7403;
   border: 1px solid rgba(247, 37, 133, 0.2);
 }
 

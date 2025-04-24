@@ -5,8 +5,7 @@ from django.core.validators import RegexValidator
 
 
 
-#productos asociados a vagones cargados/descargados
-
+#productos asociados a vagones en trenes
 class producto_en_vagon(models.Model):
    
     ESTADO_CHOICES = [
@@ -34,6 +33,19 @@ class producto_en_vagon(models.Model):
     
     def __str__(self):
         return f"tipo de producto {self.get_contiene_display()} - {self.producto.nombre_producto}"
+    
+    @property
+    def embalaje_display(self):
+        return self.tipo_embalaje.nombre if self.tipo_embalaje else "Sin especificar"
+    
+    @property
+    def unidad_medida_display(self):
+        return self.unidad_medida.nombre if self.unidad_medida else "Sin especificar"
+    
+    def __str__(self):
+        return f"{self.producto.nombre_producto} - {self.embalaje_display}"
+    
+#productos asociados al estado vagones cargados/descargados
 class productos_vagones_cargados_descargados(models.Model):
     TIPO_PROD_CHOICES = [
         ('producto', 'Producto'),
@@ -67,7 +79,7 @@ class productos_vagones_cargados_descargados(models.Model):
     def __str__(self):
         return f"tipo de producto {self.get_tipo_producto_display()} - {self.producto.nombre_producto}"
 
-# Modelo para representar los vagones cargados/descargados
+# Modelo para representar el estado vagones cargados/descargados
 class vagon_cargado_descargado(models.Model):
     TIPO_ORIGEN_DESTINO_CHOICES = [
         ('puerto', 'Puerto'),
@@ -99,18 +111,81 @@ class vagon_cargado_descargado(models.Model):
     tipo_destino = models.CharField(choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
     destino = models.CharField(max_length=40)
     causas_incumplimiento = models.TextField(null=True, blank=True, max_length = 100)
-    producto = models.ForeignKey(productos_vagones_cargados_descargados, on_delete=models.CASCADE)
+    # Cambiamos ForeignKey a ManyToManyField, es posible que un vagon tenga mas de un producto
+    producto = models.ManyToManyField(
+        productos_vagones_cargados_descargados,
+        blank=True,
+        related_name='vagones_asociados'
+    )
+
+    registros_vagones = models.ManyToManyField(
+        'registro_vagones_cargados',
+        blank=True,
+        related_name='vagon_principal',
+        verbose_name="Registros de vagones asociados"
+    )
 
     class Meta:
         verbose_name_plural = "Vagones cargados/descargados"
-        #unique_together = [['cliente', 'destino']]
-        verbose_name = "Vagón cargado/descargado"
-         
+        verbose_name = "Vagón cargado/descargado"   
 
-    
+    def delete(self, *args, **kwargs):
+        # Eliminar primero los registros_vagones asociados
+        self.registros_vagones.all().delete()
+        # Luego eliminar el registro padre
+        super().delete(*args, **kwargs)     
+
     def __str__(self):
         return f"Vagón {self.id} - {self.get_estado_display()}"
+    
+# modelo para registrar los vagones asociados al estado vagones cargados/descargados
+class registro_vagones_cargados(models.Model):
+    # Opciones para el campo tipo_origen
+    TIPO_ORIGEN_CHOICES = [
+        ('puerto', 'Puerto'),
+        ('ac_ccd', 'Acceso comercial/CCD'),
+    ]
 
+    no_id = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        unique=True,
+        verbose_name="Número de identificación",
+        help_text="Valores definidos en el nomenclador de equipos ferroviarios (excepto 'Locomotora')"
+    )
+    
+    fecha_despacho = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Fecha de despacho"
+    )
+    
+    tipo_origen = models.CharField(choices=TIPO_ORIGEN_CHOICES, max_length = 50,null=True,blank=True)
+    
+    origen = models.CharField(max_length=40,null=True,blank=True)
+    
+    fecha_llegada = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Fecha de llegada"
+    )
+    
+    observaciones = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="Observaciones",
+        help_text="Admite letras, números y caracteres especiales"
+    )
+
+    class Meta:
+        verbose_name = "Registro de vagón cargado"
+        verbose_name_plural = "Registros de vagones cargados"
+        db_table = "registro_vagones_cargados"
+
+    def __str__(self):
+        return f"Vagón {self.no_id}" if self.no_id else "Registro sin ID"
+#************************************************************************************************************************************
 #Modelo para representar en_trenes
 class en_trenes(models.Model):
     
@@ -175,14 +250,15 @@ class en_trenes(models.Model):
 
 
 
-class por_situar_carga_descarga(models.Model):
+class por_situar(models.Model):
     
     t_origen = (
         ('puerto', 'Puerto'),
-        ('acceso comercial', 'Acceso Comercial')
+        ('ac_ccd', 'Acceso Comercial')
     )
     
     tipo_origen = models.CharField(max_length=100, choices=t_origen, verbose_name="Tipo de origen")
+    origen = models.CharField(max_length=200, verbose_name="Origen")
     
     t_equipo = (
         ('casilla', 'Casilla'),
@@ -217,24 +293,49 @@ class por_situar_carga_descarga(models.Model):
     
     operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion")
     
-    producto = models.ForeignKey(nom_producto, null=False, blank=False, on_delete=models.CASCADE)
+    producto = models.ManyToManyField(
+        producto_en_vagon,
+        blank=True,
+        related_name="productos_por_situar",
+        verbose_name="Productos"
+    )
     
-    por_situar = models.CharField( max_length=10, validators=[ RegexValidator(
-                regex='^-?\d+$',  # Acepta positivos y negativos
+    por_situar = models.CharField(
+        max_length=10,
+        validators=[
+            RegexValidator(
+                regex='^-?\d+$',
                 message='Solo se permiten números enteros (ej: 5, -10).',
                 code='numero_invalido'
             )
-        ]
+        ],
+        verbose_name="Por situar"
     )
+
+    observaciones = models.TextField(
+        verbose_name="Observaciones",
+        help_text="Ingrese observaciones adicionales. Admite letras, números y caracteres especiales.",
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        verbose_name = "Por situar"
+        verbose_name_plural = "Por situar"
+        ordering = ['tipo_origen', 'origen']
+
+    def __str__(self):
+        return f"{self.tipo_origen} - {self.origen} - {self.tipo_equipo}"
 
 class Situado_Carga_Descarga(models.Model):
     
     t_origen = (
         ('puerto', 'Puerto'),
-        ('acceso comercial', 'Acceso Comercial')
+        ('ac_ccd', 'Acceso Comercial')
     )
     
     tipo_origen = models.CharField(max_length=100, choices=t_origen, verbose_name="Tipo de origen", blank=True, null=True)
+    origen = models.CharField(max_length=200, verbose_name="Origen")
     
     t_equipo = (
         ('casilla', 'Casilla'),
@@ -269,29 +370,51 @@ class Situado_Carga_Descarga(models.Model):
     
     operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion", blank=True, null=True)
     
-    producto = models.ForeignKey(nom_producto, null=False, blank=False, on_delete=models.CASCADE)
+    producto = models.ManyToManyField(
+        producto_en_vagon,
+        blank=True,
+        related_name="productos_situados",
+        verbose_name="Productos"
+    )
     
-    situados = models.CharField( max_length=10, validators=[ RegexValidator(
-                regex='^-?\d+$',  # Acepta positivos y negativos
-                message='Solo se permiten números enteros (ej: 5, -10).',
-                code='numero_invalido'
+    situados = models.CharField(
+        max_length=10,
+        verbose_name="Cantidad de situados",
+        default="0",
+        validators=[
+            RegexValidator(
+                regex='^[0-9]+$',
+                message='Solo se permiten números positivos',
+                code='invalid_situados'
             )
         ]
     )
     
-    pendiente_proximo_dia = models.CharField( max_length=10, validators=[ RegexValidator(
-                regex='^-?\d+$',  # Acepta positivos y negativos
-                message='Solo se permiten números enteros (ej: 5, -10).',
-                code='numero_invalido'
+    pendiente_proximo_dia = models.CharField(
+        max_length=10,
+        verbose_name="Pendientes para el próximo día",
+        default="0",
+        validators=[
+            RegexValidator(
+                regex='^[0-9]+$',
+                message='Solo se permiten números positivos',
+                code='invalid_pendientes'
             )
         ]
+    )
+    
+    observaciones = models.TextField(
+        verbose_name="Observaciones",
+        help_text="Ingrese observaciones adicionales. Admite letras, números y caracteres especiales.",
+        blank=True,  # Permite que el campo esté vacío
+        null=True,   # Permite valores nulos en la base de datos
     )
     
 class arrastres(models.Model):
     
     TIPO_ORIGEN_DESTINO_CHOICES = [
         ('puerto', 'Puerto'),
-        ('ac_ccd', 'Acceso comercial/CCD'),
+        ('ac_ccd', ' comercial/AccesoCCD'),
     ]
     
     tipo_origen = models.CharField(
@@ -379,9 +502,8 @@ class arrastres(models.Model):
     
     def __str__(self):
         return f"Arrastre Pendiente{self.id} - {self.origen}"
-    
-    
-    
-    
-    
-    
+
+
+
+
+

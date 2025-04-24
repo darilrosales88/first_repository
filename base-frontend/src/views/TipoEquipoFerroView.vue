@@ -341,7 +341,7 @@ export default {
           `/api/tipos_equipos/?busqueda_tipo_equipo__tipo_carga=${this.searchQuery}`
         )
         .then((response) => {
-          this.tipos_equipos = response.data;
+          this.tipos_equipos = response.data.results;
           // Actualiza busqueda_existente basado en el resultado
           this.busqueda_existente = this.tipos_equipos.length > 0;
         })

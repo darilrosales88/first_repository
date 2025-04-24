@@ -50,6 +50,7 @@ OWN_APPS = [
     'ufc.apps.UfcConfig',
     
     
+    
 ]
 INSTALLED_APPS = BASE_APPS + THIRD_APPS + OWN_APPS
 
@@ -184,3 +185,21 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 #Habilitar la internacionalización en el proyecto Django:
 USE_I18N = True
+
+
+# Configuración de email (usando SMTP de Gmail como ejemplo)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'tu_email@gmail.com'
+EMAIL_HOST_PASSWORD = 'tu_password'  # Usa App Password si tienes 2FA
+
+# URL de tu frontend para el link de recuperación
+FRONTEND_URL = 'http://localhost:8080'
+
+# Configuración JWT
+import datetime
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(hours=1),
+}

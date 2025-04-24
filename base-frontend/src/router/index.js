@@ -684,6 +684,58 @@ const routes = [
       requireLogin: true,
     },
   },
+
+  /*A partir de aqui Cargado/descargado */
+
+  {
+    path: "/AdicionarVagonCargadoDescargado",
+    name: "AdicionarVagonCargadoDescargado",
+    component: () => import("../views/UFC/AdicionarCargadoDescargado.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  /*Hatsa aqui es Cargado/descargado */
+  {
+    path: "/AdicionarPorSituar",
+    name: "AdicionarPorSituar",
+    component: () => import("../views/UFC/AdicionarPorSituarView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/EditarPorSituar/:id",
+    name: "EditarPorSituar",
+    component: () => import("../views/UFC/EditarPorSituarView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/EditarSituados/:id",
+    name: "EditarSituados",
+    component: () => import("../views/UFC/EditarSituadosView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/AdicionarSituados",
+    name: "AdicionarSituados",
+    component: () => import("../views/UFC/AdicionarSituadosView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/recuperar-contrasena", // Cambié a formato kebab-case
+    name: "RecuperarContrasena",
+    component: () => import("../views/RecuperacionContrasenaView.vue"),
+    meta: {
+      requireLogin: false // Esto DEBE ser false para una página de recuperación
+    }
+  }
 ];
 
 const router = createRouter({

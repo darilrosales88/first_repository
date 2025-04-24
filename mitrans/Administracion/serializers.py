@@ -48,10 +48,11 @@ class UserPermissionSerializer(serializers.ModelSerializer):
 
     cargo_name = serializers.ReadOnlyField(source = 'cargo.nombre_cargo')
     entidad_name = serializers.ReadOnlyField(source = 'entidad.nombre')
+    role_name = serializers.ReadOnlyField(source='get_role_display')
 
     class Meta:
-        model = CustomUser
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'entidad','cargo','cargo_name','entidad_name', 'password', 'groups', 'user_permissions']
+        model = CustomUser        
+        fields = ['id', 'username', 'email', 'first_name', 'last_name','role','role_name', 'entidad','cargo','cargo_name','entidad_name', 'password', 'groups', 'user_permissions']
         extra_kwargs = {'password': {'write_only': True, 'required': False}}
     
 
@@ -60,6 +61,7 @@ class UserPermissionSerializer(serializers.ModelSerializer):
         instance.email = validated_data.get('email', instance.email)
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.role = validated_data.get('role', instance.role)
         instance.entidad = validated_data.get('entidad', instance.entidad)
         instance.cargo = validated_data.get('cargo', instance.cargo)
 

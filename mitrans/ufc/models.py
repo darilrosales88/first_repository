@@ -134,6 +134,7 @@ class vagon_cargado_descargado(models.Model):
     producto = models.ManyToManyField(
         producto_UFC,
         blank=True,
+        null=True,
         related_name='vagones_cargados'
     )
 
@@ -195,8 +196,9 @@ class vagones_productos(models.Model):
 
     #ManyToManyField, es posible que un vagon tenga mas de un producto
     producto = models.ManyToManyField(
-        productos_vagones_productos,
+        producto_UFC,
         blank=True,
+        null=True,
         related_name='producto_vagones_productos'
     )
     plan_anual = models.IntegerField()
@@ -254,8 +256,13 @@ class en_trenes(models.Model):
     )
     tipo_equipo=models.ForeignKey(nom_tipo_equipo_ferroviario, on_delete=models.CASCADE,default="", max_length=50)
     estado = models.CharField(default="" ,choices=ESTADO_CHOICES, max_length = 50)
-    producto = models.ForeignKey(producto_en_vagon,default='', on_delete=models.CASCADE,null=True, blank=True)
-    
+    producto = models.ManyToManyField(
+        producto_UFC,
+        blank=True,
+        null=True,
+        related_name="productos_en_trenes",
+        verbose_name="Productos"
+    )
     
     tipo_origen = models.CharField(default="",choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
     origen = models.CharField(default='',max_length=40)
@@ -329,8 +336,9 @@ class por_situar(models.Model):
     operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion")
     
     producto = models.ManyToManyField(
-        producto_en_vagon,
+        producto_UFC,
         blank=True,
+        null=True,
         related_name="productos_por_situar",
         verbose_name="Productos"
     )
@@ -406,7 +414,7 @@ class Situado_Carga_Descarga(models.Model):
     operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion", blank=True, null=True)
     
     producto = models.ManyToManyField(
-        producto_en_vagon,
+        producto_UFC,
         blank=True,
         related_name="productos_situados",
         verbose_name="Productos"
@@ -503,14 +511,13 @@ class arrastres(models.Model):
         null=True
     )
     
-    producto = models.ForeignKey(
-        nom_producto, 
-        on_delete=models.CASCADE, 
-        null=False, 
-        blank=False, 
-        verbose_name="Producto"
+    producto = models.ManyToManyField(
+        producto_UFC,
+        blank=True,
+        null=True,
+        related_name="productos_arrastres",
+        verbose_name="Productos"
     )
-    
     cantidad_vagones = models.CharField(
         max_length=10, 
         verbose_name="Cantidad de vagones",

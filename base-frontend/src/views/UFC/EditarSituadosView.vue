@@ -155,46 +155,49 @@
             <div>
               <!-- Campo: producto -->
               <div class="ufc-input-group">
-                <label for="producto">
-                  Producto
-                  <button
-                    class="ufc-add-button"
-                    @click.prevent="abrirModalAgregarProducto"
-                    :disabled="loading"
-                  >
-                    <i class="bi bi-plus-lg"></i>
-                  </button>
-                </label>
-                
-                <template v-if="formData.estado === 'cargado'">
-                  <select
-                    v-if="!loading"
-                    class="ufc-select"
-                    v-model="formData.producto"
-                    id="producto"
-                    name="producto"
-                    required
-                    :disabled="loading"
-                  >
-                    <option value="" disabled>Seleccione un producto</option>
-                    <option 
-                      v-for="producto in productos" 
-                      :key="producto.id"
-                      :value="producto.id"
+                  <label for="productos">
+                    Productos
+                  </label>
+                  <div class="ufc-input-with-action">
+                    <select
+                      v-if="formData.estado === 'cargado'"
+                      class="ufc-select"
+                      v-model="formData.productos"
+                      multiple
+                      id="productos"
+                      name="productos"
+                      :disabled="loading"
+                      :required="formData.estado === 'cargado' && formData.productos.length === 0"
                     >
-                      {{ producto.id }}-{{ producto.producto_name }} - {{ producto.producto_codigo }}
-                    </option>
-                  </select>
-                  <div v-else class="ufc-loading">
-                    <i class="bi bi-arrow-repeat"></i> Cargando productos...
+                      <option value="" disabled>Seleccione uno o más productos</option>
+                      <option 
+                        v-for="producto in productos" 
+                        :key="producto.id"
+                        :value="producto.id"
+                      >
+                        {{ producto.id }}-{{ producto.producto_name }} - {{ producto.producto_codigo }}
+                      </option>
+                    </select>
+                    <div v-else-if="loading" class="ufc-loading">
+                      <i class="bi bi-arrow-repeat"></i> Cargando productos...
+                    </div>
+                    <div v-else class="ufc-disabled">
+                      (Seleccione "Cargado" para ver los productos)
+                    </div>
+                    <button
+                      v-if="formData.estado === 'cargado'"
+                      class="ufc-add-button"
+                      @click.prevent="abrirModalAgregarProducto"
+                      :disabled="loading"
+                    >
+                      <i class="bi bi-plus-lg"></i>
+                    </button>
                   </div>
-                </template>
-                
-                <div v-else class="ufc-disabled">
-                  (Seleccione "Cargado" para ver los productos)
+                  <div v-if="formData.productos.length > 0" class="ufc-selected-products">
+                    Seleccionados: {{ formData.productos.length }}
+                  </div>
                 </div>
-              </div>
-              
+                              
               <ModalAgregarProducto
                 v-if="mostrarModal"
                 :visible="mostrarModal"
@@ -292,17 +295,17 @@ export default {
   data() {
     return {
       formData: {
-        id: null,
-        tipo_origen: "",
-        origen: "",
-        tipo_equipo: "",
-        estado: "cargado",
-        operacion: "",
-        producto: "",
-        situados: 0,
-        pendiente_proximo_dia: 0,
-        observaciones: "",
-      },
+      id: null,
+      tipo_origen: "",
+      origen: "",
+      tipo_equipo: "",
+      estado: "cargado",
+      operacion: "",
+      productos: [], // Cambiamos de producto (singular) a productos (array)
+      situados: 0,
+      pendiente_proximo_dia: 0,
+      observaciones: "",
+    },
       entidades: [],
       puertos: [],
       productos: [],
@@ -336,14 +339,11 @@ export default {
     async cargarRegistro() {
   this.loading = true;
   try {
-    // Primero cargamos los datos necesarios
     await Promise.all([this.getEntidades(), this.getPuertos(), this.getProductos()]);
     
-    // Luego obtenemos el registro
     const response = await axios.get(`http://127.0.0.1:8000/ufc/situados/${this.registroId}/`);
     const registro = response.data;
     
-    // Mapeamos los datos del registro al formulario
     this.formData = {
       id: registro.id,
       tipo_origen: registro.tipo_origen || "",
@@ -351,7 +351,7 @@ export default {
       tipo_equipo: registro.tipo_equipo || "",
       estado: registro.estado || "cargado",
       operacion: registro.operacion || "",
-      producto: registro.producto ? parseInt(registro.producto) : "",
+      productos: registro.productos_info ? registro.productos_info.map(p => p.id) : [], // Array de IDs
       situados: registro.situados || 0,
       pendiente_proximo_dia: registro.pendiente_proximo_dia || 0,
       observaciones: registro.observaciones || "",
@@ -365,27 +365,27 @@ export default {
   }
 },
 
-async getEntidades() {
-  try {
-    let allEntidades = [];
-    let nextPage = "/api/entidades/";
-    
-    while (nextPage) {
-      const response = await axios.get(nextPage);
-      allEntidades = [...allEntidades, ...response.data.results];
-      nextPage = response.data.next;
-    }
-    
-    this.entidades = allEntidades;
-    return allEntidades;
-  } catch (error) {
-    console.error("Error al obtener entidades:", error);
-    Swal.fire("Error", "No se pudieron obtener las entidades", "error");
-    return [];
-  }
-},
+    async getEntidades() {
+      try {
+        let allEntidades = [];
+        let nextPage = "/api/entidades/";
+        
+        while (nextPage) {
+          const response = await axios.get(nextPage);
+          allEntidades = [...allEntidades, ...response.data.results];
+          nextPage = response.data.next;
+        }
+        
+        this.entidades = allEntidades;
+        return allEntidades;
+      } catch (error) {
+        console.error("Error al obtener entidades:", error);
+        Swal.fire("Error", "No se pudieron obtener las entidades", "error");
+        return [];
+      }
+    },
 
-async getProductos() {
+    async getProductos() {
       try {
         this.loading = true;
         const response = await axios.get("/ufc/producto-vagon/", {
@@ -442,61 +442,53 @@ async getProductos() {
     },
     
     async submitForm() {
-  try {
-    this.loading = true;
-    
-    // Validación mejorada usando las opciones definidas en data()
-    const errors = [];
-    
-    // Validar tipo_origen
-    if (!this.formData.tipo_origen || !this.tipo_origen_options.some(opt => opt.id === this.formData.tipo_origen)) {
-      errors.push("Seleccione un tipo de origen válido");
-    }
-    
-    // Validar origen según el tipo seleccionado
-    if (!this.formData.origen) {
-      errors.push("El campo Origen es requerido");
-    } else if (this.formData.tipo_origen === 'ac_ccd') {
-      if (!this.entidades.some(e => e.nombre === this.formData.origen)) {
-        errors.push("Seleccione un origen válido para Acceso Comercial");
-      }
-    } else if (this.formData.tipo_origen === 'puerto') {
-      if (!this.puertos.some(p => p.nombre_puerto === this.formData.origen)) {
-        errors.push("Seleccione un puerto válido");
-      }
-    }
-    
-    // Validar tipo_equipo
-    if (!this.formData.tipo_equipo || !this.tipo_equipo_options.some(opt => opt.id === this.formData.tipo_equipo)) {
-      errors.push("Seleccione un tipo de equipo válido");
-    }
-    
-    // Validar operación
-    if (!this.formData.operacion || !this.t_operacion_options.some(opt => opt.id === this.formData.operacion)) {
-      errors.push("Seleccione una operación válida");
-    }
-    
-    // Validar producto si está cargado
-    if (this.formData.estado === "cargado") {
-      if (!this.formData.producto || !this.productos.some(p => p.id === this.formData.producto)) {
-        errors.push("Seleccione un producto válido cuando el estado es Cargado");
-      }
-    }
-    
-    // Validar números positivos
-    if (this.formData.situados === null || this.formData.situados < 1) {
-      errors.push("La cantidad de situados debe ser al menos 1");
-    }
+      try {
+        this.loading = true;
+        
+        // Validación mejorada
+        const errors = [];
+        
+        if (!this.formData.tipo_origen || !this.tipo_origen_options.some(opt => opt.id === this.formData.tipo_origen)) {
+          errors.push("Seleccione un tipo de origen válido");
+        }
+        
+        if (!this.formData.origen) {
+          errors.push("El campo Origen es requerido");
+        } else if (this.formData.tipo_origen === 'ac_ccd') {
+          if (!this.entidades.some(e => e.nombre === this.formData.origen)) {
+            errors.push("Seleccione un origen válido para Acceso Comercial");
+          }
+        } else if (this.formData.tipo_origen === 'puerto') {
+          if (!this.puertos.some(p => p.nombre_puerto === this.formData.origen)) {
+            errors.push("Seleccione un puerto válido");
+          }
+        }
+        
+        if (!this.formData.tipo_equipo || !this.tipo_equipo_options.some(opt => opt.id === this.formData.tipo_equipo)) {
+          errors.push("Seleccione un tipo de equipo válido");
+        }
+        
+        if (!this.formData.operacion || !this.t_operacion_options.some(opt => opt.id === this.formData.operacion)) {
+          errors.push("Seleccione una operación válida");
+        }
+        
+        if (this.formData.estado === "cargado") {
+          if (!this.formData.producto || !this.productos.some(p => p.id === this.formData.producto)) {
+            errors.push("Seleccione un producto válido cuando el estado es Cargado");
+          }
+        }
+        
+        if (this.formData.situados === null || this.formData.situados < 1) {
+          errors.push("La cantidad de situados debe ser al menos 1");
+        }
 
-    if (this.formData.pendiente_proximo_dia === null || this.formData.pendiente_proximo_dia < 0) {
-      errors.push("Los pendientes al próximo día no pueden ser negativos");
-    }
+        if (this.formData.pendiente_proximo_dia === null || this.formData.pendiente_proximo_dia < 0) {
+          errors.push("Los pendientes al próximo día no pueden ser negativos");
+        }
 
-    if (errors.length > 0) {
-      throw new Error(errors.join("\n"));
-    }
-
-    
+        if (errors.length > 0) {
+          throw new Error(errors.join("\n"));
+        }
 
         // Preparar datos para enviar
         const payload = {
@@ -505,7 +497,7 @@ async getProductos() {
           tipo_equipo: this.formData.tipo_equipo,
           estado: this.formData.estado,
           operacion: this.formData.operacion,
-          producto: this.formData.producto,
+          productos: this.formData.productos, // Enviamos el array de IDs
           situados: this.formData.situados,
           pendiente_proximo_dia: this.formData.pendiente_proximo_dia,
           observaciones: this.formData.observaciones
@@ -558,6 +550,35 @@ async getProductos() {
 </script>
 
 <style scoped>
+
+.ufc-select[multiple] {
+  height: auto;
+  min-height: 100px;
+  padding: 8px;
+}
+
+.ufc-select[multiple] option {
+  padding: 6px 8px;
+  margin: 2px 0;
+  border-radius: 4px;
+}
+
+.ufc-select[multiple] option:checked {
+  background-color: #002a68;
+  color: white;
+}
+
+.ufc-selected-products {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 5px;
+}
+
+.ufc-input-with-action {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 /* Estilos idénticos al formulario anterior */
 .ufc-form-container {
   font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;

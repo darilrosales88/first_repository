@@ -164,27 +164,23 @@
             <div>
               <!-- Campo: producto -->
               <div class="ufc-input-group">
-                <label for="producto">
-                  Producto
-                </label>
+                <label for="productos">Productos</label>
                 <div class="ufc-input-with-action">
                   <select
-                    v-if="formData.estado === 'cargado' && !loadingProducts"
+                    v-if="formData.estado === 'cargado'"
                     class="ufc-select"
-                    v-model="formData.producto"
-                    id="producto"
-                    name="producto"
-                    required
-                    :disabled="isSubmitting"
+                    v-model="formData.productos"
+                    multiple
+                    :disabled="isSubmitting || loadingProducts"
+                    :required="formData.estado === 'cargado' && formData.productos.length === 0"
                   >
-                    <option value="" disabled>Seleccione un producto</option>
+                    <option value="" disabled>Seleccione uno o más productos</option>
                     <option
                       v-for="producto in productos"
                       :key="producto.id"
                       :value="producto.id"
                     >
-                      {{ producto.id }}-{{ producto.producto_name }} -
-                      {{ producto.producto_codigo }}
+                      {{ producto.id }}-{{ producto.producto_name }} - {{ producto.producto_codigo }}
                     </option>
                   </select>
                   <button
@@ -201,6 +197,9 @@
                 </div>
                 <div v-if="formData.estado !== 'cargado'" class="ufc-disabled">
                   (Seleccione "Cargado" para ver los productos)
+                </div>
+                <div v-if="formData.productos.length > 0" class="ufc-selected-products">
+                  Seleccionados: {{ formData.productos.length }}
                 </div>
               </div>
               
@@ -308,13 +307,13 @@ export default {
   },
   data() {
     return {
-      formData: {
+        formData: {
         tipo_origen: "",
         origen: "",
         tipo_equipo: "",
         estado: "cargado",
         operacion: "",
-        producto: "",
+        productos: [], // Cambiamos de producto (singular) a productos (array)
         situados: 1,
         pendiente_proximo_dia: 0,
         observaciones: "",
@@ -387,17 +386,13 @@ export default {
     },
 
     handleTipoOrigenChange() {
-  // Resetear el origen cuando cambia el tipo
-  this.formData.origen = "";
-  
-  // Actualizar las condiciones para los selects de origen
-  // (ya que ahora los valores son 'ac_ccd' y 'puerto')
-  if (this.formData.tipo_origen === 'ac_ccd') {
-    this.formData.tipo_origen = 'ac_ccd';
-  } else if (this.formData.tipo_origen === 'puerto') {
-    this.formData.tipo_origen = 'puerto';
-  }
-},
+      this.formData.origen = "";
+      if (this.formData.tipo_origen === 'ac_ccd') {
+        this.formData.tipo_origen = 'ac_ccd';
+      } else if (this.formData.tipo_origen === 'puerto') {
+        this.formData.tipo_origen = 'puerto';
+      }
+    },
 
     abrirModalAgregarProducto() {
       this.mostrarModal = true;
@@ -441,10 +436,8 @@ export default {
           errors.push("El campo Operación es requerido");
         }
 
-        if (this.formData.estado === "cargado" && !this.formData.producto) {
-          errors.push(
-            "El campo Producto es requerido cuando el estado es Cargado"
-          );
+        if (this.formData.estado === "cargado" && this.formData.productos.length === 0) {
+          throw new Error("Debe seleccionar al menos un producto cuando el estado es Cargado");
         }
 
         if (this.formData.situados === null || this.formData.situados < 1) {
@@ -471,12 +464,11 @@ export default {
           tipo_equipo: this.formData.tipo_equipo,
           estado: this.formData.estado,
           operacion: this.formData.operacion,
-          producto: this.formData.producto,
+          producto: this.formData.productos, // Array de IDs
           situados: this.formData.situados,
           pendiente_proximo_dia: this.formData.pendiente_proximo_dia,
           observaciones: this.formData.observaciones,
         };
-
         // Configuración de axios para manejar mejor los errores
         const config = {
           headers: {
@@ -543,7 +535,7 @@ export default {
         tipo_equipo: "",
         estado: "cargado",
         operacion: "",
-        producto: "",
+        productos: [], // Resetear a array vacío
         situados: 1,
         pendiente_proximo_dia: 0,
         observaciones: "",
@@ -572,6 +564,30 @@ export default {
 
 
 <style scoped>
+
+.ufc-select[multiple] {
+  height: auto;
+  min-height: 100px;
+  padding: 8px;
+}
+
+.ufc-select[multiple] option {
+  padding: 6px 8px;
+  margin: 2px 0;
+  border-radius: 4px;
+}
+
+.ufc-select[multiple] option:checked {
+  background-color: #002a68;
+  color: white;
+}
+
+.ufc-selected-products {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 5px;
+}
+
 .ufc-form-container {
   font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;
   color: #333;

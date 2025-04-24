@@ -76,9 +76,17 @@
                 </span>
               </td>
               <td class="ps-td">{{ item.operacion }}</td>
-              <td class="ps-td">{{ item.producto_name || "-" }}</td>
               <td class="ps-td">
-                <span class="ps-badge">{{ item.por_situar }}</span>
+                <span
+                  v-if="item.productos_info && item.productos_info.length > 0"
+                >
+                  {{ getNombresProductos(item.productos_info) }}
+                </span>
+                <span v-else>-</span>
+              </td>
+              <td class="ps-td">
+                {{ item.por_situar
+                }}<!-- Tuve que quitar la etiqueta span badge porque esta tiene el estilo de los textos en blanco -->
               </td>
 
               <td class="ps-td ps-td-actions">
@@ -143,134 +151,156 @@
     </div>
 
     <!-- Modal de detalles - Versión mejorada con más color -->
-    <div v-if="showDetailsModal" class="ps-modal-overlay" @click.self="closeModal">
-    <div class="ps-modal">
-      <div class="ps-modal-header">
-        <div class="ps-modal-header-content">
-          <div class="ps-modal-icon-container">
-            <i class="bi bi-info-circle-fill ps-modal-icon"></i>
+    <div
+      v-if="showDetailsModal"
+      class="ps-modal-overlay"
+      @click.self="closeModal"
+    >
+      <div class="ps-modal">
+        <div class="ps-modal-header">
+          <div class="ps-modal-header-content">
+            <div class="ps-modal-icon-container">
+              <i class="bi bi-info-circle-fill ps-modal-icon"></i>
+            </div>
+            <div>
+              <h2>Detalles del Registro</h2>
+              <p class="ps-modal-subtitle">
+                Información completa del registro seleccionado
+              </p>
+            </div>
           </div>
-          <div>
-            <h2>Detalles del Registro</h2>
-            <p class="ps-modal-subtitle">Información completa del registro seleccionado</p>
-          </div>
+          <button class="ps-modal-close" @click="closeModal">
+            <i class="bi bi-x-lg"></i>
+          </button>
         </div>
-        <button class="ps-modal-close" @click="closeModal">
-          <i class="bi bi-x-lg"></i>
-        </button>
-      </div>
-      
-      <div class="ps-modal-body">
-        <div class="ps-detail-grid">
-          <div class="ps-detail-card">
-            <div class="ps-detail-card-header">
-              <i class="bi bi-tag-fill"></i>
-              <h4>Información Básica</h4>
-            </div>
-            <div class="ps-detail-card-body">
-              <div class="ps-detail-item">
-                <span class="ps-detail-label">Tipo Origen:</span>
-                <span class="ps-detail-value">{{ currentRecord.tipo_origen || 'N/A' }}</span>
+
+        <div class="ps-modal-body">
+          <div class="ps-detail-grid">
+            <div class="ps-detail-card">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-tag-fill"></i>
+                <h4>Información Básica</h4>
               </div>
-              
-              <div class="ps-detail-item">
-                <span class="ps-detail-label">Origen:</span>
-                <span class="ps-detail-value">{{ currentRecord.origen || 'N/A' }}</span>
-              </div>
-              
-              <div class="ps-detail-item">
-                <span class="ps-detail-label">Tipo de Equipo:</span>
-                <span class="ps-detail-value">{{ currentRecord.tipo_equipo || 'N/A' }}</span>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Tipo Origen:</span>
+                  <span class="ps-detail-value">{{
+                    currentRecord.tipo_origen || "N/A"
+                  }}</span>
+                </div>
+
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Origen:</span>
+                  <span class="ps-detail-value">{{
+                    currentRecord.origen || "N/A"
+                  }}</span>
+                </div>
+
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Tipo de Equipo:</span>
+                  <span class="ps-detail-value">{{
+                    currentRecord.tipo_equipo || "N/A"
+                  }}</span>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div class="ps-detail-card">
-            <div class="ps-detail-card-header">
-              <i class="bi bi-clipboard2-data-fill"></i>
-              <h4>Estado y Operación</h4>
-            </div>
-            <div class="ps-detail-card-body">
-              <div class="ps-detail-item">
-                <span class="ps-detail-label">Estado:</span>
-                <span class="ps-detail-value">
-                  <span :class="`ps-status ps-status-${getStatusClass(currentRecord.estado)}`">
-                    {{ currentRecord.estado || 'N/A' }}
+
+            <div class="ps-detail-card">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-clipboard2-data-fill"></i>
+                <h4>Estado y Operación</h4>
+              </div>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Estado:</span>
+                  <span class="ps-detail-value">
+                    <span
+                      :class="`ps-status ps-status-${getStatusClass(
+                        currentRecord.estado
+                      )}`"
+                    >
+                      {{ currentRecord.estado || "N/A" }}
+                    </span>
                   </span>
-                </span>
-              </div>
-              
-              <div class="ps-detail-item">
-                <span class="ps-detail-label">Operación:</span>
-                <span class="ps-detail-value">{{ currentRecord.operacion || 'N/A' }}</span>
-              </div>
-              
-              <div class="ps-detail-item">
-                <span class="ps-detail-label">Producto:</span>
-                <span class="ps-detail-value">{{ currentRecord.producto_name || 'N/A' }}</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="ps-detail-card ps-detail-card-highlight">
-            <div class="ps-detail-card-header">
-              <i class="bi bi-exclamation-square-fill"></i>
-              <h4>Cantidad</h4>
-            </div>
-            <div class="ps-detail-card-body">
-              <div class="ps-detail-item">
-                <span class="ps-detail-label">Por Situar:</span>
-                <span class="ps-detail-value ps-highlight-value">
-                  {{ currentRecord.por_situar || '0' }}
-                </span>
+                </div>
+
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Operación:</span>
+                  <span class="ps-detail-value">{{
+                    currentRecord.operacion || "N/A"
+                  }}</span>
+                </div>
+
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Producto:</span>
+                  <span class="ps-detail-value">{{
+                    currentRecord.producto || "N/A"
+                  }}</span>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div class="ps-detail-card ps-detail-card-full">
-            <div class="ps-detail-card-header">
-              <i class="bi bi-chat-square-text-fill"></i>
-              <h4>Observaciones</h4>
-            </div>
-            <div class="ps-detail-card-body">
-              <div class="ps-detail-item">
-                <span class="ps-detail-value">{{ currentRecord.observaciones || 'Ninguna observación registrada' }}</span>
+
+            <div class="ps-detail-card ps-detail-card-highlight">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-exclamation-square-fill"></i>
+                <h4>Cantidad</h4>
+              </div>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Por Situar:</span>
+                  <span class="ps-detail-value ps-highlight-value">
+                    {{ currentRecord.por_situar || "0" }}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div class="ps-detail-card">
-            <div class="ps-detail-card-header">
-              <i class="bi bi-calendar-event-fill"></i>
-              <h4>Meta Información</h4>
+
+            <div class="ps-detail-card ps-detail-card-full">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-chat-square-text-fill"></i>
+                <h4>Observaciones</h4>
+              </div>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-value">{{
+                    currentRecord.observaciones ||
+                    "Ninguna observación registrada"
+                  }}</span>
+                </div>
+              </div>
             </div>
-            <div class="ps-detail-card-body">
-              <div class="ps-detail-item">
-                <span class="ps-detail-label">Fecha Creación:</span>
-                <span class="ps-detail-value">
-                  {{ currentRecord.created_at ? formatDateTime(currentRecord.created_at) : 'N/A' }}
-                </span>
+
+            <div class="ps-detail-card">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-calendar-event-fill"></i>
+                <h4>Meta Información</h4>
+              </div>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Fecha Creación:</span>
+                  <span class="ps-detail-value">
+                    {{
+                      currentRecord.created_at
+                        ? formatDateTime(currentRecord.created_at)
+                        : "N/A"
+                    }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      
-      <div class="ps-modal-footer">
-        <button class="ps-modal-btn ps-modal-btn-secondary" @click="closeModal">
-          <i class="bi bi-x-circle"></i> Cerrar
-        </button>
-        <router-link 
-          v-if="currentRecord.id"
-          :to="{ name: 'EditarPorSituar', params: { id: currentRecord.id } }"
-          class="ps-modal-btn ps-modal-btn-primary"
-          @click="closeModal"
-        >
-          <i class="bi bi-pencil-square"></i> Editar Registro
-        </router-link>
+
+        <div class="ps-modal-footer">
+          <button
+            class="ps-modal-btn ps-modal-btn-secondary"
+            @click="closeModal"
+          >
+            <i class="bi bi-x-circle"></i> Cerrar
+          </button>
+        </div>
       </div>
     </div>
-  </div>
   </div>
 </template>
 
@@ -335,6 +365,14 @@ export default {
         });
     },
 
+    getNombresProductos(productos) {
+      if (!productos || !Array.isArray(productos)) return "-";
+      return productos
+        .filter((p) => p && p.nombre_producto)
+        .map((p) => p.nombre_producto)
+        .join(", ");
+    },
+
     getStatusClass(status) {
       if (!status) return "default";
       const statusLower = status.toLowerCase();
@@ -352,14 +390,17 @@ export default {
       try {
         this.currentRecord = { ...item };
         this.showDetailsModal = true;
-        
-        const response = await axios.get(`http://127.0.0.1:8000/ufc/por-situar/${item.id}/`);
+
+        const response = await axios.get(
+          `http://127.0.0.1:8000/ufc/por-situar/${item.id}/`
+        );
         this.currentRecord = {
           ...response.data,
           // Asegurar que observaciones tenga un valor
-          observaciones: response.data.observaciones || 'Ninguna observación registrada',
+          observaciones:
+            response.data.observaciones || "Ninguna observación registrada",
           // Formatear la fecha de creación
-          created_at: response.data.created_at || new Date().toISOString()
+          created_at: response.data.created_at || new Date().toISOString(),
         };
       } catch (error) {
         console.error("Error al cargar detalles:", error);
@@ -374,15 +415,15 @@ export default {
       try {
         const date = new Date(dateString);
         const options = {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: true
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
         };
-        return date.toLocaleDateString('es-ES', options);
+        return date.toLocaleDateString("es-ES", options);
       } catch (e) {
         console.error("Error formateando fecha:", e);
         return dateString; // Retorna el valor original si hay error
@@ -390,14 +431,15 @@ export default {
     },
 
     getStatusClass(status) {
-      if (!status) return 'default';
+      if (!status) return "default";
       const statusLower = status.toLowerCase();
-      
-      if (statusLower.includes('activo')) return 'success';
-      if (statusLower.includes('pendiente')) return 'warning';
-      if (statusLower.includes('inactivo') || statusLower.includes('cancelado')) return 'danger';
-      
-      return 'info';
+
+      if (statusLower.includes("activo")) return "success";
+      if (statusLower.includes("pendiente")) return "warning";
+      if (statusLower.includes("inactivo") || statusLower.includes("cancelado"))
+        return "danger";
+
+      return "info";
     },
 
     closeModal() {
@@ -510,6 +552,14 @@ export default {
 </script>
 
 <style scoped>
+.producto-item {
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed #eee;
+}
+.producto-item:last-child {
+  border-bottom: none;
+}
+
 /* Variables de color */
 :root {
   --ps-primary: #4361ee;

@@ -36,7 +36,7 @@
         <table class="ps-table">
           <thead>
             <tr>
-              <th class="ps-th">#</th>
+              
               <th class="ps-th">Tipo Origen</th>
               <th class="ps-th">Origen</th>
               <th class="ps-th">Tipo Equipo</th>
@@ -65,7 +65,7 @@
               :key="item.id"
               class="ps-tr"
             >
-              <td class="ps-td ps-td-index">{{ index + 1 }}</td>
+              
               <td class="ps-td">{{ item.tipo_origen }}</td>
               <td class="ps-td">{{ item.origen }}</td>
               <td class="ps-td">{{ item.tipo_equipo }}</td>
@@ -96,33 +96,36 @@
                 }}</span>
               </td>
 
-              <td class="ps-td ps-td-actions">
-                <button
-                  @click="viewDetails(item)"
-                  class="ps-action-btn ps-action-view"
-                  title="Ver detalles"
-                >
-                  <i class="bi bi-eye"></i>
-                </button>
-                <router-link
-                  :to="{
-                    name: 'EditarSituados',
-                    params: { id: item.id || 'default-id' },
-                  }"
-                  class="ps-action-btn ps-action-edit"
-                  title="Editar"
-                >
-                  <i class="bi bi-pencil"></i>
-                </router-link>
-                <button
-                  @click="confirmDelete(item.id)"
-                  class="ps-action-btn ps-action-delete"
-                  title="Eliminar"
-                  :disabled="loading"
-                >
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
+              <!-- En la parte de las acciones de la tabla (dentro del <td>) -->
+<td class="ps-td ps-td-actions">
+  <div class="d-flex">
+    <button
+      @click="viewDetails(item)"
+      class="btn btn-sm btn-outline-info me-2"
+      title="Ver detalles"
+    >
+      <i class="bi bi-eye-fill"></i>
+    </button>
+    <router-link
+      :to="{
+        name: 'EditarSituados',
+        params: { id: item.id || 'default-id' },
+      }"
+      class="btn btn-sm btn-outline-warning me-2"
+      title="Editar"
+    >
+      <i class="bi bi-pencil-square"></i>
+    </router-link>
+    <button
+      @click="confirmDelete(item.id)"
+      class="btn btn-sm btn-outline-danger"
+      title="Eliminar"
+      :disabled="loading"
+    >
+      <i class="bi bi-trash"></i>
+    </button>
+  </div>
+</td>
             </tr>
 
             <!-- Estado vacío -->
@@ -653,6 +656,53 @@ export default {
 </script>
 
 <style scoped>
+/* Estilos para los botones */
+.btn-outline-info {
+  color: #0dcaf0;
+  border-color: #0dcaf0;
+}
+
+.btn-outline-warning {
+  color: #ffc107;
+  border-color: #ffc107;
+}
+
+.btn-outline-danger {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 0.2rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.btn i {
+  font-size: 1rem;
+}
+
+.me-2 {
+  margin-right: 0.5rem !important;
+}
+
+.ps-td-actions {
+  white-space: nowrap;
+}
+
+
 .producto-item {
   padding: 0.25rem 0;
   border-bottom: 1px dashed #eee;

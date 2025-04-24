@@ -619,6 +619,23 @@ const routes = [
     },
   },
   {
+    path: "/PendientesArrastre",
+    name: "PendientesArrastre",
+    component: () => import("../components/PendientesArrastre.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/AgregarArrastre",
+    name: "AgregarArrastre",
+    component: () => import("../views/UFC/AgregarArrastre.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+
+  {
     path: "/AdicionarTipoEmbalaje",
     name: "AdicionarTipoEmbalaje",
     component: () => import("../views/AdicionarTipoEmbalajeView.vue"),
@@ -635,7 +652,7 @@ const routes = [
       requireLogin: true,
     },
   },
-
+  
   {
     path: "/InfoOperativo",
     name: "InfoOperativo",
@@ -652,6 +669,7 @@ const routes = [
       requireLogin: true,
     },
   },
+  
   {
     path: "/AdicionarProductoVagon",
     name: "AdicionarProductoVagon",

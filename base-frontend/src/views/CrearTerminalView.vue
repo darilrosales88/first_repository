@@ -205,7 +205,7 @@ export default {
   async getPuertos() {
       try {
         const response = await axios.get('/api/puertos/');
-        this.puertoOptions = response.data;
+        this.puertoOptions = response.data.results;
       } catch (error) {
         console.error('Error al obtener los puertos:', error);
       }
@@ -217,7 +217,7 @@ export default {
     }
 
     const payload = {
-      nombre_terminal: this.nombre_terminal,
+      nombre_terminal: this.nombre_terminal.results,
       puerto: this.puerto,
       capacidad_almacen_importacion: parseFloat(this.capacidad_almacen_importacion).toFixed(2),
       capacidad_almacen_exportacion: parseFloat(this.capacidad_almacen_exportacion).toFixed(2),

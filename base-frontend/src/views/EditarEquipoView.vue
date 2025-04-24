@@ -197,7 +197,7 @@ export default {
     async getTiposEquipos() {
       try {
         const response = await axios.get('/api/tipos_equipos/');
-        this.tipos_equipos = response.data;
+        this.tipos_equipos = response.data.results;
       } catch (error) {
         console.error('Error al obtener los tipos de equipos ferroviarios:', error);
       }

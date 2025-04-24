@@ -11,6 +11,7 @@ import EditGroup from "@/views/EditGroup.vue";
 import CreateGroup from "@/views/CreateGroup.vue";
 import TrazasAuditoria from "@/views/TrazasAuditoria.vue";
 import NavbarComponent from "@/components/NavbarComponent.vue";
+import AdicionarVagonesProductos from "@/views/UFC/AdicionarVagonesProductos.vue";
 
 const routes = [
   //para la gestion de los usuarios
@@ -681,7 +682,7 @@ const routes = [
   {
     path: "/AdicionarVagon_producto",
     name: "AdicionarVagonProducto",
-    component: () => import("../views/UFC/AdicionarVagonesProductos.vue"),
+    component: AdicionarVagonesProductos,
     meta: {
       requireLogin: true,
     },
@@ -732,9 +733,9 @@ const routes = [
     name: "RecuperarContrasena",
     component: () => import("../views/RecuperacionContrasenaView.vue"),
     meta: {
-      requireLogin: false // Esto DEBE ser false para una página de recuperación
-    }
-  }
+      requireLogin: false, // Esto DEBE ser false para una página de recuperación
+    },
+  },
 ];
 
 const router = createRouter({

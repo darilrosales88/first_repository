@@ -12,12 +12,12 @@
   <br />
   <Navbar-Component /><br />
 
-  <h4>Transportación de las cargas</h4>
-  <div>        
-      <Vagones_productos />
-  </div>
-
   <div style="margin-left: 12em">
+    <h4>Transportación de las cargas</h4>
+    <!-- Se centro este componente para una mejor visualizacion -->
+    <div>
+      <Vagones_productos />
+    </div>
     <!-- Navbar con enlaces -->
     <nav>
       <ul>
@@ -64,15 +64,6 @@
             :class="{ active: currentComponent === 'EnTrenes' }"
           >
             En Trenes
-          </a>
-        </li>
-        <li>
-          <a
-            href="#"
-            @click.prevent="currentComponent = 'AdicionarVagonProducto'"
-            :class="{ active: currentComponent === 'AdicionarVagonProducto' }"
-          >
-            Vagones y productos
           </a>
         </li>
       </ul>

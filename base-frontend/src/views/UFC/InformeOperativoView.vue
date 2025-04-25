@@ -7,10 +7,13 @@
       padding: 10px;
     "
   >
-    <!--   <h6>Bienvenido: {{ username }}</h6> -->
+       <h6>Informe Operativo</h6> 
   </div>
   <br />
   <Navbar-Component /><br />
+  <div style="margin-left:17em;width:73%">
+  <Inf-Operative />
+  </div>
 
   <div style="margin-left: 12em">
     <!-- Navbar con enlaces -->
@@ -148,6 +151,7 @@ import SituadoCarga_Descarga from "@/components/SituadoCarga_Descarga.vue";
 import Cargados_Descargados from "@/components/Cargados_Descargados.vue";
 import PendientesArrastre from "@/components/PendientesArrastre.vue";
 import EnTrenes from "@/components/EnTrenes.vue";
+import InfOperative from "@/components/InfOperative.vue";
 
 export default {
   name: "UFCView",
@@ -158,6 +162,7 @@ export default {
     Cargados_Descargados,
     PendientesArrastre,
     EnTrenes,
+    InfOperative,
   },
   data() {
     return {

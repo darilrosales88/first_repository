@@ -468,17 +468,47 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
 
 
 class PendienteArrastreFilter(filters.FilterSet):
-    tipo_equipo = filters.CharFilter(lookup_expr='icontains')  # Filtro exacto (puedes usar 'icontains' para parcial
+    tipo_equipo = filters.CharFilter(lookup_expr='icontains')
     
     class Meta:
         model = arrastres
-        fields = ['tipo_equipo']  # Campos filtrables
-        
+        fields = ['tipo_equipo']
+
 class PendienteArrastreSerializer(serializers.ModelSerializer):
+    productos_info = serializers.SerializerMethodField()
+    producto = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=producto_en_vagon.objects.all(),
+        required=False
+    )
     
     class Meta:
         model = arrastres
-        fields= ('id','tipo_origen','tipo_equipo','estado','producto','cantidad_vagones','destino')
+        fields = ('id', 'tipo_origen', 'origen', 'tipo_equipo', 'estado', 
+                 'producto', 'productos_info', 'cantidad_vagones', 'tipo_destino', 'destino')
         filterset_class = PendienteArrastreFilter
 
+    def get_productos_info(self, obj):
+        productos = obj.producto.all()
+        return [{
+            'id': p.id,
+            'nombre_producto': p.producto.nombre_producto,
+            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
+            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
+            'cantidad': p.cantidad,
+            'estado': p.estado,
+            'contiene': p.contiene
+        } for p in productos]
 
+    def create(self, validated_data):
+        productos_data = validated_data.pop('producto', [])
+        instance = arrastres.objects.create(**validated_data)
+        instance.producto.set(productos_data)
+        return instance
+
+    def update(self, instance, validated_data):
+        productos_data = validated_data.pop('producto', None)
+        instance = super().update(instance, validated_data)
+        if productos_data is not None:
+            instance.producto.set(productos_data)
+        return instance

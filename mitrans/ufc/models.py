@@ -468,12 +468,11 @@ class arrastres(models.Model):
         null=True
     )
     
-    producto = models.ForeignKey(
-        nom_producto, 
-        on_delete=models.CASCADE, 
-        null=False, 
-        blank=False, 
-        verbose_name="Producto"
+    producto = models.ManyToManyField(
+        producto_en_vagon,
+        blank=True,
+        related_name="productos_arrastres",
+        verbose_name="Productos"
     )
     
     cantidad_vagones = models.CharField(
@@ -496,13 +495,11 @@ class arrastres(models.Model):
     
     class Meta:
         verbose_name = "arrastre"
-        verbose_name_plural="Arrastres"
-    
-    
+        verbose_name_plural = "Arrastres"
+        db_table = "arrastres"  # Esto asegura que la tabla se llame exactamente "arrastres"
     
     def __str__(self):
-        return f"Arrastre Pendiente{self.id} - {self.origen}"
-
+        return f"Arrastre Pendiente {self.id} - {self.origen}"
 
 
 

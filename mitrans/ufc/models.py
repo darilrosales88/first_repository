@@ -134,7 +134,6 @@ class vagon_cargado_descargado(models.Model):
     producto = models.ManyToManyField(
         producto_UFC,
         blank=True,
-        null=True,
         related_name='vagones_cargados'
     )
 
@@ -198,8 +197,7 @@ class vagones_productos(models.Model):
     producto = models.ManyToManyField(
         producto_UFC,
         blank=True,
-        null=True,
-        related_name='producto_vagones_productos'
+        related_name='vagones_productos'
     )
     plan_anual = models.IntegerField()
     plan_acumulado_dia_anterior = models.IntegerField()
@@ -259,8 +257,7 @@ class en_trenes(models.Model):
     producto = models.ManyToManyField(
         producto_UFC,
         blank=True,
-        null=True,
-        related_name="productos_en_trenes",
+        related_name="en_trenes",
         verbose_name="Productos"
     )
     
@@ -338,8 +335,7 @@ class por_situar(models.Model):
     producto = models.ManyToManyField(
         producto_UFC,
         blank=True,
-        null=True,
-        related_name="productos_por_situar",
+        related_name="por_situar",
         verbose_name="Productos"
     )
     
@@ -416,7 +412,7 @@ class Situado_Carga_Descarga(models.Model):
     producto = models.ManyToManyField(
         producto_UFC,
         blank=True,
-        related_name="productos_situados",
+        related_name="situados",
         verbose_name="Productos"
     )
     
@@ -514,8 +510,7 @@ class arrastres(models.Model):
     producto = models.ManyToManyField(
         producto_UFC,
         blank=True,
-        null=True,
-        related_name="productos_arrastres",
+        related_name="arrastres",
         verbose_name="Productos"
     )
     cantidad_vagones = models.CharField(

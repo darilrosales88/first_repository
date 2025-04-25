@@ -3,9 +3,9 @@ from django_filters import rest_framework as filters
 
 from django.db.models import Q
 from nomencladores.models import nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_tipo_equipo_ferroviario
-from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados, en_trenes,nom_equipo_ferroviario, producto_en_vagon
+from .models import vagon_cargado_descargado,producto_UFC, en_trenes,nom_equipo_ferroviario
 from .models import por_situar,Situado_Carga_Descarga,arrastres
-from .models import registro_vagones_cargados,vagones_productos,productos_vagones_productos
+from .models import registro_vagones_cargados,vagones_productos
 
 from Administracion.models import Auditoria 
 from rest_framework.response import Response
@@ -34,9 +34,9 @@ class producto_vagon_cargado_descargado_filter(filters.FilterSet):
     
     class Meta:
   
-        model : productos_vagones_cargados_descargados    
-        fields:{
-            'producto_contenido':['icontains'],        
+        model : producto_UFC    
+        fields : {
+            'producto_contenido': ['icontains'],        
         }
 
 
@@ -51,7 +51,7 @@ class productos_vagones_cargados_descargados_serializer(serializers.ModelSeriali
     contiene_name = serializers.ReadOnlyField(source='get_contiene_display')
 
     class Meta:
-        model = productos_vagones_cargados_descargados
+        model = producto_UFC
         fields = (
             'id', 
             'tipo_producto', 
@@ -85,9 +85,9 @@ class producto_vagones_productos_filter(filters.FilterSet):
     
     class Meta:
   
-        model : productos_vagones_productos    
-        fields:{
-            'producto_contenido':['icontains'],        
+        model : producto_UFC    
+        fields : {
+            'producto_contenido': ['icontains'],        
         }
 
 
@@ -102,7 +102,7 @@ class producto_vagones_productos_serializer(serializers.ModelSerializer):
     contiene_name = serializers.ReadOnlyField(source='get_contiene_display')
 
     class Meta:
-        model = productos_vagones_productos
+        model = producto_UFC
         fields = (
             'id', 
             'tipo_producto', 
@@ -151,7 +151,7 @@ class vagones_productos_serializer(serializers.ModelSerializer):
 
     producto_ids = serializers.PrimaryKeyRelatedField(
         many=True,
-        queryset=productos_vagones_productos.objects.all(),
+        queryset=producto_UFC.objects.all(),
         source='producto',  # Esto mapea al campo ManyToManyField
         write_only=True,
         required=False
@@ -243,7 +243,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
 
     producto_ids = serializers.PrimaryKeyRelatedField(
         many=True,
-        queryset=productos_vagones_cargados_descargados.objects.all(),
+        queryset=producto_UFC.objects.all(),
         source='producto',  # Esto mapea al campo ManyToManyField
         write_only=True,
         required=False
@@ -334,8 +334,8 @@ class registro_vagones_cargados_filter(filters.FilterSet):
     class Meta:
   
         model : registro_vagones_cargados    
-        fields:{
-            'no_id_origen':['icontains'],        
+        fields: dict[str, list[str]] = {
+            'no_id_origen': ['icontains'],        
         }
 
 
@@ -392,8 +392,8 @@ class en_trenes_filter(filters.FilterSet):
     class Meta:
   
         model : en_trenes    
-        fields:{
-            'origen_destino_producto':['icontains'],
+        fields : {
+            'origen_destino_producto': ['icontains'],
         }
 
 
@@ -457,7 +457,7 @@ class producto_vagon_serializer(serializers.ModelSerializer):
     unidad_medida_name=serializers.ReadOnlyField(source='unidad_medida.unidad_medida')
     
     class Meta:
-        model = producto_en_vagon
+        model = producto_UFC
         fields = (
             'id', 
            'producto',
@@ -491,7 +491,7 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
     productos_info = serializers.SerializerMethodField()
     producto = serializers.PrimaryKeyRelatedField(
         many=True,
-        queryset=producto_en_vagon.objects.all(),
+        queryset=producto_UFC.objects.all(),
         required=False
     )
     situados = serializers.IntegerField()
@@ -517,7 +517,7 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
             'cantidad': p.cantidad,
             'estado': p.estado,
             'contiene': p.contiene
-        } for p in productos]
+        } for p in productos] # (truco) Esta bueno este truquito para evitar errores si el objeto no tiene el atributo
         
     def to_internal_value(self, data):
         # Convertir los valores de string a integer antes de la validación
@@ -570,7 +570,7 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
     tipo_origen_name = serializers.ReadOnlyField(source='tipo_origen')
     producto = serializers.PrimaryKeyRelatedField(
         many=True,
-        queryset=producto_en_vagon.objects.all(),
+        queryset=producto_UFC.objects.all(),
         required=False
     )
     

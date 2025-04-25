@@ -26,8 +26,8 @@ class producto_UFC(models.Model):
     contiene=models.CharField(choices=CONTIENE_CHOICES, null=True, blank=True, max_length=20)
     
     class Meta:
-        verbose_name = "Producto en vagon"
-        verbose_name_plural = "Producto en vagones"
+        verbose_name = "Producto UFC"
+        verbose_name_plural = "Productos en UFC"
         #unique_together = [['cliente', 'destino']] 
 
     
@@ -36,11 +36,11 @@ class producto_UFC(models.Model):
     
     @property
     def embalaje_display(self):
-        return self.tipo_embalaje.nombre if self.tipo_embalaje else "Sin especificar"
+        return self.tipo_embalaje if self.tipo_embalaje else "Sin especificar"
     
     @property
     def unidad_medida_display(self):
-        return self.unidad_medida.nombre if self.unidad_medida else "Sin especificar"
+        return self.unidad_medida if self.unidad_medida else "Sin especificar"
     
     def __str__(self):
         return f"{self.producto.nombre_producto} - {self.embalaje_display}"

@@ -453,8 +453,8 @@ class producto_vagon_serializer(serializers.ModelSerializer):
    # tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
     producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
     producto_codigo = serializers.ReadOnlyField(source='producto.codigo_producto')
-    tipo_embalaje_name=serializers.ReadOnlyField(source='tipo_embalaje.nombre_tipo_embalaje')
-    unidad_medida_name=serializers.ReadOnlyField(source='unidad_medida.unidad_medida')
+    tipo_embalaje_name=serializers.ReadOnlyField(source='producto.tipo_embalaje.nombre_tipo_embalaje')
+    unidad_medida_name=serializers.ReadOnlyField(source='producto.unidad_medida')
     
     class Meta:
         model = producto_UFC

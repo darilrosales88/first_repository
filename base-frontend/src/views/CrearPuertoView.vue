@@ -222,9 +222,9 @@ export default {
           axios.get('/api/territorios/')
         ]);
 
-        this.paisOptions = paisResponse.data;
-        this.provinciaOptions = provinciaResponse.data;
-        this.servicioPortuarioOptions = servicioPortuarioResponse.data;
+        this.paisOptions = paisResponse.data.results;
+        this.provinciaOptions = provinciaResponse.data.results;
+        this.servicioPortuarioOptions = servicioPortuarioResponse.data.results;
       } catch (error) {
         console.error('Error al obtener las opciones:', error);
       }

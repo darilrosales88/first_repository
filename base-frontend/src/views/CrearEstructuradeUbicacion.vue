@@ -196,7 +196,7 @@ export default {
     async getTerminales() {
       try {
         const response = await axios.get('/api/terminales/');
-        this.terminales = response.data;
+        this.terminales = response.data.results;
       } catch (error) {
         console.error('Error al obtener las terminales:', error);
       }
@@ -204,7 +204,7 @@ export default {
     async getTiposEstructuras() {
       try {
         const response = await axios.get('/api/tipos_estructuras_ubicacion/');
-        this.tipos_estructuras = response.data;
+        this.tipos_estructuras = response.data.results;
       } catch (error) {
         console.error('Error al obtener los tipos de estructuras:', error);
       }
@@ -212,7 +212,7 @@ export default {
     async getEstructuras() {
       try {
         const response = await axios.get('/api/estructuras_ubicacion/');
-        this.estructuras = response.data;
+        this.estructuras = response.data.results;
       } catch (error) {
         console.error('Error al obtener las estructuras:', error);
       }

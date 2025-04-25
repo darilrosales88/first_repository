@@ -34,6 +34,17 @@ class producto_en_vagon(models.Model):
     def __str__(self):
         return f"tipo de producto {self.get_contiene_display()} - {self.producto.nombre_producto}"
     
+    @property
+    def embalaje_display(self):
+        return self.tipo_embalaje.nombre if self.tipo_embalaje else "Sin especificar"
+    
+    @property
+    def unidad_medida_display(self):
+        return self.unidad_medida.nombre if self.unidad_medida else "Sin especificar"
+    
+    def __str__(self):
+        return f"{self.producto.nombre_producto} - {self.embalaje_display}"
+    
 #productos asociados al estado vagones cargados/descargados
 class productos_vagones_cargados_descargados(models.Model):
     TIPO_PROD_CHOICES = [
@@ -404,13 +415,11 @@ class por_situar(models.Model):
     
     operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion")
     
-    producto = models.ForeignKey(
+    producto = models.ManyToManyField(
         producto_en_vagon,
-        on_delete=models.SET_NULL,  # Cambiado a SET_NULL para mayor seguridad
-        null=True,
         blank=True,
-        related_name="producto_por_situar",
-        verbose_name="Producto"
+        related_name="productos_por_situar",
+        verbose_name="Productos"
     )
     
     por_situar = models.CharField(
@@ -477,20 +486,35 @@ class Situado_Carga_Descarga(models.Model):
     
     operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion", blank=True, null=True)
     
-    producto = models.ForeignKey(producto_en_vagon, null=True, blank=True, on_delete=models.CASCADE)
+    producto = models.ManyToManyField(
+        producto_en_vagon,
+        blank=True,
+        related_name="productos_situados",
+        verbose_name="Productos"
+    )
     
-    situados = models.CharField( max_length=10, validators=[ RegexValidator(
-                regex='^-?\d+$',  # Acepta positivos y negativos
-                message='Solo se permiten números enteros (ej: 5, -10).',
-                code='numero_invalido'
+    situados = models.CharField(
+        max_length=10,
+        verbose_name="Cantidad de situados",
+        default="0",
+        validators=[
+            RegexValidator(
+                regex='^[0-9]+$',
+                message='Solo se permiten números positivos',
+                code='invalid_situados'
             )
         ]
     )
     
-    pendiente_proximo_dia = models.CharField( max_length=10, validators=[ RegexValidator(
-                regex='^-?\d+$',  # Acepta positivos y negativos
-                message='Solo se permiten números enteros (ej: 5, -10).',
-                code='numero_invalido'
+    pendiente_proximo_dia = models.CharField(
+        max_length=10,
+        verbose_name="Pendientes para el próximo día",
+        default="0",
+        validators=[
+            RegexValidator(
+                regex='^[0-9]+$',
+                message='Solo se permiten números positivos',
+                code='invalid_pendientes'
             )
         ]
     )

@@ -259,7 +259,7 @@ validateForm() {
     async getNationalities() {
       try {
         const response = await axios.get('/api/paises/');
-        this.nationalities = response.data;
+        this.nationalities = response.data.results;
       } catch (error) {
         console.error('Error al obtener las nacionalidades:', error);
         Swal.fire('Error', 'Hubo un error al obtener las nacionalidades.', 'error');

@@ -21,6 +21,7 @@ from django.urls import path,include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
     path('api/v1/', include('djoser.urls')),
     path('api/v1/', include('djoser.urls.authtoken')),
     #ahora definimos un path para las api que han sido creadas y su path se encuentra en el archivo

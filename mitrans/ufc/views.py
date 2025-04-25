@@ -1018,11 +1018,13 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
         tipo_equipo = self.request.query_params.get("tipo_equipo")
         if tipo_equipo:
-            # Si el parámetro es una lista (ej: ?tipo_equipo=camion,furgon)
             if "," in tipo_equipo:
                 tipos = tipo_equipo.split(",")
                 queryset = queryset.filter(tipo_equipo__in=tipos)
-        return queryset
+        return queryset.prefetch_related('producto')  # Optimización para la relación M2M
+    
+    # Los métodos create, update, destroy, list permanecen igual
+    # ya que el serializer ahora maneja la lógica de los productos
     
 
     def create(self, request, *args, **kwargs):
@@ -1124,7 +1126,7 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
 
 
 class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
-    queryset= Situado_Carga_Descarga.objects.all().order_by("-id")
+    queryset = Situado_Carga_Descarga.objects.all().order_by("-id")
     serializer_class = SituadoCargaDescargaSerializers
     filter_backends = [DjangoFilterBackend]
     
@@ -1132,11 +1134,13 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
         queryset = super().get_queryset()
         tipo_equipo = self.request.query_params.get("tipo_equipo")
         if tipo_equipo:
-            # Si el parámetro es una lista (ej: ?tipo_equipo=camion,furgon)
             if "," in tipo_equipo:
                 tipos = tipo_equipo.split(",")
                 queryset = queryset.filter(tipo_equipo__in=tipos)
-        return queryset
+        return queryset.prefetch_related('producto')  # Optimización para la relación M2M
+    
+    # Los métodos create, update, destroy, list permanecen igual
+    # ya que el serializer ahora maneja la lógica de los productos
     
     def create(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='AdminUFC').exists():

@@ -11,6 +11,7 @@ import EditGroup from "@/views/EditGroup.vue";
 import CreateGroup from "@/views/CreateGroup.vue";
 import TrazasAuditoria from "@/views/TrazasAuditoria.vue";
 import NavbarComponent from "@/components/NavbarComponent.vue";
+import AdicionarVagonesProductos from "@/views/UFC/AdicionarVagonesProductos.vue";
 
 const routes = [
   //para la gestion de los usuarios
@@ -618,6 +619,23 @@ const routes = [
     },
   },
   {
+    path: "/PendientesArrastre",
+    name: "PendientesArrastre",
+    component: () => import("../components/PendientesArrastre.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/AgregarArrastre",
+    name: "AgregarArrastre",
+    component: () => import("../views/UFC/AgregarArrastre.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+
+  {
     path: "/AdicionarTipoEmbalaje",
     name: "AdicionarTipoEmbalaje",
     component: () => import("../views/AdicionarTipoEmbalajeView.vue"),
@@ -634,7 +652,7 @@ const routes = [
       requireLogin: true,
     },
   },
-
+  
   {
     path: "/InfoOperativo",
     name: "InfoOperativo",
@@ -651,6 +669,7 @@ const routes = [
       requireLogin: true,
     },
   },
+  
   {
     path: "/AdicionarProductoVagon",
     name: "AdicionarProductoVagon",
@@ -690,7 +709,7 @@ const routes = [
   {
     path: "/AdicionarVagon_producto",
     name: "AdicionarVagonProducto",
-    component: () => import("../views/UFC/AdicionarVagonesProductos.vue"),
+    component: AdicionarVagonesProductos,
     meta: {
       requireLogin: true,
     },
@@ -734,6 +753,14 @@ const routes = [
     component: () => import("../views/UFC/AdicionarSituadosView.vue"),
     meta: {
       requireLogin: true,
+    },
+  },
+  {
+    path: "/recuperar-contrasena", // Cambié a formato kebab-case
+    name: "RecuperarContrasena",
+    component: () => import("../views/RecuperacionContrasenaView.vue"),
+    meta: {
+      requireLogin: false, // Esto DEBE ser false para una página de recuperación
     },
   },
 ];

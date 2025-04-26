@@ -5,7 +5,7 @@ from rest_framework.pagination import PageNumberPagination
 #importacion de modelos
 from .models import vagon_cargado_descargado,producto_UFC,en_trenes
 from .models import registro_vagones_cargados,vagones_productos
-from .models import por_situar,Situado_Carga_Descarga,arrastres
+from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones
 #importacion de serializadores asociados a los modelos
 from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descargado_serializer, 
                         producto_vagon_serializer, producto_vagon_cargado_descargado_filter, 
@@ -14,7 +14,7 @@ from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descarg
                         PendienteArrastreSerializer, registro_vagones_cargados_serializer,
                         registro_vagones_cargados_filter, producto_vagones_productos_filter,
                         producto_vagones_productos_serializer, vagones_productos_filter, 
-                        vagones_productos_serializer, en_trenes_filter)
+                        vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer)
 
 from Administracion.models import Auditoria
 
@@ -931,7 +931,7 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
         Auditoria.objects.create(
             usuario=request.user if request.user.is_authenticated else None,
             direccion_ip=direccion_ip,
-            accion=f"Modificar formulario Situado carga o descarga: {objeto_por_situar.id}",
+            accion=f"Modificar formulario Por situar carga o descarga: {objeto_por_situar.id}",
             navegador=navegador,
         )
 
@@ -989,6 +989,7 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
     queryset = Situado_Carga_Descarga.objects.all().order_by("-id")
     serializer_class = SituadoCargaDescargaSerializers
     filter_backends = [DjangoFilterBackend]
+    permission_classes = [IsUFCPermission] 
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -1097,4 +1098,196 @@ class PendienteArrastreViewset(viewsets.ModelViewSet):
     queryset = arrastres.objects.all()
     a=arrastres.objects.create
     serializer_class = PendienteArrastreSerializer
+    permission_classes = [IsUFCPermission] 
+    
+    def create(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        objeto_pendiente = serializer.save()
 
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            direccion_ip=direccion_ip,
+            accion=f"Insertado formulario en Pendiente Arrastre: {objeto_pendiente.id}",
+            navegador=navegador,
+        )
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        objeto_pendiente = serializer.save()
+
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            direccion_ip=direccion_ip,
+            accion=f"Modificar formulario Pendiente Arrastre: {objeto_pendiente.id}",
+            navegador=navegador,
+        )
+
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        instance = self.get_object()
+        id_objeto_pediente = instance.id
+
+        # Registrar la acción en el modelo de Auditoria antes de eliminar
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            direccion_ip=direccion_ip,
+            accion=f"Eliminar formulario Pendiente Arrastre {id_objeto_pediente}",
+            navegador=navegador,
+        )
+
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de Rotacion de Vagones",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return super().list(request, *args, **kwargs)
+    
+    
+#*************Empieza View Rotacion de Vagones **********************
+class RotacionVagonesViewSet(viewsets.ModelViewSet):
+    """
+    Vista para gestionar registros de rotación de vagones.
+    Permite listar, crear, actualizar y eliminar registros.
+    """
+    queryset = rotacion_vagones.objects.all()
+    serializer_class = RotacionVagonesSerializer
+    permission_classes = [IsUFCPermission] 
+
+    def create(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        objeto_rotacion = serializer.save()
+
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            direccion_ip=direccion_ip,
+            accion=f"Insertado formulario en Rotacion de vagones: {objeto_rotacion.id}",
+            navegador=navegador,
+        )
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        objeto_rotacion = serializer.save()
+
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            direccion_ip=direccion_ip,
+            accion=f"Modificar formulario Rotacion de vagones: {objeto_rotacion.id}",
+            navegador=navegador,
+        )
+
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        instance = self.get_object()
+        id_objeto_rotacion = instance.id
+
+        # Registrar la acción en el modelo de Auditoria antes de eliminar
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            direccion_ip=direccion_ip,
+            accion=f"Eliminar formulario Rotacion de vagones {id_objeto_rotacion}",
+            navegador=navegador,
+        )
+
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de Rotacion de Vagones",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return super().list(request, *args, **kwargs)
+
+
+#*************Termina View Rotacion de Vagones **********************

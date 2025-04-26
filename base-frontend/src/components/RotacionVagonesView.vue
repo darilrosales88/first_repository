@@ -1,11 +1,17 @@
 <template>
   <div class="container py-3">
+    <!-- Encabezado -->
     <div class="card border">
-      <!-- Encabezado -->
-      <div class="card-header bg-light border-bottom">
+      <div
+        class="card-header bg-light border-bottom d-flex justify-content-between align-items-center"
+      >
         <h5 class="mb-0 text-dark fw-semibold">
           <i class="bi bi-search me-2"></i>Consultar rotación de los vagones
         </h5>
+        <!-- Botón para abrir el modal -->
+        <button class="btn btn-sm btn-primary" @click="mostrarModal = true">
+          <i class="bi bi-plus-circle me-1"></i>Adicionar rotación
+        </button>
       </div>
 
       <!-- Cuerpo -->
@@ -153,6 +159,7 @@
                 <th scope="col">Real carga</th>
                 <th scope="col">Plan rotación</th>
                 <th scope="col">Real rotación</th>
+                <th scope="col">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -163,9 +170,23 @@
                 <td>{{ equipo.realCarga }}</td>
                 <td>{{ equipo.planRotacion }}</td>
                 <td>{{ equipo.realRotacion }}</td>
+                <td>
+                  <button
+                    class="btn btn-sm btn-warning me-2"
+                    @click="editarRotacion(index)"
+                  >
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-danger"
+                    @click="eliminarRotacion(index)"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
               </tr>
               <tr v-if="registrosRotacion.length === 0">
-                <td colspan="6" class="text-center text-muted">
+                <td colspan="7" class="text-center text-muted">
                   No hay resultados disponibles.
                 </td>
               </tr>
@@ -174,8 +195,108 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal para adicionar/editar rotación de vagones -->
+    <div
+      class="modal fade"
+      :class="{ show: mostrarModal }"
+      tabindex="-1"
+      role="dialog"
+      style="display: block"
+      v-if="mostrarModal"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
+              {{
+                modoEdicion
+                  ? "Editar rotación de vagones"
+                  : "Adicionar rotación de vagones"
+              }}
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              @click="cerrarModal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form
+              @submit.prevent="
+                modoEdicion ? actualizarRotacion() : guardarRotacion()
+              "
+            >
+              <div class="row g-3">
+                <!-- Tipo de equipo ferroviario -->
+                <div class="col-12">
+                  <label
+                    for="tipoEquipo"
+                    class="form-label small fw-semibold text-secondary"
+                  >
+                    Tipo de equipo ferroviario<span style="color: red">*</span>
+                  </label>
+                  <select
+                    class="form-select form-select-sm"
+                    id="tipoEquipo"
+                    v-model="nuevaRotacion.tipoEquipo"
+                    required
+                  >
+                    <option value="" disabled>
+                      Seleccione un tipo de equipo
+                    </option>
+                    <option
+                      v-for="equipo in tiposEquiposFerroviarios"
+                      :key="equipo.id"
+                      :value="equipo.nombre"
+                    >
+                      {{ equipo.nombre }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Vagones en servicio -->
+                <div class="col-12">
+                  <label
+                    for="vagonesEnServicio"
+                    class="form-label small fw-semibold text-secondary"
+                  >
+                    Vagones en servicio<span style="color: red">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    id="vagonesEnServicio"
+                    v-model.number="nuevaRotacion.vagonesEnServicio"
+                    min="0"
+                    required
+                  />
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-sm btn-secondary"
+              @click="cerrarModal"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm btn-primary"
+              @click="modoEdicion ? actualizarRotacion() : guardarRotacion()"
+            >
+              {{ modoEdicion ? "Actualizar" : "Aceptar" }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
+
 <script>
 export default {
   name: "ConsultaRotacionVagones",
@@ -192,12 +313,23 @@ export default {
         planRotacion: 0,
         realRotacion: 0,
       },
-      registrosRotacion: [], // Almacena los registros de rotación
+      registrosRotacion: [],
+      mostrarModal: false, // Controla la visibilidad del modal
+      nuevaRotacion: {
+        tipoEquipo: "",
+        vagonesEnServicio: 0,
+      },
+      tiposEquiposFerroviarios: [
+        { id: 1, nombre: "Locomotora" },
+        { id: 2, nombre: "Vagón" },
+        { id: 3, nombre: "Plataforma" },
+      ],
+      modoEdicion: false, // Indica si estamos editando o agregando un registro
+      indiceEdicion: null, // Guarda el índice del registro que se está editando
     };
   },
   methods: {
     async consultarRotacion() {
-      // Simula una llamada a la API para obtener los resultados
       try {
         const response = await this.simularConsultaAPI();
         this.resumen = response.resumen;
@@ -234,7 +366,6 @@ export default {
       this.registrosRotacion = [];
     },
     simularConsultaAPI() {
-      // Simulación de datos de respuesta de la API
       return new Promise((resolve) => {
         setTimeout(() => {
           resolve({
@@ -264,6 +395,141 @@ export default {
               },
             ],
           });
+        }, 1000); // Simula un retraso de 1 segundo
+      });
+    },
+    cerrarModal() {
+      this.mostrarModal = false;
+      this.nuevaRotacion = {
+        tipoEquipo: "",
+        vagonesEnServicio: 0,
+      };
+      this.modoEdicion = false;
+      this.indiceEdicion = null;
+    },
+    async guardarRotacion() {
+      if (
+        !this.nuevaRotacion.tipoEquipo ||
+        this.nuevaRotacion.vagonesEnServicio <= 0
+      ) {
+        this.$swal.fire(
+          "Error",
+          "Por favor, complete todos los campos obligatorios.",
+          "error"
+        );
+        return;
+      }
+
+      try {
+        // Simula una llamada a la API para guardar la nueva rotación
+        await this.simularGuardarAPI(this.nuevaRotacion);
+
+        // Agrega el nuevo registro a la tabla
+        this.registrosRotacion.push({
+          tipoEquipoFerroviario: this.nuevaRotacion.tipoEquipo,
+          enServicio: this.nuevaRotacion.vagonesEnServicio,
+          planCarga: 0,
+          realCarga: 0,
+          planRotacion: 0,
+          realRotacion: 0,
+        });
+
+        this.$swal.fire(
+          "Éxito",
+          "La rotación ha sido guardada correctamente.",
+          "success"
+        );
+        this.cerrarModal();
+      } catch (error) {
+        console.error("Error al guardar la rotación:", error);
+        this.$swal.fire(
+          "Error",
+          "Hubo un problema al guardar la rotación.",
+          "error"
+        );
+      }
+    },
+    editarRotacion(indice) {
+      this.modoEdicion = true;
+      this.indiceEdicion = indice;
+
+      // Carga los datos del registro seleccionado en el formulario
+      const rotacion = this.registrosRotacion[indice];
+      this.nuevaRotacion = {
+        tipoEquipo: rotacion.tipoEquipoFerroviario,
+        vagonesEnServicio: rotacion.enServicio,
+      };
+
+      this.mostrarModal = true;
+    },
+    async actualizarRotacion() {
+      if (
+        !this.nuevaRotacion.tipoEquipo ||
+        this.nuevaRotacion.vagonesEnServicio <= 0
+      ) {
+        this.$swal.fire(
+          "Error",
+          "Por favor, complete todos los campos obligatorios.",
+          "error"
+        );
+        return;
+      }
+
+      try {
+        // Actualiza el registro en la tabla
+        this.registrosRotacion[this.indiceEdicion] = {
+          tipoEquipoFerroviario: this.nuevaRotacion.tipoEquipo,
+          enServicio: this.nuevaRotacion.vagonesEnServicio,
+          planCarga: 0,
+          realCarga: 0,
+          planRotacion: 0,
+          realRotacion: 0,
+        };
+
+        this.$swal.fire(
+          "Éxito",
+          "La rotación ha sido actualizada correctamente.",
+          "success"
+        );
+        this.cerrarModal();
+      } catch (error) {
+        console.error("Error al actualizar la rotación:", error);
+        this.$swal.fire(
+          "Error",
+          "Hubo un problema al actualizar la rotación.",
+          "error"
+        );
+      }
+    },
+    eliminarRotacion(indice) {
+      this.$swal
+        .fire({
+          title: "¿Está seguro?",
+          text: "Esta acción no se puede deshacer.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Sí, eliminar",
+          cancelButtonText: "Cancelar",
+        })
+        .then((result) => {
+          if (result.isConfirmed) {
+            // Elimina el registro de la tabla
+            this.registrosRotacion.splice(indice, 1);
+            this.$swal.fire(
+              "Eliminado",
+              "El registro ha sido eliminado correctamente.",
+              "success"
+            );
+          }
+        });
+    },
+    simularGuardarAPI(nuevaRotacion) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          console.log("Nueva rotación guardada:", nuevaRotacion);
+          resolve();
         }, 1000); // Simula un retraso de 1 segundo
       });
     },

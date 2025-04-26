@@ -6,7 +6,7 @@ from django.db.models import Q
 from nomencladores.models import nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_tipo_equipo_ferroviario
 from .models import vagon_cargado_descargado,producto_UFC, en_trenes,nom_equipo_ferroviario
 from .models import por_situar,Situado_Carga_Descarga,arrastres
-from .models import registro_vagones_cargados,vagones_productos
+from .models import registro_vagones_cargados,vagones_productos,rotacion_vagones
 
 from Administracion.models import Auditoria 
 from rest_framework.response import Response
@@ -698,3 +698,26 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
         if productos_data is not None:
             instance.producto.set(productos_data)
         return instance
+
+
+class RotacionVagonesSerializer(serializers.ModelSerializer):
+    tipo_equipo_ferroviario_nombre = serializers.CharField(
+        source="tipo_equipo_ferroviario.tipo_eqipo", read_only=True
+    )
+
+    class Meta:
+        model = rotacion_vagones
+        fields = [
+            "id",
+            "tipo_equipo_ferroviario",
+            "tipo_equipo_ferroviario_nombre",  # Campo adicional para mostrar el nombre del equipo
+            "en_servicio",
+            "plan_carga",
+            "real_carga",
+            "plan_rotacion",
+            "real_rotacion",
+            "creado_el",
+            "actualizado_el",
+        ]
+        read_only_fields = ["creado_el", "actualizado_el"]
+

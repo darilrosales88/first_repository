@@ -263,7 +263,7 @@
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Producto nombre:</span>
                   <span class="ps-detail-value">{{
-                    currentTren.producto_name || "N/A"
+                    getNombresProductos(currentTren.productos_info)
                   }}</span>
                 </div>
 
@@ -435,8 +435,8 @@ export default {
     getNombresProductos(productos) {
       if (!productos || !Array.isArray(productos)) return "-";
       return productos
-        .filter((p) => p && p.nombre_producto)
-        .map((p) => p.nombre_producto)
+        .filter((p) => p && p.nombre_producto && p.codigo_producto)
+        .map((p) => `${p.nombre_producto} (${p.codigo_producto})`)
         .join(", ");
     },
 
@@ -499,9 +499,7 @@ export default {
       try {
         const response = await axios.get("/ufc/en-trenes/", {
           params: {
-            origen_destino: this.searchQuery,
-            page: this.currentPage,
-            page_size: this.itemsPerPage,
+            search: this.searchQuery,
           },
         });
         this.en_trenes = response.data.results;

@@ -1,3 +1,4 @@
+from typing import Literal
 from django.db import models
 from nomencladores.models import nom_puerto,nom_tipo_equipo_ferroviario,nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_equipo_ferroviario
 from nomencladores.models import nom_destino

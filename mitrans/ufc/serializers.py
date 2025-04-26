@@ -1,3 +1,4 @@
+import django_filters
 from rest_framework import serializers
 from django_filters import rest_framework as filters
 
@@ -382,19 +383,23 @@ class registro_vagones_cargados_serializer(serializers.ModelSerializer):
         
 #-------------------------********************------------EN_TRENES--------------------***************-----------------************    
 
-class en_trenes_filter(filters.FilterSet):
-    origen_destino_producto = filters.CharFilter(method='filter_by_origen_destino_producto_trenes',lookup_expr = 'icontains')
+class en_trenes_filter(django_filters.FilterSet):
+    search = filters.CharFilter(method='filtro_busqueda', lookup_expr='icontains')
 
-    #filtrado por origen,destino y descripcion del producto
-    def filter_by_origen_destino_producto_trenes(self,queryset,value):        
-        return  queryset.filter(origen_en_trenes__icontains = value) | queryset.filter(destino_en_trenes_exact = value)
+    def filtro_busqueda(self, queryset, name, value):
+        return queryset.filter(
+            Q(tipo_equipo__icontains=value) |
+            Q(numero_identificacion_locomotora__icontains=value) |
+            Q(origen__icontains=value) |
+            Q(destino__icontains=value)|
+            Q(producto__nombre_producto__icontains=value) |  # Busca por nombre de producto
+            Q(producto__codigo_producto__icontains=value)    # Busca por código de producto
+        ).distinct()
     
+
     class Meta:
-  
-        model : en_trenes    
-        fields : {
-            'origen_destino_producto': ['icontains'],
-        }
+        model = en_trenes
+        fields = ['search']  # Campos filtrables
 
 
 
@@ -441,6 +446,7 @@ class en_trenes_serializer(serializers.ModelSerializer):
         return [{
             'id': p.id,
             'nombre_producto': p.producto.nombre_producto,
+            'codigo_producto': p.producto.codigo_producto,
             'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
             'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
             'cantidad': p.cantidad,
@@ -463,18 +469,23 @@ class en_trenes_serializer(serializers.ModelSerializer):
 
         
             
-        filterset_class=en_trenes_filter
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
+    filterset_class=en_trenes_filter
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         
         # Filtra las opciones del campo locomotora
-            if 'locomotora' in self.fields:
+        if 'locomotora' in self.fields:
                 self.fields['locomotora'].queryset = nom_equipo_ferroviario.objects.filter(
                 tipo_equipo__tipo_equipo='locomotora'
             )
   
         # Validar combinación única de Tipo equipo ferroviario y No. ID
        
+       # if 'tipo_equipo' in self.initial_data and 'numero_identificacion_locomotora' in self.initial_data:
+       #     tipo_equipo = self.initial_data['tipo_equipo']
+       #     numero_identificacion_locomotora = self.initial_data['numero_identificacion_locomotora']
+       #     if en_trenes.objects.filter(tipo_equipo=tipo_equipo, numero_identificacion_locomotora=numero_identificacion_locomotora).exists():
+       #         raise serializers.ValidationError("La combinación de tipo de equipo y número de identificación de locomotora ya existe.")
                 
                 
 class producto_vagon_serializer(serializers.ModelSerializer):

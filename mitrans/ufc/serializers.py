@@ -407,13 +407,17 @@ class en_trenes_serializer(serializers.ModelSerializer):
     tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
     equipo_carga_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_carga_display')
     equipo_vagon_id=serializers.ReadOnlyField(source='equipo_vagon.numero_identificacion')
-   
+    productos_info = serializers.SerializerMethodField()
+    producto = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=producto_UFC.objects.all(),
+        required=False
+    )
     class Meta:
         model = en_trenes
         fields = (
             'id', 
             'tipo_origen', 
-           # 'tipo_origen_name', 
             'origen', 
             'locomotora',
             'numero_identificacion_locomotora',
@@ -423,15 +427,41 @@ class en_trenes_serializer(serializers.ModelSerializer):
             'equipo_vagon',
             'equipo_vagon_id',
             'estado', 
-          #  'estado_name',  
-            'tipo_destino', 
-           # 'tipo_destino_name', 
+            'tipo_destino',  
             'destino', 
             'producto', 
+            'productos_info',
             'producto_name',
             'cantidad_vagones',
             'observaciones',
         )
+        
+    def get_productos_info(self, obj):
+        productos = obj.producto.all()
+        return [{
+            'id': p.id,
+            'nombre_producto': p.producto.nombre_producto,
+            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
+            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
+            'cantidad': p.cantidad,
+            'estado': p.estado,
+            'contiene': p.contiene
+        } for p in productos]
+
+    def create(self, validated_data):
+        productos_data = validated_data.pop('producto', [])
+        instance = por_situar.objects.create(**validated_data)
+        instance.producto.set(productos_data)
+        return instance
+
+    def update(self, instance, validated_data):
+        productos_data = validated_data.pop('producto', None)
+        instance = super().update(instance, validated_data)
+        if productos_data is not None:
+            instance.producto.set(productos_data)
+        return instance
+
+        
             
         filterset_class=en_trenes_filter
         def __init__(self, *args, **kwargs):
@@ -453,8 +483,8 @@ class producto_vagon_serializer(serializers.ModelSerializer):
    # tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
     producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
     producto_codigo = serializers.ReadOnlyField(source='producto.codigo_producto')
-    tipo_embalaje_name=serializers.ReadOnlyField(source='producto.tipo_embalaje.nombre_tipo_embalaje')
-    unidad_medida_name=serializers.ReadOnlyField(source='producto.unidad_medida')
+    tipo_embalaje_name=serializers.ReadOnlyField(source='tipo_embalaje.nombre_tipo_embalaje')
+    unidad_medida_name=serializers.ReadOnlyField(source='unidad_medida.unidad_medida')
     
     class Meta:
         model = producto_UFC

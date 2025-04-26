@@ -150,6 +150,38 @@
       </div>
     </div>
 
+    <!-- Paginación mejorada -->
+    <div
+      class="ps-pagination d-flex justify-content-between align-items-center"
+    >
+      <div class="ps-pagination-info">
+        Mostrando {{ Math.min(currentPage * itemsPerPage, totalItems) }} de
+        {{ totalItems }} registros
+      </div>
+      <nav aria-label="Navegación de páginas">
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item" :class="{ disabled: currentPage === 1 }">
+            <button class="page-link ps-pagination-btn" @click="previousPage">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+          </li>
+          <li class="page-item disabled">
+            <span class="page-link">
+              Página {{ currentPage }} de
+              {{ Math.ceil(totalItems / itemsPerPage) }}
+            </span>
+          </li>
+          <li
+            class="page-item"
+            :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
+          >
+            <button class="page-link ps-pagination-btn" @click="nextPage">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
     <!-- Modal de detalles - Versión mejorada con más color -->
     <div
       v-if="showDetailsModal"
@@ -234,7 +266,7 @@
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Producto:</span>
                   <span class="ps-detail-value">{{
-                    currentRecord.producto || "N/A"
+                    getNombresProductos(currentRecord.productos_info)
                   }}</span>
                 </div>
               </div>
@@ -312,13 +344,19 @@ export default {
   data() {
     return {
       allRecords: [],
+      debounceTimeout: null,
+      isEditing: false,
+      currentItemId: null,
       searchQuery: "",
       registrosPorSituar: [],
       loading: false,
+      busqueda_existente: true,
+      showModal: false,
       showDetailsModal: false,
-      errorLoading: false,
       currentRecord: {},
-      debounceTimeout: null,
+      currentPage: 1,
+      itemsPerPage: 10,
+      totalItems: 0,
     };
   },
 
@@ -352,9 +390,15 @@ export default {
     getPorSituar() {
       this.loading = true;
       axios
-        .get("http://127.0.0.1:8000/ufc/por-situar/")
+        .get("http://127.0.0.1:8000/ufc/por-situar/", {
+          params: {
+            page: this.currentPage,
+            page_size: this.itemsPerPage,
+          },
+        })
         .then((response) => {
           this.registrosPorSituar = response.data.results;
+          this.totalItems = response.data.count;
           this.loading = false;
         })
         .catch((error) => {

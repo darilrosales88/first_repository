@@ -158,33 +158,37 @@
     </div>
 
     <!-- Paginación mejorada -->
-    <div class="ps-pagination">
+    <div
+      class="ps-pagination d-flex justify-content-between align-items-center"
+    >
       <div class="ps-pagination-info">
-        Mostrando {{ filteredRecords.length }} de {{ totalItems }} registros
+        Mostrando {{ Math.min(currentPage * itemsPerPage, totalItems) }} de
+        {{ totalItems }} registros
       </div>
-      <div class="ps-pagination-controls">
-        <button
-          class="ps-pagination-btn"
-          :class="{ 'ps-pagination-disabled': currentPage === 1 }"
-          @click="previousPage"
-        >
-          <i class="bi bi-chevron-left"></i>
-        </button>
-        <span class="ps-pagination-page">
-          Página {{ currentPage }} de {{ Math.ceil(totalItems / itemsPerPage) }}
-        </span>
-        <button
-          class="ps-pagination-btn"
-          :class="{
-            'ps-pagination-disabled': currentPage * itemsPerPage >= totalItems,
-          }"
-          @click="nextPage"
-        >
-          <i class="bi bi-chevron-right"></i>
-        </button>
-      </div>
+      <nav aria-label="Navegación de páginas">
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item" :class="{ disabled: currentPage === 1 }">
+            <button class="page-link ps-pagination-btn" @click="previousPage">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+          </li>
+          <li class="page-item disabled">
+            <span class="page-link">
+              Página {{ currentPage }} de
+              {{ Math.ceil(totalItems / itemsPerPage) }}
+            </span>
+          </li>
+          <li
+            class="page-item"
+            :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
+          >
+            <button class="page-link ps-pagination-btn" @click="nextPage">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
     </div>
-
     <!-- Modal de detalles - Versión mejorada con más color -->
     <div
       v-if="showDetailsModal"
@@ -289,7 +293,6 @@
                     <span v-else>N/A</span>
                   </span>
                 </div>
-                A
               </div>
             </div>
 
@@ -380,9 +383,9 @@ export default {
       errorLoading: false,
       currentRecord: {},
       debounceTimeout: null,
-      totalItems: 0,
       currentPage: 1,
       itemsPerPage: 10,
+      totalItems: 0,
     };
   },
 

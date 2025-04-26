@@ -206,22 +206,33 @@
 
                 <!-- Campo: producto -->
                 <div class="ufc-input-group">
-                  <label for="producto">Producto</label>
+                  <label for="producto">Productos</label>
                   <div class="ufc-input-with-action">
                     <select
                       v-if="formData.estado === 'cargado'"
                       class="ufc-select"
                       v-model="formData.producto"
+                      multiple
+                      :required="formData.estado === 'cargado'"
                     >
-                      <option value="" disabled>Seleccione un producto</option>
+                      <option value="" disabled>
+                        Seleccione uno o más productos
+                      </option>
                       <option
                         v-for="producto in productos"
+                        :key="producto.id"
                         :value="producto.id"
                       >
                         {{ producto.id }}-{{ producto.producto_name }} -
-                        {{ producto.producto_codigo }}-{{
-                          producto.tipo_embalaje_name
-                        }}
+                        {{ producto.producto_codigo }}
+                        <template v-if="producto.tipo_embalaje">
+                          (Embalaje:
+                          {{
+                            producto.tipo_embalaje.nombre ||
+                            producto.tipo_embalaje.nombre_embalaje ||
+                            "N/A"
+                          }})
+                        </template>
                       </option>
                     </select>
                     <div v-else class="ufc-disabled">
@@ -394,7 +405,7 @@ export default {
         estado: "cargado",
         tipo_destino: "ac_ccd",
         destino: "",
-        producto: "",
+        producto: [],
         cantidad_vagones: 0,
         observaciones: "",
         equipo_vagon: "",
@@ -442,7 +453,7 @@ export default {
         estado: "cargado",
         tipo_destino: "ac_ccd",
         destino: "",
-        producto: "",
+        producto: [],
         cantidad_vagones: 0,
         observaciones: "",
         equipo_vagon: "",
@@ -460,6 +471,33 @@ export default {
           console.log(vagon["datos"]);
         }
         try {
+          if (!this.formData.tipo_origen) {
+            throw new Error("El campo Tipo de Origen es requerido");
+          }
+
+          if (!this.formData.origen) {
+            throw new Error("El campo Origen es requerido");
+          }
+
+          if (!this.formData.tipo_equipo) {
+            throw new Error("El campo Tipo de Equipo es requerido");
+          }
+
+          if (
+            this.formData.estado === "cargado" &&
+            this.formData.producto.length === 0
+          ) {
+            throw new Error(
+              "Debe seleccionar al menos un producto cuando el estado es Cargado"
+            );
+          }
+
+          if (
+            !this.formData.cantidad_vagones ||
+            this.formData.cantidad_vagones < 1
+          ) {
+            throw new Error("La cantidad por situar debe ser al menos 1");
+          }
           for (const vagon of vagones) {
             await axios.post("/ufc/en-trenes/", vagon.datos);
           }

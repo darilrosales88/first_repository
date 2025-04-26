@@ -77,7 +77,14 @@
                   {{ tren.estado || "-" }}
                 </span>
               </td>
-              <td class="ps-td">{{ tren.producto_name || "-" }}</td>
+              <td class="ps-td">
+                <span
+                  v-if="tren.productos_info && tren.productos_info.length > 0"
+                >
+                  {{ getNombresProductos(tren.productos_info) }}
+                </span>
+                <span v-else>-</span>
+              </td>
               <td class="ps-td">
                 <span class="ps-badge">{{ tren.cantidad_vagones || "0" }}</span>
               </td>
@@ -177,6 +184,7 @@
         </ul>
       </nav>
     </div>
+    <!-- Fin Paginacion -->
 
     <!-- Modal de detalles - Versión mejorada con más color -->
     <div
@@ -423,6 +431,13 @@ export default {
   methods: {
     toggleContentVisibility() {
       this.showNoId = !this.showNoId;
+    },
+    getNombresProductos(productos) {
+      if (!productos || !Array.isArray(productos)) return "-";
+      return productos
+        .filter((p) => p && p.nombre_producto)
+        .map((p) => p.nombre_producto)
+        .join(", ");
     },
 
     hasGroup(group) {

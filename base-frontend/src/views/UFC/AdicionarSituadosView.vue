@@ -163,47 +163,47 @@
             <!-- Columna 2 -->
             <div>
               <!-- Campo: producto -->
-              <div class="ufc-input-group">
-                <label for="productos">Productos</label>
-                <div class="ufc-input-with-action">
-                  <select
-                    v-if="formData.estado === 'cargado'"
-                    class="ufc-select"
-                    v-model="formData.productos"
-                    multiple
-                    :disabled="isSubmitting || loadingProducts"
-                    :required="formData.estado === 'cargado' && formData.productos.length === 0"
-                  >
-                    <option value="" disabled>Seleccione uno o más productos</option>
-                    <option
-                      v-for="producto in productos"
-                      :key="producto.id"
-                      :value="producto.id"
-                    >
-                      {{ producto.id }}-{{ producto.producto_name }} - {{ producto.producto_codigo }}
-                    </option>
-                  </select>
-                  <button
-                    v-if="formData.estado === 'cargado'"
-                    class="ufc-add-button"
-                    @click.prevent="abrirModalAgregarProducto"
-                    :disabled="isSubmitting"
-                  >
-                    <i class="bi bi-plus-lg"></i>
-                  </button>
-                  <div v-if="loadingProducts" class="ufc-disabled">
-                    <i class="bi bi-arrow-repeat"></i> Cargando productos...
-                  </div>
-                </div>
-                <div v-if="formData.estado !== 'cargado'" class="ufc-disabled">
-                  (Seleccione "Cargado" para ver los productos)
-                </div>
-                <div v-if="formData.productos.length > 0" class="ufc-selected-products">
-                  Seleccionados: {{ formData.productos.length }}
-                </div>
-              </div>
-              
-              <ModalAgregarProducto
+<div class="ufc-input-group">
+  <label for="productos">Productos <span v-if="formData.estado === 'cargado'" class="required">*</span></label>
+  <div class="ufc-input-with-action">
+    <div class="ufc-custom-select" @click="toggleProductosDropdown">
+      <div class="ufc-select-display">
+        {{ getSelectedProductosText() || 'Seleccione productos...' }}
+      </div>
+      <i class="bi bi-chevron-down ufc-select-arrow"></i>
+      
+      <div class="ufc-productos-dropdown" v-if="showProductosDropdown">
+        <div class="ufc-productos-search-container">
+          <input
+            type="text"
+            class="ufc-productos-search"
+            placeholder="Buscar productos..."
+            v-model="productoSearch"
+            @input="filterProductos"
+            @click.stop>
+        </div>
+        <div class="ufc-productos-options">
+          <div
+            v-for="producto in filteredProductos"
+            :key="producto.id"
+            class="ufc-producto-option"
+            :class="{ 'selected': formData.productos.includes(producto.id) }"
+            @click.stop="toggleProductoSelection(producto.id)">
+            {{ producto.id }}-{{ producto.producto_name }} - {{ producto.producto_codigo }}
+          </div>
+        </div>
+      </div>
+    </div>
+    <button 
+      class="ufc-add-button"
+      @click.prevent="abrirModalAgregarProducto"
+      :disabled="isSubmitting">
+      <i class="bi bi-plus-lg"></i>
+    </button>
+  </div>
+</div>
+
+<ModalAgregarProducto
                 v-if="mostrarModal"
                 :visible="mostrarModal"
                 @cerrar-modal="cerrarModal"
@@ -321,6 +321,9 @@ export default {
       entidades: [],
       puertos: [],
       productos: [],
+      productoSearch: '',
+      filteredProductos: [],
+      showProductosDropdown: false,
       mostrarModal: false,
       loadingProducts: false,
       isSubmitting: false,
@@ -558,12 +561,155 @@ export default {
         this.$router.push({ name: "InfoOperativo" });
       }
     },
+
+    toggleProductosDropdown() {
+    this.showProductosDropdown = !this.showProductosDropdown;
+    if (this.showProductosDropdown) {
+      this.productoSearch = '';
+      this.filterProductos();
+    }
+  },
+  
+  filterProductos() {
+    if (!this.productoSearch) {
+      this.filteredProductos = this.productos;
+      return;
+    }
+    const searchTerm = this.productoSearch.toLowerCase();
+    this.filteredProductos = this.productos.filter(producto => 
+      producto.producto_name.toLowerCase().includes(searchTerm) ||
+      producto.producto_codigo.toLowerCase().includes(searchTerm) ||
+      producto.id.toString().includes(searchTerm)
+    );
+  },
+  
+  toggleProductoSelection(productoId) {
+    const index = this.formData.productos.indexOf(productoId);
+    if (index === -1) {
+      this.formData.productos.push(productoId);
+    } else {
+      this.formData.productos.splice(index, 1);
+    }
+  },
+  
+  getSelectedProductosText() {
+    if (this.formData.productos.length === 0) return '';
+    
+    // Si el estado es vacío, mostramos solo el conteo
+    if (this.formData.estado === 'vacio') {
+      return `${this.formData.productos.length} producto(s) seleccionado(s)`;
+    }
+    
+    // Para estado cargado, mostramos más detalles
+    if (this.formData.productos.length === 1) {
+      const producto = this.productos.find(p => p.id === this.formData.productos[0]);
+      return producto ? `${producto.id}-${producto.producto_name}` : '1 producto seleccionado';
+    }
+    return `${this.formData.productos.length} productos seleccionados`;
+  },
+  
+  closeDropdownsOnClickOutside() {
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.ufc-custom-select')) {
+        this.showProductosDropdown = false;
+      }
+    });
+  }
+
   },
 };
 </script>
 
 
 <style scoped>
+/* Estilos para el select personalizado de productos */
+.ufc-custom-select {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+}
+
+.ufc-select-display {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background-color: white;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+}
+
+.ufc-select-arrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: transform 0.2s;
+}
+
+.ufc-custom-select.open .ufc-select-arrow {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.ufc-productos-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  margin-top: 2px;
+}
+
+.ufc-productos-search-container {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  background: #f8f9fa;
+}
+
+.ufc-productos-search {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.ufc-productos-search:focus {
+  outline: none;
+  border-color: #002a68;
+}
+
+.ufc-productos-options {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.ufc-producto-option {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ufc-producto-option:hover {
+  background-color: #f5f5f5;
+}
+
+.ufc-producto-option.selected {
+  background-color: #002a68;
+  color: white;
+}
+
+/* Estilo para el botón de agregar */
+.ufc-add-button {
+  margin-left: 8px;
+}
 
 .ufc-select[multiple] {
   height: auto;

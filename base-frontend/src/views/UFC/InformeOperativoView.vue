@@ -7,10 +7,13 @@
       padding: 10px;
     "
   >
-    <!--   <h6>Bienvenido: {{ username }}</h6> -->
+    <h6>Informe Operativo</h6>
   </div>
   <br />
   <Navbar-Component /><br />
+  <div style="margin-left: 17em; width: 73%">
+    <Inf-Operative />
+  </div>
 
   <div style="margin-left: 12em">
     <h4>Transportación de las cargas</h4>
@@ -153,6 +156,7 @@ import SituadoCarga_Descarga from "@/components/SituadoCarga_Descarga.vue";
 import Cargados_Descargados from "@/components/Cargados_Descargados.vue";
 import PendientesArrastre from "@/components/PendientesArrastre.vue";
 import EnTrenes from "@/components/EnTrenes.vue";
+import InfOperative from "@/components/InfOperative.vue";
 import Vagones_productos from "@/components/Vagones_productos.vue";
 import AdicionarVagonProducto from "@/views/UFC/AdicionarVagonesProductos.vue";
 
@@ -165,6 +169,7 @@ export default {
     Cargados_Descargados,
     PendientesArrastre,
     EnTrenes,
+    InfOperative,
     Vagones_productos,
     AdicionarVagonProducto,
   },

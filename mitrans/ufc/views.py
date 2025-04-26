@@ -8,12 +8,9 @@ from .models import registro_vagones_cargados,vagones_productos
 from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones
 #importacion de serializadores asociados a los modelos
 from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descargado_serializer, 
-                        producto_vagon_serializer, producto_vagon_cargado_descargado_filter, 
-                        productos_vagones_cargados_descargados_serializer, en_trenes_serializer,
-                        PorSituarCargaDescargaSerializer, SituadoCargaDescargaSerializers, 
+                        producto_vagon_serializer, en_trenes_serializer,PorSituarCargaDescargaSerializer, SituadoCargaDescargaSerializers, 
                         PendienteArrastreSerializer, registro_vagones_cargados_serializer,
-                        registro_vagones_cargados_filter, producto_vagones_productos_filter,
-                        producto_vagones_productos_serializer, vagones_productos_filter, 
+                        registro_vagones_cargados_filter, vagones_productos_filter, 
                         vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer)
 
 from Administracion.models import Auditoria
@@ -300,219 +297,8 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
         return Response({'total': total})
     
 #para productos de vagones cargados/descargados
-class productos_vagones_cargados_descargados_view_set(viewsets.ModelViewSet):
-    queryset = producto_UFC.objects.all().order_by('-id')  # Definir el queryset
-    serializer_class = productos_vagones_cargados_descargados_serializer    
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-
-        search = self.request.query_params.get('producto_contenido', None)
-
-        if search is not None:
-            #filtrado por origen y por tipo de equipo ferroviario
-            queryset = queryset.filter(Q(producto__nombre__icontains=search) | Q(contenido__icontains=search) 
-            )
-
-        return queryset
-
-    def create(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        objeto_producto_vagon_cargado_descargado = serializer.save()
-
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Insertar producto de vagón cargado/descargado: {objeto_producto_vagon_cargado_descargado.id}",
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def update(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        objeto_producto_vagon_cargado_descargado = serializer.save()
-
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Modificar producto de vagón cargado/descargado: {objeto_producto_vagon_cargado_descargado.id}",
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
-    def destroy(self, request, *args, **kwargs):
-
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        instance = self.get_object()
-        id_objeto_producto_vagon_cargado_descargado = instance.id
-
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Eliminar producto de vagón cargado/descargado: {id_objeto_producto_vagon_cargado_descargado}",
-            navegador=navegador,
-        )
-
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de productos de vagones cargados/descargados",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return super().list(request, *args, **kwargs)
-    
 #para productos de vagones y productos
-class productos_vagones_productos_view_set(viewsets.ModelViewSet):
-    queryset = producto_UFC.objects.all().order_by('-id')  # Definir el queryset
-    serializer_class = producto_vagones_productos_serializer    
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-
-        search = self.request.query_params.get('producto_contenido', None)
-
-        if search is not None:
-            #filtrado por producto y por contenido
-            queryset = queryset.filter(Q(producto__nombre__icontains=search) | Q(contenido__icontains=search) 
-            )
-
-        return queryset
-
-    def create(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        objeto_producto_vagones_productos = serializer.save()
-
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Insertar producto de vagones y productos: {objeto_producto_vagones_productos.id}",
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def update(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        objeto_producto_vagones_productos = serializer.save()
-
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Modificar producto de vagones y productos: {objeto_producto_vagones_productos.id}",
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
-    def destroy(self, request, *args, **kwargs):
-
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        instance = self.get_object()
-        id_objeto_producto_vagones_productos = instance.id
-
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Eliminar producto de de vagones y productos: {id_objeto_producto_vagones_productos}",
-            navegador=navegador,
-        )
-
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de productos de vagones y productos",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return super().list(request, *args, **kwargs)
-    
 @api_view(['POST'])
 def verificar_productos_vagonesyproductos(request):
     producto_ids = request.data.get('producto_ids', [])
@@ -631,17 +417,9 @@ class registro_vagones_cargados_view_set(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
     
 #/********************************************************EN_TRENES*********************************************************************
-
-
-
-class en_trenes_paginator(PageNumberPagination):
-    page_size = 10  # Número de registros por página
-    page_size_query_param = 'page_size'
-    max_page_size = 100
 class en_trenes_view_set(viewsets.ModelViewSet):
     queryset = en_trenes.objects.all().order_by('-id')
     serializer_class = en_trenes_serializer
-    pagination_class = en_trenes_paginator
     filter_backends = [DjangoFilterBackend]
     filter_class = en_trenes_filter
 

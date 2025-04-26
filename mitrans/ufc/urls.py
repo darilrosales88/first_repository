@@ -1,8 +1,8 @@
 from rest_framework import routers
 #importamos las vistas
-from .views import vagon_cargado_descargado_view_set,productos_vagones_cargados_descargados_view_set , en_trenes_view_set, producto_vagon_view_set
+from .views import vagon_cargado_descargado_view_set , en_trenes_view_set, producto_vagon_view_set
 from .views import SituadoCargaDescargaViewset,PorSituarCargaDescargaViewSet,PendienteArrastreViewset,registro_vagones_cargados_view_set
-from .views import vagones_productos_view_set,productos_vagones_productos_view_set,verificar_productos_vagonesyproductos,RotacionVagonesViewSet
+from .views import vagones_productos_view_set,verificar_productos_vagonesyproductos,RotacionVagonesViewSet
 
 from django.urls import path
 
@@ -21,8 +21,6 @@ router = routers.DefaultRouter()
 #endpoints asociados a vagones y productos
 router.register('vagones-productos',vagones_productos_view_set,basename='vagones_productos')
 #endpoints productos_UFC
-router.register('productos-vagones-cargados-descargados',productos_vagones_cargados_descargados_view_set,basename='productos-vagones-cargados-descargados')
-router.register('productos-vagones-productos',productos_vagones_productos_view_set,basename='productos_vagones_productos')
 router.register('producto-vagon',producto_vagon_view_set, basename='producto-vagon' )
 
 router.register('registro-vagones-cargados',registro_vagones_cargados_view_set,basename='registro-vagones-cargados')

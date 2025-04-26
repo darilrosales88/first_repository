@@ -4,9 +4,12 @@ from django_filters import rest_framework as filters
 
 from django.db.models import Q
 from nomencladores.models import nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_tipo_equipo_ferroviario
-from .models import vagon_cargado_descargado,producto_UFC, en_trenes,nom_equipo_ferroviario
-from .models import por_situar,Situado_Carga_Descarga,arrastres
-from .models import registro_vagones_cargados,vagones_productos,rotacion_vagones
+
+#Importando modelos de UFC
+from .models import (vagon_cargado_descargado,producto_UFC, en_trenes,nom_equipo_ferroviario
+                    ,por_situar,Situado_Carga_Descarga,arrastres 
+                    ,registro_vagones_cargados,vagones_productos,rotacion_vagones 
+                     )
 
 from Administracion.models import Auditoria 
 from rest_framework.response import Response
@@ -25,105 +28,12 @@ from django.db import transaction
 
 #****************-------------------------********************--------------------***************-----------------********************************
 #serializador para los productos de vagones cargados/descargados
-class producto_vagon_cargado_descargado_filter(filters.FilterSet):
-    producto_contenido = filters.CharFilter(method='filtrado_por_producto_contenido',lookup_expr = 'icontains') 
-    
-
-    def filtrado_por_producto_contenido(self,queryset,value):        
-        return queryset.filter(producto__icontains = value) | queryset.filter(contenido__icontains = value)
-        
-    
-    class Meta:
-  
-        model : producto_UFC    
-        fields : {
-            'producto_contenido': ['icontains'],        
-        }
 
 
-
-class productos_vagones_cargados_descargados_serializer(serializers.ModelSerializer):
-    tipo_producto_name = serializers.ReadOnlyField(source='get_tipo_producto_display')
-    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
-    tipo_embalaje_name = serializers.ReadOnlyField(source='tipo_embalaje.nombre_tipo_embalaje')
-    tipo_embalaje_name = serializers.ReadOnlyField(source='tipo_embalaje.nombre_tipo_embalaje')
-    unidad_medida_name = serializers.ReadOnlyField(source='unidad_medida.unidad_medida')
-    estado_name = serializers.ReadOnlyField(source='get_estado_display')
-    contiene_name = serializers.ReadOnlyField(source='get_contiene_display')
-
-    class Meta:
-        model = producto_UFC
-        fields = (
-            'id', 
-            'tipo_producto', 
-            'tipo_producto_name', 
-            'producto', 
-            'producto_name', 
-            'tipo_embalaje', 
-            'tipo_embalaje_name', 
-            'unidad_medida', 
-            'unidad_medida_name', 
-            'cantidad', 
-            'estado', 
-            'estado_name', 
-            'contiene', 
-            'contiene_name',
-        )
-        extra_kwargs = {
-            'estado': {'allow_null': True},
-            'contiene': {'allow_null': True},
-        }
 
 #****************************************************************************************************************
 #serializador para los productos del modelo vagones y  productos
-class producto_vagones_productos_filter(filters.FilterSet):
-    producto_contenido = filters.CharFilter(method='filtrado_por_producto_contenido',lookup_expr = 'icontains') 
-    
 
-    def filtrado_por_producto_contenido(self,queryset,value):        
-        return queryset.filter(producto__icontains = value) | queryset.filter(contenido__icontains = value)
-        
-    
-    class Meta:
-  
-        model : producto_UFC    
-        fields : {
-            'producto_contenido': ['icontains'],        
-        }
-
-
-
-class producto_vagones_productos_serializer(serializers.ModelSerializer):
-    tipo_producto_name = serializers.ReadOnlyField(source='get_tipo_producto_display')
-    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
-    tipo_embalaje_name = serializers.ReadOnlyField(source='tipo_embalaje.nombre_tipo_embalaje')
-    tipo_embalaje_name = serializers.ReadOnlyField(source='tipo_embalaje.nombre_tipo_embalaje')
-    unidad_medida_name = serializers.ReadOnlyField(source='unidad_medida.unidad_medida')
-    estado_name = serializers.ReadOnlyField(source='get_estado_display')
-    contiene_name = serializers.ReadOnlyField(source='get_contiene_display')
-
-    class Meta:
-        model = producto_UFC
-        fields = (
-            'id', 
-            'tipo_producto', 
-            'tipo_producto_name', 
-            'producto', 
-            'producto_name', 
-            'tipo_embalaje', 
-            'tipo_embalaje_name', 
-            'unidad_medida', 
-            'unidad_medida_name', 
-            'cantidad', 
-            'estado', 
-            'estado_name', 
-            'contiene', 
-            'contiene_name',
-        )
-        extra_kwargs = {
-            'estado': {'allow_null': True},
-            'contiene': {'allow_null': True},
-        }
 
 #****************-------------------------********************--------------------***************-----------------********************************
 #serializador para el modelo vagones y productos

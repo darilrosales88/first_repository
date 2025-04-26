@@ -308,7 +308,7 @@
   border: 1px solid #555; /* Borde gris */
   max-height: 230px; /* Altura máxima antes de mostrar el scroll */
   overflow-y: auto; /* Habilitar scroll vertical */
-  z-index: 1000; /* Asegura que el dropdown esté por encima de otros elementos */
+  z-index: 1200; /* Asegura que el dropdown esté por encima de otros elementos */
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease;

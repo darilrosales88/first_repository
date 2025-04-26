@@ -1,3 +1,4 @@
+from typing import Literal
 from django.db import models
 from nomencladores.models import nom_puerto,nom_tipo_equipo_ferroviario,nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_equipo_ferroviario
 from nomencladores.models import nom_destino
@@ -6,7 +7,7 @@ from django.db.models import Sum
 
 
 #productos asociados a vagones en trenes
-class producto_en_vagon(models.Model):
+class producto_UFC(models.Model):
    
     ESTADO_CHOICES = [
         ('vacio', 'Vacío'),
@@ -26,8 +27,8 @@ class producto_en_vagon(models.Model):
     contiene=models.CharField(choices=CONTIENE_CHOICES, null=True, blank=True, max_length=20)
     
     class Meta:
-        verbose_name = "Producto en vagon"
-        verbose_name_plural = "Producto en vagones"
+        verbose_name = "Producto UFC"
+        verbose_name_plural = "Productos en UFC"
         #unique_together = [['cliente', 'destino']] 
 
     
@@ -36,82 +37,19 @@ class producto_en_vagon(models.Model):
     
     @property
     def embalaje_display(self):
-        return self.tipo_embalaje.nombre if self.tipo_embalaje else "Sin especificar"
+        return self.tipo_embalaje if self.tipo_embalaje else "Sin especificar"
     
     @property
     def unidad_medida_display(self):
-        return self.unidad_medida.nombre if self.unidad_medida else "Sin especificar"
+        return self.unidad_medida if self.unidad_medida else "Sin especificar"
     
     def __str__(self):
         return f"{self.producto.nombre_producto} - {self.embalaje_display}"
     
 #productos asociados al estado vagones cargados/descargados
-class productos_vagones_cargados_descargados(models.Model):
-    TIPO_PROD_CHOICES = [
-        ('producto', 'Producto'),
-        ('contenedor', 'Contenedor'),
-    ]
-
-    ESTADO_CHOICES = [
-        ('vacio', 'Vacío'),
-        ('lleno', 'lleno'),
-    ]
-
-    CONTIENE_CHOICES = [
-        ('alimentos', 'Alimentos'),
-        ('productos_varios', 'Productos varios'),
-    ]
-
-    tipo_producto = models.CharField(choices=TIPO_PROD_CHOICES, max_length = 20)
-    producto = models.ForeignKey(nom_producto, on_delete=models.CASCADE)
-    tipo_embalaje = models.ForeignKey(nom_tipo_embalaje, on_delete=models.CASCADE)
-    unidad_medida = models.ForeignKey(nom_unidad_medida, on_delete=models.CASCADE)
-    cantidad = models.IntegerField()
-    estado = models.CharField(choices=ESTADO_CHOICES, null=True, blank=True, max_length = 20)
-    contiene = models.CharField(choices=CONTIENE_CHOICES, null=True, blank=True, max_length = 20)
-
-    class Meta:
-        verbose_name = "Producto de vagón cargado/descargado"
-        verbose_name_plural = "Productos de vagones cargados/descargados"
-        #unique_together = [['cliente', 'destino']] 
-
-    
-    def __str__(self):
-        return f"tipo de producto {self.get_tipo_producto_display()} - {self.producto.nombre_producto}"
 
 #Modelo creado para los productos asociados al modelo vagones y productos
-class productos_vagones_productos(models.Model):
-    TIPO_PROD_CHOICES = [
-        ('producto', 'Producto'),
-        ('contenedor', 'Contenedor'),
-    ]
 
-    ESTADO_CHOICES = [
-        ('vacio', 'Vacío'),
-        ('lleno', 'lleno'),
-    ]
-
-    CONTIENE_CHOICES = [
-        ('alimentos', 'Alimentos'),
-        ('productos_varios', 'Productos varios'),
-    ]
-
-    tipo_producto = models.CharField(choices=TIPO_PROD_CHOICES, max_length = 20)
-    producto = models.ForeignKey(nom_producto, on_delete=models.CASCADE)
-    tipo_embalaje = models.ForeignKey(nom_tipo_embalaje, on_delete=models.CASCADE)
-    unidad_medida = models.ForeignKey(nom_unidad_medida, on_delete=models.CASCADE)
-    cantidad = models.IntegerField()
-    estado = models.CharField(choices=ESTADO_CHOICES, null=True, blank=True, max_length = 20)
-    contiene = models.CharField(choices=CONTIENE_CHOICES, null=True, blank=True, max_length = 20)
-
-    class Meta:
-        verbose_name = "Producto de vagones y productos"
-        verbose_name_plural = "Productos de vagones y productos"
-        #unique_together = [['cliente', 'destino']] 
-
-    
-    def __str__(self):
-        return f"tipo de producto {self.get_tipo_producto_display()} - {self.producto.nombre_producto}"
 # Modelo para representar el estado vagones cargados/descargados
 class vagon_cargado_descargado(models.Model):
     TIPO_ORIGEN_DESTINO_CHOICES = [
@@ -147,6 +85,7 @@ class vagon_cargado_descargado(models.Model):
     # Cambiamos ForeignKey a ManyToManyField, es posible que un vagon tenga mas de un producto
     producto = models.ManyToManyField(
         productos_vagones_cargados_descargados,
+        blank=True,
         related_name='vagones_asociados'
     )
 
@@ -165,33 +104,7 @@ class vagon_cargado_descargado(models.Model):
         # Eliminar primero los registros_vagones asociados
         self.registros_vagones.all().delete()
         # Luego eliminar el registro padre
-        super().delete(*args, **kwargs) 
-    
-    def save(self, *args, **kwargs):
-        # Calcular los campos antes de guardar
-        self.plan_dia = vagon_cargado_descargado.objects.filter(
-            operacion='carga',
-            origen=self.origen,
-            producto__in=self.producto.all()
-        ).aggregate(total=Sum('plan_diario_carga_descarga'))['total'] or 0
-        
-        self.vagones_situados = Situado_Carga_Descarga.objects.filter(
-            operacion='carga',
-            origen=self.origen,
-            producto__producto__in=self.producto.all()
-        ).aggregate(total=Sum('situados'))['total'] or 0
-        
-        self.vagones_cargados = vagon_cargado_descargado.objects.filter(
-            operacion='carga',
-            origen=self.origen,
-            producto__in=self.producto.all()
-        ).aggregate(total=Sum('real_carga_descarga'))['total'] or 0
-        
-        self.plan_aseguramiento_proximos_dias = self.vagones_cargados
-        
-        super().save(*args, **kwargs)
-    
-        
+        super().delete(*args, **kwargs)     
 
     def __str__(self):
         return f"Vagón {self.id} - {self.get_estado_display()}"
@@ -239,10 +152,68 @@ class registro_vagones_cargados(models.Model):
     class Meta:
         verbose_name = "Registro de vagón cargado"
         verbose_name_plural = "Registros de vagones cargados"
-        db_table = "registro_vagones_cargados"
 
     def __str__(self):
         return f"Vagón {self.no_id}" if self.no_id else "Registro sin ID"
+    
+    
+class vagon_cargado_descargado(models.Model):
+    TIPO_ORIGEN_DESTINO_CHOICES = [
+        ('puerto', 'Puerto'),
+        ('ac_ccd', 'Acceso comercial/CCD'),
+    ]
+    
+    ESTADO_CHOICES = [
+        ('vacio', 'Vacío'),
+        ('cargado', 'Cargado'),
+    ]
+    
+    OPERACION_CHOICES = [
+        ('carga', 'Carga'),
+        ('descarga', 'Descarga'),
+    ]
+    
+    TIPO_DESTINO_CHOICES = [
+        ('puerto', 'Puerto'),
+        ('ac_ccd', 'Acceso comercial/CCD'),
+    ]
+    
+    tipo_origen = models.CharField(choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
+    origen = models.CharField(max_length=40)
+    tipo_equipo_ferroviario = models.ForeignKey(nom_tipo_equipo_ferroviario, on_delete=models.CASCADE)
+    estado = models.CharField(choices=ESTADO_CHOICES, max_length = 50)    
+    operacion = models.CharField(choices=OPERACION_CHOICES, editable=True, max_length = 50)
+    plan_diario_carga_descarga = models.IntegerField()
+    real_carga_descarga = models.IntegerField(default = 0, editable=False)
+    tipo_destino = models.CharField(choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
+    destino = models.CharField(max_length=40)
+    causas_incumplimiento = models.TextField(null=True, blank=True, max_length = 100)
+    # Cambiamos ForeignKey a ManyToManyField, es posible que un vagon tenga mas de un producto
+    producto = models.ManyToManyField(
+        producto_UFC,
+        blank=True,
+        related_name='vagones_cargados'
+    )
+
+    registros_vagones = models.ManyToManyField(
+        registro_vagones_cargados,
+        blank=True,
+        related_name='vagon_principal',
+        verbose_name="Registros de vagones asociados"
+    )
+
+    class Meta:
+        verbose_name_plural = "Vagones cargados/descargados"
+        verbose_name = "Vagón cargado/descargado"   
+
+    def delete(self, *args, **kwargs):
+        # Eliminar primero los registros_vagones asociados
+        self.registros_vagones.all().delete()
+        # Luego eliminar el registro padre
+        super().delete(*args, **kwargs)     
+
+    def __str__(self):
+        return f"Vagón {self.id} - {self.get_estado_display()}"
     
 #**************************************************************************************************
 #Modelo destinado a vagones y productos
@@ -282,9 +253,9 @@ class vagones_productos(models.Model):
 
     #ManyToManyField, es posible que un vagon tenga mas de un producto
     producto = models.ManyToManyField(
-        productos_vagones_productos,
+        producto_UFC,
         blank=True,
-        related_name='producto_vagones_productos'
+        related_name='vagones_productos'
     )
     plan_anual = models.IntegerField()
     plan_acumulado_dia_anterior = models.IntegerField()
@@ -341,8 +312,12 @@ class en_trenes(models.Model):
     )
     tipo_equipo=models.ForeignKey(nom_tipo_equipo_ferroviario, on_delete=models.CASCADE,default="", max_length=50)
     estado = models.CharField(default="" ,choices=ESTADO_CHOICES, max_length = 50)
-    producto = models.ForeignKey(producto_en_vagon,default='', on_delete=models.CASCADE,null=True, blank=True)
-    
+    producto = models.ManyToManyField(
+        producto_UFC,
+        blank=True,
+        related_name="en_trenes",
+        verbose_name="Productos"
+    )
     
     tipo_origen = models.CharField(default="",choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
     origen = models.CharField(default='',max_length=40)
@@ -416,9 +391,9 @@ class por_situar(models.Model):
     operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion")
     
     producto = models.ManyToManyField(
-        producto_en_vagon,
+        producto_UFC,
         blank=True,
-        related_name="productos_por_situar",
+        related_name="por_situar",
         verbose_name="Productos"
     )
     
@@ -487,9 +462,9 @@ class Situado_Carga_Descarga(models.Model):
     operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion", blank=True, null=True)
     
     producto = models.ManyToManyField(
-        producto_en_vagon,
+        producto_UFC,
         blank=True,
-        related_name="productos_situados",
+        related_name="situados",
         verbose_name="Productos"
     )
     
@@ -584,14 +559,12 @@ class arrastres(models.Model):
         null=True
     )
     
-    producto = models.ForeignKey(
-        nom_producto, 
-        on_delete=models.CASCADE, 
-        null=False, 
-        blank=False, 
-        verbose_name="Producto"
+    producto = models.ManyToManyField(
+        producto_UFC,
+        blank=True,
+        related_name="arrastres",
+        verbose_name="Productos"
     )
-    
     cantidad_vagones = models.CharField(
         max_length=10, 
         verbose_name="Cantidad de vagones",
@@ -612,9 +585,9 @@ class arrastres(models.Model):
     
     class Meta:
         verbose_name = "arrastre"
-        verbose_name_plural="Arrastres"
-    
-    
+        verbose_name_plural = "Arrastres"
+     #   db_table = "arrastres"  # Esto asegura que la tabla se llame exactamente "arrastres"
+     #no quiero que la tabla se llame arrastres, quiero que se llame ufc_arrastre
     
     def __str__(self):
         return f"Arrastre Pendiente{self.id} - {self.origen}"

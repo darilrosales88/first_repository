@@ -36,7 +36,7 @@
         <table class="ps-table">
           <thead>
             <tr>
-              <th class="ps-th">#</th>
+              
               <th class="ps-th">Código Locomotora</th>
               <th class="ps-th">Tipo</th>
               <th class="ps-th">Estado</th>
@@ -65,7 +65,7 @@
               :key="tren.id"
               class="ps-tr"
             >
-              <td class="ps-td ps-td-index">{{ index + 1 }}</td>
+              
               <td class="ps-td">
                 {{ tren.numero_identificacion_locomotora || "-" }}
               </td>
@@ -77,7 +77,14 @@
                   {{ tren.estado || "-" }}
                 </span>
               </td>
-              <td class="ps-td">{{ tren.producto_name || "-" }}</td>
+              <td class="ps-td">
+                <span
+                  v-if="tren.productos_info && tren.productos_info.length > 0"
+                >
+                  {{ getNombresProductos(tren.productos_info) }}
+                </span>
+                <span v-else>-</span>
+              </td>
               <td class="ps-td">
                 <span class="ps-badge">{{ tren.cantidad_vagones || "0" }}</span>
               </td>
@@ -87,33 +94,36 @@
                 {{ tren.descripcion || "-" }}
               </td>
 
-              <td class="ps-td ps-td-actions">
-                <button
-                  @click="viewDetails(tren)"
-                  class="ps-action-btn ps-action-view"
-                  title="Ver detalles"
-                >
-                  <i class="bi bi-eye"></i>
-                </button>
-                <router-link
-                  :to="{
-                    name: 'EditarEnTren',
-                    params: { id: tren.id },
-                  }"
-                  class="ps-action-btn ps-action-edit"
-                  title="Editar"
-                >
-                  <i class="bi bi-pencil"></i>
-                </router-link>
-                <button
-                  @click="confirmDelete(tren.id)"
-                  class="ps-action-btn ps-action-delete"
-                  title="Eliminar"
-                  :disabled="loading"
-                >
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
+              <!-- En el td de acciones de la tabla -->
+<td class="ps-td ps-td-actions">
+  <div class="d-flex">
+    <button
+      @click="viewDetails(tren)"
+      class="btn btn-sm btn-outline-info me-2"
+      title="Ver detalles"
+    >
+      <i class="bi bi-eye-fill"></i>
+    </button>
+    <router-link
+      :to="{
+        name: 'EditarEnTren',
+        params: { id: tren.id },
+      }"
+      class="btn btn-sm btn-outline-warning me-2"
+      title="Editar"
+    >
+      <i class="bi bi-pencil-square"></i>
+    </router-link>
+    <button
+      @click="confirmDelete(tren.id)"
+      class="btn btn-sm btn-outline-danger"
+      title="Eliminar"
+      :disabled="loading"
+    >
+      <i class="bi bi-trash"></i>
+    </button>
+  </div>
+</td>
             </tr>
 
             <!-- Estado vacío -->
@@ -177,6 +187,7 @@
         </ul>
       </nav>
     </div>
+    <!-- Fin Paginacion -->
 
     <!-- Modal de detalles - Versión mejorada con más color -->
     <div
@@ -255,7 +266,7 @@
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Producto nombre:</span>
                   <span class="ps-detail-value">{{
-                    currentTren.producto_name || "N/A"
+                    getNombresProductos(currentTren.productos_info)
                   }}</span>
                 </div>
 
@@ -424,6 +435,13 @@ export default {
     toggleContentVisibility() {
       this.showNoId = !this.showNoId;
     },
+    getNombresProductos(productos) {
+      if (!productos || !Array.isArray(productos)) return "-";
+      return productos
+        .filter((p) => p && p.nombre_producto && p.codigo_producto)
+        .map((p) => `${p.nombre_producto} (${p.codigo_producto})`)
+        .join(", ");
+    },
 
     hasGroup(group) {
       return this.userGroups.some((g) => g.name === group);
@@ -484,9 +502,7 @@ export default {
       try {
         const response = await axios.get("/ufc/en-trenes/", {
           params: {
-            origen_destino: this.searchQuery,
-            page: this.currentPage,
-            page_size: this.itemsPerPage,
+            search: this.searchQuery,
           },
         });
         this.en_trenes = response.data.results;
@@ -644,6 +660,51 @@ export default {
 </script>
 
 <style scoped>
+/* Estilos para los botones */
+.btn-outline-info {
+  color: #0dcaf0;
+  border-color: #0dcaf0;
+}
+
+.btn-outline-warning {
+  color: #ffc107;
+  border-color: #ffc107;
+}
+
+.btn-outline-danger {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 0.2rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.btn i {
+  font-size: 1rem;
+}
+
+.me-2 {
+  margin-right: 0.5rem !important;
+}
+
+.ps-td-actions {
+  white-space: nowrap;
+}
 /* Variables de color */
 :root {
   --ps-primary: #4361ee;

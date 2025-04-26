@@ -3,15 +3,18 @@
 from rest_framework import viewsets,generics,permissions
 from rest_framework.pagination import PageNumberPagination
 #importacion de modelos
-from .models import vagon_cargado_descargado,productos_vagones_cargados_descargados,en_trenes,producto_en_vagon
-from .models import registro_vagones_cargados,vagones_productos,productos_vagones_productos
+from .models import vagon_cargado_descargado,producto_UFC,en_trenes
+from .models import registro_vagones_cargados,vagones_productos
 from .models import por_situar,Situado_Carga_Descarga,arrastres
 #importacion de serializadores asociados a los modelos
-from .serializers import vagon_cargado_descargado_filter,vagon_cargado_descargado_serializer,producto_vagon_serializer
-from .serializers import producto_vagon_cargado_descargado_filter,productos_vagones_cargados_descargados_serializer,en_trenes_serializer
-from .serializers import PorSituarCargaDescargaSerializer,SituadoCargaDescargaSerializers,PendienteArrastreSerializer
-from .serializers import registro_vagones_cargados_serializer,registro_vagones_cargados_filter,producto_vagones_productos_filter
-from .serializers import producto_vagones_productos_serializer,vagones_productos_filter,vagones_productos_serializer
+from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descargado_serializer, 
+                        producto_vagon_serializer, producto_vagon_cargado_descargado_filter, 
+                        productos_vagones_cargados_descargados_serializer, en_trenes_serializer,
+                        PorSituarCargaDescargaSerializer, SituadoCargaDescargaSerializers, 
+                        PendienteArrastreSerializer, registro_vagones_cargados_serializer,
+                        registro_vagones_cargados_filter, producto_vagones_productos_filter,
+                        producto_vagones_productos_serializer, vagones_productos_filter, 
+                        vagones_productos_serializer, en_trenes_filter)
 
 from Administracion.models import Auditoria
 
@@ -444,7 +447,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
     
 #para productos de vagones cargados/descargados
 class productos_vagones_cargados_descargados_view_set(viewsets.ModelViewSet):
-    queryset = productos_vagones_cargados_descargados.objects.all().order_by('-id')  # Definir el queryset
+    queryset = producto_UFC.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = productos_vagones_cargados_descargados_serializer    
 
     def get_queryset(self):
@@ -454,7 +457,7 @@ class productos_vagones_cargados_descargados_view_set(viewsets.ModelViewSet):
 
         if search is not None:
             #filtrado por origen y por tipo de equipo ferroviario
-            queryset = queryset.filter( Q(producto__icontains=search) | Q(contenido__icontains=search) 
+            queryset = queryset.filter(Q(producto__nombre__icontains=search) | Q(contenido__icontains=search) 
             )
 
         return queryset
@@ -551,7 +554,7 @@ class productos_vagones_cargados_descargados_view_set(viewsets.ModelViewSet):
     
 #para productos de vagones y productos
 class productos_vagones_productos_view_set(viewsets.ModelViewSet):
-    queryset = productos_vagones_productos.objects.all().order_by('-id')  # Definir el queryset
+    queryset = producto_UFC.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = producto_vagones_productos_serializer    
 
     def get_queryset(self):
@@ -561,7 +564,7 @@ class productos_vagones_productos_view_set(viewsets.ModelViewSet):
 
         if search is not None:
             #filtrado por producto y por contenido
-            queryset = queryset.filter( Q(producto__icontains=search) | Q(contenido__icontains=search) 
+            queryset = queryset.filter(Q(producto__nombre__icontains=search) | Q(contenido__icontains=search) 
             )
 
         return queryset
@@ -659,7 +662,7 @@ class productos_vagones_productos_view_set(viewsets.ModelViewSet):
 @api_view(['POST'])
 def verificar_productos_vagonesyproductos(request):
     producto_ids = request.data.get('producto_ids', [])
-    existentes = productos_vagones_productos.objects.filter(id__in=producto_ids).values_list('id', flat=True)
+    existentes = producto_UFC.objects.filter(id__in=producto_ids).values_list('id', flat=True)
     return Response({
         'todos_existen': len(existentes) == len(producto_ids),
         'ids_existentes': list(existentes),
@@ -782,25 +785,28 @@ class en_trenes_paginator(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 100
 class en_trenes_view_set(viewsets.ModelViewSet):
-    queryset = en_trenes.objects.all().order_by('-id') # Definir el queryset
+    queryset = en_trenes.objects.all().order_by('-id')
     serializer_class = en_trenes_serializer
     pagination_class = en_trenes_paginator
+    filter_backends = [DjangoFilterBackend]
+    filter_class = en_trenes_filter
 
     ordering_fields = ['id'] 
     ordering = ['-id']  # Orden por defecto (descendente por id)    
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        search_term = self.request.query_params.get('origen_destino', None)
+        search_term = self.request.query_params.get('search', None)
 
         if search_term:
             # Filtra por coincidencia en cualquiera de los campos
-            queryset = queryset.select_related('producto').filter(
+            queryset = queryset.prefetch_related('producto').filter(
             Q(origen__icontains=search_term) |
-            Q(destino__icontains=search_term)|
-            Q(producto__producto__nombre_producto__icontains=search_term)|
-            Q(numero_identificacion_locomotora__icontains=search_term)         
-     )
+            Q(destino__icontains=search_term) |
+            Q(producto__producto__nombre_producto__icontains=search_term) |
+            Q(producto__producto__codigo_producto__icontains=search_term) |
+            Q(numero_identificacion_locomotora__icontains=search_term)
+).distinct()
         return queryset
 
     def create(self, request, *args, **kwargs):
@@ -898,7 +904,7 @@ class en_trenes_view_set(viewsets.ModelViewSet):
 
 
 class producto_vagon_view_set(viewsets.ModelViewSet):
-    queryset = producto_en_vagon.objects.all().order_by('-id') # Definir el queryset
+    queryset = producto_UFC.objects.all().order_by('-id') # Definir el queryset
     serializer_class = producto_vagon_serializer
     permission_classes = [IsUFCPermission]
 
@@ -1071,7 +1077,7 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
         Auditoria.objects.create(
             usuario=request.user if request.user.is_authenticated else None,
             direccion_ip=direccion_ip,
-            accion=f"Modificar formulario Situar carga o descarga: {objeto_por_situar.id}",
+            accion=f"Modificar formulario Situado carga o descarga: {objeto_por_situar.id}",
             navegador=navegador,
         )
 

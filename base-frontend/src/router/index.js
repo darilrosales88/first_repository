@@ -652,7 +652,7 @@ const routes = [
       requireLogin: true,
     },
   },
-  
+
   {
     path: "/InfoOperativo",
     name: "InfoOperativo",
@@ -669,7 +669,7 @@ const routes = [
       requireLogin: true,
     },
   },
-  
+
   {
     path: "/AdicionarProductoVagon",
     name: "AdicionarProductoVagon",
@@ -761,6 +761,14 @@ const routes = [
     component: () => import("../views/RecuperacionContrasenaView.vue"),
     meta: {
       requireLogin: false, // Esto DEBE ser false para una página de recuperación
+    },
+  },
+  {
+    path: "/AdicionarArrastre", // Cambié a formato kebab-case
+    name: "AdicionarArrastre",
+    component: () => import("../views/UFC/AdicionarPendienteArrastreView.vue"),
+    meta: {
+      requireLogin: true,
     },
   },
 ];

@@ -1,81 +1,79 @@
 <template>
-    <div class="container py-3">
-      
-      <h4>Vagones Cargados/descargados</h4>
-      <!-- Encabezado con acciones -->
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <!-- Botón de agregar - más destacado -->  
-        <button class="btn btn-link p-0" @click="showModal = true">
-          <router-link
-           v-if="hasGroup('AdminUFC')"
-            to="AdicionarVagonCargadoDescargado"
-            title="Agregar nuevo vagón cargado/descargado"
+  <div class="container py-3">
+    <!-- Encabezado con acciones -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <!-- Botón de agregar - más destacado -->
+      <button class="btn btn-link p-0" @click="showModal = true">
+        <router-link
+          v-if="hasGroup('AdminUFC')"
+          to="AdicionarVagonCargadoDescargado"
+          title="Agregar nuevo vagón cargado/descargado"
+        >
+          <i class="bi bi-plus-circle fs-3"></i>
+        </router-link>
+        <!-- Icono grande -->
+      </button>
+
+      <form @submit.prevent="search_producto" class="search-container">
+        <div class="input-group">
+          <input
+            type="search"
+            class="form-control"
+            placeholder="Origen, Destino, Producto, Locomotora"
+            v-model="searchQuery"
+            @input="handleSearchInput"
+          />
+          <span
+            class="position-absolute top-50 start-0 translate-middle-y ps-2"
           >
-            <i class="bi bi-plus-circle fs-3"></i>
-          </router-link>
-          <!-- Icono grande -->
-        </button>
-  
-        <form @submit.prevent="search_producto" class="search-container">
-          <div class="input-group">
-            <input
-              type="search"
-              class="form-control"
-              placeholder="Origen, Destino, Producto, Locomotora"
-              v-model="searchQuery"
-              @input="handleSearchInput"
-            />
-            <span
-              class="position-absolute top-50 start-0 translate-middle-y ps-2"
-            >
-              <i class="bi bi-search"></i>
-            </span>
-          </div>
-        </form>
-      </div>
-  
-      <!-- Tabla responsive con mejoras -->
-      <div class="table table-responsive">
-        <table class="table table-hover mb-0">
-          <thead>
-            <tr>
-              <th scope="col" style="width: 50px">No</th>
-              <th scope="col">TEF</th>
-              <th scope="col">Origen</th>
-              <th scope="col">Destino</th>
-              <th scope="col">Estado</th>
-              <th scope="col">Productos</th>
-              <th scope="col" > Acciones </th>
-            </tr>
-            <tr v-if="!busqueda_existente">
-              <td colspan="8" class="text-center text-muted py-4">
-                <i class="bi bi-exclamation-circle fs-4"></i>
-                <p class="mt-2">
-                  No se encontraron resultados para "{{ searchQuery }}"
-                </p>
-              </td>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(vagon, index) in cargados_descargados"
-              :key="vagon.id"
-              class="align-middle"
-            >
-              <th scope="row">{{ index + 1 }}</th>
-              <td>{{ vagon.tipo_equipo_ferroviario_name }}</td>
-              <td>{{ vagon.origen }}</td>
-              <td>
-                <span>
-                  {{ vagon.destino }}
-                </span>
-              </td>              
-              <td>{{ vagon.estado }}</td>
-              <td>{{ vagon.productos_list }}</td>
-              <td v-if="hasGroup('AdminUFC')">
+            <i class="bi bi-search"></i>
+          </span>
+        </div>
+      </form>
+    </div>
+
+    <!-- Tabla responsive con mejoras -->
+    <div class="table table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th scope="col" style="width: 50px">No</th>
+            <th scope="col">TEF</th>
+            <th scope="col">Origen</th>
+            <th scope="col">Destino</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Productos</th>
+            <th scope="col">Acciones</th>
+          </tr>
+          <tr v-if="!busqueda_existente">
+            <td colspan="8" class="text-center text-muted py-4">
+              <i class="bi bi-exclamation-circle fs-4"></i>
+              <p class="mt-2">
+                No se encontraron resultados para "{{ searchQuery }}"
+              </p>
+            </td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="(vagon, index) in cargados_descargados"
+            :key="vagon.id"
+            class="align-middle"
+          >
+            <th scope="row">{{ index + 1 }}</th>
+            <td>{{ vagon.tipo_equipo_ferroviario_name }}</td>
+            <td>{{ vagon.origen }}</td>
+            <td>
+              <span>
+                {{ vagon.destino }}
+              </span>
+            </td>
+            <td>{{ vagon.estado }}</td>
+            <td>{{ vagon.productos_list }}</td>
+            <td v-if="hasGroup('AdminUFC')">
               <div class="d-flex">
                 <button
-                  @click="viewDetails(tren)"
+                  @click="viewDetails(vagon)"
                   class="btn btn-sm btn-outline-info me-2"
                   title="Ver detalles"
                 >
@@ -97,85 +95,85 @@
                 </button>
               </div>
             </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-  
-      <!-- Paginación mejorada -->
-      <div class="d-flex justify-content-between align-items-center">
-        <div class="text-muted small">
-          Mostrando {{ cargados_descargados.length }} de {{ totalItems }} registros
-        </div>
-        <nav aria-label="Page navigation">
-          <ul class="pagination pagination-sm mb-0">
-            <li class="page-item" :class="{ disabled: currentPage === 1 }">
-              <button class="page-link" @click="previousPage">
-                <i class="bi bi-chevron-left"></i>
-              </button>
-            </li>
-            <li class="page-item disabled">
-              <span class="page-link">
-                Página {{ currentPage }} de
-                {{ Math.ceil(totalItems / itemsPerPage) }}
-              </span>
-            </li>
-            <li
-              class="page-item"
-              :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
-            >
-              <button class="page-link" @click="nextPage">
-                <i class="bi bi-chevron-right"></i>
-              </button>
-            </li>
-          </ul>
-        </nav>
-      </div>
-      <!-- Termina la paginacion -->
-  
+          </tr>
+        </tbody>
+      </table>
     </div>
-  </template>
-  
-  <style scoped>
-  .pagination-container {
-    margin-top: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .pagination-container button {
-    margin: 0 5px;
-  }
-  .btn-small {
-    font-size: 22px; /* Aumenta el tamaño del ícono */
-    color: black;
-    margin-right: 5px;
-    outline: none; /* Elimina el borde de foco */
-    border: none;
-    background: none; /* Elimina el fondo */
-    padding: 0; /* Elimina el padding para que solo se vea el ícono */
-  }
-  .btn-eye {
-    font-size: 22px; /* Aumenta el tamaño del ícono */
-    margin-right: 5px;
-    outline: none; /* Elimina el borde de foco */
-    border: none;
-    background: none; /* Elimina el fondo */
-    padding: 0; /* Elimina el padding para que solo se vea el ícono */
-  }
-  .btn:hover {
-    scale: 1.1; /* Asegura que no haya fondo al hacer hover */
-  }
-  
-  .btn:focus {
-    outline: none; /* Elimina el borde de foco al hacer clic */
-    box-shadow: none; /* Elimina cualquier sombra de foco en algunos navegadores */
-  }
-  </style>
-  <script>
-  import axios from "axios";
-  import Swal from "sweetalert2";  
+
+    <!-- Paginación mejorada -->
+    <div class="d-flex justify-content-between align-items-center">
+      <div class="text-muted small">
+        Mostrando {{ cargados_descargados.length }} de
+        {{ totalItems }} registros
+      </div>
+      <nav aria-label="Page navigation">
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item" :class="{ disabled: currentPage === 1 }">
+            <button class="page-link" @click="previousPage">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+          </li>
+          <li class="page-item disabled">
+            <span class="page-link">
+              Página {{ currentPage }} de
+              {{ Math.ceil(totalItems / itemsPerPage) }}
+            </span>
+          </li>
+          <li
+            class="page-item"
+            :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
+          >
+            <button class="page-link" @click="nextPage">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+    <!-- Termina la paginacion -->
+  </div>
+</template>
+
+<style scoped>
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination-container button {
+  margin: 0 5px;
+}
+.btn-small {
+  font-size: 22px; /* Aumenta el tamaño del ícono */
+  color: black;
+  margin-right: 5px;
+  outline: none; /* Elimina el borde de foco */
+  border: none;
+  background: none; /* Elimina el fondo */
+  padding: 0; /* Elimina el padding para que solo se vea el ícono */
+}
+.btn-eye {
+  font-size: 22px; /* Aumenta el tamaño del ícono */
+  margin-right: 5px;
+  outline: none; /* Elimina el borde de foco */
+  border: none;
+  background: none; /* Elimina el fondo */
+  padding: 0; /* Elimina el padding para que solo se vea el ícono */
+}
+.btn:hover {
+  scale: 1.1; /* Asegura que no haya fondo al hacer hover */
+}
+
+.btn:focus {
+  outline: none; /* Elimina el borde de foco al hacer clic */
+  box-shadow: none; /* Elimina cualquier sombra de foco en algunos navegadores */
+}
+</style>
+<script>
+import axios from "axios";
+import Swal from "sweetalert2";
 
   export default {
     name: "CargadosDescargados",   
@@ -341,12 +339,6 @@
       cerrarModal() {
         this.mostrarModal = false;
       },
-
-      editVagon(vagon) {
-        // Aquí puedes implementar la navegación a la página de edición
-        this.$router.push({ name: 'EditarCargadoDescargado', params: { id: vagon.id } });
-      },
-      
   
       confirmDelete(id) {
         Swal.fire({

@@ -36,7 +36,6 @@
         <table class="ps-table">
           <thead>
             <tr>
-              <th class="ps-th">#</th>
               <th class="ps-th">Tipo Origen</th>
               <th class="ps-th">Origen</th>
               <th class="ps-th">Tipo Equipo</th>
@@ -64,7 +63,6 @@
               :key="item.id"
               class="ps-tr"
             >
-              <td class="ps-td ps-td-index">{{ index + 1 }}</td>
               <td class="ps-td">{{ item.tipo_origen_name }}</td>
               <td class="ps-td">{{ item.origen }}</td>
               <td class="ps-td">{{ item.tipo_equipo }}</td>
@@ -84,37 +82,38 @@
                 </span>
                 <span v-else>-</span>
               </td>
-              <td class="ps-td">
-                {{ item.por_situar
-                }}<!-- Tuve que quitar la etiqueta span badge porque esta tiene el estilo de los textos en blanco -->
-              </td>
+              <td class="ps-td">{{ item.por_situar }}</td>
 
-              <td class="ps-td ps-td-actions">
-                <button
-                  @click="viewDetails(item)"
-                  class="ps-action-btn ps-action-view"
-                  title="Ver detalles"
-                >
-                  <i class="bi bi-eye"></i>
-                </button>
-                <router-link
-                  :to="{
-                    name: 'EditarPorSituar',
-                    params: { id: item.id || 'default-id' },
-                  }"
-                  class="ps-action-btn ps-action-edit"
-                  title="Editar"
-                >
-                  <i class="bi bi-pencil"></i>
-                </router-link>
-                <button
-                  @click="confirmDelete(item.id)"
-                  class="ps-action-btn ps-action-delete"
-                  title="Eliminar"
-                  :disabled="loading"
-                >
-                  <i class="bi bi-trash"></i>
-                </button>
+              <!-- Acciones -->
+              <td v-if="hasGroup('AdminUFC')" class="ps-td">
+                <div class="d-flex">
+                  <button
+                    @click="viewDetails(item)"
+                    class="btn btn-sm btn-outline-info me-2"
+                    title="Ver detalles"
+                  >
+                    <i class="bi bi-eye-fill"></i>
+                  </button>
+
+                  <router-link
+                    :to="{
+                      name: 'EditarPorSituar',
+                      params: { id: item.id || 'default-id' },
+                    }"
+                    class="btn btn-sm btn-outline-warning me-2"
+                    title="Editar"
+                  >
+                    <i class="bi bi-pencil-square"></i>
+                  </router-link>
+
+                  <button
+                    @click="confirmDelete(item.id)"
+                    class="btn btn-sm btn-outline-danger"
+                    title="Eliminar"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
               </td>
             </tr>
 
@@ -150,6 +149,38 @@
       </div>
     </div>
 
+    <!-- Paginación mejorada -->
+    <div
+      class="ps-pagination d-flex justify-content-between align-items-center"
+    >
+      <div class="ps-pagination-info">
+        Mostrando {{ Math.min(currentPage * itemsPerPage, totalItems) }} de
+        {{ totalItems }} registros
+      </div>
+      <nav aria-label="Navegación de páginas">
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item" :class="{ disabled: currentPage === 1 }">
+            <button class="page-link ps-pagination-btn" @click="previousPage">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+          </li>
+          <li class="page-item disabled">
+            <span class="page-link">
+              Página {{ currentPage }} de
+              {{ Math.ceil(totalItems / itemsPerPage) }}
+            </span>
+          </li>
+          <li
+            class="page-item"
+            :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
+          >
+            <button class="page-link ps-pagination-btn" @click="nextPage">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
     <!-- Modal de detalles - Versión mejorada con más color -->
     <div
       v-if="showDetailsModal"
@@ -185,7 +216,9 @@
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Tipo Origen:</span>
                   <span class="ps-detail-value">{{
-                    currentRecord.tipo_origen || "N/A"
+                    currentRecord.tipo_origen_name ||
+                    currentRecord.tipo_origen ||
+                    "N/A"
                   }}</span>
                 </div>
 
@@ -233,9 +266,17 @@
 
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Producto:</span>
-                  <span class="ps-detail-value">{{
-                    currentRecord.producto || "N/A"
-                  }}</span>
+                  <span class="ps-detail-value">
+                    <span
+                      v-if="
+                        currentRecord.productos_info &&
+                        currentRecord.productos_info.length > 0
+                      "
+                    >
+                      {{ getNombresProductos(currentRecord.productos_info) }}
+                    </span>
+                    <span v-else>N/A</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -312,13 +353,21 @@ export default {
   data() {
     return {
       allRecords: [],
+      debounceTimeout: null,
+      isEditing: false,
+      currentItemId: null,
       searchQuery: "",
       registrosPorSituar: [],
       loading: false,
+      busqueda_existente: true,
+      showModal: false,
       showDetailsModal: false,
-      errorLoading: false,
       currentRecord: {},
-      debounceTimeout: null,
+      currentPage: 1,
+      itemsPerPage: 10,
+      totalItems: 0,
+      userGroups: [],
+      userPermissions: [],
     };
   },
 
@@ -328,12 +377,14 @@ export default {
       const query = this.searchQuery.toLowerCase();
       return this.registrosPorSituar.filter((item) => {
         const fieldsToSearch = [
-          item.tipo_origen,
+          item.tipo_origen_name,
           item.origen,
           item.tipo_equipo,
           item.estado,
           item.operacion,
-          item.producto_name,
+          item.productos_info
+            ? this.getNombresProductos(item.productos_info)
+            : "",
           item.por_situar,
           item.observaciones,
         ];
@@ -346,15 +397,36 @@ export default {
 
   mounted() {
     this.getPorSituar();
+    this.fetchUserPermissionsAndGroups();
   },
 
   methods: {
+    hasGroup(group) {
+      return this.userGroups.some((g) => g.name === group);
+    },
+
+    async fetchUserPermissionsAndGroups() {
+      try {
+        const userId = localStorage.getItem("userid");
+        if (userId) {
+          const response = await axios.get(
+            `/apiAdmin/user/${userId}/permissions-and-groups/`
+          );
+          this.userPermissions = response.data.permissions;
+          this.userGroups = response.data.groups;
+        }
+      } catch (error) {
+        console.error("Error al obtener permisos y grupos:", error);
+      }
+    },
+
     getPorSituar() {
       this.loading = true;
       axios
-        .get("/ufc/por-situar/")
+        .get("http://127.0.0.1:8000/ufc/por-situar/")
         .then((response) => {
           this.registrosPorSituar = response.data.results;
+          this.totalItems = response.data.count;
           this.loading = false;
         })
         .catch((error) => {
@@ -373,39 +445,32 @@ export default {
         .join(", ");
     },
 
-    getStatusClass(status) {
-      if (!status) return "default";
-      const statusLower = status.toLowerCase();
-
-      if (statusLower.includes("activo")) return "success";
-      if (statusLower.includes("pendiente")) return "warning";
-      if (statusLower.includes("inactivo") || statusLower.includes("cancelado"))
-        return "danger";
-
-      return "info";
-    },
-
     async viewDetails(item) {
       this.loading = true;
       try {
         this.currentRecord = { ...item };
         this.showDetailsModal = true;
-        
-        const response = await axios.get(`http://127.0.0.1:8000/ufc/por-situar/${item.id}/`);
+
+        const response = await axios.get(
+          `http://127.0.0.1:8000/ufc/por-situar/${item.id}/`
+        );
         this.currentRecord = {
+          ...this.currentRecord,
           ...response.data,
-          // Asegurar que observaciones tenga un valor
-          observaciones:
-            response.data.observaciones || "Ninguna observación registrada",
-          // Formatear la fecha de creación
-          created_at: response.data.created_at || new Date().toISOString(),
         };
+
+        this.showDetailsModal = true;
       } catch (error) {
         console.error("Error al cargar detalles:", error);
         this.showErrorToast("No se pudieron cargar los detalles completos");
       } finally {
         this.loading = false;
       }
+    },
+
+    editRecord(item) {
+      // Implementa la lógica de edición aquí
+      console.log("Editar registro:", item);
     },
 
     formatDateTime(dateString) {
@@ -424,7 +489,7 @@ export default {
         return date.toLocaleDateString("es-ES", options);
       } catch (e) {
         console.error("Error formateando fecha:", e);
-        return dateString; // Retorna el valor original si hay error
+        return dateString;
       }
     },
 
@@ -455,11 +520,6 @@ export default {
         cancelButtonColor: "#33b5e5",
         confirmButtonText: "Sí, eliminar",
         cancelButtonText: "Cancelar",
-        customClass: {
-          popup: "ps-swal-popup",
-          confirmButton: "ps-swal-confirm",
-          cancelButton: "ps-swal-cancel",
-        },
       });
 
       if (result.isConfirmed) {
@@ -486,10 +546,6 @@ export default {
         background: "#4BB543",
         color: "#fff",
         iconColor: "#fff",
-        didOpen: (toast) => {
-          toast.addEventListener("mouseenter", Swal.stopTimer);
-          toast.addEventListener("mouseleave", Swal.resumeTimer);
-        },
       });
 
       Toast.fire({
@@ -508,10 +564,6 @@ export default {
         background: "#ff4444",
         color: "#fff",
         iconColor: "#fff",
-        didOpen: (toast) => {
-          toast.addEventListener("mouseenter", Swal.stopTimer);
-          toast.addEventListener("mouseleave", Swal.resumeTimer);
-        },
       });
 
       Toast.fire({
@@ -534,22 +586,48 @@ export default {
       this.showErrorToast(errorMsg);
     },
 
-    formatDate(dateString) {
-      if (!dateString) return "N/A";
-      const options = {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      };
-      return new Date(dateString).toLocaleDateString("es-ES", options);
+    handleSearchInput() {
+      if (this.debounceTimeout) {
+        clearTimeout(this.debounceTimeout);
+      }
+      this.debounceTimeout = setTimeout(() => {
+        // Lógica de búsqueda si es necesaria
+      }, 300);
     },
   },
 };
 </script>
 
 <style scoped>
+/* Estilos CSS de los botones (de la primera tabla) */
+.btn-small {
+  font-size: 22px; /* Aumenta el tamaño del ícono */
+  color: black;
+  margin-right: 5px;
+  outline: none; /* Elimina el borde de foco */
+  border: none;
+  background: none; /* Elimina el fondo */
+  padding: 0; /* Elimina el padding para que solo se vea el ícono */
+}
+
+.btn-eye {
+  font-size: 22px; /* Aumenta el tamaño del ícono */
+  margin-right: 5px;
+  outline: none; /* Elimina el borde de foco */
+  border: none;
+  background: none; /* Elimina el fondo */
+  padding: 0; /* Elimina el padding para que solo se vea el ícono */
+}
+
+.btn:hover {
+  scale: 1.1; /* Asegura que no haya fondo al hacer hover */
+}
+
+.btn:focus {
+  outline: none; /* Elimina el borde de foco al hacer clic */
+  box-shadow: none; /* Elimina cualquier sombra de foco en algunos navegadores */
+}
+
 .producto-item {
   padding: 0.5rem 0;
   border-bottom: 1px dashed #eee;

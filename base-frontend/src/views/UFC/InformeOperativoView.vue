@@ -76,6 +76,8 @@
     <div>
       <component :is="currentComponent" />
     </div>
+    <!-- Componente de Rotacion de vagones -->
+    <ConsultaRotacionVagones />
   </div>
 </template>
 
@@ -159,6 +161,7 @@ import EnTrenes from "@/components/EnTrenes.vue";
 import InfOperative from "@/components/InfOperative.vue";
 import Vagones_productos from "@/components/Vagones_productos.vue";
 import AdicionarVagonProducto from "@/views/UFC/AdicionarVagonesProductos.vue";
+import ConsultaRotacionVagones from "@/components/RotacionVagonesView.vue";
 
 export default {
   name: "UFCView",
@@ -172,6 +175,7 @@ export default {
     InfOperative,
     Vagones_productos,
     AdicionarVagonProducto,
+    ConsultaRotacionVagones,
   },
   data() {
     return {

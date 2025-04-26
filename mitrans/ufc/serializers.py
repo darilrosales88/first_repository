@@ -552,9 +552,10 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
         productos = obj.producto.all()
         return [{
             'id': p.id,
-            'nombre_producto': getattr(p.producto, 'nombre_producto', 'N/A'),
-            'tipo_embalaje': getattr(p.tipo_embalaje, 'nombre_embalaje', 'N/A'),
-            'unidad_medida': getattr(p.unidad_medida, 'nombre_unidad_medida', 'N/A'),
+            'nombre_producto': p.producto.nombre_producto,
+            'codigo_producto': p.producto.codigo_producto,
+            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
+            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
             'cantidad': p.cantidad,
             'estado': p.estado,
             'contiene': p.contiene
@@ -629,6 +630,7 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         return [{
             'id': p.id,
             'nombre_producto': p.producto.nombre_producto,
+            'codigo_producto': p.producto.codigo_producto,
             'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
             'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
             'cantidad': p.cantidad,
@@ -661,7 +663,7 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
     productos_info = serializers.SerializerMethodField()
     producto = serializers.PrimaryKeyRelatedField(
         many=True,
-        queryset=producto_en_vagon.objects.all(),
+        queryset=producto_UFC.objects.all(),
         required=False
     )
     
@@ -674,8 +676,9 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
     def get_productos_info(self, obj):
         productos = obj.producto.all()
         return [{
-            'id': p.id,
+           'id': p.id,
             'nombre_producto': p.producto.nombre_producto,
+            'codigo_producto': p.producto.codigo_producto,
             'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
             'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
             'cantidad': p.cantidad,

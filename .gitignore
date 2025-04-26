@@ -49,6 +49,7 @@ base-frontend/src-2/
 .env.local
 
 # Ignorar archivos de caché de Python
+migrations
 __pycache__
 *.pyc
 *.pyo
@@ -57,6 +58,11 @@ __pycache__
 # Ignorar archivos de base de datos SQLite (si usas SQLite)
 *.sqlite3
 *.db
+
+# Ignorar archivos de migración de Django
+*.pyc
+*.pyo
+*.pyd
 
 # Ignorar archivos de configuración de VSCode (opcional)
 .vscode/

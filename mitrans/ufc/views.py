@@ -432,7 +432,7 @@ class en_trenes_view_set(viewsets.ModelViewSet):
 
         if search_term:
             # Filtra por coincidencia en cualquiera de los campos
-            queryset = queryset.prefetch_related('producto').filter(
+            queryset = queryset.prefetch_related('equipo_vagon','producto').filter(
             Q(origen__icontains=search_term) |
             Q(destino__icontains=search_term) |
             Q(producto__producto__nombre_producto__icontains=search_term) |

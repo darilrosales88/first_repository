@@ -36,9 +36,8 @@
         <table class="ps-table">
           <thead>
             <tr>
-              
               <th class="ps-th">Código Locomotora</th>
-              <th class="ps-th">Tipo</th>
+              <th class="ps-th">Tipo de Equipo</th>
               <th class="ps-th">Estado</th>
               <th class="ps-th">Producto</th>
               <th class="ps-th">Cant. Vagones</th>
@@ -65,11 +64,10 @@
               :key="tren.id"
               class="ps-tr"
             >
-              
               <td class="ps-td">
                 {{ tren.numero_identificacion_locomotora || "-" }}
               </td>
-              <td class="ps-td">{{ tren.tipo_equipo || "-" }}</td>
+              <td class="ps-td">{{ tren.tipo_equipo_name || "-" }}</td>
               <td class="ps-td">
                 <span
                   :class="`ps-status ps-status-${getStatusClass(tren.estado)}`"
@@ -95,35 +93,35 @@
               </td>
 
               <!-- En el td de acciones de la tabla -->
-<td class="ps-td ps-td-actions">
-  <div class="d-flex">
-    <button
-      @click="viewDetails(tren)"
-      class="btn btn-sm btn-outline-info me-2"
-      title="Ver detalles"
-    >
-      <i class="bi bi-eye-fill"></i>
-    </button>
-    <router-link
-      :to="{
-        name: 'EditarEnTren',
-        params: { id: tren.id },
-      }"
-      class="btn btn-sm btn-outline-warning me-2"
-      title="Editar"
-    >
-      <i class="bi bi-pencil-square"></i>
-    </router-link>
-    <button
-      @click="confirmDelete(tren.id)"
-      class="btn btn-sm btn-outline-danger"
-      title="Eliminar"
-      :disabled="loading"
-    >
-      <i class="bi bi-trash"></i>
-    </button>
-  </div>
-</td>
+              <td class="ps-td ps-td-actions">
+                <div class="d-flex">
+                  <button
+                    @click="viewDetails(tren)"
+                    class="btn btn-sm btn-outline-info me-2"
+                    title="Ver detalles"
+                  >
+                    <i class="bi bi-eye-fill"></i>
+                  </button>
+                  <router-link
+                    :to="{
+                      name: 'EditarEnTren',
+                      params: { id: tren.id },
+                    }"
+                    class="btn btn-sm btn-outline-warning me-2"
+                    title="Editar"
+                  >
+                    <i class="bi bi-pencil-square"></i>
+                  </router-link>
+                  <button
+                    @click="confirmDelete(tren.id)"
+                    class="btn btn-sm btn-outline-danger"
+                    title="Eliminar"
+                    :disabled="loading"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
             </tr>
 
             <!-- Estado vacío -->
@@ -231,7 +229,7 @@
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Tipo de equipo:</span>
                   <span class="ps-detail-value">{{
-                    currentTren.tipo_equipo || "N/A"
+                    currentTren.tipo_equipo_name || "N/A"
                   }}</span>
                 </div>
 

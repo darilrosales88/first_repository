@@ -540,3 +540,30 @@ class arrastres(models.Model):
     
     def __str__(self):
         return f"Arrastre Pendiente{self.id} - {self.origen}"
+    
+    
+class rotacion_vagones(models.Model):
+    tipo_equipo_ferroviario = models.ForeignKey(
+        nom_tipo_equipo_ferroviario,
+        on_delete=models.CASCADE,
+        related_name="registros_rotacion",
+        verbose_name="Equipo ferroviario"
+    )
+    en_servicio = models.PositiveIntegerField(verbose_name="En servicio")
+    plan_carga = models.PositiveIntegerField(verbose_name="Plan carga")
+    real_carga = models.PositiveIntegerField(verbose_name="Real carga")
+    plan_rotacion = models.PositiveIntegerField(verbose_name="Plan rotación")
+    real_rotacion = models.PositiveIntegerField(verbose_name="Real rotación")
+
+    creado_el = models.DateTimeField(auto_now_add=True, verbose_name="Creado el")
+    actualizado_el = models.DateTimeField(auto_now=True, verbose_name="Actualizado el")
+
+    class Meta:
+        verbose_name = "Registro de rotación"
+        verbose_name_plural = "Registros de rotación"
+        ordering = ["-creado_el"]
+
+    def __str__(self):
+        return f"{self.tipo_equipo_ferroviario.nombre} - Servicio: {self.en_servicio}"
+    
+    

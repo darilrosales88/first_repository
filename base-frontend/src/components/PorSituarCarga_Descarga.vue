@@ -423,12 +423,7 @@ export default {
     getPorSituar() {
       this.loading = true;
       axios
-        .get("http://127.0.0.1:8000/ufc/por-situar/", {
-          params: {
-            page: this.currentPage,
-            page_size: this.itemsPerPage,
-          },
-        })
+        .get("http://127.0.0.1:8000/ufc/por-situar/")
         .then((response) => {
           this.registrosPorSituar = response.data.results;
           this.totalItems = response.data.count;
@@ -453,20 +448,12 @@ export default {
     async viewDetails(item) {
       this.loading = true;
       try {
-        // Primero asignamos los datos básicos del item
-        this.currentRecord = {
-          ...item,
-          tipo_origen: item.tipo_origen_name,
-          observaciones: item.observaciones || "Ninguna observación registrada",
-          created_at: item.created_at || new Date().toISOString(),
-        };
+        this.currentRecord = { ...item };
+        this.showDetailsModal = true;
 
-        // Luego hacemos la llamada API para obtener más detalles
         const response = await axios.get(
           `http://127.0.0.1:8000/ufc/por-situar/${item.id}/`
         );
-
-        // Combinamos los datos existentes con los nuevos
         this.currentRecord = {
           ...this.currentRecord,
           ...response.data,
@@ -538,7 +525,7 @@ export default {
       if (result.isConfirmed) {
         try {
           this.loading = true;
-          await axios.delete(`http://127.0.0.1:8000/ufc/por-situar/${id}/`);
+          await axios.delete(`/ufc/por-situar/${id}/`);
           this.showSuccessToast("Registro eliminado");
           await this.getPorSituar();
         } catch (error) {

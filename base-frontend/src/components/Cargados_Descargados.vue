@@ -80,7 +80,7 @@
                   <i class="bi bi-eye-fill"></i>
                 </button>
                 <button
-                  @click="editTren(vagon)"
+                  @click="editVagon(vagon)"
                   class="btn btn-sm btn-outline-warning me-2"
                   title="Editar"
                 >
@@ -175,317 +175,308 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 
-export default {
-  name: "CargadosDescargados",
-
-  data() {
-    return {
-      cargados_descargados: [], // Lista de vagones
-      allRecords: [], // Copia completa de todos los registros para filtrado local
-      currentPage: 1,
-      itemsPerPage: 10,
-      totalItems: 0,
-      searchQuery: "",
-      debounceTimeout: null,
-      busqueda_existente: true,
-      userPermissions: [],
-      userGroups: [],
-      showContent: false,
-      mostrarModal: false,
-      loading: false,
-    };
-  },
-
-  async mounted() {
-    await this.getVagonesCargadosDescargados();
-    await this.fetchUserPermissionsAndGroups();
-  },
-
-  methods: {
-    toggleContentVisibility() {
-      this.showContent = !this.showContent;
+  export default {
+    name: "CargadosDescargados",   
+  
+    data() {
+      return {
+        cargados_descargados: [], // Lista de vagones
+        allRecords: [], // Copia completa de todos los registros para filtrado local
+        currentPage: 1,
+        itemsPerPage: 10,
+        totalItems: 0,
+        searchQuery: "",
+        debounceTimeout: null,
+        busqueda_existente: true,
+        userPermissions: [],
+        userGroups: [],
+        showContent: false,
+        mostrarModal: false,
+        loading: false,
+      };
     },
-
-    hasGroup(group) {
-      return this.userGroups.some((g) => g.name === group);
+  
+    async mounted() {
+      await this.getVagonesCargadosDescargados();
+      await this.fetchUserPermissionsAndGroups();
     },
-
-    async fetchUserPermissionsAndGroups() {
-      try {
-        const userId = localStorage.getItem("userid");
-        if (userId) {
-          const response = await axios.get(
-            `/apiAdmin/user/${userId}/permissions-and-groups/`
-          );
-          this.userPermissions = response.data.permissions;
-          this.userGroups = response.data.groups;
+  
+    methods: {
+      toggleContentVisibility() {
+        this.showContent = !this.showContent;
+      },
+  
+      hasGroup(group) {
+        return this.userGroups.some((g) => g.name === group);
+      },
+  
+      async fetchUserPermissionsAndGroups() {
+        try {
+          const userId = localStorage.getItem("userid");
+          if (userId) {
+            const response = await axios.get(
+              `/apiAdmin/user/${userId}/permissions-and-groups/`
+            );
+            this.userPermissions = response.data.permissions;
+            this.userGroups = response.data.groups;
+          }
+        } catch (error) {
+          console.error("Error al obtener permisos y grupos:", error);
         }
-      } catch (error) {
-        console.error("Error al obtener permisos y grupos:", error);
-      }
-    },
-
-    async getVagonesCargadosDescargados() {
-      this.loading = true;
-      try {
-        const response = await axios.get("/ufc/vagones-cargados-descargados/", {
-          params: {
-            page: this.currentPage,
-            page_size: this.itemsPerPage,
+      },
+  
+      async getVagonesCargadosDescargados() {
+        this.loading = true;
+        try {
+          const response = await axios.get("/ufc/vagones-cargados-descargados/", {
+            params: {
+              page: this.currentPage,
+              page_size: this.itemsPerPage,
+            },
+          });
+          
+          this.cargados_descargados = response.data.results;
+          this.allRecords = [...response.data.results]; // Guardar copia completa para filtrado
+          this.totalItems = response.data.count;
+          this.busqueda_existente = true;
+        } catch (error) {
+          console.error("Error al obtener los vagones cargados/descargados:", error);
+          this.busqueda_existente = false;
+        } finally {
+          this.loading = false;
+        }
+      },
+  
+      // Nuevo método de búsqueda adaptado del componente que funciona
+      handleSearchInput() {
+        clearTimeout(this.debounceTimeout);
+        this.debounceTimeout = setTimeout(() => {
+          if (!this.searchQuery.trim()) {
+            this.cargados_descargados = [...this.allRecords];
+            this.busqueda_existente = true;
+            return;
+          }
+  
+          const query = this.searchQuery.toLowerCase();
+          this.cargados_descargados = this.allRecords.filter((item) => {
+            const tipoEquipo = item.tipo_equipo_ferroviario_name?.toLowerCase() || "";
+            const productos = item.productos_list?.toLowerCase() || "";
+            const estado = item.estado?.toLowerCase() || "";
+            
+            return (
+              tipoEquipo.includes(query) || 
+              productos.includes(query) || 
+              estado.includes(query)
+            );
+          });
+  
+          this.busqueda_existente = this.cargados_descargados.length > 0;
+        }, 300);
+      },
+  
+      // Métodos de paginación
+      previousPage() {
+        if (this.currentPage > 1) {
+          this.currentPage--;
+          this.getVagonesCargadosDescargados();
+        }
+      },
+  
+      nextPage() {
+        if (this.currentPage * this.itemsPerPage < this.totalItems) {
+          this.currentPage++;
+          this.getVagonesCargadosDescargados();
+        }
+      },
+  
+      goToPage(page) {
+        this.currentPage = page;
+        this.getVagonesCargadosDescargados();
+      },
+  
+      async delete_tren(id) {
+        try {
+          await axios.delete(`/ufc/vagones-cargados-descargados/${id}/`);
+          this.cargados_descargados = this.cargados_descargados.filter((objeto) => objeto.id !== id);
+          Swal.fire(
+            "Eliminado!",
+            "El producto ha sido eliminado exitosamente.",
+            "success"
+          );
+        } catch (error) {
+          console.error("Error al eliminar el producto:", error);
+          Swal.fire("Error", "Hubo un error al eliminar el producto.", "error");
+        }
+      },
+  
+      openVagonDetailsModal(vagon) {
+        Swal.fire({
+          title: "Detalles del Vagon",
+          html: `
+            <div style="text-align: left;">
+              <p><strong>No Id Locomotora:</strong> ${vagon.numero_identificacion_locomotora}</p>
+              <p><strong>Tipo de equipo:</strong> ${vagon.tipo_equipo}</p>
+              <p><strong>Estado:</strong> ${vagon.estado}</p>
+              <p><strong>Producto Id:</strong> ${vagon.producto}</p>
+              <p><strong>Producto nombre:</strong> ${vagon.producto_name}</p>
+              <p><strong>Tipo de origen:</strong> ${vagon.tipo_origen}</p>
+              <p><strong>Origen:</strong> ${vagon.origen}</p>
+              <p><strong>Tipo de destino:</strong> ${vagon.tipo_destino}</p>
+              <p><strong>Destino:</strong> ${vagon.destino}</p>
+              <p><strong>Nombre del equipo de carga:</strong> ${vagon.equipo_carga_name}</p>
+              <p><strong>Observaciones:</strong> ${vagon.observaciones}</p>
+            </div>
+          `,
+          width: "600px",
+          customClass: {
+            popup: "custom-swal-popup",
+            title: "custom-swal-title",
+            htmlContainer: "custom-swal-html",
           },
         });
-
-        this.cargados_descargados = response.data.results;
-        this.allRecords = [...response.data.results]; // Guardar copia completa para filtrado
-        this.totalItems = response.data.count;
-        this.busqueda_existente = true;
-      } catch (error) {
-        console.error(
-          "Error al obtener los vagones cargados/descargados:",
-          error
-        );
-        this.busqueda_existente = false;
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    // Nuevo método de búsqueda adaptado del componente que funciona
-    handleSearchInput() {
-      clearTimeout(this.debounceTimeout);
-      this.debounceTimeout = setTimeout(() => {
-        if (!this.searchQuery.trim()) {
-          this.cargados_descargados = [...this.allRecords];
-          this.busqueda_existente = true;
-          return;
-        }
-
-        const query = this.searchQuery.toLowerCase();
-        this.cargados_descargados = this.allRecords.filter((item) => {
-          const tipoEquipo =
-            item.tipo_equipo_ferroviario_name?.toLowerCase() || "";
-          const productos = item.productos_list?.toLowerCase() || "";
-          const estado = item.estado?.toLowerCase() || "";
-
-          return (
-            tipoEquipo.includes(query) ||
-            productos.includes(query) ||
-            estado.includes(query)
-          );
+      },
+  
+      cerrarModal() {
+        this.mostrarModal = false;
+      },
+  
+      confirmDelete(id) {
+        Swal.fire({
+          title: "¿Estás seguro?",
+          text: "¡No podrás revertir esta acción!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Sí, eliminar",
+          cancelButtonText: "Cancelar",
+          reverseButtons: true,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.delete_tren(id);
+          }
         });
-
-        this.busqueda_existente = this.cargados_descargados.length > 0;
-      }, 300);
-    },
-
-    // Métodos de paginación
-    previousPage() {
-      if (this.currentPage > 1) {
-        this.currentPage--;
-        this.getVagonesCargadosDescargados();
-      }
-    },
-
-    nextPage() {
-      if (this.currentPage * this.itemsPerPage < this.totalItems) {
-        this.currentPage++;
-        this.getVagonesCargadosDescargados();
-      }
-    },
-
-    goToPage(page) {
-      this.currentPage = page;
-      this.getVagonesCargadosDescargados();
-    },
-
-    async delete_tren(id) {
-      try {
-        await axios.delete(`/ufc/vagones-cargados-descargados/${id}/`);
-        this.cargados_descargados = this.cargados_descargados.filter(
-          (objeto) => objeto.id !== id
-        );
-        Swal.fire(
-          "Eliminado!",
-          "El producto ha sido eliminado exitosamente.",
-          "success"
-        );
-      } catch (error) {
-        console.error("Error al eliminar el producto:", error);
-        Swal.fire("Error", "Hubo un error al eliminar el producto.", "error");
-      }
-    },
-
-    viewDetails(vagon) {
-      this.openVagonDetailsModal(vagon);
-    },
-
-    openVagonDetailsModal(vagon) {
-      Swal.fire({
-        title: "Detalles del Vagon",
-        html: `
-          <div style="text-align: left;">
-            <p><strong>No Id Locomotora:</strong> ${vagon.numero_identificacion_locomotora}</p>
-            <p><strong>Tipo de equipo:</strong> ${vagon.tipo_equipo}</p>
-            <p><strong>Estado:</strong> ${vagon.estado}</p>
-            <p><strong>Producto Id:</strong> ${vagon.producto}</p>
-            <p><strong>Producto nombre:</strong> ${vagon.producto_name}</p>
-            <p><strong>Tipo de origen:</strong> ${vagon.tipo_origen}</p>
-            <p><strong>Origen:</strong> ${vagon.origen}</p>
-            <p><strong>Tipo de destino:</strong> ${vagon.tipo_destino}</p>
-            <p><strong>Destino:</strong> ${vagon.destino}</p>
-            <p><strong>Nombre del equipo de carga:</strong> ${vagon.equipo_carga_name}</p>
-            <p><strong>Observaciones:</strong> ${vagon.observaciones}</p>
-          </div>
-        `,
-        width: "600px",
-        customClass: {
-          popup: "custom-swal-popup",
-          title: "custom-swal-title",
-          htmlContainer: "custom-swal-html",
-        },
-      });
-    },
-
-    cerrarModal() {
-      this.mostrarModal = false;
-    },
-
-    confirmDelete(id) {
-      Swal.fire({
-        title: "¿Estás seguro?",
-        text: "¡No podrás revertir esta acción!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Sí, eliminar",
-        cancelButtonText: "Cancelar",
-        reverseButtons: true,
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.delete_tren(id);
+      },
+  
+      // Método para manejar errores (similar al del componente que funciona)
+      handleApiError(error, action) {
+        let errorMsg = `Error al ${action}`;
+        if (error.response) {
+          errorMsg += ` (${error.response.status})`;
+          if (error.response.data) {
+            errorMsg += `: ${JSON.stringify(error.response.data)}`;
+          }
+        } else {
+          errorMsg += `: ${error.message}`;
         }
-      });
+        console.error(errorMsg, error);
+        Swal.fire("Error", errorMsg, "error");
+      },
     },
-
-    // Método para manejar errores (similar al del componente que funciona)
-    handleApiError(error, action) {
-      let errorMsg = `Error al ${action}`;
-      if (error.response) {
-        errorMsg += ` (${error.response.status})`;
-        if (error.response.data) {
-          errorMsg += `: ${JSON.stringify(error.response.data)}`;
-        }
-      } else {
-        errorMsg += `: ${error.message}`;
-      }
-      console.error(errorMsg, error);
-      Swal.fire("Error", errorMsg, "error");
-    },
-  },
-};
-</script>
-
-<style scoped>
-/* Estilos para el contenedor del buscador */
-.search-container {
-  position: relative;
-  width: 100%;
-  max-width: 300px; /* Ancho máximo del buscador */
-}
-
-/* Estilos para el input del buscador */
-.search-container input {
-  padding-right: 40px; /* Espacio para el icono de lupa */
-  border-radius: 20px; /* Bordes redondeados */
-}
-
-/* Estilos para el icono de lupa */
-.search-icon {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #888; /* Color del icono */
-  pointer-events: none; /* Evita que el icono interfiera con el input */
-}
-
-/* Estilos para la tabla responsive */
-.table-responsive {
-  overflow-x: auto; /* Permite desplazamiento horizontal en pantallas pequeñas */
-}
-
-/* Estilos para el modal */
-.modal-backdrop {
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 90%;
-  background-color: transparent; /* Fondo semitransparente */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000; /* Asegura que el modal esté por encima de todo */
-}
-
-.modal-content {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  width: 90%;
-  max-width: 500px; /* Ancho máximo del modal */
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
-}
-
-.modal-title {
-  margin: 0;
-}
-
-.btn-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-}
-
-.modal-body {
-  margin-bottom: 20px;
-}
-
-/* Estilos para el icono de agregar */
-.btn-link {
-  color: #007bff; /* Color azul para el icono */
-  text-decoration: none; /* Sin subrayado */
-}
-
-.btn-link:hover {
-  color: #0056b3; /* Color azul más oscuro al pasar el mouse */
-}
-
-.search-container {
-  position: relative;
-  width: 100%;
-  max-width: 300px;
-}
-
-.search-container input {
-  padding-left: 2.5rem !important; /* Espacio para el icono */
-  border-radius: 20px !important;
-}
-
-.search-container .bi-search {
-  color: #6c757d; /* Color gris para el icono */
-  z-index: 10;
-}
-
-/* Para asegurar que el input group conserve los estilos */
-.input-group {
-  width: 100%;
-}
-</style>
+  };
+  </script>
+  
+  <style scoped>
+  /* Estilos para el contenedor del buscador */
+  .search-container {
+    position: relative;
+    width: 100%;
+    max-width: 300px; /* Ancho máximo del buscador */
+  }
+  
+  /* Estilos para el input del buscador */
+  .search-container input {
+    padding-right: 40px; /* Espacio para el icono de lupa */
+    border-radius: 20px; /* Bordes redondeados */
+  }
+  
+  /* Estilos para el icono de lupa */
+  .search-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888; /* Color del icono */
+    pointer-events: none; /* Evita que el icono interfiera con el input */
+  }
+  
+  /* Estilos para la tabla responsive */
+  .table-responsive {
+    overflow-x: auto; /* Permite desplazamiento horizontal en pantallas pequeñas */
+  }
+  
+  /* Estilos para el modal */
+  .modal-backdrop {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 90%;
+    background-color: transparent; /* Fondo semitransparente */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Asegura que el modal esté por encima de todo */
+  }
+  
+  .modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px; /* Ancho máximo del modal */
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .modal-title {
+    margin: 0;
+  }
+  
+  .btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  
+  .modal-body {
+    margin-bottom: 20px;
+  }
+  
+  /* Estilos para el icono de agregar */
+  .btn-link {
+    color: #007bff; /* Color azul para el icono */
+    text-decoration: none; /* Sin subrayado */
+  }
+  
+  .btn-link:hover {
+    color: #0056b3; /* Color azul más oscuro al pasar el mouse */
+  }
+  
+  .search-container {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .search-container input {
+    padding-left: 2.5rem !important; /* Espacio para el icono */
+    border-radius: 20px !important;
+  }
+  
+  .search-container .bi-search {
+    color: #6c757d; /* Color gris para el icono */
+    z-index: 10;
+  }
+  
+  /* Para asegurar que el input group conserve los estilos */
+  .input-group {
+    width: 100%;
+  }
+  </style>
+  

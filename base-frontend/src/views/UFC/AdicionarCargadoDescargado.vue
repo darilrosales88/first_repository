@@ -306,13 +306,7 @@
                 <td>{{ item.observaciones }}</td>
                 <td>                  
                   <span v-if="hasGroup('AdminUFC')">
-                    <button class="btn btn-warning btn-small">
-                      <!-- <router-link
-                        :to="{ name: 'EditarDestino', params: { id: item.id } }"
-                      >
-                        <i style="color: black" class="bi bi-pencil-square"></i>
-                      </router-link> -->
-                    </button>
+                    
                     <button
                     @click.prevent="confirmDeleteVagonAsignado(item)"
                       class="btn btn-danger btn-small"
@@ -490,6 +484,102 @@
       },
   
     methods: {
+
+      async submitForm() {
+        // Validación de campos obligatorios base
+        if (!this.formData.tipo_equipo_ferroviario || !this.formData.tipo_origen ||
+            !this.formData.origen || !this.formData.tipo_destino || !this.formData.destino) {
+            Swal.fire("Error", "Por favor complete todos los campos obligatorios", "error");
+            return;
+        }
+
+        // Validación específica para productos cuando estado es "cargado"
+        if (this.formData.estado === 'cargado' &&
+            (!this.formData.lista_productos || this.formData.lista_productos.length === 0)) {
+            Swal.fire("Error", "Debe seleccionar al menos un producto cuando el estado es 'Cargado'", "error");
+            return;
+        }
+
+        // Asegurar que tenemos el cálculo más reciente
+        await this.calcularRealCargaDescarga();
+
+        try {
+            const datosEnvio = {
+                ...this.formData,
+                producto_ids: Array.isArray(this.formData.lista_productos)
+                    ? this.formData.lista_productos
+                    : [this.formData.lista_productos],
+                registros_vagones_data: this.registros_vagones_temporales.map(v => ({
+                    no_id: v.no_id,
+                    fecha_despacho: v.fecha_despacho,
+                    tipo_origen: v.tipo_origen,
+                    origen: v.origen,
+                    fecha_llegada: v.fecha_llegada,
+                    observaciones: v.observaciones
+                }))
+            };
+
+            const response = await axios.post("/ufc/vagones-cargados-descargados/", datosEnvio);
+
+            // Limpiar después del éxito
+            this.registros_vagones_temporales = [];
+            this.formData.lista_productos = [];
+            this.resetForm();
+
+            await Swal.fire({
+                title: "Éxito",
+                text: "Registro creado correctamente",
+                icon: "success",
+                confirmButtonText: "Aceptar"
+            });
+
+            this.$router.push({ name: 'InfoOperativo' });
+        } catch (error) {
+            console.error("Error al guardar:", error.response);
+            let errorMsg = "No se pudo guardar el registro";
+            
+            if (error.response?.data) {
+                errorMsg += `: ${JSON.stringify(error.response.data)}`;
+            }
+            
+            Swal.fire("Error", errorMsg, "error");
+        }
+    },
+
+    async calcularRealCargaDescarga() {
+        if (!this.formData.lista_productos || this.formData.lista_productos.length === 0) {
+            this.formData.real_carga_descarga = 0;
+            return;
+        }
+        
+        try {
+            const response = await axios.post(
+                '/ufc/vagones-cargados-descargados/calcular_total_vagones_por_productos/',
+                { producto_ids: this.formData.lista_productos }
+            );
+            
+            this.formData.real_carga_descarga = response.data.total;
+        } catch (error) {
+            console.error('Error al calcular el total de vagones:', error);
+            this.formData.real_carga_descarga = 0;
+        }
+    },
+
+    resetForm() {
+        this.formData = {
+            tipo_equipo_ferroviario: "",
+            tipo_origen: "ac_ccd",
+            origen: "",
+            tipo_destino: "ac_ccd",
+            destino: "",
+            estado: "cargado",
+            lista_productos: [],
+            plan_diario_carga_descarga: "",
+            real_carga_descarga: "",
+            operacion: "",
+            causas_incumplimiento: ""
+        };
+    },
       // Al abrir/cerrar el modal hijo
       abrirModalAgregarVagon() {
         this.mostrarModalVagon = true;
@@ -542,113 +632,14 @@
           
           // Actualizar lista de visualización (creando nuevo array)
           this.registros_vagones_cargados = [...this.registros_vagones_temporales];
-      },
-
-    async calcularRealCargaDescarga() {
-            if (!this.formData.lista_productos || this.formData.lista_productos.length === 0) {
-                this.formData.real_carga_descarga = 0;
-                return;
-            }
-            
-            try {
-                const response = await axios.post(
-                    '/ufc/vagones-cargados-descargados/calcular_total_vagones_por_productos/',
-                    { producto_ids: this.formData.lista_productos }
-                );
-                
-                this.formData.real_carga_descarga = response.data.total;
-            } catch (error) {
-                console.error('Error al calcular el total de vagones:', error);
-                this.formData.real_carga_descarga = 0;
-            }
-        },
-
-        async submitForm() {
-
-          // Validación de campos obligatorios base
-        if (!this.formData.tipo_equipo_ferroviario || !this.formData.tipo_origen || 
-            !this.formData.origen || !this.formData.tipo_destino || !this.formData.destino) {
-          Swal.fire("Error", "Por favor complete todos los campos obligatorios", "error");
-          return;
-        }
-
-        // Validación específica para productos cuando estado es "cargado"
-        if (this.formData.estado === 'cargado' && 
-            (!this.formData.lista_productos || this.formData.lista_productos.length === 0)) {
-          Swal.fire("Error", "Debe seleccionar al menos un producto cuando el estado es 'Cargado'", "error");
-          return;
-        }
-        // Asegurar que tenemos el cálculo más reciente
-        await this.calcularRealCargaDescarga();
-        
-        // Resto del código de envío del formulario...
-        try {
-            const datosEnvio = {
-                ...this.formData,
-                producto_ids: Array.isArray(this.formData.lista_productos)
-                    ? this.formData.lista_productos
-                    : [this.formData.lista_productos],
-                registros_vagones_data: this.registros_vagones_temporales.map(v => ({
-                    no_id: v.no_id,
-                    fecha_despacho: v.fecha_despacho,
-                    tipo_origen: v.tipo_origen,
-                    origen: v.origen,
-                    fecha_llegada: v.fecha_llegada,
-                    observaciones: v.observaciones
-                }))
-            };
-            
-            const response = await axios.post("/ufc/vagones-cargados-descargados/", datosEnvio);
-            
-            // Limpiar después del éxito
-            this.registros_vagones_temporales = [];
-            this.formData.lista_productos = [];
-            this.resetForm();
-            
-            // Mostrar mensaje de éxito y redireccionar
-            await Swal.fire({
-              title: "Éxito",
-              text: "Registro creado correctamente",
-              icon: "success",
-              confirmButtonText: "Aceptar"
-            });
-            
-            // Redirección a InfoOperativo
-            this.$router.push({ name: 'InfoOperativo' });
-        } 
-        
-        catch (error) {
-            console.error("Error al guardar:", error.response);
-            let errorMsg = "No se pudo guardar el registro";
-            
-            if (error.response?.data) {
-                errorMsg += `: ${JSON.stringify(error.response.data)}`;
-            }
-            
-            Swal.fire("Error", errorMsg, "error");
-        }
-    },
+      }, 
 
       // Método para agregar registros temporales desde el modal
       agregarRegistroTemporal(registro) {
         this.registros_vagones_temporales.push(registro);
       },
 
-  resetForm() {
-    this.formData = {
-      tipo_equipo_ferroviario: "",
-      tipo_origen: "ac_ccd",
-      origen: "",
-      tipo_destino: "ac_ccd",
-      destino: "",
-      estado: "cargado",
-      lista_productos: [], // Ahora es un array vacío en lugar de string vacío
-      plan_diario_carga_descarga: "",
-      real_carga_descarga: "",
-      operacion: "",
-      causas_incumplimiento: ""
-    };
-  },
+  
 
  /*        // Obtiene los registros de los vagones del estado cargado/descargado
         async GetRegistroVagonesCargadosDescargados() {

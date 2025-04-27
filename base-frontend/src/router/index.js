@@ -696,6 +696,15 @@ const routes = [
       requireLogin: true,
     },
   },
+  {
+    path: '/editar-cargado-descargado/:id',
+    name: 'EditarCargadoDescargado',
+    component: () => import('@/views/UFC/EditarCargadoDescargado.vue'),
+    meta: {
+      requireLogin: true
+    },
+    props: true // Pasar los parámetros como props
+  },
   /* Vagones y productos */
   {
     path: "/AdicionarVagon_producto",

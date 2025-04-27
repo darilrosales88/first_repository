@@ -19,7 +19,7 @@
             <input
               type="search"
               class="form-control"
-              placeholder="Origen, Tipo, Producto, Equipo ferroviario"
+              placeholder="Origen, Tipo Equipo, Producto"
               v-model="searchQuery"
               @input="handleSearchInput"
             />
@@ -162,6 +162,7 @@
                 <div class="col-md-6">
                 <p><strong>Plan acumulado día anterior:</strong> {{ vagonSeleccionado.plan_acumulado_dia_anterior || '0' }}</p>
                 <p><strong>Real acumulado día anterior:</strong> {{ vagonSeleccionado.real_acumulado_dia_anterior || '0' }}</p>
+                <p><strong>Plan del día :</strong> {{ vagonSeleccionado.plan_dia || '0' }}</p>
                 </div>
             </div>
 
@@ -278,7 +279,7 @@
           const query = this.searchQuery.toLowerCase();
           this.vagones_productos = this.allRecords.filter((item) => {
             const tipoEquipo = item.tipo_equipo_ferroviario_name?.toLowerCase() || "";
-            const tipoOrigen = item.tipo_origen_name?.toLowerCase() || "";
+            const tipoOrigen = item.origen?.toLowerCase() || "";
             const productos = item.productos_list?.toLowerCase() || "";
             
             return (

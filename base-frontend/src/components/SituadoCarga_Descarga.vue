@@ -424,7 +424,7 @@ export default {
     async getPorSituar() {
       this.loading = true;
       try {
-        const response = await axios.get("http://127.0.0.1:8000/ufc/situados/");
+        const response = await axios.get("/ufc/situados/");
         this.totalItems = response.data.count;
 
         if (
@@ -478,18 +478,11 @@ export default {
     async viewDetails(item) {
       try {
         this.loading = true;
-        this.currentRecord = { ...item };
-        this.showDetailsModal = true;
-
-        const response = await axios.get(
-          `http://127.0.0.1:8000/ufc/situados/${item.id}/`
-        );
-        this.currentRecord = {
-          ...response.data,
-          observaciones:
-            response.data.observaciones || "Ninguna observación registrada",
-          created_at: response.data.created_at || new Date().toISOString(),
-        };
+        this.selectedItem = { ...item };
+        this.showModal = true;
+        
+        const response = await axios.get(`http://127.0.0.1:8000/ufc/situados/${item.id}/`);
+        this.selectedItem = response.data;
       } catch (error) {
         console.error("Error al cargar detalles:", error);
         this.showErrorToast("No se pudieron cargar los detalles completos");
@@ -573,7 +566,7 @@ export default {
         try {
           this.loading = true;
           await axios.delete(`http://127.0.0.1:8000/ufc/situados/${id}/`);
-          this.showSuccessToast("Registro eliminado");
+          this.showSuccessToast('Registro eliminado');
           await this.getPorSituar();
         } catch (error) {
           this.handleApiError(error, "eliminar registro");

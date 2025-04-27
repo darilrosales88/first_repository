@@ -178,6 +178,48 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
             'registros_vagones': {'read_only': True}
         }
 
+    def update(self, instance, validated_data):
+        try:
+            with transaction.atomic():
+                # Extraer datos para relaciones
+                productos_data = validated_data.pop('producto', None)  # Usamos el source='producto' del PrimaryKeyRelatedField
+                registros_data = validated_data.pop('registros_vagones_data', [])
+                
+                # Actualizar campos directos
+                for attr, value in validated_data.items():
+                    setattr(instance, attr, value)
+                instance.save()
+                
+                # Actualizar productos si se proporcionaron
+                if productos_data is not None:
+                    # Usamos set() para actualizar la relación ManyToMany
+                    instance.producto.set(productos_data)
+                
+                # Manejar registros de vagones
+                if registros_data:
+                    # Eliminar registros antiguos no incluidos
+                    ids_nuevos = [r.get('id') for r in registros_data if r.get('id')]
+                    instance.registros_vagones.exclude(id__in=ids_nuevos).delete()
+                    
+                    # Actualizar o crear registros
+                    for registro_data in registros_data:
+                        registro_id = registro_data.get('id')
+                        if registro_id:
+                            # Actualizar registro existente
+                            registro = registro_vagones_cargados.objects.get(id=registro_id)
+                            for attr, value in registro_data.items():
+                                setattr(registro, attr, value)
+                            registro.save()
+                        else:
+                            # Crear nuevo registro
+                            registro = registro_vagones_cargados.objects.create(**registro_data)
+                            instance.registros_vagones.add(registro)
+                
+                return instance
+                
+        except Exception as e:
+            raise serializers.ValidationError(f"Error al actualizar el registro: {str(e)}")
+
     def create(self, validated_data):
         try:
             with transaction.atomic():
@@ -205,7 +247,9 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
         except Exception as e:
             raise serializers.ValidationError(
                 f"Error al crear el vagon: {str(e)}"
-            )    
+            )
+
+        
 
     def get_productos_list(self, obj):
         return ", ".join([

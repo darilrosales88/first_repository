@@ -322,7 +322,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
         
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-#*****************************************************************************************************************************
+
 #serializador para los vagones asignados al estado vagones cargados/descargados
 class registro_vagones_cargados_filter(filters.FilterSet):
     no_id_origen = filters.CharFilter(method='filtrado_por_no_id_origen',lookup_expr = 'icontains') 

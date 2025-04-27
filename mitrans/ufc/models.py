@@ -3,7 +3,7 @@ from django.db import models
 from nomencladores.models import nom_puerto,nom_tipo_equipo_ferroviario,nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_equipo_ferroviario
 from nomencladores.models import nom_destino
 from django.core.validators import RegexValidator
-from django.db.models import Sum
+
 
 
 #productos asociados a vagones en trenes
@@ -51,64 +51,7 @@ class producto_UFC(models.Model):
 #Modelo creado para los productos asociados al modelo vagones y productos
 
 # Modelo para representar el estado vagones cargados/descargados
-class vagon_cargado_descargado(models.Model):
-    TIPO_ORIGEN_DESTINO_CHOICES = [
-        ('puerto', 'Puerto'),
-        ('ac_ccd', 'Acceso comercial/CCD'),
-    ]
-    
-    ESTADO_CHOICES = [
-        ('vacio', 'Vacío'),
-        ('cargado', 'Cargado'),
-    ]
-    
-    OPERACION_CHOICES = [
-        ('carga', 'Carga'),
-        ('descarga', 'Descarga'),
-    ]
-    
-    TIPO_DESTINO_CHOICES = [
-        ('puerto', 'Puerto'),
-        ('ac_ccd', 'Acceso comercial/CCD'),
-    ]
-    
-    tipo_origen = models.CharField(choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
-    origen = models.CharField(max_length=40)
-    tipo_equipo_ferroviario = models.ForeignKey(nom_tipo_equipo_ferroviario, on_delete=models.CASCADE)
-    estado = models.CharField(choices=ESTADO_CHOICES, max_length = 50)    
-    operacion = models.CharField(choices=OPERACION_CHOICES, editable=True, max_length = 50)
-    plan_diario_carga_descarga = models.IntegerField()
-    real_carga_descarga = models.IntegerField(default = 0, editable=False)
-    tipo_destino = models.CharField(choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
-    destino = models.CharField(max_length=40)
-    causas_incumplimiento = models.TextField(null=True, blank=True, max_length = 100)
-    # Cambiamos ForeignKey a ManyToManyField, es posible que un vagon tenga mas de un producto
-    producto = models.ManyToManyField(
-        productos_vagones_cargados_descargados,
-        blank=True,
-        related_name='vagones_asociados'
-    )
 
-    registros_vagones = models.ManyToManyField(
-        'registro_vagones_cargados',
-        blank=True,
-        related_name='vagon_principal',
-        verbose_name="Registros de vagones asociados"
-    )
-
-    class Meta:
-        verbose_name_plural = "Vagones cargados/descargados"
-        verbose_name = "Vagón cargado/descargado"   
-
-    def delete(self, *args, **kwargs):
-        # Eliminar primero los registros_vagones asociados
-        self.registros_vagones.all().delete()
-        # Luego eliminar el registro padre
-        super().delete(*args, **kwargs)     
-
-    def __str__(self):
-        return f"Vagón {self.id} - {self.get_estado_display()}"
-    
 # modelo para registrar los vagones asociados al estado vagones cargados/descargados
 class registro_vagones_cargados(models.Model):
     # Opciones para el campo tipo_origen
@@ -399,7 +342,13 @@ class por_situar(models.Model):
     
     por_situar = models.CharField(
         max_length=10,
-        
+        validators=[
+            RegexValidator(
+                regex='^-?\d+$',
+                message='Solo se permiten números enteros (ej: 5, -10).',
+                code='numero_invalido'
+            )
+        ],
         verbose_name="Por situar"
     )
 

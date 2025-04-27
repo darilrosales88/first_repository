@@ -3,17 +3,17 @@
     <h6>Bienvenido:</h6>
   </div>
   <Navbar-Component />
-  
+
   <div class="container mt-2 px-6" style="padding-left: 10%">
     <div class="row mb-4">
       <h2 class="mb-4">Editar registro de vagón cargado/descargado</h2>
-      
+
       <div v-if="loading" class="text-center">
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Cargando...</span>
         </div>
       </div>
-      
+
       <form @submit.prevent="submitForm" v-else>
         <div class="row">
           <!-- Columna 1 -->
@@ -35,7 +35,10 @@
                   :key="tipo_equipo_ferroviario.id"
                   :value="tipo_equipo_ferroviario.id"
                 >
-                  {{ tipo_equipo_ferroviario.id }}-{{ tipo_equipo_ferroviario.tipo_equipo_name }} -
+                  {{ tipo_equipo_ferroviario.id }}-{{
+                    tipo_equipo_ferroviario.tipo_equipo_name
+                  }}
+                  -
                   {{ tipo_equipo_ferroviario.descripcion }}
                 </option>
               </select>
@@ -185,7 +188,8 @@
                 class="form-control"
                 v-model="formData.operacion"
                 id="operacion"
-                name="operacion" readonly
+                name="operacion"
+                readonly
               />
             </div>
 
@@ -214,7 +218,8 @@
                 class="form-control"
                 v-model="formData.real_carga_descarga"
                 id="real_carga_descarga"
-                name="real_carga_descarga" readonly
+                name="real_carga_descarga"
+                readonly
               />
             </div>
 
@@ -222,7 +227,11 @@
             <div class="mb-3" v-if="formData.estado === 'cargado'">
               <label for="producto" class="form-label">
                 Productos
-                <button type="button" class="btn btn-sm btn-success ms-2" @click="abrirModalAgregarProducto">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-success ms-2"
+                  @click="abrirModalAgregarProducto"
+                >
                   <i class="bi bi-plus-circle"></i> Agregar
                 </button>
               </label>
@@ -240,24 +249,37 @@
                   :value="producto.id"
                 >
                   {{ producto.id }}-{{ producto.producto_name }} -
-                  {{ producto.producto_codigo }}-{{ producto.tipo_embalaje_name }}
+                  {{ producto.producto_codigo }}-{{
+                    producto.tipo_embalaje_name
+                  }}
                 </option>
               </select>
-              <small class="text-muted">Mantén presionado Ctrl o Shift para seleccionar múltiples productos</small>
-              
+              <small class="text-muted"
+                >Mantén presionado Ctrl o Shift para seleccionar múltiples
+                productos</small
+              >
+
               <!-- Mostrar productos actuales -->
               <div v-if="formData.original_productos.length > 0" class="mt-3">
                 <h6>Productos actualmente asociados:</h6>
                 <ul>
-                  <li v-for="(prod, index) in formData.original_productos" :key="index">
-                    {{ prod.id }} - {{ prod.producto_name || prod.nombre_producto || 'Producto sin nombre' }}
+                  <li
+                    v-for="(prod, index) in formData.original_productos"
+                    :key="index"
+                  >
+                    {{ prod.id }} -
+                    {{
+                      prod.producto_name ||
+                      prod.nombre_producto ||
+                      "Producto sin nombre"
+                    }}
                   </li>
                 </ul>
               </div>
             </div>
 
             <!-- Modal para agregar producto cargado/descargado -->
-            <ModalAgregarProductoCargadoDescargado
+            <ModalAgregarProducto
               v-if="mostrarModalProducto"
               :visible="mostrarModalProducto"
               @cerrar-modal="cerrarModalAddProductoCargado"
@@ -294,24 +316,37 @@
             class="btn btn-primary"
             :disabled="loading || registros_vagones_temporales.length === 0"
           >
-            <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span
+              v-if="loading"
+              class="spinner-border spinner-border-sm"
+              role="status"
+              aria-hidden="true"
+            ></span>
             Guardar cambios
           </button>
-          <button type="button" @click="goBack" class="btn btn-secondary">Volver</button>
+          <button type="button" @click="goBack" class="btn btn-secondary">
+            Volver
+          </button>
         </div>
       </form>
     </div>
-    <br>
-    
+    <br />
+
     <!-- Segunda fila: Lista de vagones -->
     <div class="row">
       <div class="col-md-12">
-        <h4 v-if="registros_vagones_temporales.length > 0">Cargados/descargados</h4>
-        <h4 v-else style="color: red;">* Debe agregar al menos un vagón</h4>
-        <button type="button" class="btn btn-sm btn-success ms-2" @click="abrirModalAgregarVagon">
+        <h4 v-if="registros_vagones_temporales.length > 0">
+          Cargados/descargados
+        </h4>
+        <h4 v-else style="color: red">* Debe agregar al menos un vagón</h4>
+        <button
+          type="button"
+          class="btn btn-sm btn-success ms-2"
+          @click="abrirModalAgregarVagon"
+        >
           <i class="bi bi-plus-circle"></i> Agregar vagón
         </button>
-        
+
         <table class="table table-hover mb-0">
           <thead>
             <tr>
@@ -324,12 +359,15 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item, index) in registros_vagones_cargados" :key="index">
-              <td>{{ item.no_id || 'Sin ID' }}</td>
-              <td>{{ item.fecha_despacho || 'No especificada' }}</td>
-              <td>{{ item.origen || 'No especificado' }}</td>
-              <td>{{ item.fecha_llegada || 'No especificada' }}</td>
-              <td>{{ item.observaciones || 'Sin observaciones' }}</td>
+            <tr
+              v-for="(item, index) in registros_vagones_cargados"
+              :key="index"
+            >
+              <td>{{ item.no_id || "Sin ID" }}</td>
+              <td>{{ item.fecha_despacho || "No especificada" }}</td>
+              <td>{{ item.origen || "No especificado" }}</td>
+              <td>{{ item.fecha_llegada || "No especificada" }}</td>
+              <td>{{ item.observaciones || "Sin observaciones" }}</td>
               <td v-if="hasGroup('AdminUFC')">
                 <button
                   @click.prevent="confirmDeleteVagonAsignado(item)"
@@ -353,20 +391,21 @@ import Swal from "sweetalert2";
 import NavbarComponent from "@/components/NavbarComponent.vue";
 import ModalAgregarProductoCargadoDescargado from "@/components/ModaAgregarProductoCargadoDescargado.vue";
 import ModalAgregarVagonCargado from "@/components/ModaAgregarVagonCargado.vue";
-
+import ModalAgregarProducto from "@/components/ModalAgregarProducto.vue";
 export default {
   name: "EditarCargadoDescargado",
   components: {
     NavbarComponent,
     ModalAgregarProductoCargadoDescargado,
+    ModalAgregarProducto,
     ModalAgregarVagonCargado,
   },
-  props: {
+  /* props: {
     id: {
       type: [String, Number],
-      required: true
-    }
-  },
+      required: true,
+    },
+  }, */
   data() {
     return {
       loading: false,
@@ -385,7 +424,7 @@ export default {
         real_carga_descarga: "",
         operacion: "",
         causas_incumplimiento: "",
-        original_equipo: null
+        original_equipo: null,
       },
       registros_vagones_temporales: [],
       registros_vagones_cargados: [],
@@ -398,21 +437,21 @@ export default {
     };
   },
   watch: {
-    'formData.estado': {
+    "formData.estado": {
       immediate: true,
       handler(newVal) {
-        if (newVal === 'vacio') {
-          this.formData.operacion = 'carga';
-        } else if (newVal === 'cargado') {
-          this.formData.operacion = 'descarga';
+        if (newVal === "vacio") {
+          this.formData.operacion = "carga";
+        } else if (newVal === "cargado") {
+          this.formData.operacion = "descarga";
         }
-      }
+      },
     },
-    'formData.lista_productos': {
+    "formData.lista_productos": {
       handler() {
         this.calcularRealCargaDescarga();
       },
-      deep: true
+      deep: true,
     },
   },
   async created() {
@@ -426,62 +465,75 @@ export default {
   methods: {
     async loadVagonData() {
       this.loading = true;
+      this.id = this.$route.params.id;
       try {
         // Modifica la URL para incluir los detalles expandidos
-        const response = await axios.get(`/ufc/vagones-cargados-descargados/${this.id}/?expand=registros_vagones`);
-        const vagonData = response.data;        
-        
+        const response = await axios.get(
+          `/ufc/vagones-cargados-descargados/${this.id}/?expand=registros_vagones`
+        );
+        const vagonData = response.data;
+
         // Luego obtener los registros completos
-        const registrosResponse = await axios.get(`/ufc/vagones-cargados-descargados/${this.id}/registros-completos/`);
+        const registrosResponse = await axios.get(
+          `/ufc/registro-vagones-cargados/`
+        );
         const registrosCompletos = registrosResponse.data;
 
         // Procesar datos del vagón
         this.formData = {
-          tipo_equipo_ferroviario: vagonData.tipo_equipo_ferroviario?.id || vagonData.tipo_equipo_ferroviario || "",
+          tipo_equipo_ferroviario:
+            vagonData.tipo_equipo_ferroviario?.id ||
+            vagonData.tipo_equipo_ferroviario ||
+            "",
           tipo_origen: vagonData.tipo_origen || "ac_ccd",
           origen: vagonData.origen || "",
           tipo_destino: vagonData.tipo_destino || "ac_ccd",
           destino: vagonData.destino || "",
           estado: vagonData.estado || "cargado",
-          lista_productos: Array.isArray(vagonData.producto) 
-            ? vagonData.producto.map(p => p.id || p)
+          lista_productos: Array.isArray(vagonData.producto)
+            ? vagonData.producto.map((p) => p.id || p)
             : vagonData.producto_ids || [],
-          original_productos: Array.isArray(vagonData.producto) 
-            ? vagonData.producto.filter(p => p && p.id)
+          original_productos: Array.isArray(vagonData.producto)
+            ? vagonData.producto.filter((p) => p && p.id)
             : [],
-          plan_diario_carga_descarga: vagonData.plan_diario_carga_descarga || "",
+          plan_diario_carga_descarga:
+            vagonData.plan_diario_carga_descarga || "",
           real_carga_descarga: vagonData.real_carga_descarga || "",
-          operacion: vagonData.operacion || (vagonData.estado === 'cargado' ? 'descarga' : 'carga'),
+          operacion:
+            vagonData.operacion ||
+            (vagonData.estado === "cargado" ? "descarga" : "carga"),
           causas_incumplimiento: vagonData.causas_incumplimiento || "",
-          original_equipo: vagonData.tipo_equipo_ferroviario?.tipo_equipo_name || 
-                          vagonData.tipo_equipo_ferroviario_name || ""
+          original_equipo:
+            vagonData.tipo_equipo_ferroviario?.tipo_equipo_name ||
+            vagonData.tipo_equipo_ferroviario_name ||
+            "",
         };
-        
+
         // Procesar vagones asociados
-        console.log("retornado asi: ", vagonData.registros_vagones)
+        console.log("retornado asi: ", vagonData.registros_vagones);
         // Procesar datos
         // Usar los registros completos
-        this.registros_vagones_temporales = registrosCompletos.map(vagon => ({
+        this.registros_vagones_temporales = registrosCompletos.map((vagon) => ({
           id: vagon.id,
-          no_id: vagon.no_id || 'Sin ID',
-          fecha_despacho: vagon.fecha_despacho || '',
-          tipo_origen: vagon.tipo_origen || 'ac_ccd',
-          origen: vagon.origen || '',
-          fecha_llegada: vagon.fecha_llegada || '',
-          observaciones: vagon.observaciones || ''
+          no_id: vagon.no_id || "Sin ID",
+          fecha_despacho: vagon.fecha_despacho || "",
+          tipo_origen: vagon.tipo_origen || "ac_ccd",
+          origen: vagon.origen || "",
+          fecha_llegada: vagon.fecha_llegada || "",
+          observaciones: vagon.observaciones || "",
         }));
-        
-        this.registros_vagones_cargados = [...this.registros_vagones_temporales];
-        
+
+        this.registros_vagones_cargados = [
+          ...this.registros_vagones_temporales,
+        ];
       } catch (error) {
-          console.error("Error al cargar datos del vagón:", error);
-          Swal.fire("Error", "No se pudo cargar los datos del vagón", "error");
-          this.goBack();
-        } finally {
-          this.loading = false;
-        }
+        console.error("Error al cargar datos del vagón:", error);
+        Swal.fire("Error", "No se pudo cargar los datos del vagón", "error");
+      } finally {
+        this.loading = false;
+      }
     },
-    
+
     // Métodos para manejar modales
     abrirModalAgregarProducto() {
       this.mostrarModalProducto = true;
@@ -498,32 +550,46 @@ export default {
     },
     handleVagonAgregado(nuevoVagon) {
       // Validar campos obligatorios
-      if (!nuevoVagon.no_id || !nuevoVagon.fecha_despacho || !nuevoVagon.origen) {
-        Swal.fire("Error", "Debe completar todos los campos obligatorios del vagón", "error");
+      if (
+        !nuevoVagon.no_id ||
+        !nuevoVagon.fecha_despacho ||
+        !nuevoVagon.origen
+      ) {
+        Swal.fire(
+          "Error",
+          "Debe completar todos los campos obligatorios del vagón",
+          "error"
+        );
         return;
       }
 
       const existe = this.registros_vagones_temporales.some(
-        v => v.no_id === nuevoVagon.no_id && v.fecha_despacho === nuevoVagon.fecha_despacho
+        (v) =>
+          v.no_id === nuevoVagon.no_id &&
+          v.fecha_despacho === nuevoVagon.fecha_despacho
       );
-      
+
       if (existe) {
-        Swal.fire("Advertencia", "Este vagón ya fue agregado a la lista", "warning");
+        Swal.fire(
+          "Advertencia",
+          "Este vagón ya fue agregado a la lista",
+          "warning"
+        );
         return;
       }
-      
-      this.registros_vagones_temporales.push({ 
+
+      this.registros_vagones_temporales.push({
         no_id: nuevoVagon.no_id,
         fecha_despacho: nuevoVagon.fecha_despacho,
-        tipo_origen: nuevoVagon.tipo_origen || 'ac_ccd',
+        tipo_origen: nuevoVagon.tipo_origen || "ac_ccd",
         origen: nuevoVagon.origen,
-        fecha_llegada: nuevoVagon.fecha_llegada || '',
-        observaciones: nuevoVagon.observaciones || ''
+        fecha_llegada: nuevoVagon.fecha_llegada || "",
+        observaciones: nuevoVagon.observaciones || "",
       });
-      
+
       this.registros_vagones_cargados = [...this.registros_vagones_temporales];
     },
-    
+
     // Métodos para permisos
     hasPermission(permission) {
       return this.userPermissions.some((p) => p.name === permission);
@@ -535,7 +601,9 @@ export default {
       try {
         const userId = localStorage.getItem("userid");
         if (userId) {
-          const response = await axios.get(`/apiAdmin/user/${userId}/permissions-and-groups/`);
+          const response = await axios.get(
+            `/apiAdmin/user/${userId}/permissions-and-groups/`
+          );
           this.userPermissions = response.data.permissions;
           this.userGroups = response.data.groups;
         }
@@ -543,121 +611,123 @@ export default {
         console.error("Error al obtener permisos y grupos:", error);
       }
     },
-    
+
     // Métodos para cálculos
     async calcularRealCargaDescarga() {
-      if (!this.formData.lista_productos || this.formData.lista_productos.length === 0) {
+      if (
+        !this.formData.lista_productos ||
+        this.formData.lista_productos.length === 0
+      ) {
         this.formData.real_carga_descarga = 0;
         return;
       }
-      
+
       try {
         const response = await axios.post(
-          '/ufc/vagones-cargados-descargados/calcular_total_vagones_por_productos/',
+          "/ufc/vagones-cargados-descargados/calcular_total_vagones_por_productos/",
           { producto_ids: this.formData.lista_productos }
         );
         this.formData.real_carga_descarga = response.data.total;
       } catch (error) {
-        console.error('Error al calcular el total de vagones:', error);
+        console.error("Error al calcular el total de vagones:", error);
         this.formData.real_carga_descarga = 0;
       }
     },
-    
+
     // Métodos para CRUD
     async submitForm() {
-    this.loading = true;
-    try {
-      // Preparar payload con todos los datos necesarios
-      const payload = {
-        tipo_equipo_ferroviario: this.formData.tipo_equipo_ferroviario,
-        tipo_origen: this.formData.tipo_origen,
-        origen: this.formData.origen,
-        tipo_destino: this.formData.tipo_destino,
-        destino: this.formData.destino,
-        estado: this.formData.estado,
-        producto_ids: Array.isArray(this.formData.lista_productos) 
-          ? this.formData.lista_productos 
-          : [this.formData.lista_productos],
-        plan_diario_carga_descarga: this.formData.plan_diario_carga_descarga,
-        real_carga_descarga: this.formData.real_carga_descarga,
-        operacion: this.formData.operacion,
-        causas_incumplimiento: this.formData.causas_incumplimiento,
-        registros_vagones_data: this.registros_vagones_cargados.map(v => ({
-          no_id: v.no_id,
-          fecha_despacho: v.fecha_despacho,
-          tipo_origen: v.tipo_origen || 'ac_ccd',
-          origen: v.origen,
-          fecha_llegada: v.fecha_llegada || null,
-          observaciones: v.observaciones || ''
-        }))
-      };
+      this.loading = true;
+      try {
+        // Preparar payload con todos los datos necesarios
+        const payload = {
+          tipo_equipo_ferroviario: this.formData.tipo_equipo_ferroviario,
+          tipo_origen: this.formData.tipo_origen,
+          origen: this.formData.origen,
+          tipo_destino: this.formData.tipo_destino,
+          destino: this.formData.destino,
+          estado: this.formData.estado,
+          producto_ids: Array.isArray(this.formData.lista_productos)
+            ? this.formData.lista_productos
+            : [this.formData.lista_productos],
+          plan_diario_carga_descarga: this.formData.plan_diario_carga_descarga,
+          real_carga_descarga: this.formData.real_carga_descarga,
+          operacion: this.formData.operacion,
+          causas_incumplimiento: this.formData.causas_incumplimiento,
+          registros_vagones_data: this.registros_vagones_cargados.map((v) => ({
+            no_id: v.no_id,
+            fecha_despacho: v.fecha_despacho,
+            tipo_origen: v.tipo_origen || "ac_ccd",
+            origen: v.origen,
+            fecha_llegada: v.fecha_llegada || null,
+            observaciones: v.observaciones || "",
+          })),
+        };
 
-      // Enviar la solicitud PUT
-      const response = await axios.put(
-        `/ufc/vagones-cargados-descargados/${this.id}/`, 
-        payload,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': this.getCookie('csrftoken')
+        // Enviar la solicitud PUT
+        const response = await axios.put(
+          `/ufc/vagones-cargados-descargados/${this.id}/`,
+          payload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": this.getCookie("csrftoken"),
+            },
+          }
+        );
+
+        // Mostrar mensaje de éxito y redirigir
+        await Swal.fire({
+          title: "Éxito",
+          text: "Vagón actualizado correctamente",
+          icon: "success",
+        });
+
+        this.$router.push({ name: "InfoOperativo" });
+      } catch (error) {
+        console.error("Error al actualizar:", error);
+
+        let errorMsg = "Error al actualizar el vagón";
+        if (error.response?.data) {
+          if (typeof error.response.data === "object") {
+            errorMsg += `: ${JSON.stringify(error.response.data)}`;
+          } else {
+            errorMsg += `: ${error.response.data}`;
           }
         }
-      );
 
-      // Mostrar mensaje de éxito y redirigir
-      await Swal.fire({
-        title: "Éxito",
-        text: "Vagón actualizado correctamente",
-        icon: "success"
-      });
-      
-      this.$router.push({ name: 'InfoOperativo' });
+        Swal.fire({
+          title: "Error",
+          text: errorMsg,
+          icon: "error",
+        });
+      } finally {
+        this.loading = false;
+      }
+    },
 
-    } catch (error) {
-      console.error("Error al actualizar:", error);
-      
-      let errorMsg = "Error al actualizar el vagón";
-      if (error.response?.data) {
-        if (typeof error.response.data === 'object') {
-          errorMsg += `: ${JSON.stringify(error.response.data)}`;
-        } else {
-          errorMsg += `: ${error.response.data}`;
+    // Método auxiliar para obtener cookies
+    getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
         }
       }
-      
-      Swal.fire({
-        title: "Error",
-        text: errorMsg,
-        icon: "error"
-      });
-    } finally {
-      this.loading = false;
-    }
-  },
+      return cookieValue;
+    },
 
-  // Método auxiliar para obtener cookies
-  getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
-        }
-      }
-    }
-    return cookieValue;
-  },
-    
     confirmDeleteVagonAsignado(item) {
       if (!item) {
         console.error("Item a eliminar es null/undefined");
         Swal.fire("Error", "No se puede eliminar: elemento no válido", "error");
         return;
       }
-      
+
       Swal.fire({
         title: "¿Estás seguro?",
         text: "¿Quieres eliminar este vagón de la lista?",
@@ -671,110 +741,129 @@ export default {
         }
       });
     },
-    
+
     deleteVagonTemporal(item) {
       try {
-        if (!item || typeof item !== 'object' || item === null) {
+        if (!item || typeof item !== "object" || item === null) {
           throw new Error("El elemento a eliminar no es válido");
         }
-        
+
         const index = this.registros_vagones_temporales.findIndex(
-          vagon => vagon && vagon.no_id === item.no_id && vagon.fecha_despacho === item.fecha_despacho
+          (vagon) =>
+            vagon &&
+            vagon.no_id === item.no_id &&
+            vagon.fecha_despacho === item.fecha_despacho
         );
-        
+
         if (index === -1) {
-          Swal.fire("Error", "No se encontró el vagón en la lista temporal", "error");
+          Swal.fire(
+            "Error",
+            "No se encontró el vagón en la lista temporal",
+            "error"
+          );
           return;
         }
-        
+
         this.registros_vagones_temporales.splice(index, 1);
-        this.registros_vagones_cargados = [...this.registros_vagones_temporales];
-        console.log("Aqui lo debe mostrar .... ",this.registros_vagones_cargados);
-        
+        this.registros_vagones_cargados = [
+          ...this.registros_vagones_temporales,
+        ];
+        console.log(
+          "Aqui lo debe mostrar .... ",
+          this.registros_vagones_cargados
+        );
+
         Swal.fire("Éxito", "Vagón eliminado correctamente", "success");
-        
       } catch (error) {
         console.error("Error al eliminar vagón temporal:", error);
-        Swal.fire("Error", `No se pudo eliminar el vagón: ${error.message}`, "error");
+        Swal.fire(
+          "Error",
+          `No se pudo eliminar el vagón: ${error.message}`,
+          "error"
+        );
       }
     },
-    
+
     // Métodos para obtener datos
     async getNoLocomotoras() {
       try {
         const response = await axios.get("/api/tipo-e-f-no-locomotora/");
-        this.tipos_equipos_ferroviarios = response.data.map(item => ({
+        this.tipos_equipos_ferroviarios = response.data.map((item) => ({
           ...item,
-          id: item.id.toString()
+          id: item.id.toString(),
         }));
       } catch (error) {
         console.error("Error al obtener los equipos ferroviarios:", error);
-        Swal.fire("Error", "Hubo un error al obtener los equipos ferroviarios.", "error");
+        Swal.fire(
+          "Error",
+          "Hubo un error al obtener los equipos ferroviarios.",
+          "error"
+        );
       }
     },
-    
+
     async getEntidades() {
       try {
         let allEntidades = [];
         let nextPage = "/api/entidades/";
-        
+
         while (nextPage) {
           const response = await axios.get(nextPage);
           allEntidades = [...allEntidades, ...response.data.results];
           nextPage = response.data.next;
         }
-        
+
         this.entidades = allEntidades;
       } catch (error) {
         console.error("Error al obtener las entidades:", error);
         Swal.fire("Error", "Hubo un error al obtener las entidades.", "error");
       }
     },
-    
+
     async getPuertos() {
       try {
         let allPuertos = [];
         let nextPage = "/api/puertos/";
-        
+
         while (nextPage) {
           const response = await axios.get(nextPage);
           allPuertos = [...allPuertos, ...response.data.results];
           nextPage = response.data.next;
         }
-        
+
         this.puertos = allPuertos;
       } catch (error) {
         console.error("Error al obtener los puertos:", error);
         Swal.fire("Error", "Hubo un error al obtener los puertos.", "error");
       }
     },
-    
+
     async getProductos() {
       try {
         let allProductos = [];
-        let nextPage = "/ufc/productos-vagones-cargados-descargados/";
-        
+        let nextPage = "/ufc/producto-vagon/";
+
         while (nextPage) {
           const response = await axios.get(nextPage);
           allProductos = [...allProductos, ...response.data.results];
           nextPage = response.data.next;
         }
-        
-        this.productos = allProductos.map(p => ({
+
+        this.productos = allProductos.map((p) => ({
           ...p,
-          id: p.id?.toString() || ''
+          id: p.id?.toString() || "",
         }));
       } catch (error) {
         console.error("Error al obtener los productos:", error);
         Swal.fire("Error", "Hubo un error al obtener los productos.", "error");
       }
     },
-    
+
     // Navegación
     goBack() {
       this.$router.go(-1);
-    }
-  }
+    },
+  },
 };
 </script>
 

@@ -818,7 +818,7 @@
       async getProductos() {
         try {
           let allProductos = [];
-          let nextPage = "/ufc/productos-vagones-cargados-descargados/"; // URL inicial
+          let nextPage = "/ufc/producto-vagon/"; // URL inicial
   
           while (nextPage) {
             const response = await axios.get(nextPage);

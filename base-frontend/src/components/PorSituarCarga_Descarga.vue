@@ -65,7 +65,7 @@
             >
               <td class="ps-td">{{ item.tipo_origen_name }}</td>
               <td class="ps-td">{{ item.origen }}</td>
-              <td class="ps-td">{{ item.tipo_equipo }}</td>
+              <td class="ps-td">{{ item.tipo_equipo_name }}</td>
               <td class="ps-td">
                 <span
                   :class="`ps-status ps-status-${getStatusClass(item.estado)}`"
@@ -232,7 +232,7 @@
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Tipo de Equipo:</span>
                   <span class="ps-detail-value">{{
-                    currentRecord.tipo_equipo || "N/A"
+                    currentRecord.tipo_equipo_name || "N/A"
                   }}</span>
                 </div>
               </div>
@@ -379,7 +379,7 @@ export default {
         const fieldsToSearch = [
           item.tipo_origen_name,
           item.origen,
-          item.tipo_equipo,
+          item.tipo_equipo_name,
           item.estado,
           item.operacion,
           item.productos_info

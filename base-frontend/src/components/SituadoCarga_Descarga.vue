@@ -225,7 +225,7 @@
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Tipo Origen:</span>
                   <span class="ps-detail-value">{{
-                    currentRecord.tipo_origen || "N/A"
+                    currentRecord.tipo_origen_name || "N/A"
                   }}</span>
                 </div>
 
@@ -239,7 +239,7 @@
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Tipo de Equipo:</span>
                   <span class="ps-detail-value">{{
-                    currentRecord.tipo_equipo || "N/A"
+                    currentRecord.tipo_equipo_name || "N/A"
                   }}</span>
                 </div>
               </div>
@@ -477,12 +477,11 @@ export default {
       try {
         this.loading = true;
         this.selectedItem = { ...item };
-        this.showModal = true;
-
+        this.showDetailsModal = true; // Corregir aquí
         const response = await axios.get(
           `http://127.0.0.1:8000/ufc/situados/${item.id}/`
         );
-        this.selectedItem = response.data;
+        this.currentRecord = response.data; // Usar currentRecord en lugar de selectedItem
       } catch (error) {
         console.error("Error al cargar detalles:", error);
         this.showErrorToast("No se pudieron cargar los detalles completos");

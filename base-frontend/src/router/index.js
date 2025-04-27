@@ -774,7 +774,7 @@ const routes = [
   {
     path: "/EditarArrastre/:id", // Cambié a formato kebab-case
     name: "EditarArrastre",
-    component: () => import("../views/UFC/EditarArrastre.vue"),
+    component: () => import("../views/UFC/EditarPendienteArrastreView.vue"),
     meta: {
       requireLogin: true,
     },

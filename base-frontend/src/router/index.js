@@ -697,13 +697,13 @@ const routes = [
     },
   },
   {
-    path: '/editar-cargado-descargado/:id',
-    name: 'EditarCargadoDescargado',
-    component: () => import('@/views/UFC/EditarCargadoDescargado.vue'),
+    path: "/editar-cargado-descargado/:id",
+    name: "EditarCargadoDescargado",
+    component: () => import("@/views/UFC/EditarCargadoDescargado.vue"),
     meta: {
-      requireLogin: true
+      requireLogin: true,
     },
-    props: true // Pasar los parámetros como props
+    props: true, // Pasar los parámetros como props
   },
   /* Vagones y productos */
   {
@@ -767,6 +767,14 @@ const routes = [
     path: "/AdicionarArrastre", // Cambié a formato kebab-case
     name: "AdicionarArrastre",
     component: () => import("../views/UFC/AdicionarPendienteArrastreView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/EditarArrastre/:id", // Cambié a formato kebab-case
+    name: "EditarArrastre",
+    component: () => import("../views/UFC/EditarArrastre.vue"),
     meta: {
       requireLogin: true,
     },

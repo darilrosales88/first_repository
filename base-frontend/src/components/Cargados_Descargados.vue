@@ -324,6 +324,12 @@ export default {
     hasGroup(group) {
       return this.userGroups.some((g) => g.name === group);
     },
+    editVagon(vagon) {
+      this.$router.push({
+        name: "EditarCargadoDescargado",
+        params: { id: vagon.id },
+      });
+    },
 
     async fetchUserPermissionsAndGroups() {
       try {

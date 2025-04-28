@@ -358,9 +358,7 @@
                   <tr v-for="(vagon, index) in vagonesAgregados" :key="index">
                     <td>{{ index + 1 }}</td>
                     <td>
-                      {{ vagon["datos"]["equipo_vagon"] }}-{{
-                        vagon["vagon_id"]
-                      }}
+                      {{ vagon["datos"]["equipo_vagon"] }}
                     </td>
                     <td>
                       <button
@@ -451,7 +449,7 @@ export default {
         producto: [],
         cantidad_vagones: 0,
         observaciones: "",
-        equipo_vagon: "",
+        equipo_vagon: [],
       },
       productoSearch: "",
       filteredProductos: [],
@@ -503,8 +501,8 @@ export default {
         destino: "",
         producto: [],
         cantidad_vagones: 0,
+        equipo_vagon: [],
         observaciones: "",
-        equipo_vagon: "",
       };
       this.vagonesAgregados = [];
       this.numeroIdentificacionSeleccionado = null;
@@ -515,8 +513,8 @@ export default {
       const vagonesJson = localStorage.getItem("vagonesAgregados");
       if (vagonesJson) {
         const vagones = JSON.parse(vagonesJson);
-        for (const vagon in vagones) {
-          console.log(vagon["datos"]);
+        for (const vagon of vagones) {
+          this.formData["equipo_vagon"].push(vagon["vagon_id"]);
         }
         try {
           if (!this.formData.tipo_origen) {
@@ -546,9 +544,8 @@ export default {
           ) {
             throw new Error("La cantidad por situar debe ser al menos 1");
           }
-          for (const vagon of vagones) {
-            await axios.post("/ufc/en-trenes/", vagon.datos);
-          }
+          console.log("Datos del formulario:", this.formData);
+          await axios.post("/ufc/en-trenes/", this.formData);
           Swal.fire({
             title: "¡Éxito!",
             text: "El formulario ha sido procesado correctamente",
@@ -723,10 +720,11 @@ export default {
         });
         return;
       }
+
       const datosVagon = JSON.parse(JSON.stringify(this.formData));
       const nuevoVagon = {
+        vagon_id: this.formData.equipo_vagon,
         datos: datosVagon,
-        vagon_id: this.numeroIdentificacionSeleccionado,
       };
 
       this.vagonesAgregados.push(nuevoVagon);

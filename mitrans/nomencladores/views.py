@@ -1862,7 +1862,7 @@ class equipo_ferroviario_no_locomotora(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 class nom_equipo_ferroviario_view_set(viewsets.ModelViewSet):
-    queryset = nom_equipo_ferroviario.objects.all()
+    queryset = nom_equipo_ferroviario.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = nom_equipo_ferroviario_serializer
 
     def get_queryset(self):

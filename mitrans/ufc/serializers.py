@@ -182,7 +182,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
         try:
             with transaction.atomic():
                 # Extraer datos para relaciones
-                productos_data = validated_data.pop('producto', None)  # Usamos el source='producto' del PrimaryKeyRelatedField
+                productos_data = validated_data.pop('producto', None)
                 registros_data = validated_data.pop('registros_vagones_data', [])
                 
                 # Actualizar campos directos
@@ -192,14 +192,18 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 
                 # Actualizar productos si se proporcionaron
                 if productos_data is not None:
-                    # Usamos set() para actualizar la relación ManyToMany
                     instance.producto.set(productos_data)
                 
                 # Manejar registros de vagones
                 if registros_data:
                     # Eliminar registros antiguos no incluidos
                     ids_nuevos = [r.get('id') for r in registros_data if r.get('id')]
-                    instance.registros_vagones.exclude(id__in=ids_nuevos).delete()
+                    
+                    # Primero, liberar equipos ferroviarios de registros que se eliminarán
+                    registros_a_eliminar = instance.registros_vagones.exclude(id__in=ids_nuevos)
+                    for registro in registros_a_eliminar:
+                        self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
+                    registros_a_eliminar.delete()
                     
                     # Actualizar o crear registros
                     for registro_data in registros_data:
@@ -214,6 +218,9 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                             # Crear nuevo registro
                             registro = registro_vagones_cargados.objects.create(**registro_data)
                             instance.registros_vagones.add(registro)
+                        
+                        # Actualizar estado del equipo ferroviario
+                        self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Asignado al estado Cargado/Descargado')
                 
                 return instance
                 
@@ -238,18 +245,29 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 for registro_data in registros_data:
                     registro = registro_vagones_cargados.objects.create(**registro_data)
                     instance.registros_vagones.add(registro)
+                    
+                    # Actualizar estado del equipo ferroviario
+                    self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Asignado al estado Cargado/Descargado')
                 
                 return instance
                 
         except Exception as e:
             raise serializers.ValidationError(f"Error al crear el registro: {str(e)}")
-                
+    
+    def actualizar_estado_equipo_ferroviario(self, no_id, nuevo_estado):
+        """
+        Método auxiliar para actualizar el estado de un equipo ferroviario
+        """
+        try:
+            from nomencladores.models import nom_equipo_ferroviario
+            
+            equipo = nom_equipo_ferroviario.objects.filter(numero_identificacion=no_id).first()
+            if equipo:
+                equipo.estado_actual = nuevo_estado
+                equipo.save()
         except Exception as e:
-            raise serializers.ValidationError(
-                f"Error al crear el vagon: {str(e)}"
-            )
-
-        
+            # No romper el flujo principal si hay error al actualizar el estado
+            print(f"Error al actualizar estado del equipo {no_id}: {str(e)}")        
 
     def get_productos_list(self, obj):
         return ", ".join([

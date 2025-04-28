@@ -517,6 +517,8 @@ class nom_equipo_ferroviario(models.Model):
 
     peso_maximo = models.DecimalField(max_digits=10,decimal_places=2, verbose_name="Peso máximo (t)",)
 
+    estado_actual = models.CharField(max_length=10,choices=territ, default="Disponible", verbose_name="Estado", editable=False)
+
 
     def __str__(self):
         return self.numero_identificacion

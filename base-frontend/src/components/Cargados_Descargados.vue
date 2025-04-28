@@ -1,13 +1,12 @@
 <template>
   <div class="container py-3">
-    
     <h4>Vagones Cargados/descargados</h4>
     <!-- Encabezado con acciones -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <!-- Botón de agregar - más destacado -->  
+      <!-- Botón de agregar - más destacado -->
       <button class="btn btn-link p-0" @click="showModal = true">
         <router-link
-         v-if="hasGroup('AdminUFC')"
+          v-if="hasGroup('AdminUFC')"
           to="AdicionarVagonCargadoDescargado"
           title="Agregar nuevo vagón cargado/descargado"
         >
@@ -45,7 +44,7 @@
             <th scope="col">Destino</th>
             <th scope="col">Estado</th>
             <th scope="col">Productos</th>
-            <th scope="col" > Acciones </th>
+            <th scope="col">Acciones</th>
           </tr>
           <tr v-if="!busqueda_existente">
             <td colspan="8" class="text-center text-muted py-4">
@@ -69,35 +68,35 @@
               <span>
                 {{ vagon.destino }}
               </span>
-            </td>              
+            </td>
             <td>{{ vagon.estado }}</td>
             <td>{{ vagon.productos_list }}</td>
             <td v-if="hasGroup('AdminUFC')">
-            <div class="d-flex">
-              <button
-              @click="viewDetails(vagon)"
-              class="btn btn-sm btn-outline-info me-2"
-              title="Ver detalles"
-            >
-              <i class="bi bi-eye-fill"></i>
-            </button>
+              <div class="d-flex">
+                <button
+                  @click="viewDetails(vagon)"
+                  class="btn btn-sm btn-outline-info me-2"
+                  title="Ver detalles"
+                >
+                  <i class="bi bi-eye-fill"></i>
+                </button>
 
-              <button
-                @click="editVagon(vagon)"
-                class="btn btn-sm btn-outline-warning me-2"
-                title="Editar"
-              >
-                <i class="bi bi-pencil-square"></i>
-              </button>
-              <button
-                @click="confirmDelete(vagon.id)"
-                class="btn btn-sm btn-outline-danger"
-                title="Eliminar"
-              >
-                <i class="bi bi-trash"></i>
-              </button>
-            </div>
-          </td>
+                <button
+                  @click="editVagon(vagon)"
+                  class="btn btn-sm btn-outline-warning me-2"
+                  title="Editar"
+                >
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+                <button
+                  @click="confirmDelete(vagon.id)"
+                  class="btn btn-sm btn-outline-danger"
+                  title="Eliminar"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -115,20 +114,37 @@
           <!-- Información básica -->
           <div class="row mb-3">
             <div class="col-md-6">
-              <p><strong>Tipo de equipo ferroviario:</strong> {{ vagonSeleccionado.tipo_equipo_ferroviario_name || 'N/A' }}</p>
-              <p><strong>Origen:</strong> {{ vagonSeleccionado.origen || 'N/A' }}</p>
-              <p><strong>Destino:</strong> {{ vagonSeleccionado.destino || 'N/A' }}</p>
+              <p>
+                <strong>Tipo de equipo ferroviario:</strong>
+                {{ vagonSeleccionado.tipo_equipo_ferroviario_name || "N/A" }}
+              </p>
+              <p>
+                <strong>Origen:</strong> {{ vagonSeleccionado.origen || "N/A" }}
+              </p>
+              <p>
+                <strong>Destino:</strong>
+                {{ vagonSeleccionado.destino || "N/A" }}
+              </p>
             </div>
             <div class="col-md-6">
-              <p><strong>Estado:</strong> {{ vagonSeleccionado.estado || 'N/A' }}</p>
-              <p><strong>Fecha:</strong> {{ vagonSeleccionado.fecha || 'N/A' }}</p>
+              <p>
+                <strong>Estado:</strong> {{ vagonSeleccionado.estado || "N/A" }}
+              </p>
+              <p>
+                <strong>Fecha:</strong> {{ vagonSeleccionado.fecha || "N/A" }}
+              </p>
             </div>
           </div>
 
           <!-- Productos asociados -->
           <div class="mb-3">
             <h6 class="border-bottom pb-2">Productos asociados</h6>
-            <div v-if="vagonSeleccionado.productos_list && vagonSeleccionado.productos_list.length > 0">
+            <div
+              v-if="
+                vagonSeleccionado.productos_list &&
+                vagonSeleccionado.productos_list.length > 0
+              "
+            >
               <p>{{ vagonSeleccionado.productos_list }}</p>
             </div>
             <div v-else>
@@ -139,7 +155,9 @@
           <!-- Observaciones -->
           <div class="mb-3">
             <h6 class="border-bottom pb-2">Observaciones</h6>
-            <p v-if="vagonSeleccionado.observaciones">{{ vagonSeleccionado.observaciones }}</p>
+            <p v-if="vagonSeleccionado.observaciones">
+              {{ vagonSeleccionado.observaciones }}
+            </p>
             <p v-else class="text-muted">No hay observaciones registradas</p>
           </div>
         </div>
@@ -149,7 +167,8 @@
     <!-- Paginación mejorada -->
     <div class="d-flex justify-content-between align-items-center">
       <div class="text-muted small">
-        Mostrando {{ cargados_descargados.length }} de {{ totalItems }} registros
+        Mostrando {{ cargados_descargados.length }} de
+        {{ totalItems }} registros
       </div>
       <nav aria-label="Page navigation">
         <ul class="pagination pagination-sm mb-0">
@@ -176,11 +195,32 @@
       </nav>
     </div>
     <!-- Termina la paginacion -->
-
   </div>
 </template>
 
 <style scoped>
+.ps-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.ps-modal {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
 .pagination-container {
   margin-top: 20px;
   display: flex;
@@ -219,10 +259,10 @@
 </style>
 <script>
 import axios from "axios";
-import Swal from "sweetalert2";  
+import Swal from "sweetalert2";
 
 export default {
-  name: "CargadosDescargados",   
+  name: "CargadosDescargados",
 
   data() {
     return {
@@ -235,7 +275,7 @@ export default {
       debounceTimeout: null,
       busqueda_existente: true,
       userPermissions: [],
-      userGroups: [],     
+      userGroups: [],
       loading: false,
       mostrarModalDetalles: false,
       vagonSeleccionado: null,
@@ -247,7 +287,7 @@ export default {
     await this.fetchUserPermissionsAndGroups();
   },
 
-  methods: {  
+  methods: {
     hasGroup(group) {
       return this.userGroups.some((g) => g.name === group);
     },
@@ -286,13 +326,16 @@ export default {
             page_size: this.itemsPerPage,
           },
         });
-        
+
         this.cargados_descargados = response.data.results;
         this.allRecords = [...response.data.results]; // Guardar copia completa para filtrado
         this.totalItems = response.data.count;
         this.busqueda_existente = true;
       } catch (error) {
-        console.error("Error al obtener los vagones cargados/descargados:", error);
+        console.error(
+          "Error al obtener los vagones cargados/descargados:",
+          error
+        );
         this.busqueda_existente = false;
       } finally {
         this.loading = false;
@@ -311,13 +354,14 @@ export default {
 
         const query = this.searchQuery.toLowerCase();
         this.cargados_descargados = this.allRecords.filter((item) => {
-          const tipoEquipo = item.tipo_equipo_ferroviario_name?.toLowerCase() || "";
+          const tipoEquipo =
+            item.tipo_equipo_ferroviario_name?.toLowerCase() || "";
           const productos = item.productos_list?.toLowerCase() || "";
           const estado = item.estado?.toLowerCase() || "";
-          
+
           return (
-            tipoEquipo.includes(query) || 
-            productos.includes(query) || 
+            tipoEquipo.includes(query) ||
+            productos.includes(query) ||
             estado.includes(query)
           );
         });
@@ -349,7 +393,9 @@ export default {
     async delete_tren(id) {
       try {
         await axios.delete(`/ufc/vagones-cargados-descargados/${id}/`);
-        this.cargados_descargados = this.cargados_descargados.filter((objeto) => objeto.id !== id);
+        this.cargados_descargados = this.cargados_descargados.filter(
+          (objeto) => objeto.id !== id
+        );
         Swal.fire(
           "Eliminado!",
           "El producto ha sido eliminado exitosamente.",
@@ -359,7 +405,7 @@ export default {
         console.error("Error al eliminar el producto:", error);
         Swal.fire("Error", "Hubo un error al eliminar el producto.", "error");
       }
-    },  
+    },
 
     cerrarModal() {
       this.mostrarModal = false;
@@ -367,9 +413,11 @@ export default {
 
     editVagon(vagon) {
       // Aquí puedes implementar la navegación a la página de edición
-      this.$router.push({ name: 'EditarCargadoDescargado', params: { id: vagon.id } });
+      this.$router.push({
+        name: "EditarCargadoDescargado",
+        params: { id: vagon.id },
+      });
     },
-    
 
     confirmDelete(id) {
       Swal.fire({

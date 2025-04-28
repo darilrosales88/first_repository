@@ -502,6 +502,8 @@ class SituadoCargaDescargaFilter(filters.FilterSet):
         
 class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
     productos_info = serializers.SerializerMethodField()
+    tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
+    tipo_equipo_name=serializers.ReadOnlyField(source='get_tipo_equipo_display')
     producto = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=producto_UFC.objects.all(),
@@ -512,7 +514,7 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
     
     class Meta:
         model = Situado_Carga_Descarga
-        fields = ('id', 'tipo_origen', 'origen', 'tipo_equipo', 'estado', 
+        fields = ('id', 'tipo_origen' , 'tipo_origen_name', 'origen', 'tipo_equipo' , 'tipo_equipo_name', 'estado', 
                  'operacion', 'producto', 'productos_info', 'situados', 
                  'pendiente_proximo_dia', 'observaciones')
         extra_kwargs = {
@@ -581,7 +583,8 @@ class PorSituarCargaDescargaFilter(filters.FilterSet):
 
 class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
     productos_info = serializers.SerializerMethodField()
-    tipo_origen_name = serializers.ReadOnlyField(source='tipo_origen')
+    tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
+    tipo_equipo_name=serializers.ReadOnlyField(source='get_tipo_equipo_display')
     producto = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=producto_UFC.objects.all(),
@@ -590,7 +593,7 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = por_situar
-        fields = ('id', 'tipo_origen', 'tipo_origen_name', 'origen', 'tipo_equipo', 
+        fields = ('id', 'tipo_origen', 'tipo_origen_name', 'origen', 'tipo_equipo','tipo_equipo_name', 
                  'estado', 'operacion', 'producto', 'por_situar', 'productos_info', 'observaciones')
         extra_kwargs = {
             'producto': {'required': False},

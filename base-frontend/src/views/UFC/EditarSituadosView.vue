@@ -30,8 +30,8 @@
                   :disabled="loading"
                 >
                   <option value="">Seleccione un tipo</option>
-                  <option 
-                    v-for="option in tipo_origen_options" 
+                  <option
+                    v-for="option in tipo_origen_options"
                     :key="option.id"
                     :value="option.id"
                   >
@@ -55,7 +55,7 @@
                   :disabled="loading"
                 >
                   <option value="">Seleccione un origen</option>
-                  <option 
+                  <option
                     v-for="entidad in entidades"
                     :key="entidad.id"
                     :value="entidad.nombre"
@@ -154,46 +154,65 @@
             <!-- Columna 2 -->
             <div>
               <!-- Campo: producto -->
-<div class="ufc-input-group">
-  <label for="productos">Productos <span v-if="formData.estado === 'cargado'" class="required">*</span></label>
-  <div class="ufc-input-with-action">
-    <div class="ufc-custom-select" @click="toggleProductosDropdown">
-      <div class="ufc-select-display">
-        {{ getSelectedProductosText() || 'Seleccione productos...' }}
-      </div>
-      <i class="bi bi-chevron-down ufc-select-arrow"></i>
-      
-      <div class="ufc-productos-dropdown" v-if="showProductosDropdown">
-        <div class="ufc-productos-search-container">
-          <input
-            type="text"
-            class="ufc-productos-search"
-            placeholder="Buscar productos..."
-            v-model="productoSearch"
-            @input="filterProductos"
-            @click.stop>
-        </div>
-        <div class="ufc-productos-options">
-          <div
-            v-for="producto in filteredProductos"
-            :key="producto.id"
-            class="ufc-producto-option"
-            :class="{ 'selected': formData.productos.includes(producto.id) }"
-            @click.stop="toggleProductoSelection(producto.id)">
-            {{ producto.id }}-{{ producto.producto_name }} - {{ producto.producto_codigo }}
-          </div>
-        </div>
-      </div>
-    </div>
-    <button 
-      class="ufc-add-button"
-      @click.prevent="abrirModalAgregarProducto"
-      :disabled="loading">
-      <i class="bi bi-plus-lg"></i>
-    </button>
-  </div>
-</div>
-                              
+              <div class="ufc-input-group">
+                <label for="productos"
+                  >Productos
+                  <span v-if="formData.estado === 'cargado'" class="required"
+                    >*</span
+                  ></label
+                >
+                <div class="ufc-input-with-action">
+                  <div
+                    class="ufc-custom-select"
+                    @click="toggleProductosDropdown"
+                  >
+                    <div class="ufc-select-display">
+                      {{
+                        getSelectedProductosText() || "Seleccione productos..."
+                      }}
+                    </div>
+                    <i class="bi bi-chevron-down ufc-select-arrow"></i>
+
+                    <div
+                      class="ufc-productos-dropdown"
+                      v-if="showProductosDropdown"
+                    >
+                      <div class="ufc-productos-search-container">
+                        <input
+                          type="text"
+                          class="ufc-productos-search"
+                          placeholder="Buscar productos..."
+                          v-model="productoSearch"
+                          @input="filterProductos"
+                          @click.stop
+                        />
+                      </div>
+                      <div class="ufc-productos-options">
+                        <div
+                          v-for="producto in filteredProductos"
+                          :key="producto.id"
+                          class="ufc-producto-option"
+                          :class="{
+                            selected: formData.productos.includes(producto.id),
+                          }"
+                          @click.stop="toggleProductoSelection(producto.id)"
+                        >
+                          {{ producto.id }}-{{ producto.producto_name }} -
+                          {{ producto.producto_codigo }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    class="ufc-add-button"
+                    @click.prevent="abrirModalAgregarProducto"
+                    :disabled="loading"
+                  >
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </div>
+              </div>
+
               <ModalAgregarProducto
                 v-if="mostrarModal"
                 :visible="mostrarModal"
@@ -214,7 +233,7 @@
                   min="1"
                   required
                   :disabled="loading"
-                >
+                />
               </div>
 
               <!-- Campo: pendiente_proximo_dia -->
@@ -231,7 +250,7 @@
                   min="0"
                   required
                   :disabled="loading"
-                >
+                />
               </div>
 
               <!-- Campo: observaciones -->
@@ -291,20 +310,20 @@ export default {
   data() {
     return {
       formData: {
-      id: null,
-      tipo_origen: "",
-      origen: "",
-      tipo_equipo: "",
-      estado: "cargado",
-      operacion: "",
-      productos: [], // Cambiamos de producto (singular) a productos (array)
-      situados: 0,
-      pendiente_proximo_dia: 0,
-      observaciones: "",
-    },
-    productoSearch: '',
-    filteredProductos: [],
-    showProductosDropdown: false,
+        id: null,
+        tipo_origen: "",
+        origen: "",
+        tipo_equipo: "",
+        estado: "cargado",
+        operacion: "",
+        productos: [], // Cambiamos de producto (singular) a productos (array)
+        situados: 0,
+        pendiente_proximo_dia: 0,
+        observaciones: "",
+      },
+      productoSearch: "",
+      filteredProductos: [],
+      showProductosDropdown: false,
       entidades: [],
       puertos: [],
       productos: [],
@@ -336,51 +355,63 @@ export default {
   },
 
   mounted() {
-  this.filteredProductos = this.productos;
-  this.closeDropdownsOnClickOutside();
-},
+    this.filteredProductos = this.productos;
+    this.closeDropdownsOnClickOutside();
+  },
 
   methods: {
     async cargarRegistro() {
-  this.loading = true;
-  try {
-    await Promise.all([this.getEntidades(), this.getPuertos(), this.getProductos()]);
-    
-    const response = await axios.get(`http://127.0.0.1:8000/ufc/situados/${this.registroId}/`);
-    const registro = response.data;
-    
-    this.formData = {
-      id: registro.id,
-      tipo_origen: registro.tipo_origen || "",
-      origen: registro.origen || "",
-      tipo_equipo: registro.tipo_equipo || "",
-      estado: registro.estado || "cargado",
-      operacion: registro.operacion || "",
-      productos: registro.productos_info ? registro.productos_info.map(p => p.id) : [], // Array de IDs
-      situados: registro.situados || 0,
-      pendiente_proximo_dia: registro.pendiente_proximo_dia || 0,
-      observaciones: registro.observaciones || "",
-    };
-  } catch (error) {
-    console.error("Error al cargar el registro:", error);
-    Swal.fire("Error", "No se pudo cargar el registro para editar", "error");
-    this.$router.push({ name: "InfoOperativo" });
-  } finally {
-    this.loading = false;
-  }
-},
+      this.loading = true;
+      try {
+        await Promise.all([
+          this.getEntidades(),
+          this.getPuertos(),
+          this.getProductos(),
+        ]);
+
+        const response = await axios.get(
+          `http://127.0.0.1:8000/ufc/situados/${this.registroId}/`
+        );
+        const registro = response.data;
+
+        this.formData = {
+          id: registro.id,
+          tipo_origen: registro.tipo_origen || "",
+          origen: registro.origen || "",
+          tipo_equipo: registro.tipo_equipo || "",
+          estado: registro.estado || "cargado",
+          operacion: registro.operacion || "",
+          productos: registro.productos_info
+            ? registro.productos_info.map((p) => p.id)
+            : [], // Array de IDs
+          situados: registro.situados || 0,
+          pendiente_proximo_dia: registro.pendiente_proximo_dia || 0,
+          observaciones: registro.observaciones || "",
+        };
+      } catch (error) {
+        console.error("Error al cargar el registro:", error);
+        Swal.fire(
+          "Error",
+          "No se pudo cargar el registro para editar",
+          "error"
+        );
+        this.$router.push({ name: "InfoOperativo" });
+      } finally {
+        this.loading = false;
+      }
+    },
 
     async getEntidades() {
       try {
         let allEntidades = [];
         let nextPage = "/api/entidades/";
-        
+
         while (nextPage) {
           const response = await axios.get(nextPage);
           allEntidades = [...allEntidades, ...response.data.results];
           nextPage = response.data.next;
         }
-        
+
         this.entidades = allEntidades;
         return allEntidades;
       } catch (error) {
@@ -398,11 +429,14 @@ export default {
         });
 
         if (response.status === 200) {
-          this.productos = response.data.results.map(producto => ({
+          this.productos = response.data.results.map((producto) => ({
             id: producto.id,
-            producto_name: producto.nombre_producto || producto.descripcion || `Producto ${producto.id}`,
-            producto_codigo: producto.codigo || 'N/A',
-            tipo_embalaje_name: producto.tipo_embalaje?.nombre || 'N/A'
+            producto_name:
+              producto.producto_name ||
+              producto.descripcion ||
+              `Producto ${producto.id}`,
+            producto_codigo: producto.producto_codigo || "N/A",
+            tipo_embalaje_name: producto.tipo_embalaje?.nombre || "N/A",
           }));
         }
       } catch (error) {
@@ -440,54 +474,87 @@ export default {
     abrirModalAgregarProducto() {
       this.mostrarModal = true;
     },
-    
+
     cerrarModal() {
       this.mostrarModal = false;
       this.getProductos();
     },
-    
+
     async submitForm() {
       try {
         this.loading = true;
-        
+
         // Validación mejorada
         const errors = [];
-        
-        if (!this.formData.tipo_origen || !this.tipo_origen_options.some(opt => opt.id === this.formData.tipo_origen)) {
+
+        if (
+          !this.formData.tipo_origen ||
+          !this.tipo_origen_options.some(
+            (opt) => opt.id === this.formData.tipo_origen
+          )
+        ) {
           errors.push("Seleccione un tipo de origen válido");
         }
-        
+
         if (!this.formData.origen) {
           errors.push("El campo Origen es requerido");
-        } else if (this.formData.tipo_origen === 'ac_ccd') {
-          if (!this.entidades.some(e => e.nombre === this.formData.origen)) {
+        } else if (this.formData.tipo_origen === "ac_ccd") {
+          if (!this.entidades.some((e) => e.nombre === this.formData.origen)) {
             errors.push("Seleccione un origen válido para Acceso Comercial");
           }
-        } else if (this.formData.tipo_origen === 'puerto') {
-          if (!this.puertos.some(p => p.nombre_puerto === this.formData.origen)) {
+        } else if (this.formData.tipo_origen === "puerto") {
+          if (
+            !this.puertos.some((p) => p.nombre_puerto === this.formData.origen)
+          ) {
             errors.push("Seleccione un puerto válido");
           }
         }
-        
-        if (!this.formData.tipo_equipo || !this.tipo_equipo_options.some(opt => opt.id === this.formData.tipo_equipo)) {
+
+        if (
+          !this.formData.tipo_equipo ||
+          !this.tipo_equipo_options.some(
+            (opt) => opt.id === this.formData.tipo_equipo
+          )
+        ) {
           errors.push("Seleccione un tipo de equipo válido");
         }
-        
-        if (!this.formData.operacion || !this.t_operacion_options.some(opt => opt.id === this.formData.operacion)) {
+
+        if (
+          !this.formData.operacion ||
+          !this.t_operacion_options.some(
+            (opt) => opt.id === this.formData.operacion
+          )
+        ) {
           errors.push("Seleccione una operación válida");
         }
-        
+
         if (this.formData.estado === "cargado") {
-          if (!this.formData.producto || !this.productos.some(p => p.id === this.formData.producto)) {
-            errors.push("Seleccione un producto válido cuando el estado es Cargado");
+          if (
+            !Array.isArray(this.formData.productos) || // Verifica que sea un array
+            this.formData.productos.length === 0 // Verifica que no esté vacío
+          ) {
+            errors.push(
+              "Seleccione al menos un producto cuando el estado es Cargado"
+            );
+          } else {
+            // Verifica que todos los IDs en formData.productos sean válidos
+            const invalidProductos = this.formData.productos.some(
+              (productId) => !this.productos.some((p) => p.id === productId)
+            );
+            if (invalidProductos) {
+              errors.push("Uno o más productos seleccionados no son válidos");
+            }
           }
         }
-        
+
         if (this.formData.situados === null || this.formData.situados < 1) {
           errors.push("La cantidad de situados debe ser al menos 1");
         }
 
-        if (this.formData.pendiente_proximo_dia === null || this.formData.pendiente_proximo_dia < 0) {
+        if (
+          this.formData.pendiente_proximo_dia === null ||
+          this.formData.pendiente_proximo_dia < 0
+        ) {
           errors.push("Los pendientes al próximo día no pueden ser negativos");
         }
 
@@ -502,14 +569,17 @@ export default {
           tipo_equipo: this.formData.tipo_equipo,
           estado: this.formData.estado,
           operacion: this.formData.operacion,
-          productos: this.formData.productos, // Enviamos el array de IDs
+          producto: this.formData.productos, // Enviamos el array de IDs
           situados: this.formData.situados,
           pendiente_proximo_dia: this.formData.pendiente_proximo_dia,
-          observaciones: this.formData.observaciones
+          observaciones: this.formData.observaciones,
         };
 
         // Enviar datos para actualizar (PUT)
-        const response = await axios.put(`http://127.0.0.1:8000/ufc/situados/${this.registroId}/`, payload);
+        const response = await axios.put(
+          `http://127.0.0.1:8000/ufc/situados/${this.registroId}/`,
+          payload
+        );
 
         if (response.status === 200) {
           Swal.fire({
@@ -522,20 +592,20 @@ export default {
         }
       } catch (error) {
         let errorMessage = "Error al actualizar el registro";
-        
+
         if (error.message) {
           errorMessage = error.message;
         } else if (error.response?.data) {
           errorMessage = Object.values(error.response.data).join("\n");
         }
-        
+
         Swal.fire("Error", errorMessage, "error");
         console.error("Error al enviar el formulario:", error);
       } finally {
         this.loading = false;
       }
     },
-    
+
     confirmCancel() {
       Swal.fire({
         title: "¿Cancelar cambios?",
@@ -552,60 +622,60 @@ export default {
     },
 
     toggleProductosDropdown() {
-    this.showProductosDropdown = !this.showProductosDropdown;
-    if (this.showProductosDropdown) {
-      this.productoSearch = '';
-      this.filterProductos();
-    }
-  },
-  
-  filterProductos() {
-    if (!this.productoSearch) {
-      this.filteredProductos = this.productos;
-      return;
-    }
-    const searchTerm = this.productoSearch.toLowerCase();
-    this.filteredProductos = this.productos.filter(producto => 
-      producto.producto_name.toLowerCase().includes(searchTerm) ||
-      producto.producto_codigo.toLowerCase().includes(searchTerm) ||
-      producto.id.toString().includes(searchTerm)
-    );
-  },
-  
-  toggleProductoSelection(productoId) {
-    const index = this.formData.productos.indexOf(productoId);
-    if (index === -1) {
-      this.formData.productos.push(productoId);
-    } else {
-      this.formData.productos.splice(index, 1);
-    }
-  },
-  
-  getSelectedProductosText() {
-    if (this.formData.productos.length === 0) return '';
-    
-    // Si el estado es vacío, mostramos solo el conteo
-    if (this.formData.estado === 'vacio') {
-      return `${this.formData.productos.length} producto(s) seleccionado(s)`;
-    }
-    
-    // Para estado cargado, mostramos más detalles
-    if (this.formData.productos.length === 1) {
-      const producto = this.productos.find(p => p.id === this.formData.productos[0]);
-      return producto ? `${producto.id}-${producto.producto_name}` : '1 producto seleccionado';
-    }
-    return `${this.formData.productos.length} productos seleccionados`;
-  },
-  
-  closeDropdownsOnClickOutside() {
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.ufc-custom-select')) {
-        this.showProductosDropdown = false;
+      this.showProductosDropdown = !this.showProductosDropdown;
+      if (this.showProductosDropdown) {
+        this.productoSearch = "";
+        this.filterProductos();
       }
-    });
-  }
+    },
 
-  }
+    filterProductos() {
+      if (!this.productoSearch) {
+        this.filteredProductos = this.productos;
+        return;
+      }
+      const searchTerm = this.productoSearch.toLowerCase();
+      this.filteredProductos = this.productos.filter(
+        (producto) =>
+          producto.producto_name.toLowerCase().includes(searchTerm) ||
+          producto.producto_codigo.toLowerCase().includes(searchTerm) ||
+          producto.id.toString().includes(searchTerm)
+      );
+    },
+
+    toggleProductoSelection(productoId) {
+      const index = this.formData.productos.indexOf(productoId);
+      if (index === -1) {
+        this.formData.productos.push(productoId); // Agrega el producto
+      } else {
+        this.formData.productos.splice(index, 1); // Elimina el producto
+      }
+    },
+
+    getSelectedProductosText() {
+      if (this.formData.productos.length === 0) return "";
+      if (this.formData.estado === "vacio") {
+        return `${this.formData.productos.length} producto(s) seleccionado(s)`;
+      }
+      if (this.formData.productos.length === 1) {
+        const producto = this.productos.find(
+          (p) => p.id === this.formData.productos[0]
+        );
+        return producto
+          ? `${producto.id}-${producto.producto_name}`
+          : "1 producto seleccionado";
+      }
+      return `${this.formData.productos.length} productos seleccionados`;
+    },
+
+    closeDropdownsOnClickOutside() {
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".ufc-custom-select")) {
+          this.showProductosDropdown = false;
+        }
+      });
+    },
+  },
 };
 </script>
 
@@ -729,7 +799,7 @@ export default {
 }
 /* Estilos idénticos al formulario anterior */
 .ufc-form-container {
-  font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;
+  font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
   color: #333;
   padding-bottom: 20px;
 }
@@ -804,7 +874,8 @@ export default {
   color: #e74c3c;
 }
 
-.ufc-select, .ufc-input {
+.ufc-select,
+.ufc-input {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid #ddd;
@@ -814,7 +885,8 @@ export default {
   background-color: white;
 }
 
-.ufc-select:focus, .ufc-input:focus {
+.ufc-select:focus,
+.ufc-input:focus {
   border-color: #002a68;
   box-shadow: 0 0 0 3px rgba(0, 42, 104, 0.1);
   outline: none;
@@ -864,7 +936,8 @@ export default {
   font-size: 1.1rem;
 }
 
-.ufc-loading, .ufc-disabled {
+.ufc-loading,
+.ufc-disabled {
   font-size: 0.8rem;
   color: #777;
   padding: 8px 0;
@@ -876,8 +949,12 @@ export default {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Estilo especial para el campo por situar */

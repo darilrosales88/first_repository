@@ -150,6 +150,17 @@ class vagon_cargado_descargado(models.Model):
         verbose_name = "Vagón cargado/descargado"   
 
     def delete(self, *args, **kwargs):
+        # Liberar equipos ferroviarios asociados antes de eliminar, el campo estado_actual regresa a "Disponible"
+        for registro in self.registros_vagones.all():
+            try:
+                from nomencladores.models import nom_equipo_ferroviario
+                equipo = nom_equipo_ferroviario.objects.filter(numero_identificacion=registro.no_id).first()
+                if equipo:
+                    equipo.estado_actual = 'Disponible'
+                    equipo.save()
+            except Exception as e:
+                print(f"Error al actualizar estado del equipo {registro.no_id}: {str(e)}")
+        
         # Eliminar primero los registros_vagones asociados
         self.registros_vagones.all().delete()
         # Luego eliminar el registro padre

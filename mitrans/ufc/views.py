@@ -295,12 +295,61 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
             total += registro.registros_vagones.count()
             
         return Response({'total': total})
+    # En el vagon_cargado_descargado_view_set, agrega este nuevo método:
+    @action(detail=True, methods=['get'], url_path='registros-vagones')
+    def obtener_registros_vagones(self, request, pk=None):
+        """
+        Endpoint para obtener los registros de vagones asociados a un vagon_cargado_descargado
+        """
+        try:
+            # Obtener la instancia principal
+            instance = self.get_object()
+            
+            # Obtener los registros asociados a través de la relación ManyToMany
+            registros_vagones = instance.registros_vagones.all()
+            
+            # Serializar los datos
+            serializer = registro_vagones_cargados_serializer(registros_vagones, many=True)
+            
+            return Response(serializer.data)
+        
+        except Exception as e:
+            return Response(
+                {"error": f"No se pudieron obtener los registros de vagones: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    # También agrega este otro action para obtener los registros completos (como mencionaste en tu código)
+    @action(detail=True, methods=['get'], url_path='registros-completos')
+    def obtener_registros_completos(self, request, pk=None):
+        """
+        Endpoint alternativo que devuelve los registros de vagones con más detalles
+        """
+        try:
+            instance = self.get_object()
+            registros_vagones = instance.registros_vagones.all().values(
+                'id',
+                'no_id',
+                'fecha_despacho',
+                'tipo_origen',
+                'origen',
+                'fecha_llegada',
+                'observaciones'
+            )
+            
+            return Response(list(registros_vagones))
+        
+        except Exception as e:
+            return Response(
+                {"error": f"No se pudieron obtener los registros completos: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
 #para productos de vagones cargados/descargados
 #para productos de vagones y productos
 
 @api_view(['POST'])
-def verificar_productos_vagonesyproductos(request):
+def verificar_productos(request):
     producto_ids = request.data.get('producto_ids', [])
     existentes = producto_UFC.objects.filter(id__in=producto_ids).values_list('id', flat=True)
     return Response({

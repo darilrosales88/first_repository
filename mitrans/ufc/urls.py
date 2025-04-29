@@ -2,13 +2,13 @@ from rest_framework import routers
 #importamos las vistas
 from .views import vagon_cargado_descargado_view_set , en_trenes_view_set, producto_vagon_view_set
 from .views import SituadoCargaDescargaViewset,PorSituarCargaDescargaViewSet,PendienteArrastreViewset,registro_vagones_cargados_view_set
-from .views import vagones_productos_view_set,verificar_productos_vagonesyproductos,RotacionVagonesViewSet
+from .views import vagones_productos_view_set,verificar_productos,RotacionVagonesViewSet
 
 from django.urls import path
 
 
 urlpatterns = [
-    path('productos-vagones-productos/verificar/', verificar_productos_vagonesyproductos, name='verificar-productos-vagonesyproductos'),
+    path('productos-vagones/verificar/', verificar_productos, name='verificar-productos'),
    #path('destinos/verificar-existencia/', verificar_destino, name='verificar_destino'),#verificar si existe un destino dado cliente-destino
     #path('entidades/verificar-existencia-reeup/', verificar_codigo_reeup, name='verificar_existencia_reeup'),#verificar si existe ya el codigo reeup
         

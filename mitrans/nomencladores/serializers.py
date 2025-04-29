@@ -459,7 +459,7 @@ class nom_equipo_ferroviario_serializer(serializers.ModelSerializer):
     
     class Meta:
         model = nom_equipo_ferroviario       
-        fields = ('id','tipo_equipo','tipo_equipo_name', 'numero_identificacion','territorio','territorio_name','tipo_carga','tipo_combustible','peso_maximo')
+        fields = ('id','tipo_equipo','tipo_equipo_name','estado_actual', 'numero_identificacion','territorio','territorio_name','tipo_carga','tipo_combustible','peso_maximo')
         filterset_class: nom_equipo_ferroviario_filter 
 
 #****************-------------------------********************--------------------***************-----------------********************************

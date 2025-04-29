@@ -314,7 +314,7 @@
           <button
             type="submit"
             class="btn btn-primary"
-            :disabled="loading || registros_vagones_temporales.length === 0"
+            :disabled="loading || registros_vagones_cargados.length === 0"
           >
             <span
               v-if="loading"
@@ -335,7 +335,7 @@
     <!-- Segunda fila: Lista de vagones -->
     <div class="row">
       <div class="col-md-12">
-        <h4 v-if="registros_vagones_temporales.length > 0">
+        <h4 v-if="registros_vagones_cargados.length > 0">
           Cargados/descargados
         </h4>
         <h4 v-else style="color: red">* Debe agregar al menos un vagón</h4>
@@ -465,21 +465,26 @@ export default {
   methods: {
     async loadVagonData() {
       this.loading = true;
-      this.id = this.$route.params.id;
       try {
-        // Modifica la URL para incluir los detalles expandidos
-        const response = await axios.get(
-          `/ufc/vagones-cargados-descargados/${this.id}/?expand=registros_vagones`
+        // 1. Obtener datos principales
+        const mainResponse = await axios.get(
+          `/ufc/vagones-cargados-descargados/${this.id}/`
         );
-        const vagonData = response.data;
+        const vagonData = mainResponse.data;
 
-        // Luego obtener los registros completos
-        const registrosResponse = await axios.get(
-          `/ufc/registro-vagones-cargados/`
-        );
-        const registrosCompletos = registrosResponse.data;
+        // 2. Obtener registros asociados - manejar posibles errores
+        let registrosVagones = [];
+        try {
+          const registrosResponse = await axios.get(
+            `/ufc/vagones-cargados-descargados/${this.id}/registros-completos/`
+          );
+          registrosVagones = registrosResponse.data || [];
+        } catch (error) {
+          console.error("Error al obtener registros asociados:", error);
+          registrosVagones = [];
+        }
 
-        // Procesar datos del vagón
+        // 3. Asignar datos principales
         this.formData = {
           tipo_equipo_ferroviario:
             vagonData.tipo_equipo_ferroviario?.id ||
@@ -509,11 +514,14 @@ export default {
             "",
         };
 
-        // Procesar vagones asociados
-        console.log("retornado asi: ", vagonData.registros_vagones);
-        // Procesar datos
-        // Usar los registros completos
-        this.registros_vagones_temporales = registrosCompletos.map((vagon) => ({
+        // 4. Asignar registros de vagones con verificación
+        if (!Array.isArray(registrosVagones)) {
+          console.warn("registrosVagones no es un array:", registrosVagones);
+          registrosVagones = [];
+        }
+
+        // Asignación segura a la propiedad reactiva
+        this.registros_vagones_cargados = registrosVagones.map((vagon) => ({
           id: vagon.id,
           no_id: vagon.no_id || "Sin ID",
           fecha_despacho: vagon.fecha_despacho || "",
@@ -523,12 +531,15 @@ export default {
           observaciones: vagon.observaciones || "",
         }));
 
-        this.registros_vagones_cargados = [
-          ...this.registros_vagones_temporales,
-        ];
+        // Depuración: verificar asignación
+        console.log(
+          "Después de loadVagonData, registros_vagones_cargados:",
+          this.registros_vagones_cargados
+        );
       } catch (error) {
         console.error("Error al cargar datos del vagón:", error);
         Swal.fire("Error", "No se pudo cargar los datos del vagón", "error");
+        this.goBack();
       } finally {
         this.loading = false;
       }
@@ -547,47 +558,6 @@ export default {
     },
     cerrarModalAddVagonCargado() {
       this.mostrarModalVagon = false;
-    },
-    handleVagonAgregado(nuevoVagon) {
-      // Validar campos obligatorios
-      if (
-        !nuevoVagon.no_id ||
-        !nuevoVagon.fecha_despacho ||
-        !nuevoVagon.origen
-      ) {
-        Swal.fire(
-          "Error",
-          "Debe completar todos los campos obligatorios del vagón",
-          "error"
-        );
-        return;
-      }
-
-      const existe = this.registros_vagones_temporales.some(
-        (v) =>
-          v.no_id === nuevoVagon.no_id &&
-          v.fecha_despacho === nuevoVagon.fecha_despacho
-      );
-
-      if (existe) {
-        Swal.fire(
-          "Advertencia",
-          "Este vagón ya fue agregado a la lista",
-          "warning"
-        );
-        return;
-      }
-
-      this.registros_vagones_temporales.push({
-        no_id: nuevoVagon.no_id,
-        fecha_despacho: nuevoVagon.fecha_despacho,
-        tipo_origen: nuevoVagon.tipo_origen || "ac_ccd",
-        origen: nuevoVagon.origen,
-        fecha_llegada: nuevoVagon.fecha_llegada || "",
-        observaciones: nuevoVagon.observaciones || "",
-      });
-
-      this.registros_vagones_cargados = [...this.registros_vagones_temporales];
     },
 
     // Métodos para permisos
@@ -636,9 +606,13 @@ export default {
 
     // Métodos para CRUD
     async submitForm() {
+      if (!this.registros_vagones_cargados) {
+        console.error("registros_vagones_cargados es undefined!");
+        this.registros_vagones_cargados = [];
+      }
+
       this.loading = true;
       try {
-        // Preparar payload con todos los datos necesarios
         const payload = {
           tipo_equipo_ferroviario: this.formData.tipo_equipo_ferroviario,
           tipo_origen: this.formData.tipo_origen,
@@ -654,6 +628,7 @@ export default {
           operacion: this.formData.operacion,
           causas_incumplimiento: this.formData.causas_incumplimiento,
           registros_vagones_data: this.registros_vagones_cargados.map((v) => ({
+            id: v.id || null, // Incluir el ID si existe para actualización
             no_id: v.no_id,
             fecha_despacho: v.fecha_despacho,
             tipo_origen: v.tipo_origen || "ac_ccd",
@@ -663,7 +638,8 @@ export default {
           })),
         };
 
-        // Enviar la solicitud PUT
+        console.log("Payload a enviar:", payload); // Para depuración
+
         const response = await axios.put(
           `/ufc/vagones-cargados-descargados/${this.id}/`,
           payload,
@@ -675,7 +651,6 @@ export default {
           }
         );
 
-        // Mostrar mensaje de éxito y redirigir
         await Swal.fire({
           title: "Éxito",
           text: "Vagón actualizado correctamente",
@@ -688,11 +663,7 @@ export default {
 
         let errorMsg = "Error al actualizar el vagón";
         if (error.response?.data) {
-          if (typeof error.response.data === "object") {
-            errorMsg += `: ${JSON.stringify(error.response.data)}`;
-          } else {
-            errorMsg += `: ${error.response.data}`;
-          }
+          errorMsg += `: ${JSON.stringify(error.response.data)}`;
         }
 
         Swal.fire({
@@ -742,13 +713,53 @@ export default {
       });
     },
 
+    handleVagonAgregado(nuevoVagon) {
+      // Validar campos obligatorios
+      if (
+        !nuevoVagon.no_id ||
+        !nuevoVagon.fecha_despacho ||
+        !nuevoVagon.origen
+      ) {
+        Swal.fire(
+          "Error",
+          "Debe completar todos los campos obligatorios del vagón",
+          "error"
+        );
+        return;
+      }
+
+      const existe = this.registros_vagones_cargados.some(
+        (v) =>
+          v.no_id === nuevoVagon.no_id &&
+          v.fecha_despacho === nuevoVagon.fecha_despacho
+      );
+
+      if (existe) {
+        Swal.fire(
+          "Advertencia",
+          "Este vagón ya fue agregado a la lista",
+          "warning"
+        );
+        return;
+      }
+
+      this.registros_vagones_cargados.push({
+        no_id: nuevoVagon.no_id,
+        fecha_despacho: nuevoVagon.fecha_despacho,
+        tipo_origen: nuevoVagon.tipo_origen || "ac_ccd",
+        origen: nuevoVagon.origen,
+        fecha_llegada: nuevoVagon.fecha_llegada || "",
+        observaciones: nuevoVagon.observaciones || "",
+      });
+    },
+
     deleteVagonTemporal(item) {
       try {
         if (!item || typeof item !== "object" || item === null) {
           throw new Error("El elemento a eliminar no es válido");
         }
 
-        const index = this.registros_vagones_temporales.findIndex(
+        const index = this.registros_vagones_cargados.findIndex(
           (vagon) =>
             vagon &&
             vagon.no_id === item.no_id &&
@@ -756,23 +767,11 @@ export default {
         );
 
         if (index === -1) {
-          Swal.fire(
-            "Error",
-            "No se encontró el vagón en la lista temporal",
-            "error"
-          );
+          Swal.fire("Error", "No se encontró el vagón en la lista", "error");
           return;
         }
 
-        this.registros_vagones_temporales.splice(index, 1);
-        this.registros_vagones_cargados = [
-          ...this.registros_vagones_temporales,
-        ];
-        console.log(
-          "Aqui lo debe mostrar .... ",
-          this.registros_vagones_cargados
-        );
-
+        this.registros_vagones_cargados.splice(index, 1);
         Swal.fire("Éxito", "Vagón eliminado correctamente", "success");
       } catch (error) {
         console.error("Error al eliminar vagón temporal:", error);

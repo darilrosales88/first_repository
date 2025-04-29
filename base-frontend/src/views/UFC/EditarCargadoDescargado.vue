@@ -336,6 +336,7 @@
     <div class="row">
       <div class="col-md-12">
         <h4 v-if="registros_vagones_cargados.length > 0">
+        <h4 v-if="registros_vagones_cargados.length > 0">
           Cargados/descargados
         </h4>
         <h4 v-else style="color: red">* Debe agregar al menos un vagón</h4>

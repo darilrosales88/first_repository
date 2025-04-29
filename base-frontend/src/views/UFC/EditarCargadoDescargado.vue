@@ -400,12 +400,12 @@ export default {
     ModalAgregarProducto,
     ModalAgregarVagonCargado,
   },
-  /* props: {
+  props: {
     id: {
       type: [String, Number],
       required: true,
     },
-  }, */
+  },
   data() {
     return {
       loading: false,
@@ -464,7 +464,7 @@ export default {
   },
   methods: {
     async loadVagonData() {
-      this.loading = true;
+      /* this.loading = true; */
       try {
         // 1. Obtener datos principales
         const mainResponse = await axios.get(

@@ -189,7 +189,7 @@
                           <template v-if="producto.tipo_embalaje">
                             (Embalaje:
                             {{
-                              producto.tipo_embalaje.nombre ||
+                              producto.tipo_embalaje_name ||
                               producto.tipo_embalaje.nombre_embalaje ||
                               "N/A"
                             }})

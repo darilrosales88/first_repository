@@ -36,7 +36,6 @@
         <table class="ps-table">
           <thead>
             <tr>
-              
               <th class="ps-th">Tipo Origen</th>
               <th class="ps-th">Origen</th>
               <th class="ps-th">Tipo Equipo</th>
@@ -65,10 +64,9 @@
               :key="item.id"
               class="ps-tr"
             >
-              
-              <td class="ps-td">{{ item.tipo_origen }}</td>
+              <td class="ps-td">{{ item.tipo_origen_name }}</td>
               <td class="ps-td">{{ item.origen }}</td>
-              <td class="ps-td">{{ item.tipo_equipo }}</td>
+              <td class="ps-td">{{ item.tipo_equipo_name }}</td>
               <td class="ps-td">
                 <span
                   :class="`ps-status ps-status-${getStatusClass(item.estado)}`"
@@ -97,35 +95,35 @@
               </td>
 
               <!-- En la parte de las acciones de la tabla (dentro del <td>) -->
-<td class="ps-td ps-td-actions">
-  <div class="d-flex">
-    <button
-      @click="viewDetails(item)"
-      class="btn btn-sm btn-outline-info me-2"
-      title="Ver detalles"
-    >
-      <i class="bi bi-eye-fill"></i>
-    </button>
-    <router-link
-      :to="{
-        name: 'EditarSituados',
-        params: { id: item.id || 'default-id' },
-      }"
-      class="btn btn-sm btn-outline-warning me-2"
-      title="Editar"
-    >
-      <i class="bi bi-pencil-square"></i>
-    </router-link>
-    <button
-      @click="confirmDelete(item.id)"
-      class="btn btn-sm btn-outline-danger"
-      title="Eliminar"
-      :disabled="loading"
-    >
-      <i class="bi bi-trash"></i>
-    </button>
-  </div>
-</td>
+              <td class="ps-td ps-td-actions">
+                <div class="d-flex">
+                  <button
+                    @click="viewDetails(item)"
+                    class="btn btn-sm btn-outline-info me-2"
+                    title="Ver detalles"
+                  >
+                    <i class="bi bi-eye-fill"></i>
+                  </button>
+                  <router-link
+                    :to="{
+                      name: 'EditarSituados',
+                      params: { id: item.id || 'default-id' },
+                    }"
+                    class="btn btn-sm btn-outline-warning me-2"
+                    title="Editar"
+                  >
+                    <i class="bi bi-pencil-square"></i>
+                  </router-link>
+                  <button
+                    @click="confirmDelete(item.id)"
+                    class="btn btn-sm btn-outline-danger"
+                    title="Eliminar"
+                    :disabled="loading"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
             </tr>
 
             <!-- Estado vacío -->
@@ -227,7 +225,7 @@
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Tipo Origen:</span>
                   <span class="ps-detail-value">{{
-                    currentRecord.tipo_origen || "N/A"
+                    currentRecord.tipo_origen_name || "N/A"
                   }}</span>
                 </div>
 
@@ -241,7 +239,7 @@
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Tipo de Equipo:</span>
                   <span class="ps-detail-value">{{
-                    currentRecord.tipo_equipo || "N/A"
+                    currentRecord.tipo_equipo_name || "N/A"
                   }}</span>
                 </div>
               </div>
@@ -398,9 +396,9 @@ export default {
       const query = this.searchQuery.toLowerCase();
       return this.registrosPorSituar.filter((item) => {
         const fieldsToSearch = [
-          item.tipo_origen,
+          item.tipo_origen_name,
           item.origen,
-          item.tipo_equipo,
+          item.tipo_equipo_name,
           item.estado,
           item.operacion,
           item.producto_name,
@@ -434,9 +432,9 @@ export default {
           const data = response.data.results || response.data;
           this.allRecords = data.map((item) => ({
             id: item.id,
-            tipo_origen: item.tipo_origen || "",
+            tipo_origen_name: item.tipo_origen_name || "",
             origen: item.origen || "",
-            tipo_equipo: item.tipo_equipo || "",
+            tipo_equipo_name: item.tipo_equipo_name || "",
             estado: item.estado || "",
             operacion: item.operacion || "",
             productos_info: item.productos_info || [],
@@ -479,10 +477,11 @@ export default {
       try {
         this.loading = true;
         this.selectedItem = { ...item };
-        this.showModal = true;
-        
-        const response = await axios.get(`http://127.0.0.1:8000/ufc/situados/${item.id}/`);
-        this.selectedItem = response.data;
+        this.showDetailsModal = true; // Corregir aquí
+        const response = await axios.get(
+          `http://127.0.0.1:8000/ufc/situados/${item.id}/`
+        );
+        this.currentRecord = response.data; // Usar currentRecord en lugar de selectedItem
       } catch (error) {
         console.error("Error al cargar detalles:", error);
         this.showErrorToast("No se pudieron cargar los detalles completos");
@@ -566,7 +565,7 @@ export default {
         try {
           this.loading = true;
           await axios.delete(`http://127.0.0.1:8000/ufc/situados/${id}/`);
-          this.showSuccessToast('Registro eliminado');
+          this.showSuccessToast("Registro eliminado");
           await this.getPorSituar();
         } catch (error) {
           this.handleApiError(error, "eliminar registro");
@@ -697,7 +696,6 @@ export default {
 .ps-td-actions {
   white-space: nowrap;
 }
-
 
 .producto-item {
   padding: 0.25rem 0;

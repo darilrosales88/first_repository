@@ -206,45 +206,84 @@
 
                 <!-- Campo: producto -->
                 <div class="ufc-input-group">
-                  <label for="producto">Productos</label>
+                  <label for="producto"
+                    >Productos <span class="required">*</span></label
+                  >
                   <div class="ufc-input-with-action">
-                    <select
-                      v-if="formData.estado === 'cargado'"
-                      class="ufc-select"
-                      v-model="formData.producto"
-                      multiple
-                      :required="formData.estado === 'cargado'"
+                    <div
+                      class="ufc-custom-select"
+                      @click="toggleProductosDropdown"
                     >
-                      <option value="" disabled>
-                        Seleccione uno o más productos
-                      </option>
-                      <option
-                        v-for="producto in productos"
-                        :key="producto.id"
-                        :value="producto.id"
+                      <div class="ufc-select-display">
+                        {{
+                          getSelectedProductosText() ||
+                          "Seleccione productos..."
+                        }}
+                      </div>
+                      <i class="bi bi-chevron-down ufc-select-arrow"></i>
+
+                      <div
+                        class="ufc-productos-dropdown"
+                        v-if="showProductosDropdown"
                       >
-                        {{ producto.id }}-{{ producto.producto_name }} -
-                        {{ producto.producto_codigo }}
-                        <template v-if="producto.tipo_embalaje">
-                          (Embalaje:
-                          {{
-                            producto.tipo_embalaje.nombre ||
-                            producto.tipo_embalaje.nombre_embalaje ||
-                            "N/A"
-                          }})
-                        </template>
-                      </option>
-                    </select>
-                    <div v-else class="ufc-disabled">
-                      (Seleccione "Cargado" para ver los productos)
+                        <div class="ufc-productos-search-container">
+                          <input
+                            type="text"
+                            class="ufc-productos-search"
+                            placeholder="Buscar productos..."
+                            v-model="productoSearch"
+                            @input="filterProductos"
+                            @click.stop
+                          />
+                        </div>
+                        <div class="ufc-productos-options">
+                          <div
+                            v-for="producto in filteredProductos"
+                            :key="producto.id"
+                            class="ufc-producto-option"
+                            :class="{
+                              selected: formData.producto.includes(producto.id),
+                            }"
+                            @click.stop="toggleProductoSelection(producto.id)"
+                          >
+                            {{ producto.id }}-{{ producto.producto_name }} -
+                            {{ producto.producto_codigo }}
+                            <template v-if="producto.tipo_embalaje">
+                              (Embalaje:
+                              {{
+                                producto.tipo_embalaje_name ||
+                                producto.tipo_embalaje.nombre_embalaje ||
+                                "N/A"
+                              }})
+                            </template>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     <button
-                      v-if="formData.estado === 'cargado'"
                       class="ufc-add-button"
                       @click.prevent="abrirModalAgregarProducto"
                     >
                       <i class="bi bi-plus-circle"></i>
                     </button>
+                  </div>
+                </div>
+
+                <!-- Modal Agregar Producto -->
+                <div v-if="mostrarModal" class="ufc-modal-overlay">
+                  <div class="ufc-modal-container">
+                    <div class="ufc-modal-header">
+                      <h3><i class="bi bi-box-seam"></i> Nuevo Producto</h3>
+                      <button @click="cerrarModal" class="ufc-modal-close">
+                        <i class="bi bi-x"></i>
+                      </button>
+                    </div>
+                    <div class="ufc-modal-body">
+                      <ModalAgregarProducto
+                        :visible="mostrarModal"
+                        @cerrar-modal="cerrarModal"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -290,7 +329,11 @@
               >
                 <i class="bi bi-plus-circle"></i> Agregar Vagon
               </button>
-              <button type="submit" class="ufc-button primary">
+              <button
+                type="button"
+                class="ufc-button primary"
+                @click="submitForm"
+              >
                 <i class="bi bi-check-circle"></i> Guardar
               </button>
             </div>
@@ -315,9 +358,7 @@
                   <tr v-for="(vagon, index) in vagonesAgregados" :key="index">
                     <td>{{ index + 1 }}</td>
                     <td>
-                      {{ vagon["datos"]["equipo_vagon"] }}-{{
-                        vagon["vagon_id"]
-                      }}
+                      {{ vagon["datos"]["equipo_vagon"] }}
                     </td>
                     <td>
                       <button
@@ -408,8 +449,11 @@ export default {
         producto: [],
         cantidad_vagones: 0,
         observaciones: "",
-        equipo_vagon: "",
+        equipo_vagon: [],
       },
+      productoSearch: "",
+      filteredProductos: [],
+      showProductosDropdown: false,
       mostrarModal: false,
       productos: [],
       equipos: [],
@@ -427,6 +471,8 @@ export default {
     this.getLocomotoras();
     this.getEntidades();
     this.getPuertos();
+    this.filteredProductos = this.productos;
+    this.closeDropdownsOnClickOutside();
   },
   methods: {
     confirmCancel() {
@@ -455,8 +501,8 @@ export default {
         destino: "",
         producto: [],
         cantidad_vagones: 0,
+        equipo_vagon: [],
         observaciones: "",
-        equipo_vagon: "",
       };
       this.vagonesAgregados = [];
       this.numeroIdentificacionSeleccionado = null;
@@ -467,8 +513,8 @@ export default {
       const vagonesJson = localStorage.getItem("vagonesAgregados");
       if (vagonesJson) {
         const vagones = JSON.parse(vagonesJson);
-        for (const vagon in vagones) {
-          console.log(vagon["datos"]);
+        for (const vagon of vagones) {
+          this.formData["equipo_vagon"].push(vagon["vagon_id"]);
         }
         try {
           if (!this.formData.tipo_origen) {
@@ -498,9 +544,8 @@ export default {
           ) {
             throw new Error("La cantidad por situar debe ser al menos 1");
           }
-          for (const vagon of vagones) {
-            await axios.post("/ufc/en-trenes/", vagon.datos);
-          }
+          console.log("Datos del formulario:", this.formData);
+          await axios.post("/ufc/en-trenes/", this.formData);
           Swal.fire({
             title: "¡Éxito!",
             text: "El formulario ha sido procesado correctamente",
@@ -638,7 +683,21 @@ export default {
           allProductos = [...allProductos, ...response.data.results];
           nextPage = response.data.next;
         }
-        this.productos = allProductos;
+
+        this.productos = allProductos.map((p) => {
+          // Asegurar que tipo_embalaje esté definido
+          const tipoEmbalaje = p.tipo_embalaje || {};
+          return {
+            ...p,
+            tipo_embalaje: {
+              nombre:
+                tipoEmbalaje.nombre ||
+                tipoEmbalaje.nombre_embalaje ||
+                "Sin embalaje",
+            },
+          };
+        });
+        console.log(this.productos);
       } catch (error) {
         console.error("Error al obtener los productos:", error);
         Swal.fire("Error", "Hubo un error al obtener los productos.", "error");
@@ -661,11 +720,13 @@ export default {
         });
         return;
       }
+
       const datosVagon = JSON.parse(JSON.stringify(this.formData));
       const nuevoVagon = {
+        vagon_id: this.formData.equipo_vagon,
         datos: datosVagon,
-        vagon_id: this.numeroIdentificacionSeleccionado,
       };
+
       this.vagonesAgregados.push(nuevoVagon);
       Swal.fire({
         title: "Éxito",
@@ -691,6 +752,58 @@ export default {
         confirmButtonText: "Aceptar",
       });
     },
+    /* Acciones del producto */
+    toggleProductosDropdown() {
+      this.showProductosDropdown = !this.showProductosDropdown;
+      if (this.showProductosDropdown) {
+        this.productoSearch = "";
+        this.filterProductos();
+      }
+    },
+
+    filterProductos() {
+      if (!this.productoSearch) {
+        this.filteredProductos = this.productos;
+        return;
+      }
+      const searchTerm = this.productoSearch.toLowerCase();
+      this.filteredProductos = this.productos.filter(
+        (producto) =>
+          producto.producto_name.toLowerCase().includes(searchTerm) ||
+          producto.producto_codigo.toLowerCase().includes(searchTerm) ||
+          producto.id.toString().includes(searchTerm)
+      );
+    },
+
+    toggleProductoSelection(productoId) {
+      const index = this.formData.producto.indexOf(productoId);
+      if (index === -1) {
+        this.formData.producto.push(productoId);
+      } else {
+        this.formData.producto.splice(index, 1);
+      }
+    },
+
+    getSelectedProductosText() {
+      if (this.formData.producto.length === 0) return "";
+      if (this.formData.producto.length === 1) {
+        const producto = this.productos.find(
+          (p) => p.id === this.formData.producto[0]
+        );
+        return producto
+          ? `${producto.id}-${producto.producto_name}`
+          : "1 producto seleccionado";
+      }
+      return `${this.formData.producto.length} productos seleccionados`;
+    },
+
+    closeDropdownsOnClickOutside() {
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".ufc-custom-select")) {
+          this.showProductosDropdown = false;
+        }
+      });
+    },
   },
 };
 </script>
@@ -698,7 +811,415 @@ export default {
 <style scoped>
 /* Todos los estilos del primer formulario ya están incluidos */
 /* Se añaden estilos adicionales específicos para este componente */
+.ufc-custom-select {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+}
 
+.ufc-select-display {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background-color: white;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+}
+
+.ufc-select-arrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: transform 0.2s;
+}
+
+.ufc-custom-select.open .ufc-select-arrow {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.ufc-productos-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  margin-top: 2px;
+}
+
+.ufc-productos-search-container {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  background: #f8f9fa;
+}
+
+.ufc-productos-search {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.ufc-productos-search:focus {
+  outline: none;
+  border-color: #002a68;
+}
+
+.ufc-productos-options {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.ufc-producto-option {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ufc-producto-option:hover {
+  background-color: #f5f5f5;
+}
+
+.ufc-producto-option.selected {
+  background-color: #002a68;
+  color: white;
+}
+
+/* Estilo para el botón de agregar */
+.ufc-add-button {
+  margin-left: 8px;
+}
+
+/* Para navegadores que soportan datalist */
+input[list] {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.ufc-select[multiple] {
+  height: auto;
+  min-height: 100px;
+  padding: 8px;
+}
+
+.ufc-select[multiple] option {
+  padding: 6px 8px;
+  margin: 2px 0;
+  border-radius: 4px;
+}
+
+.ufc-select[multiple] option:checked {
+  background-color: #002a68;
+  color: white;
+}
+
+.ufc-form-container {
+  font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+  color: #333;
+  padding-bottom: 20px;
+}
+
+.ufc-header {
+  background-color: #002a68;
+  color: white;
+  text-align: right;
+  padding: 10px 15px;
+  margin-bottom: 20px;
+}
+
+.ufc-header h6 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.ufc-form-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+.ufc-form-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.ufc-form-title {
+  color: #002a68;
+  font-size: 1.3rem;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.ufc-form-title i {
+  font-size: 1.4rem;
+}
+
+.ufc-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+@media (max-width: 768px) {
+  .ufc-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ufc-input-group {
+  margin-bottom: 15px;
+}
+
+.ufc-input-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #444;
+}
+
+.ufc-input-group .required {
+  color: #e74c3c;
+}
+
+.ufc-select,
+.ufc-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  background-color: white;
+}
+
+.ufc-select:focus,
+.ufc-input:focus {
+  border-color: #002a68;
+  box-shadow: 0 0 0 3px rgba(0, 42, 104, 0.1);
+  outline: none;
+}
+
+.ufc-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  resize: vertical;
+  min-height: 70px;
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.ufc-textarea:focus {
+  border-color: #002a68;
+  box-shadow: 0 0 0 3px rgba(0, 42, 104, 0.1);
+  outline: none;
+}
+
+.ufc-input-with-action {
+  display: flex;
+  gap: 8px;
+}
+
+.ufc-add-button {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  width: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #002a68;
+  transition: all 0.2s;
+}
+
+.ufc-add-button:hover {
+  background: #e9ecef;
+  color: #001a3d;
+}
+
+.ufc-add-button i {
+  font-size: 1.1rem;
+}
+
+.ufc-disabled {
+  font-size: 0.8rem;
+  color: #777;
+  padding: 8px 0;
+}
+
+/* Estilo especial para el campo por situar */
+.ufc-por-situar-container {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.ufc-por-situar-input {
+  flex: 1;
+  border: none;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  min-width: 0;
+}
+
+.ufc-por-situar-suffix {
+  background: #f8f9fa;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: #666;
+  border-left: 1px solid #ddd;
+}
+
+/* Botones de acción */
+.ufc-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.ufc-button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ufc-button.primary {
+  background: #002a68;
+  color: white;
+}
+
+.ufc-button.primary:hover {
+  background: #003d8f;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.ufc-button.secondary {
+  background: white;
+  color: #555;
+  border: 1px solid #ddd;
+}
+
+.ufc-button.secondary:hover {
+  background: #f8f9fa;
+  border-color: #ccc;
+}
+
+/* Estilos para selects */
+.ufc-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
+}
+
+/* Estilos para el modal */
+.ufc-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.ufc-modal-container {
+  background: white;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+.ufc-modal-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #002a68;
+  color: white;
+  border-radius: 10px 10px 0 0;
+}
+
+.ufc-modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ufc-modal-close {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 5px;
+  transition: all 0.2s;
+}
+
+.ufc-modal-close:hover {
+  color: #ccc;
+}
+
+.ufc-modal-body {
+  padding: 20px;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 .ufc-vagones-agregados {
   margin-top: 30px;
   padding-top: 20px;

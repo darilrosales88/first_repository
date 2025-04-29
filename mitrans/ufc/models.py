@@ -279,7 +279,12 @@ class en_trenes(models.Model):
     tipo_destino = models.CharField(default="",choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
     destino = models.CharField(default='',max_length=40)
     cantidad_vagones=models.IntegerField(default=1,verbose_name="Cantidad de vagones")
-    equipo_vagon=models.ForeignKey(nom_equipo_ferroviario, on_delete=models.CASCADE)
+    equipo_vagon=models.ManyToManyField(
+        nom_equipo_ferroviario,
+        blank=True,
+        related_name="en_trenes_vagones",
+        verbose_name="Productos"
+    )
     observaciones = models.TextField(
         verbose_name="Observaciones",
         help_text="Ingrese observaciones adicionales. Admite letras, números y caracteres especiales.",

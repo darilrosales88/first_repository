@@ -18,6 +18,7 @@ from rest_framework import status
 #transaction.atomic crea una transacción atómica que asegura que:
 #O todas las operaciones se ejecutan correctamente O ninguna se ejecuta (si ocurre algún error)
 from django.db import transaction 
+from nomencladores.serializers import nom_equipo_ferroviario_serializer
 
 #para cada modelo del que deseemos realizar el filtrado debemos hacer un filtrado
 #nom_pais_filter es una clase que se implementa para definir sobre qué campos quiero filtrar los registros de mi API, 
@@ -382,14 +383,21 @@ class en_trenes_serializer(serializers.ModelSerializer):
    # tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
     producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')
     tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
-    equipo_carga_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_carga_display')
-    equipo_vagon_id=serializers.ReadOnlyField(source='equipo_vagon.numero_identificacion')
+   # equipo_vagon_id=serializers.ReadOnlyField(source='equipo_vagon.numero_identificacion')
     productos_info = serializers.SerializerMethodField()
+    vagones_info=serializers.SerializerMethodField()
     producto = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=producto_UFC.objects.all(),
         required=False
     )
+
+    equipo_vagon = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=nom_equipo_ferroviario.objects.all(),
+        required=False
+    )
+   
     class Meta:
         model = en_trenes
         fields = (
@@ -400,9 +408,8 @@ class en_trenes_serializer(serializers.ModelSerializer):
             'numero_identificacion_locomotora',
             'tipo_equipo', 
             'tipo_equipo_name',
-            'equipo_carga_name',
             'equipo_vagon',
-            'equipo_vagon_id',
+            'vagones_info',
             'estado', 
             'tipo_destino',  
             'destino', 
@@ -425,6 +432,16 @@ class en_trenes_serializer(serializers.ModelSerializer):
             'estado': p.estado,
             'contiene': p.contiene
         } for p in productos]
+        
+    def get_vagones_info(self, obj):
+        equipo_vagon = obj.equipo_vagon.all()
+        return [{
+            'id': e.id,
+            'tipo_equipo': e.tipo_equipo.tipo_equipo,
+            'numero_identificacion': e.numero_identificacion,
+            'tipo_carga': e.tipo_carga,
+            'tipo_combustible': e.tipo_combustible
+        } for e in equipo_vagon]
 
     def create(self, validated_data):
         productos_data = validated_data.pop('producto', [])
@@ -502,6 +519,8 @@ class SituadoCargaDescargaFilter(filters.FilterSet):
         
 class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
     productos_info = serializers.SerializerMethodField()
+    tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
+    tipo_equipo_name=serializers.ReadOnlyField(source='get_tipo_equipo_display')
     producto = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=producto_UFC.objects.all(),
@@ -512,7 +531,7 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
     
     class Meta:
         model = Situado_Carga_Descarga
-        fields = ('id', 'tipo_origen', 'origen', 'tipo_equipo', 'estado', 
+        fields = ('id', 'tipo_origen' , 'tipo_origen_name', 'origen', 'tipo_equipo' , 'tipo_equipo_name', 'estado', 
                  'operacion', 'producto', 'productos_info', 'situados', 
                  'pendiente_proximo_dia', 'observaciones')
         extra_kwargs = {
@@ -581,7 +600,8 @@ class PorSituarCargaDescargaFilter(filters.FilterSet):
 
 class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
     productos_info = serializers.SerializerMethodField()
-    tipo_origen_name = serializers.ReadOnlyField(source='tipo_origen')
+    tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
+    tipo_equipo_name=serializers.ReadOnlyField(source='get_tipo_equipo_display')
     producto = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=producto_UFC.objects.all(),
@@ -590,7 +610,7 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = por_situar
-        fields = ('id', 'tipo_origen', 'tipo_origen_name', 'origen', 'tipo_equipo', 
+        fields = ('id', 'tipo_origen', 'tipo_origen_name', 'origen', 'tipo_equipo','tipo_equipo_name', 
                  'estado', 'operacion', 'producto', 'por_situar', 'productos_info', 'observaciones')
         extra_kwargs = {
             'producto': {'required': False},

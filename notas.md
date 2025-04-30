@@ -30,3 +30,9 @@
 
 - Los cambios en permisos deben ser reflejados inmediatamente en la sesión del usuario
 - Mantener sincronización entre los permisos del backend y frontend
+
+### Reunion miercoles
+
+-Hay una contradiccion en la rotacion de vagones con el registro de cargado y descargados sobre los planes reales.
+-La rama de raidel hace falta hecharle un ojo que tiene muchas cositas
+-Adicionar el backend de los informes operativos

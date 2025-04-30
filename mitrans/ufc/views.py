@@ -336,6 +336,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
                 'fecha_llegada',
                 'observaciones'
             )
+            #lalalalal
             
             return Response(list(registros_vagones))
         

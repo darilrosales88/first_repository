@@ -97,7 +97,7 @@
               <div class="card border-secondary">
                 <div class="card-body p-3">
                   <h6 class="card-title text-secondary fw-semibold">
-                    Plan carga
+                    Plan total carga
                   </h6>
                   <p class="card-text display-6 text-center">
                     {{ resumen.planCarga }}
@@ -109,7 +109,7 @@
               <div class="card border-secondary">
                 <div class="card-body p-3">
                   <h6 class="card-title text-secondary fw-semibold">
-                    Real carga
+                    Total real carga
                   </h6>
                   <p class="card-text display-6 text-center">
                     {{ resumen.realCarga }}
@@ -121,7 +121,7 @@
               <div class="card border-secondary">
                 <div class="card-body p-3">
                   <h6 class="card-title text-secondary fw-semibold">
-                    Plan de rotación
+                    Plan total de rotación
                   </h6>
                   <p class="card-text display-6 text-center">
                     {{ resumen.planRotacion }}
@@ -133,7 +133,7 @@
               <div class="card border-secondary">
                 <div class="card-body p-3">
                   <h6 class="card-title text-secondary fw-semibold">
-                    Real de rotación
+                    Total real de rotación
                   </h6>
                   <p class="card-text display-6 text-center">
                     {{ resumen.realRotacion }}
@@ -164,12 +164,16 @@
             </thead>
             <tbody>
               <tr v-for="(equipo, index) in registrosRotacion" :key="index">
-                <td>{{ equipo.tipoEquipoFerroviario }}</td>
-                <td>{{ equipo.enServicio }}</td>
-                <td>{{ equipo.planCarga }}</td>
-                <td>{{ equipo.realCarga }}</td>
-                <td>{{ equipo.planRotacion }}</td>
-                <td>{{ equipo.realRotacion }}</td>
+                <td>
+                  {{ equipo.tipo_equipo_ferroviario_nombre }}--{{
+                    equipo.tipo_carga_name
+                  }}
+                </td>
+                <td>{{ equipo.en_servicio }}</td>
+                <td>{{ equipo.plan_carga }}</td>
+                <td>{{ equipo.real_carga }}</td>
+                <td>{{ equipo.plan_rotacion }}</td>
+                <td>{{ equipo.real_rotacion }}</td>
                 <td>
                   <button
                     class="btn btn-sm btn-warning me-2"
@@ -248,9 +252,11 @@
                     <option
                       v-for="equipo in tiposEquiposFerroviarios"
                       :key="equipo.id"
-                      :value="equipo.nombre"
+                      :value="equipo.id"
                     >
-                      {{ equipo.nombre }}
+                      {{ equipo.tipo_equipo_name }}--{{
+                        equipo.tipo_carga_name
+                      }}
                     </option>
                   </select>
                 </div>
@@ -298,6 +304,8 @@
 </template>
 
 <script>
+import axios from "axios";
+import Swal from "sweetalert2";
 export default {
   name: "ConsultaRotacionVagones",
   data() {
@@ -319,84 +327,76 @@ export default {
         tipoEquipo: "",
         vagonesEnServicio: 0,
       },
-      tiposEquiposFerroviarios: [
-        { id: 1, nombre: "Locomotora" },
-        { id: 2, nombre: "Vagón" },
-        { id: 3, nombre: "Plataforma" },
-      ],
+      tiposEquiposFerroviarios: [],
       modoEdicion: false, // Indica si estamos editando o agregando un registro
       indiceEdicion: null, // Guarda el índice del registro que se está editando
     };
   },
+  mounted() {
+    this.get_rotaciones();
+    this.getEquipos();
+  },
   methods: {
-    async consultarRotacion() {
+    async get_rotaciones() {
+      this.loading = true; // Activa el estado de carga
       try {
-        const response = await this.simularConsultaAPI();
-        this.resumen = response.resumen;
-        this.registrosRotacion = response.registrosRotacion;
+        let allRotaciones = []; // Almacena todos los registros de rotaciones
+        let nextPage = "/ufc/rotaciones/"; // URL inicial del endpoint
 
-        if (this.registrosRotacion.length === 0) {
-          this.$swal.fire(
-            "Sin resultados",
-            "No se encontraron registros en el rango de fechas seleccionado.",
-            "info"
-          );
+        // Bucle para manejar paginación (si aplica)
+        while (nextPage) {
+          const response = await axios.get(nextPage);
+          allRotaciones = [...allRotaciones, ...response.data.results]; // Agrega los resultados
+          nextPage = response.data.next; // Actualiza la URL de la siguiente página
         }
-      } catch (error) {
-        console.error("Error al consultar la rotación:", error);
-        this.$swal.fire(
-          "Error",
-          "Hubo un problema al consultar la rotación de los vagones.",
-          "error"
+
+        // Asigna los datos obtenidos a una variable en el componente
+        this.registrosRotacion = allRotaciones;
+
+        // Calcula las sumas de los campos relevantes
+        this.resumen.totalVagonesEnServicio = allRotaciones.reduce(
+          (total, item) => total + item.en_servicio,
+          0
         );
+        this.resumen.planCarga = allRotaciones.reduce(
+          (total, item) => total + item.plan_carga,
+          0
+        );
+        this.resumen.realCarga = allRotaciones.reduce(
+          (total, item) => total + item.real_carga,
+          0
+        );
+        this.resumen.planRotacion = allRotaciones.reduce(
+          (total, item) => total + item.plan_rotacion,
+          0
+        );
+        this.resumen.realRotacion = allRotaciones.reduce(
+          (total, item) => total + item.real_rotacion,
+          0
+        );
+
+        // Opcional: Si necesitas realizar alguna transformación de datos, hazlo aquí
+        console.log("Rotaciones cargadas:", this.registrosRotacion);
+        console.log("Total vagones en servicio:", this.totalVagonesEnServicio);
+        console.log("Plan de carga:", this.planCarga);
+        console.log("Real de carga:", this.realCarga);
+        console.log("Plan de rotación:", this.planRotacion);
+        console.log("Real de rotación:", this.realRotacion);
+      } catch (error) {
+        console.error("Error al obtener las rotaciones:", error);
+        Swal.fire("Error", "Hubo un error al cargar las rotaciones.", "error");
+      } finally {
+        this.loading = false; // Desactiva el estado de carga
       }
     },
-    resetForm() {
-      this.formData = {
-        fechaInicial: "",
-        fechaFinal: "",
-      };
-      this.resumen = {
-        totalVagonesEnServicio: 0,
-        planCarga: 0,
-        realCarga: 0,
-        planRotacion: 0,
-        realRotacion: 0,
-      };
-      this.registrosRotacion = [];
-    },
-    simularConsultaAPI() {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({
-            resumen: {
-              totalVagonesEnServicio: 150,
-              planCarga: 120,
-              realCarga: 110,
-              planRotacion: 90,
-              realRotacion: 85,
-            },
-            registrosRotacion: [
-              {
-                tipoEquipoFerroviario: "Locomotora",
-                enServicio: 10,
-                planCarga: 8,
-                realCarga: 7,
-                planRotacion: 6,
-                realRotacion: 5,
-              },
-              {
-                tipoEquipoFerroviario: "Vagón",
-                enServicio: 140,
-                planCarga: 112,
-                realCarga: 103,
-                planRotacion: 84,
-                realRotacion: 80,
-              },
-            ],
-          });
-        }, 1000); // Simula un retraso de 1 segundo
-      });
+    async getEquipos() {
+      try {
+        const response = await axios.get("/api/tipo-e-f-no-locomotora/");
+        this.tiposEquiposFerroviarios = response.data;
+      } catch (error) {
+        console.error("Error al obtener los equipos:", error);
+        Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
+      }
     },
     cerrarModal() {
       this.mostrarModal = false;

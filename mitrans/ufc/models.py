@@ -1,7 +1,5 @@
-from typing import Literal
 from django.db import models
-from nomencladores.models import nom_puerto,nom_tipo_equipo_ferroviario,nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_equipo_ferroviario
-from nomencladores.models import nom_destino
+from nomencladores.models import nom_tipo_equipo_ferroviario,nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_equipo_ferroviario
 from django.core.validators import RegexValidator
 
 
@@ -42,8 +40,8 @@ class producto_UFC(models.Model):
     @property
     def unidad_medida_display(self):
         return self.unidad_medida if self.unidad_medida else "Sin especificar"
-    
-    def __str__(self):
+    @property
+    def producto_display(self):
         return f"{self.producto.nombre_producto} - {self.embalaje_display}"
     
 #productos asociados al estado vagones cargados/descargados
@@ -528,7 +526,7 @@ class arrastres(models.Model):
         producto_UFC,
         blank=True,
         related_name="arrastres",
-        verbose_name="Productos"
+        verbose_name="Productos_UFC"
     )
     cantidad_vagones = models.CharField(
         max_length=10, 
@@ -562,9 +560,11 @@ class rotacion_vagones(models.Model):
     tipo_equipo_ferroviario = models.ForeignKey(
         nom_tipo_equipo_ferroviario,
         on_delete=models.CASCADE,
-        related_name="registros_rotacion",
+        related_name="tipo_equipo_rotacion",
         verbose_name="Equipo ferroviario"
     )
+    
+  #  registro_vagones=models.ManyToManyField(vagon_cargado_descargado, blank=True,related_name="vagones_rotacion", verbose_name="Registro de rotacion de vagones")
     en_servicio = models.PositiveIntegerField(verbose_name="En servicio")
     plan_carga = models.PositiveIntegerField(verbose_name="Plan carga")
     real_carga = models.PositiveIntegerField(verbose_name="Real carga")
@@ -580,6 +580,6 @@ class rotacion_vagones(models.Model):
         ordering = ["-creado_el"]
 
     def __str__(self):
-        return f"{self.tipo_equipo_ferroviario.nombre} - Servicio: {self.en_servicio}"
+        return f"{self.tipo_equipo_ferroviario.tipo_equipo} - Servicio: {self.en_servicio}"
     
     

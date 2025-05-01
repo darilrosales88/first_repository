@@ -357,6 +357,7 @@
 
             const response = await axios.post("/ufc/vagones-productos/", datosEnvio);
             Swal.fire("Éxito", "Registro agregado correctamente", "success");
+            this.$router.push({ name: "InfoOperativo" });
         } catch (error) {
             console.error("Error al guardar:", error.response);
             let errorMsg = "No se pudo guardar el registro";
@@ -394,7 +395,7 @@
 
         async validarProductos(idsProductos) {
         try {
-            const response = await axios.post("/ufc/productos-vagones-productos/verificar/", {
+            const response = await axios.post("/ufc/producto-vagon/verificar/", {
             producto_ids: idsProductos.map(id => parseInt(id))
             });
             return response.data.todos_existen;
@@ -474,7 +475,7 @@
   
       async getProductos() {
   try {
-    const response = await axios.get("/ufc/productos-vagones-productos/");
+    const response = await axios.get("/ufc/producto-vagon/");
     this.productos = response.data.results.map(p => ({
       ...p,
       id: parseInt(p.id) // Asegurar que los IDs son números

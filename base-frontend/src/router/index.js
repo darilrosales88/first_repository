@@ -707,7 +707,7 @@ const routes = [
   },
   /* Vagones y productos */
   {
-    path: "/AdicionarVagon_producto",
+    path: "/AdicionarVagonProducto",
     name: "AdicionarVagonProducto",
     component: AdicionarVagonesProductos,
     meta: {

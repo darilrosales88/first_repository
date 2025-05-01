@@ -7,11 +7,11 @@ from .views import nom_pais_view_set,nom_provincia_view_set,nom_municipio_view_s
 from .views import nom_contenedor_view_set,nom_cargo_view_set,nom_territorio_view_set,nom_puerto_view_set,nom_terminal_view_set
 from .views import nom_atraque_view_set,nom_unidad_medida_view_set,nom_osde_oace_organismo_view_set,nom_entidades_view_set
 from .views import nom_destino_view_set,nom_tipo_equipo_ferroviario_view_set,nom_embarcacion_view_set,nom_equipo_ferroviario_view_set
-from .views import nom_estado_tecnico_view_set,nom_producto_view_set,nom_tipo_equipo_ferroviario_view_set
+from .views import nom_estado_tecnico_view_set,nom_producto_view_set
 from .views import nom_incidencia_view_set,nom_tipo_estructura_ubicacion_view_set, nom_estructura_ubicacion_view_set
 from .views import nom_tipo_embalaje_view_set,verificar_destino,verificar_codigo_reeup
 from .views import entidades_acceso_comercial_ccdView,tipo_equipo_ferroviario_no_locomotora,equipo_ferroviario_no_locomotora
-
+    
 
 from django.urls import path
 

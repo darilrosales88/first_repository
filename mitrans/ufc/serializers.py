@@ -2,8 +2,7 @@ import django_filters
 from rest_framework import serializers
 from django_filters import rest_framework as filters
 
-from django.db.models import Q
-from nomencladores.models import nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_tipo_equipo_ferroviario
+from django.db.models import Q,Sum
 
 #Importando modelos de UFC
 from .models import (vagon_cargado_descargado,producto_UFC, en_trenes,nom_equipo_ferroviario
@@ -18,7 +17,6 @@ from rest_framework import status
 #transaction.atomic crea una transacción atómica que asegura que:
 #O todas las operaciones se ejecutan correctamente O ninguna se ejecuta (si ocurre algún error)
 from django.db import transaction 
-from nomencladores.serializers import nom_equipo_ferroviario_serializer
 
 #para cada modelo del que deseemos realizar el filtrado debemos hacer un filtrado
 #nom_pais_filter es una clase que se implementa para definir sobre qué campos quiero filtrar los registros de mi API, 
@@ -693,23 +691,121 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
 
 
 class RotacionVagonesSerializer(serializers.ModelSerializer):
-    tipo_equipo_ferroviario_nombre = serializers.CharField(
-        source="tipo_equipo_ferroviario.tipo_eqipo", read_only=True
-    )
-
+    tipo_equipo_ferroviario_nombre = serializers.SerializerMethodField()
+    plan_carga = serializers.IntegerField(read_only=True)
+    real_carga = serializers.IntegerField(read_only=True)
+    plan_rotacion = serializers.FloatField(read_only=True)
+    real_rotacion = serializers.FloatField(read_only=True)
+    tipo_carga_name= serializers.ReadOnlyField(source='tipo_equipo_ferroviario.get_tipo_carga_display')
     class Meta:
         model = rotacion_vagones
         fields = [
             "id",
             "tipo_equipo_ferroviario",
-            "tipo_equipo_ferroviario_nombre",  # Campo adicional para mostrar el nombre del equipo
+            "tipo_equipo_ferroviario_nombre",
+            "tipo_carga_name",
             "en_servicio",
             "plan_carga",
             "real_carga",
             "plan_rotacion",
             "real_rotacion",
-            "creado_el",
-            "actualizado_el",
         ]
-        read_only_fields = ["creado_el", "actualizado_el"]
+        extra_kwargs = {
+            "tipo_equipo_ferroviario": {"required": True},
+            "en_servicio": {"required": True},
+        }
+
+    def get_tipo_equipo_ferroviario_nombre(self, obj):
+        """Devuelve el nombre del tipo de equipo ferroviario."""
+        return obj.tipo_equipo_ferroviario.get_tipo_equipo_display()
+
+    def validate_tipo_equipo_ferroviario(self, value):
+        """Valida que el tipo de equipo ferroviario no sea 'Locomotora'."""
+        if value.tipo_equipo == "locomotora":
+            raise serializers.ValidationError(
+                "El tipo de equipo ferroviario no puede ser 'Locomotora'."
+            )
+        return value
+
+    def validate_en_servicio(self, value):
+        """Valida que el campo 'Vagones en servicio' sea un número entero positivo."""
+        if value <= 0:
+            raise serializers.ValidationError(
+                "El número de vagones en servicio debe ser un número entero positivo."
+            )
+        return value
+
+    def calculate_plan_carga(self,validated_data):
+        """Calcula la sumatoria del plan diario de carga para la operación 'carga'."""
+        return (
+            vagon_cargado_descargado.objects.filter(operacion="carga",tipo_equipo_ferroviario=validated_data["tipo_equipo_ferroviario"])
+            .aggregate(total_plan_carga=Sum("plan_diario_carga_descarga"))
+            .get("total_plan_carga", 0) or 0
+        )
+
+    def calculate_real_carga(self,validated_data):
+        """Calcula la sumatoria del real de carga para la operación 'carga'."""
+        return (
+            vagon_cargado_descargado.objects.filter(operacion="carga",tipo_equipo_ferroviario=validated_data["tipo_equipo_ferroviario"])
+            .aggregate(total_real_carga=Sum("real_carga_descarga"))
+            .get("total_real_carga", 0) or 0
+        )
+
+    def calculate_plan_rotacion(self, plan_carga, en_servicio):
+        """Calcula el plan de rotación."""
+        if en_servicio == 0:
+            return 0
+        return plan_carga / en_servicio
+
+    def calculate_real_rotacion(self, real_carga, en_servicio):
+        """Calcula el real de rotación."""
+        if en_servicio == 0:
+            return 0
+        return real_carga / en_servicio
+
+    def create(self, validated_data):
+        """Crea una nueva instancia de rotación de vagones."""
+        # Calcular valores dinámicos
+        plan_carga = self.calculate_plan_carga(validated_data)
+        real_carga = self.calculate_real_carga(validated_data)
+        en_servicio = validated_data["en_servicio"]
+
+        # Calcular rotaciones
+        plan_rotacion = self.calculate_plan_rotacion(plan_carga, en_servicio)
+        real_rotacion = self.calculate_real_rotacion(real_carga, en_servicio)
+
+        # Crear instancia
+        instance = rotacion_vagones.objects.create(
+            **validated_data,
+            plan_carga=plan_carga,
+            real_carga=real_carga,
+            plan_rotacion=plan_rotacion,
+            real_rotacion=real_rotacion,
+        )
+        return instance
+
+    def update(self, instance, validated_data):
+        """Actualiza una instancia existente de rotación de vagones."""
+        # Calcular valores dinámicos
+        plan_carga = self.calculate_plan_carga()
+        real_carga = self.calculate_real_carga()
+        en_servicio = validated_data.get("en_servicio", instance.en_servicio)
+
+        # Calcular rotaciones
+        plan_rotacion = self.calculate_plan_rotacion(plan_carga, en_servicio)
+        real_rotacion = self.calculate_real_rotacion(real_carga, en_servicio)
+
+        # Actualizar campos
+        instance.tipo_equipo_ferroviario = validated_data.get(
+            "tipo_equipo_ferroviario", instance.tipo_equipo_ferroviario
+        )
+        instance.en_servicio = en_servicio
+        instance.plan_carga = plan_carga
+        instance.real_carga = real_carga
+        instance.plan_rotacion = plan_rotacion
+        instance.real_rotacion = real_rotacion
+        instance.save()
+
+        return instance
+    
 

@@ -74,7 +74,7 @@ def get_permissions(self):
     #*****************************************************************************************************************************
 #4.2 declaramos la vista para serializar el modelo nom_pais
 class nom_pais_view_set(viewsets.ModelViewSet):
-    queryset = nom_pais.objects.all()
+    queryset = nom_pais.objects.all().order_by('-id')
     serializer_class = nom_pais_serializer
 
     
@@ -197,7 +197,7 @@ class nom_pais_view_set(viewsets.ModelViewSet):
 
 #/*********************************************************************************************************************************************
 class nom_provincia_view_set(viewsets.ModelViewSet):
-    queryset = nom_provincia.objects.all()
+    queryset = nom_provincia.objects.all().order_by('-id')
     serializer_class = nom_provincia_serializer
 
     def get_queryset(self):
@@ -296,7 +296,7 @@ class nom_provincia_view_set(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_municipio_view_set(viewsets.ModelViewSet):
-    queryset = nom_municipio.objects.all()
+    queryset = nom_municipio.objects.all().order_by('-id')
     serializer_class = nom_municipio_serializer
 
     def get_queryset(self):
@@ -408,7 +408,7 @@ class nom_municipio_view_set(viewsets.ModelViewSet):
 CustomUser = get_user_model()  # Obtén el modelo de usuario personalizado
 
 class nom_tipo_maniobra_portuaria_view_set(viewsets.ModelViewSet):
-    queryset = nom_tipo_maniobra_portuaria.objects.all()
+    queryset = nom_tipo_maniobra_portuaria.objects.all().order_by('-id')
     serializer_class = nom_tipo_maniobra_portuaria_serializer
 
     def get_queryset(self):
@@ -515,7 +515,7 @@ class nom_tipo_maniobra_portuaria_view_set(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_contenedor_view_set(viewsets.ModelViewSet):
-    queryset = nom_contenedor.objects.all()
+    queryset = nom_contenedor.objects.all().order_by('-id_contenedor')
     serializer_class = nom_contenedor_serializer
     #El método get_object utiliza el campo lookup_field para obtener la instancia correcta. Por defecto, lookup_field es pk, 
     #pero en 3este caso, la clave primaria es id_contenedor. Por eso en el ModelViewSet este campo debe estar igualado a id_contenedor
@@ -623,7 +623,7 @@ class nom_contenedor_view_set(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_cargo_view_set(viewsets.ModelViewSet):
-    queryset = nom_cargo.objects.all()
+    queryset = nom_cargo.objects.all().order_by('-id')
     serializer_class = nom_cargo_serializer
 
     def get_queryset(self):
@@ -727,7 +727,7 @@ class nom_cargo_view_set(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_territorio_view_set(viewsets.ModelViewSet):
-    queryset = nom_territorio.objects.all()
+    queryset = nom_territorio.objects.all().order_by('-id')
     serializer_class = nom_territorio_serializer
 
     def get_queryset(self):
@@ -1152,7 +1152,7 @@ class nom_atraque_view_set(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_unidad_medida_view_set(viewsets.ModelViewSet):
-    queryset = nom_unidad_medida.objects.all()
+    queryset = nom_unidad_medida.objects.all().order_by('-id')
     serializer_class = nom_unidad_medida_serializer
 
     def get_queryset(self):
@@ -1258,7 +1258,7 @@ class nom_unidad_medida_view_set(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_osde_oace_organismo_view_set(viewsets.ModelViewSet):
-    queryset = nom_osde_oace_organismo.objects.all()
+    queryset = nom_osde_oace_organismo.objects.all().order_by('-id')
     serializer_class = nom_osde_oace_organismo_serializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = nom_osde_oace_organismo_filter
@@ -1496,7 +1496,7 @@ class entidades_acceso_comercial_ccdView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 #/*********************************************************************************************************************************************
 class nom_destino_view_set(viewsets.ModelViewSet):
-    queryset = nom_destino.objects.all()
+    queryset = nom_destino.objects.all().order_by('-id')
     serializer_class = nom_destino_serializer
 
     def get_queryset(self):
@@ -1614,7 +1614,7 @@ def verificar_destino(request):
     return Response({"exists": existe})#retorna un booleano
 #/*********************************************************************************************************************************************
 class nom_tipo_equipo_ferroviario_view_set(viewsets.ModelViewSet):
-    queryset = nom_tipo_equipo_ferroviario.objects.all()
+    queryset = nom_tipo_equipo_ferroviario.objects.all().order_by('-id')
     serializer_class = nom_tipo_equipo_ferroviario_serializer
 
     def get_queryset(self):
@@ -1985,7 +1985,7 @@ class nom_equipo_ferroviario_view_set(viewsets.ModelViewSet):
 
 
 class nom_estado_tecnico_view_set(viewsets.ModelViewSet):
-    queryset = nom_estado_tecnico.objects.all()
+    queryset = nom_estado_tecnico.objects.all().order_by('-id')
     serializer_class = nom_estado_tecnico_serializer
     lookup_field = 'codigo_estado_tecnico'  # Especifica el campo a usar como clave primaria
 
@@ -2214,7 +2214,7 @@ class nom_producto_view_set(viewsets.ModelViewSet):
 #/*********************************************************************************************************************************************
 
 class nom_tipo_embalaje_view_set(viewsets.ModelViewSet):
-    queryset = nom_tipo_embalaje.objects.all()
+    queryset = nom_tipo_embalaje.objects.all().order_by('-id')
     serializer_class = nom_tipo_embalaje_serializer
 
     def get_queryset(self):
@@ -2318,7 +2318,7 @@ class nom_tipo_embalaje_view_set(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_incidencia_view_set(viewsets.ModelViewSet):
-    queryset = nom_incidencia.objects.all()
+    queryset = nom_incidencia.objects.all().order_by('-id')
     serializer_class = nom_incidencia_serializer
 
     def get_queryset(self):
@@ -2424,7 +2424,7 @@ class nom_incidencia_view_set(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_tipo_estructura_ubicacion_view_set(viewsets.ModelViewSet):
-    queryset = nom_tipo_estructura_ubicacion.objects.all()
+    queryset = nom_tipo_estructura_ubicacion.objects.all().order_by('-id')
     serializer_class = nom_tipo_estructura_ubicacion_serializer
 
     def get_queryset(self):
@@ -2530,7 +2530,7 @@ class nom_tipo_estructura_ubicacion_view_set(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_estructura_ubicacion_view_set(viewsets.ModelViewSet):
-    queryset = nom_estructura_ubicacion.objects.all()
+    queryset = nom_estructura_ubicacion.objects.all().order_by('-id')
     serializer_class = nom_estructura_ubicacion_serializer
 
     def get_queryset(self):

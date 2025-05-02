@@ -183,6 +183,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
+        print("Datos recibidos en create:", request.data)  # Verificar datos entrantes
         #permisos de acceso a la operacion
         if not request.user.groups.filter(name='AdminUFC').exists():
             return Response(

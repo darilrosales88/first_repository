@@ -267,7 +267,7 @@
               </label>
               <textarea
                 class="form-control"
-                v-model="causas_incumplimiento"
+                v-model="formData.causas_incumplimiento"
                 id="causas_incumplimiento"
                 name="causas_incumplimiento"
                 rows="3"
@@ -502,99 +502,79 @@ export default {
   },
 
   methods: {
+    
     async submitForm() {
-      // Validación de campos obligatorios base
-      if (
-        !this.formData.tipo_equipo_ferroviario ||
+  try {
+    // 1. Calcular primero el valor real (asegurar que se complete antes de enviar)
+    await this.calcularRealCargaDescarga();
+    
+    // 2. Validaciones básicas
+    if (!this.formData.tipo_equipo_ferroviario || 
         !this.formData.tipo_origen ||
-        !this.formData.origen ||
+        !this.formData.origen || 
         !this.formData.tipo_destino ||
-        !this.formData.destino
-      ) {
-        Swal.fire(
-          "Error",
-          "Por favor complete todos los campos obligatorios",
-          "error"
-        );
-        return;
-      }
+        !this.formData.destino) {
+      Swal.fire("Error", "Por favor complete todos los campos obligatorios", "error");
+      return;
+    }
 
-      // Validación específica para productos cuando estado es "cargado"
-      if (
-        this.formData.estado === "cargado" &&
-        (!this.formData.lista_productos ||
-          this.formData.lista_productos.length === 0)
-      ) {
-        Swal.fire(
-          "Error",
-          "Debe seleccionar al menos un producto.",
-          "error"
-        );
-        return;
-      }
-      else if (
-         this.formData.estado === "vacío" &&
-        (!this.formData.lista_productos ||
-          this.formData.lista_productos.length === 0)
-      ) {
-        Swal.fire(
-          "Error",
-          "Debe seleccionar al menos un producto.",
-          "error"
-        );
-        return;
-      }
+    // 3. Validación específica para productos
+    if (this.formData.estado === "cargado" && 
+        (!this.formData.lista_productos || this.formData.lista_productos.length === 0)) {
+      Swal.fire("Error", "Debe seleccionar al menos un producto.", "error");
+      return;
+    }
 
-      // Asegurar que tenemos el cálculo más reciente
-      await this.calcularRealCargaDescarga();
+    // 4. Preparar datos de envío CORRECTAMENTE
+    const datosEnvio = {
+      ...this.formData,
+      real_carga_descarga: this.formData.real_carga_descarga || 0, // Asegurar que lleva el valor calculado
+      causas_incumplimiento: this.formData.causas_incumplimiento || '', // Asegurar valor
+      producto_ids: Array.isArray(this.formData.lista_productos) 
+        ? this.formData.lista_productos 
+        : [this.formData.lista_productos],
+      registros_vagones_data: this.registros_vagones_temporales.map(v => ({
+        no_id: v.no_id,
+        fecha_despacho: v.fecha_despacho,
+        tipo_origen: v.tipo_origen,
+        origen: v.origen,
+        fecha_llegada: v.fecha_llegada,
+        observaciones: v.observaciones
+      }))
+    };
 
-      try {
-        const datosEnvio = {
-          ...this.formData,
-          producto_ids: Array.isArray(this.formData.lista_productos)
-            ? this.formData.lista_productos
-            : [this.formData.lista_productos],
-          registros_vagones_data: this.registros_vagones_temporales.map(
-            (v) => ({
-              no_id: v.no_id,
-              fecha_despacho: v.fecha_despacho,
-              tipo_origen: v.tipo_origen,
-              origen: v.origen,
-              fecha_llegada: v.fecha_llegada,
-              observaciones: v.observaciones,
-            })
-          ),
-        };
+    console.log("Datos a enviar:", {
+      ...this.formData,
+      real_carga_descarga: this.formData.real_carga_descarga,
+      causas_incumplimiento: this.formData.causas_incumplimiento
+    });
 
-        const response = await axios.post(
-          "/ufc/vagones-cargados-descargados/",
-          datosEnvio
-        );
+    // 5. Enviar datos
+    const response = await axios.post("/ufc/vagones-cargados-descargados/", datosEnvio);
 
-        // Limpiar después del éxito
-        this.registros_vagones_temporales = [];
-        this.formData.lista_productos = [];
-        this.resetForm();
+    // 6. Limpiar después del éxito
+    this.registros_vagones_temporales = [];
+    this.formData.lista_productos = [];
+    this.resetForm();
 
-        await Swal.fire({
-          title: "Éxito",
-          text: "Registro creado correctamente",
-          icon: "success",
-          confirmButtonText: "Aceptar",
-        });
+    await Swal.fire({
+      title: "Éxito",
+      text: "Registro creado correctamente",
+      icon: "success",
+      confirmButtonText: "Aceptar"
+    });
 
-        this.$router.push({ name: "InfoOperativo" });
-      } catch (error) {
-        console.error("Error al guardar:", error.response);
-        let errorMsg = "No se pudo guardar el registro";
+    this.$router.push({ name: "InfoOperativo" });
 
-        if (error.response?.data) {
-          errorMsg += `: ${JSON.stringify(error.response.data)}`;
-        }
-
-        Swal.fire("Error", errorMsg, "error");
-      }
-    },
+  } catch (error) {
+    console.error("Error al guardar:", error.response);
+    let errorMsg = "No se pudo guardar el registro";
+    if (error.response?.data) {
+      errorMsg += `: ${JSON.stringify(error.response.data)}`;
+    }
+    Swal.fire("Error", errorMsg, "error");
+  }
+},
 
     async calcularRealCargaDescarga() {
       if (

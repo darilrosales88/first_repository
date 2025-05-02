@@ -225,6 +225,19 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 
         except Exception as e:
             raise serializers.ValidationError(f"Error al actualizar el registro: {str(e)}")
+        
+    
+    def validate(self, data):
+        # Validación para causas_incumplimiento
+        data['causas_incumplimiento'] = data.get('causas_incumplimiento', '')
+        
+        # Validación para real_carga_descarga
+        if 'real_carga_descarga' not in data or data['real_carga_descarga'] is None:
+            # Calcular valor basado en registros_vagones_data si está disponible
+            registros_data = data.get('registros_vagones_data', [])
+            data['real_carga_descarga'] = len(registros_data)
+            
+        return data
 
     def create(self, validated_data):
         try:
@@ -232,6 +245,16 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 # Extraer datos para relaciones
                 productos_ids = validated_data.pop('producto_ids', [])
                 registros_data = validated_data.pop('registros_vagones_data', [])
+
+                def validate(self, data):
+                    # Forzar el valor de causas_incumplimiento si viene vacío
+                    if 'causas_incumplimiento' in data and not data['causas_incumplimiento']:
+                        data['causas_incumplimiento'] = 'Sin causas especificadas'  # Valor por defecto
+
+                # Asegurar que real_carga_descarga no sea sobrescrito
+                if validated_data.get('real_carga_descarga', 0) == 0:
+                    registros_data = validated_data.get('registros_vagones_data', [])
+                    validated_data['real_carga_descarga'] = len(registros_data)
                 
                 # Crear instancia principal
                 instance = super().create(validated_data)

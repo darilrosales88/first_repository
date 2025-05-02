@@ -255,7 +255,6 @@
           });
           
           this.vagones_productos = response.data.results;
-          console.log("respuesta del server de vagones y productos",this.vagones_productos);
           this.allRecords = [...response.data.results]; // Guardar copia completa para filtrado
           this.totalItems = response.data.count;
           this.busqueda_existente = true;

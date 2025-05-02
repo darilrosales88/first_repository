@@ -131,7 +131,7 @@ class vagon_cargado_descargado(models.Model):
     real_carga_descarga = models.IntegerField(default = 0, editable=False)
     tipo_destino = models.CharField(choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
     destino = models.CharField(max_length=40)
-    causas_incumplimiento = models.TextField(null=True, blank=True, max_length = 100)
+    causas_incumplimiento = models.TextField(null=False, blank=True, default='', max_length=100)
     # Cambiamos ForeignKey a ManyToManyField, es posible que un vagon tenga mas de un producto
     producto = models.ManyToManyField(
         producto_UFC,
@@ -325,96 +325,13 @@ class vagones_productos(models.Model):
         
         # Unir los nombres con comas si hay más de uno
         productos_str = ", ".join(nombres_productos) if nombres_productos else "Sin productos"        
-        return f"Vagones y productos: {productos_str}"
-    
-    # También podemos añadir esta lógica al método save() del modelo para asegurar
-    # que los campos se actualicen cuando se guarda un vagones_productos
-    """ def save(self, *args, **kwargs):
-        # Solo actualizar si no es una creación nueva (para evitar cálculos innecesarios)
-        if self.pk is not None:
-            # Actualizar plan_dia
-            self.plan_dia = vagon_cargado_descargado.objects.filter(
-                operacion='carga',
-                #tipo_origen=self.tipo_origen,
-                #origen=self.origen,
-                #tipo_equipo_ferroviario=self.tipo_equipo_ferroviario
-            ).aggregate(total=Sum('plan_diario_carga_descarga'))['total'] or 0
-            print("Plan del dia actualizado",self.plan_dia)
-            
-            # Actualizar vagones_situados
-           #self.vagones_situados = Situado_Carga_Descarga.objects.filter(
-           #     operacion='carga',
-                #tipo_origen=self.tipo_origen,
-                #origen=self.origen,
-                #tipo_equipo=self.tipo_equipo_ferroviario.get_tipo_equipo_display() if self.tipo_equipo_ferroviario else None
-            #).aggregate(total=Sum('situados'))['total'] or 0
-            
-            # Actualizar vagones_cargados
-            self.vagones_cargados = vagon_cargado_descargado.objects.filter(
-                operacion='carga',
-                #tipo_origen=self.tipo_origen,
-                #origen=self.origen,
-                #tipo_equipo_ferroviario=self.tipo_equipo_ferroviario
-            ).aggregate(total=Sum('real_carga_descarga'))['total'] or 0
-            
-            # Actualizar plan_aseguramiento_proximos_dias
-            self.plan_aseguramiento_proximos_dias = vagon_cargado_descargado.objects.filter(
-                operacion='carga',
-                #tipo_origen=self.tipo_origen,
-                #origen=self.origen,
-                #tipo_equipo_ferroviario=self.tipo_equipo_ferroviario
-            ).aggregate(total=Sum('real_carga_descarga'))['total'] or 0
-        
-        super().save(*args, **kwargs) """
+        return f"Vagones y productos: {productos_str}"   
 
+#se ejecuta la funcion actualizar_campos_automaticos cuando se inserte, modifique o elimine
+#algun registro en esos modelos
 @receiver([post_save, post_delete], sender=vagon_cargado_descargado)
-#@receiver([post_save, post_delete], sender=Situado_Carga_Descarga)
-@receiver([post_save, post_delete], sender=vagon_cargado_descargado)
-def actualizar_campos_automaticos(sender, instance, **kwargs):
-    '''Actualiza los campos automáticos en vagones_productos cuando hay cambios
-    en los modelos relacionados vagon_cargado_descargado'''
-    
-    # Obtener todos los objetos vagones_productos que necesitan actualización
-    objetos_actualizar = vagones_productos.objects.all().prefetch_related('producto__producto')
-    
-    for vagon_producto in objetos_actualizar:
-        # Obtener los IDs de los productos nom_producto asociados al vagon_producto actual
-        productos_ids = vagon_producto.producto.all().values_list('producto__id', flat=True)
-        
-        if not productos_ids:  # Si no tiene productos asociados, saltar
-            continue
-        
-        # Actualizar plan_dia (suma de plan_diario_carga_descarga donde operacion='carga')
-        plan_dia = vagon_cargado_descargado.objects.filter(
-            operacion='carga'
-        ).aggregate(total=Sum('plan_diario_carga_descarga'))['total'] or 0
-        
-        # Actualizar vagones_cargados (suma de real_carga_descarga donde operacion='carga')
-        # Solo contar los que tienen los mismos productos (nom_producto) que el vagon_producto actual
-        vagones_cargados = vagon_cargado_descargado.objects.filter(
-            operacion='carga',
-            producto__producto__id__in=productos_ids  # Filtro por productos nom_producto relacionados
-        ).aggregate(total=Sum('real_carga_descarga'))['total'] or 0
-        
-        # Actualizar plan_aseguramiento_proximos_dias
-        plan_aseguramiento = vagon_cargado_descargado.objects.filter(
-            operacion='carga',
-            producto__producto__id__in=productos_ids  # Filtro por productos nom_producto relacionados
-        ).aggregate(total=Sum('real_carga_descarga'))['total'] or 0
-        
-        # Actualizar el objeto solo si alguno de los valores ha cambiado
-        if (vagon_producto.plan_dia != plan_dia or            
-            vagon_producto.vagones_cargados != vagones_cargados or
-            vagon_producto.plan_aseguramiento_proximos_dias != plan_aseguramiento):
-            
-            vagon_producto.plan_dia = plan_dia
-            vagon_producto.vagones_cargados = vagones_cargados
-            vagon_producto.plan_aseguramiento_proximos_dias = plan_aseguramiento
-            vagon_producto.save(update_fields=[
-                'plan_dia',
-                'vagones_cargados',
-                'plan_aseguramiento_proximos_dias'
-            ])
+@receiver([post_save, post_delete], sender=Situado_Carga_Descarga)
+def actualizar_campos_automaticos(sender, instance, **kwargs):    
     
     '''Actualiza los campos automáticos en vagones_productos cuando hay cambios
     en los modelos relacionados vagon_cargado_descargado o Situado_Carga_Descarga'''
@@ -428,38 +345,39 @@ def actualizar_campos_automaticos(sender, instance, **kwargs):
         plan_dia = vagon_cargado_descargado.objects.filter(
             operacion='carga'
             
-        ).aggregate(total=Sum('plan_diario_carga_descarga'))['total'] or 0
-        print("plan_dia",plan_dia)
-        
-        # Actualizar vagones_situados (suma de situados donde operacion='carga')
-        #vagones_situados = Situado_Carga_Descarga.objects.filter(
-        #    operacion='carga',
-        #    ).aggregate(total=Sum('situados'))['total'] or 0
-        #print("vagones_situados",vagones_situados)
+        ).aggregate(total=Sum('plan_diario_carga_descarga'))['total'] or 0        
         
         # Actualizar vagones_cargados (suma de real_carga_descarga donde operacion='carga')
         vagones_cargados = vagon_cargado_descargado.objects.filter(
-            operacion='descarga',
+            operacion='carga',
             ).aggregate(total=Sum('real_carga_descarga'))['total'] or 0
-        print("vagones_cargados",vagones_cargados)
+        
+
+        # Actualizar vagones_situados (suma de situados donde operacion='carga')
+        vagones_situados = Situado_Carga_Descarga.objects.filter(
+            operacion='carga',
+            ).aggregate(total=Sum('situados'))['total'] or 0
+        
+
         # Actualizar plan_aseguramiento_proximos_dias (misma lógica que vagones_cargados)
         plan_aseguramiento = vagon_cargado_descargado.objects.filter(
             operacion='carga',
             ).aggregate(total=Sum('real_carga_descarga'))['total'] or 0
-        print("Este     es el vagonnnnn, plan de aseguramiento",plan_aseguramiento)
+        
         
         # Actualizar el objeto solo si alguno de los valores ha cambiado
         if (vagon_producto.plan_dia != plan_dia or             
             vagon_producto.vagones_cargados != vagones_cargados or
-            vagon_producto.plan_aseguramiento_proximos_dias != plan_aseguramiento):
+            vagon_producto.plan_aseguramiento_proximos_dias != plan_aseguramiento or
+            vagon_producto.vagones_situados != vagones_situados):
             
             vagon_producto.plan_dia = plan_dia
-            #vagon_producto.vagones_situados = vagones_situados
+            vagon_producto.vagones_situados = vagones_situados
             vagon_producto.vagones_cargados = vagones_cargados
             vagon_producto.plan_aseguramiento_proximos_dias = plan_aseguramiento
             vagon_producto.save(update_fields=[
                 'plan_dia', 
-                #'vagones_situados', 
+                'vagones_situados', 
                 'vagones_cargados', 
                 'plan_aseguramiento_proximos_dias'
             ])

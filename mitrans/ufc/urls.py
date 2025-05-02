@@ -8,7 +8,7 @@ from django.urls import path
 
 
 urlpatterns = [
-    path('productos-vagones/verificar/', verificar_productos, name='verificar-productos'),
+    path('producto-vagon/verificar/', verificar_productos, name='verificar-productos'),
    #path('destinos/verificar-existencia/', verificar_destino, name='verificar_destino'),#verificar si existe un destino dado cliente-destino
     #path('entidades/verificar-existencia-reeup/', verificar_codigo_reeup, name='verificar_existencia_reeup'),#verificar si existe ya el codigo reeup
         

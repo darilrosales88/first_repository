@@ -210,7 +210,7 @@
               />
             </div>
             <!-- Campo: producto -->
-            <div class="mb-3" v-if="formData.estado === 'cargado'">
+            <div class="mb-3">
               <label for="producto" class="form-label">
                 Productos
                 <button
@@ -527,7 +527,19 @@ export default {
       ) {
         Swal.fire(
           "Error",
-          "Debe seleccionar al menos un producto cuando el estado es 'Cargado'",
+          "Debe seleccionar al menos un producto.",
+          "error"
+        );
+        return;
+      }
+      else if (
+         this.formData.estado === "vacío" &&
+        (!this.formData.lista_productos ||
+          this.formData.lista_productos.length === 0)
+      ) {
+        Swal.fire(
+          "Error",
+          "Debe seleccionar al menos un producto.",
           "error"
         );
         return;

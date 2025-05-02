@@ -7,30 +7,6 @@
           <div class="row">
             <!-- Columna 1 -->
             <div class="col-md-6">
-              <!-- Campo: TEF -->
-              <div class="mb-3">
-                <label for="tipo_equipo_ferroviario" class="form-label"
-                  >Tipo de equipo ferroviario <span style="color: red">*</span></label
-                >
-                <select
-                  class="form-select"
-                  v-model="formData.tipo_equipo_ferroviario"
-                  id="tipo_equipo_ferroviario"
-                  name="tipo_equipo_ferroviario"
-                  required
-                >
-                  <option
-                    v-for="tipo_equipo_ferroviario in tipos_equipos_ferroviarios"
-                    :key="tipo_equipo_ferroviario.id"
-                    :value="tipo_equipo_ferroviario.id"
-                  >
-                    {{ tipo_equipo_ferroviario.id }}-{{
-                    tipo_equipo_ferroviario.tipo_equipo_name }} -
-                    {{ tipo_equipo_ferroviario.descripcion }}
-                  </option>
-                </select>
-              </div>
-  
               <!-- Campo: tipo_origen -->
               <div class="mb-3">
                 <label for="tipo_origen" class="form-label"
@@ -87,9 +63,24 @@
                   </option>
                 </select>
               </div>
-  
+              <!-- Campo: tipo_producto -->
+              <div class="mb-3" >
+                <label for="tipo_producto" class="form-label"
+                  >Tipo de Producto</label
+                >
+                <select
+                  class="form-select"
+                  v-model="formData.tipo_producto"
+                  id="tipo_producto"
+                  name="tipo_producto"
+                >
+                  <option value="producto">Producto</option>
+                  <option value="contenedor">Contenedor</option>
+                  <option value="combustible">Combustible</option>
+                </select>
+              </div>
               <!-- Campo: tipo_combustible -->
-              <div class="mb-3">
+              <div class="mb-3" v-if="mostrarCampoCombustible">
                 <label for="tipo_combustible" class="form-label"
                   >Tipo de Combustible</label
                 >
@@ -104,22 +95,29 @@
                   <option value="combustible_turbo">Combustible turbo</option>
                 </select>
               </div>
-  
-              <!-- Campo: tipo_producto -->
-              <div class="mb-3">
-                <label for="tipo_producto" class="form-label"
-                  >Tipo de Producto</label
+              <!-- Campo: TEF -->
+              <div class="mb-3" v-if="mostrarCampoCombustible">
+                <label for="tipo_equipo_ferroviario" class="form-label"
+                  >Tipo de equipo ferroviario <span style="color: red">*</span></label
                 >
                 <select
                   class="form-select"
-                  v-model="formData.tipo_producto"
-                  id="tipo_producto"
-                  name="tipo_producto"
+                  v-model="formData.tipo_equipo_ferroviario"
+                  id="tipo_equipo_ferroviario"
+                  name="tipo_equipo_ferroviario"
+                  required
                 >
-                  <option value="producto">Producto</option>
-                  <option value="contenedor">Contenedor</option>
+                  <option
+                    v-for="tipo_equipo_ferroviario in tipos_equipos_ferroviarios"
+                    :key="tipo_equipo_ferroviario.id"
+                    :value="tipo_equipo_ferroviario.id"
+                  >
+                    {{ tipo_equipo_ferroviario.id }}-{{
+                    tipo_equipo_ferroviario.tipo_equipo_name }} -
+                    {{ tipo_equipo_ferroviario.descripcion }}
+                  </option>
                 </select>
-              </div>
+              </div>  
             </div>
   
             <!-- Columna 2 -->
@@ -185,7 +183,7 @@
               </div>
   
               <!-- Campo: producto -->
-              <div class="mb-3">
+              <div class="mb-3" v-if="mostrarCampoProducto">
                 <label for="producto" class="form-label">
                   Productos
                   <button class="create-button ms-2" @click="abrirModalAgregarProducto">
@@ -264,6 +262,7 @@
       NavbarComponent,
       ModalAgregarProductoVagonesProductos,
     },
+    
     data() {
       return {
         mostrarModalProducto: false,
@@ -288,6 +287,15 @@
         entidades: [],
       };
     },
+    computed: {
+    mostrarCampoProducto() {
+      return this.formData.tipo_producto === 'producto';    
+    },
+    mostrarCampoCombustible() {
+      return this.formData.tipo_producto === 'combustible';    
+    }
+  },
+   
     async mounted() {
       await this.getProductos();
       this.getNoLocomotoras();
@@ -296,6 +304,16 @@
     },
     async created() {
       await this.fetchUserPermissionsAndGroups();
+    },
+    watch: {
+  'formData.tipo_combustible': {
+        handler(newVal) {
+          if (newVal) {
+            this.getNoLocomotoras();
+          }
+        },
+        immediate: true
+      }
     },
     methods: {
       // Métodos de autenticación y permisos
@@ -429,13 +447,21 @@
       // Métodos para obtener datos
       async getNoLocomotoras() {
         try {
-          const response = await axios.get("/api/tipo-e-f-no-locomotora/");
+          let url = "/api/tipo-e-f-no-locomotora/";
+          
+          // Si hay un tipo de combustible seleccionado, añadirlo como parámetro
+          if (this.formData.tipo_combustible) {
+            url += `?tipo_combustible=${this.formData.tipo_combustible}`;
+          }
+          
+          const response = await axios.get(url);
           this.tipos_equipos_ferroviarios = response.data;
         } catch (error) {
           console.error("Error al obtener los equipos ferroviarios:", error);
           Swal.fire("Error", "Hubo un error al obtener los equipos ferroviarios.", "error");
         }
       },
+
   
       async getEntidades() {
         try {

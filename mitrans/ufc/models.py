@@ -1,6 +1,9 @@
 from django.db import models
 from nomencladores.models import nom_tipo_equipo_ferroviario,nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_equipo_ferroviario
 from django.core.validators import RegexValidator
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.db.models import Sum
 
 
 
@@ -167,6 +170,99 @@ class vagon_cargado_descargado(models.Model):
     def __str__(self):
         return f"Vagón {self.id} - {self.get_estado_display()}"
     
+#************************************************************************************************
+#Modelo Situado
+class Situado_Carga_Descarga(models.Model):
+    
+    t_origen = (
+        ('puerto', 'Puerto'),
+        ('ac_ccd', 'Acceso Comercial')
+    )
+    
+    tipo_origen = models.CharField(max_length=100, choices=t_origen, verbose_name="Tipo de origen", blank=True, null=True)
+    origen = models.CharField(max_length=200, verbose_name="Origen")
+    
+    t_equipo = (
+        ('casilla', 'Casilla'),
+        ('caj_gon', 'Cajones o Góndola'),
+        ('planc_plat', 'Plancha o Plataforma'),
+        ('Plan_porta_cont', 'Plancha porta contenedores'),
+        ('cist_liquidos', 'Cisterna para líquidos'),
+        ('cist_solidos', 'Cisterna para sólidos'),
+        ('tolva_g_mineral', 'Tolva granelera(mineral)'),
+        ('tolva_g_agric', 'Tolva granelera(agrícola)'),
+        ('tolva_g_cemento', 'Tolva para cemento'),
+        ('volqueta', 'Volqueta'),
+        ('Vagon_ref', 'Vagón refrigerado'),
+        ('jaula', 'Jaula'),
+        ('locomotora', 'Locomotora'),
+        ('tren', 'Tren'),
+    )
+    
+    tipo_equipo = models.CharField(max_length=200, choices=t_equipo, verbose_name="Tipo de equipo", blank=True, null=True)
+    
+    status =(
+        ('vacio', 'Vacio'),
+        ('cargado', 'Cargado')
+    )
+    
+    estado = models.CharField(max_length=200, choices=status, verbose_name="Estado", blank=True, null=True)
+    
+    t_operacion = (
+        ('carga', 'Carga'),
+        ('descarga', 'Descarga')
+    )
+    
+    operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion", blank=True, null=True)
+    
+    producto = models.ManyToManyField(
+        producto_UFC,
+        blank=True,
+        related_name="situados",
+        verbose_name="Productos"
+    )
+    
+    situados = models.CharField(
+        max_length=10,
+        verbose_name="Cantidad de situados",
+        default="0",
+        validators=[
+            RegexValidator(
+                regex='^[0-9]+$',
+                message='Solo se permiten números positivos',
+                code='invalid_situados'
+            )
+        ]
+    )
+    
+    pendiente_proximo_dia = models.CharField(
+        max_length=10,
+        verbose_name="Pendientes para el próximo día",
+        default="0",
+        validators=[
+            RegexValidator(
+                regex='^[0-9]+$',
+                message='Solo se permiten números positivos',
+                code='invalid_pendientes'
+            )
+        ]
+    )
+    
+    observaciones = models.TextField(
+        verbose_name="Observaciones",
+        help_text="Ingrese observaciones adicionales. Admite letras, números y caracteres especiales.",
+        blank=True,  # Permite que el campo esté vacío
+        null=True,   # Permite valores nulos en la base de datos
+    )
+
+    class Meta:
+        verbose_name = "Situado "
+        verbose_name_plural = "Situados"
+        ordering = ['tipo_origen', 'origen']
+
+    def __str__(self):
+        return f"{self.tipo_origen} - {self.origen} - {self.tipo_equipo}"
+    
 #**************************************************************************************************
 #Modelo destinado a vagones y productos
 class vagones_productos(models.Model):
@@ -183,6 +279,7 @@ class vagones_productos(models.Model):
         ('combustible_blanco', 'Combustible blanco'),
         ('combustible_negro', 'Combustible negro'),
         ('combustible_turbo', 'Combustible turbo'),
+        ('-', '-'),
     ]
 
     
@@ -195,7 +292,7 @@ class vagones_productos(models.Model):
     plan_dia = models.IntegerField(editable=False,default=0)
     vagones_situados = models.IntegerField(editable=False,default=0)
     vagones_cargados = models.IntegerField(editable=False,default=0)
-    plan_aseguramiento_proximos_dias = models.IntegerField(editable=False,default=0)
+    plan_aseguramiento_proximos_dias = models.IntegerField(editable=False,default=0,blank=True)
     observaciones = models.TextField(
         null=True,
         blank=True,
@@ -227,9 +324,149 @@ class vagones_productos(models.Model):
         nombres_productos = [str(producto.producto.nombre_producto) for producto in productos]
         
         # Unir los nombres con comas si hay más de uno
-        productos_str = ", ".join(nombres_productos) if nombres_productos else "Sin productos"
-        
+        productos_str = ", ".join(nombres_productos) if nombres_productos else "Sin productos"        
         return f"Vagones y productos: {productos_str}"
+    
+    # También podemos añadir esta lógica al método save() del modelo para asegurar
+    # que los campos se actualicen cuando se guarda un vagones_productos
+    """ def save(self, *args, **kwargs):
+        # Solo actualizar si no es una creación nueva (para evitar cálculos innecesarios)
+        if self.pk is not None:
+            # Actualizar plan_dia
+            self.plan_dia = vagon_cargado_descargado.objects.filter(
+                operacion='carga',
+                #tipo_origen=self.tipo_origen,
+                #origen=self.origen,
+                #tipo_equipo_ferroviario=self.tipo_equipo_ferroviario
+            ).aggregate(total=Sum('plan_diario_carga_descarga'))['total'] or 0
+            print("Plan del dia actualizado",self.plan_dia)
+            
+            # Actualizar vagones_situados
+           #self.vagones_situados = Situado_Carga_Descarga.objects.filter(
+           #     operacion='carga',
+                #tipo_origen=self.tipo_origen,
+                #origen=self.origen,
+                #tipo_equipo=self.tipo_equipo_ferroviario.get_tipo_equipo_display() if self.tipo_equipo_ferroviario else None
+            #).aggregate(total=Sum('situados'))['total'] or 0
+            
+            # Actualizar vagones_cargados
+            self.vagones_cargados = vagon_cargado_descargado.objects.filter(
+                operacion='carga',
+                #tipo_origen=self.tipo_origen,
+                #origen=self.origen,
+                #tipo_equipo_ferroviario=self.tipo_equipo_ferroviario
+            ).aggregate(total=Sum('real_carga_descarga'))['total'] or 0
+            
+            # Actualizar plan_aseguramiento_proximos_dias
+            self.plan_aseguramiento_proximos_dias = vagon_cargado_descargado.objects.filter(
+                operacion='carga',
+                #tipo_origen=self.tipo_origen,
+                #origen=self.origen,
+                #tipo_equipo_ferroviario=self.tipo_equipo_ferroviario
+            ).aggregate(total=Sum('real_carga_descarga'))['total'] or 0
+        
+        super().save(*args, **kwargs) """
+
+@receiver([post_save, post_delete], sender=vagon_cargado_descargado)
+#@receiver([post_save, post_delete], sender=Situado_Carga_Descarga)
+@receiver([post_save, post_delete], sender=vagon_cargado_descargado)
+def actualizar_campos_automaticos(sender, instance, **kwargs):
+    '''Actualiza los campos automáticos en vagones_productos cuando hay cambios
+    en los modelos relacionados vagon_cargado_descargado'''
+    
+    # Obtener todos los objetos vagones_productos que necesitan actualización
+    objetos_actualizar = vagones_productos.objects.all().prefetch_related('producto__producto')
+    
+    for vagon_producto in objetos_actualizar:
+        # Obtener los IDs de los productos nom_producto asociados al vagon_producto actual
+        productos_ids = vagon_producto.producto.all().values_list('producto__id', flat=True)
+        
+        if not productos_ids:  # Si no tiene productos asociados, saltar
+            continue
+        
+        # Actualizar plan_dia (suma de plan_diario_carga_descarga donde operacion='carga')
+        plan_dia = vagon_cargado_descargado.objects.filter(
+            operacion='carga'
+        ).aggregate(total=Sum('plan_diario_carga_descarga'))['total'] or 0
+        
+        # Actualizar vagones_cargados (suma de real_carga_descarga donde operacion='carga')
+        # Solo contar los que tienen los mismos productos (nom_producto) que el vagon_producto actual
+        vagones_cargados = vagon_cargado_descargado.objects.filter(
+            operacion='carga',
+            producto__producto__id__in=productos_ids  # Filtro por productos nom_producto relacionados
+        ).aggregate(total=Sum('real_carga_descarga'))['total'] or 0
+        
+        # Actualizar plan_aseguramiento_proximos_dias
+        plan_aseguramiento = vagon_cargado_descargado.objects.filter(
+            operacion='carga',
+            producto__producto__id__in=productos_ids  # Filtro por productos nom_producto relacionados
+        ).aggregate(total=Sum('real_carga_descarga'))['total'] or 0
+        
+        # Actualizar el objeto solo si alguno de los valores ha cambiado
+        if (vagon_producto.plan_dia != plan_dia or            
+            vagon_producto.vagones_cargados != vagones_cargados or
+            vagon_producto.plan_aseguramiento_proximos_dias != plan_aseguramiento):
+            
+            vagon_producto.plan_dia = plan_dia
+            vagon_producto.vagones_cargados = vagones_cargados
+            vagon_producto.plan_aseguramiento_proximos_dias = plan_aseguramiento
+            vagon_producto.save(update_fields=[
+                'plan_dia',
+                'vagones_cargados',
+                'plan_aseguramiento_proximos_dias'
+            ])
+    
+    '''Actualiza los campos automáticos en vagones_productos cuando hay cambios
+    en los modelos relacionados vagon_cargado_descargado o Situado_Carga_Descarga'''
+    
+    # Obtener todos los objetos vagones_productos que necesitan actualización
+    objetos_actualizar = vagones_productos.objects.all()
+    print("Objetos a actualizar> ", objetos_actualizar[0])
+    
+    for vagon_producto in objetos_actualizar:
+        # Actualizar plan_dia (suma de plan_diario_carga_descarga donde operacion='carga')
+        plan_dia = vagon_cargado_descargado.objects.filter(
+            operacion='carga'
+            
+        ).aggregate(total=Sum('plan_diario_carga_descarga'))['total'] or 0
+        print("plan_dia",plan_dia)
+        
+        # Actualizar vagones_situados (suma de situados donde operacion='carga')
+        #vagones_situados = Situado_Carga_Descarga.objects.filter(
+        #    operacion='carga',
+        #    ).aggregate(total=Sum('situados'))['total'] or 0
+        #print("vagones_situados",vagones_situados)
+        
+        # Actualizar vagones_cargados (suma de real_carga_descarga donde operacion='carga')
+        vagones_cargados = vagon_cargado_descargado.objects.filter(
+            operacion='descarga',
+            ).aggregate(total=Sum('real_carga_descarga'))['total'] or 0
+        print("vagones_cargados",vagones_cargados)
+        # Actualizar plan_aseguramiento_proximos_dias (misma lógica que vagones_cargados)
+        plan_aseguramiento = vagon_cargado_descargado.objects.filter(
+            operacion='carga',
+            ).aggregate(total=Sum('real_carga_descarga'))['total'] or 0
+        print("Este     es el vagonnnnn, plan de aseguramiento",plan_aseguramiento)
+        
+        # Actualizar el objeto solo si alguno de los valores ha cambiado
+        if (vagon_producto.plan_dia != plan_dia or             
+            vagon_producto.vagones_cargados != vagones_cargados or
+            vagon_producto.plan_aseguramiento_proximos_dias != plan_aseguramiento):
+            
+            vagon_producto.plan_dia = plan_dia
+            #vagon_producto.vagones_situados = vagones_situados
+            vagon_producto.vagones_cargados = vagones_cargados
+            vagon_producto.plan_aseguramiento_proximos_dias = plan_aseguramiento
+            vagon_producto.save(update_fields=[
+                'plan_dia', 
+                #'vagones_situados', 
+                'vagones_cargados', 
+                'plan_aseguramiento_proximos_dias'
+            ])
+  
+
+    
+
 #************************************************************************************************************************************
 #Modelo para representar en_trenes
 class en_trenes(models.Model):
@@ -381,88 +618,6 @@ class por_situar(models.Model):
     def __str__(self):
         return f"{self.tipo_origen} - {self.origen} - {self.tipo_equipo}"
 
-class Situado_Carga_Descarga(models.Model):
-    
-    t_origen = (
-        ('puerto', 'Puerto'),
-        ('ac_ccd', 'Acceso Comercial')
-    )
-    
-    tipo_origen = models.CharField(max_length=100, choices=t_origen, verbose_name="Tipo de origen", blank=True, null=True)
-    origen = models.CharField(max_length=200, verbose_name="Origen")
-    
-    t_equipo = (
-        ('casilla', 'Casilla'),
-        ('caj_gon', 'Cajones o Góndola'),
-        ('planc_plat', 'Plancha o Plataforma'),
-        ('Plan_porta_cont', 'Plancha porta contenedores'),
-        ('cist_liquidos', 'Cisterna para líquidos'),
-        ('cist_solidos', 'Cisterna para sólidos'),
-        ('tolva_g_mineral', 'Tolva granelera(mineral)'),
-        ('tolva_g_agric', 'Tolva granelera(agrícola)'),
-        ('tolva_g_cemento', 'Tolva para cemento'),
-        ('volqueta', 'Volqueta'),
-        ('Vagon_ref', 'Vagón refrigerado'),
-        ('jaula', 'Jaula'),
-        ('locomotora', 'Locomotora'),
-        ('tren', 'Tren'),
-    )
-    
-    tipo_equipo = models.CharField(max_length=200, choices=t_equipo, verbose_name="Tipo de equipo", blank=True, null=True)
-    
-    status =(
-        ('vacio', 'Vacio'),
-        ('cargado', 'Cargado')
-    )
-    
-    estado = models.CharField(max_length=200, choices=status, verbose_name="Estado", blank=True, null=True)
-    
-    t_operacion = (
-        ('carga', 'Carga'),
-        ('descarga', 'Descarga')
-    )
-    
-    operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion", blank=True, null=True)
-    
-    producto = models.ManyToManyField(
-        producto_UFC,
-        blank=True,
-        related_name="situados",
-        verbose_name="Productos"
-    )
-    
-    situados = models.CharField(
-        max_length=10,
-        verbose_name="Cantidad de situados",
-        default="0",
-        validators=[
-            RegexValidator(
-                regex='^[0-9]+$',
-                message='Solo se permiten números positivos',
-                code='invalid_situados'
-            )
-        ]
-    )
-    
-    pendiente_proximo_dia = models.CharField(
-        max_length=10,
-        verbose_name="Pendientes para el próximo día",
-        default="0",
-        validators=[
-            RegexValidator(
-                regex='^[0-9]+$',
-                message='Solo se permiten números positivos',
-                code='invalid_pendientes'
-            )
-        ]
-    )
-    
-    observaciones = models.TextField(
-        verbose_name="Observaciones",
-        help_text="Ingrese observaciones adicionales. Admite letras, números y caracteres especiales.",
-        blank=True,  # Permite que el campo esté vacío
-        null=True,   # Permite valores nulos en la base de datos
-    )
     
 class arrastres(models.Model):
     

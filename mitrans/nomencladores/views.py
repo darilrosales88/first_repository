@@ -1727,6 +1727,13 @@ class tipo_equipo_ferroviario_no_locomotora(APIView):
         # Excluir los tipos de equipos ferroviarios cuyo tipo sea "locomotora"
         tipos_equipos = nom_tipo_equipo_ferroviario.objects.exclude(tipo_equipo='locomotora')
         
+        # Obtener el parámetro de tipo_combustible de la URL si existe
+        tipo_combustible = request.query_params.get('tipo_combustible', None)
+        
+        # Si se proporciona un tipo de combustible, filtrar por él
+        if tipo_combustible:
+            tipos_equipos = tipos_equipos.filter(tipo_combustible=tipo_combustible)
+        
         # Serializar los datos
         serializer = nom_tipo_equipo_ferroviario_serializer(tipos_equipos, many=True)
         

@@ -30,7 +30,7 @@ urlpatterns = [
     #path('permisos/', obtener_permisos, name='obtener_permisos'),  # GET),
      #entidades que son acceso comrcial o ccd
     path('entidades-acceso-ccd/', entidades_acceso_comercial_ccdView.as_view(), name='entidades-acceso-ccd'),
-    #tipos de equipos ferro que no son locomotora
+    #tipos de equipos ferro que no son locomotora y tipo de combustible seleccionado
     path('tipo-e-f-no-locomotora/', tipo_equipo_ferroviario_no_locomotora.as_view(), name='tipo-e-f-no-locomotora'),
     #equipos ferro que no son locomotora
     path('e-f-no-locomotora/', equipo_ferroviario_no_locomotora.as_view(), name='e-f-no-locomotora'),
@@ -39,29 +39,29 @@ urlpatterns = [
 
 router = routers.DefaultRouter()
 #definimos las rutas
-router.register('paises',nom_pais_view_set,basename='paises')#karmal---------------------------------------------------------------------
-router.register('provincias',nom_provincia_view_set,basename='provincias')#Armando+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-router.register('municipios',nom_municipio_view_set,basename='municipios')#Armando+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-router.register('tipo_maniobras',nom_tipo_maniobra_portuaria_view_set,basename='tipo_maniobras')#Armando DARILOK
-router.register('contenedores',nom_contenedor_view_set,basename='contenedores')#karmalDARILOK
-router.register('cargos',nom_cargo_view_set,basename='cargos')#Armando+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-router.register('territorios', nom_territorio_view_set, basename='territorios')#karmalDARILOK
-router.register('puertos',nom_puerto_view_set,basename='puertos')#karmal-----------------------------------------------------------------
-router.register('terminales',nom_terminal_view_set,basename='terminales')#karmalDARILOK
-router.register('atraques',nom_atraque_view_set,basename='atraques')#karmal DARILOK
-router.register('unidades_medida',nom_unidad_medida_view_set,basename='unidades_medida')#DARILOK
-router.register('osde',nom_osde_oace_organismo_view_set,basename='osde')#Armando+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-router.register('entidades',nom_entidades_view_set,basename='entidades')#karmal----------------------------------------------------------
-router.register('destinos',nom_destino_view_set,basename='destinos')#karmal--------------------------------------------------------------
-router.register('tipos_equipos',nom_tipo_equipo_ferroviario_view_set,basename='tipos_equipos')#DARILOK todos a partir de este
-router.register('embarcaciones',nom_embarcacion_view_set,basename='embarcaciones')#DARILOK
-router.register('equipos_ferroviarios',nom_equipo_ferroviario_view_set,basename='equipos_ferroviarios')#armando++++++++++++++++++++++++++
-router.register('estados',nom_estado_tecnico_view_set,basename='estados')#DARILOK
-router.register('productos',nom_producto_view_set,basename='productos')#DARILOK
-router.register('embalajes',nom_tipo_embalaje_view_set,basename='embalajes')#DARILOK
-router.register('incidencias',nom_incidencia_view_set,basename='incidencias')#karmal-----------------------------------------------------
-router.register('tipos_estructuras_ubicacion',nom_tipo_estructura_ubicacion_view_set,basename='tipos_estructuras_ubicacion')#darilOK
-router.register('estructuras_ubicacion',nom_estructura_ubicacion_view_set,basename='estructuras_ubicacion')#karmal---DARILOK
+router.register('paises',nom_pais_view_set,basename='paises')
+router.register('provincias',nom_provincia_view_set,basename='provincias')
+router.register('municipios',nom_municipio_view_set,basename='municipios')
+router.register('tipo_maniobras',nom_tipo_maniobra_portuaria_view_set,basename='tipo_maniobras')
+router.register('contenedores',nom_contenedor_view_set,basename='contenedores')
+router.register('cargos',nom_cargo_view_set,basename='cargos')
+router.register('territorios', nom_territorio_view_set, basename='territorios')
+router.register('puertos',nom_puerto_view_set,basename='puertos')
+router.register('terminales',nom_terminal_view_set,basename='terminales')
+router.register('atraques',nom_atraque_view_set,basename='atraques')
+router.register('unidades_medida',nom_unidad_medida_view_set,basename='unidades_medida')
+router.register('osde',nom_osde_oace_organismo_view_set,basename='osde')
+router.register('entidades',nom_entidades_view_set,basename='entidades')
+router.register('destinos',nom_destino_view_set,basename='destinos')
+router.register('tipos_equipos',nom_tipo_equipo_ferroviario_view_set,basename='tipos_equipos')
+router.register('embarcaciones',nom_embarcacion_view_set,basename='embarcaciones')
+router.register('equipos_ferroviarios',nom_equipo_ferroviario_view_set,basename='equipos_ferroviarios')
+router.register('estados',nom_estado_tecnico_view_set,basename='estados')
+router.register('productos',nom_producto_view_set,basename='productos')
+router.register('embalajes',nom_tipo_embalaje_view_set,basename='embalajes')
+router.register('incidencias',nom_incidencia_view_set,basename='incidencias')
+router.register('tipos_estructuras_ubicacion',nom_tipo_estructura_ubicacion_view_set,basename='tipos_estructuras_ubicacion')
+router.register('estructuras_ubicacion',nom_estructura_ubicacion_view_set,basename='estructuras_ubicacion')
 
 
 #ahora declaramos el urlpatterns y lo igualamos a la propiedad urls de la variable creada de tipo routers

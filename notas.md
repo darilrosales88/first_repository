@@ -30,3 +30,13 @@
 
 - Los cambios en permisos deben ser reflejados inmediatamente en la sesión del usuario
 - Mantener sincronización entre los permisos del backend y frontend
+
+##
+
+Arreglar registro de rotaciones
+
+Arreglar fuentes y estilos unificarlos,
+
+Botones de aprobados, Aprobar
+
+Adicionar Vagones y Productos.

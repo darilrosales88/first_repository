@@ -20,58 +20,8 @@
         <form @submit.prevent="consultarRotacion">
           <div class="row mb-3 g-2">
             <!-- Campo: Fecha inicial -->
-            <div class="col-md-6">
-              <div class="form-group">
-                <label
-                  for="fechaInicial"
-                  class="form-label small fw-semibold text-secondary"
-                >
-                  <i class="bi bi-calendar-date me-2 text-primary"></i>Fecha
-                  Inicial
-                </label>
-                <input
-                  type="date"
-                  class="form-control form-control-sm border-secondary"
-                  id="fechaInicial"
-                  v-model="formData.fechaInicial"
-                  required
-                />
-              </div>
-            </div>
 
             <!-- Campo: Fecha final -->
-            <div class="col-md-6">
-              <div class="form-group">
-                <label
-                  for="fechaFinal"
-                  class="form-label small fw-semibold text-secondary"
-                >
-                  <i class="bi bi-calendar-check me-2 text-primary"></i>Fecha
-                  Final
-                </label>
-                <input
-                  type="date"
-                  class="form-control form-control-sm border-secondary"
-                  id="fechaFinal"
-                  v-model="formData.fechaFinal"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Botón de consulta -->
-          <div class="d-flex justify-content-end gap-2 mt-4">
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-secondary"
-              @click="resetForm"
-            >
-              <i class="bi bi-x-circle me-1"></i>Limpiar
-            </button>
-            <button type="submit" class="btn btn-sm btn-primary">
-              <i class="bi bi-search me-1"></i>Consultar
-            </button>
           </div>
         </form>
 

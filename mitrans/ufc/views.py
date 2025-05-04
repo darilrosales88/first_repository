@@ -65,11 +65,7 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
     queryset = ufc_informe_operativo.objects.all().order_by('-id')
     serializer_class = ufc_informe_operativo_serializer
 
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        # Asegurar que las relaciones se mantengan
-        context['keep_relations'] = True
-        return context
+    
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -93,7 +89,8 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
                         'producto',
                         'producto__producto',
                         'registros_vagones'
-                    )),            
+                    )),
+            
             Prefetch('situados_carga_descarga', 
                     queryset=Situado_Carga_Descarga.objects.all().prefetch_related('producto')),
             Prefetch('vagones_por_situar', 
@@ -236,7 +233,33 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
             navegador=navegador,
         )
 
-        return super().list(request, *args, **kwargs)    
+        return super().list(request, *args, **kwargs)  
+
+#Verificando que exista el informe creado antes de insertar
+@api_view(['GET'])
+def verificar_informe_existente(request):
+    fecha_operacion = request.query_params.get('fecha_operacion')
+    if not fecha_operacion:
+        return Response({"error": "Parámetro fecha_operacion requerido"}, status=400)
+    
+    try:
+        fecha_obj = datetime.strptime(fecha_operacion, '%Y-%m-%d').date()
+        existe = ufc_informe_operativo.objects.filter(
+            fecha_operacion__date=fecha_obj
+        ).exists()
+        
+        if existe:
+            informe = ufc_informe_operativo.objects.filter(
+                fecha_operacion__date=fecha_obj
+            ).first()
+            return Response({
+                "existe": True,
+                "id": informe.id,
+                "fecha_operacion": informe.fecha_operacion
+            })
+        return Response({"existe": False})
+    except ValueError:
+        return Response({"error": "Formato de fecha inválido"}, status=400)  
 
 #para vagones y productos
 class vagones_productos_view_set(viewsets.ModelViewSet):
@@ -367,29 +390,56 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
-        print("Datos recibidos en create:", request.data)  # Verificar datos entrantes
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
+        print("Datos recibidos en create:", request.data)  # Para depuración
+        
+        try:
+            # Validación de permisos
+            if not request.user.groups.filter(name='AdminUFC').exists():
+                return Response(
+                    {"detail": "No tiene permiso para realizar esta acción."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # Validar que se envíe informe_operativo
+            if not request.data.get('informe_operativo'):
+                return Response(
+                    {"detail": "Debe asociar un informe operativo válido."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            # Validar registros_vagones_data
+            registros_data = request.data.get('registros_vagones_data', [])
+            if not registros_data:
+                return Response(
+                    {"detail": "Debe proporcionar al menos un registro de vagón."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Crear el objeto
+            instance = serializer.save()
+            
+            # Auditoría
+            navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+            direccion_ip = request.META.get('REMOTE_ADDR')
+            
+            Auditoria.objects.create(
+                usuario=request.user if request.user.is_authenticated else None,
+                direccion_ip=direccion_ip,
+                accion=f"Insertar vagón cargado/descargado: {instance.id}",
+                navegador=navegador,
             )
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        objeto_vagon_cargado_descargado = serializer.save()
-
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Insertar vagón cargado/descargado: {objeto_vagon_cargado_descargado.id}",
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            print(f"Error al crear vagon_cargado_descargado: {str(e)}")
+            return Response(
+                {"detail": f"No se pudo crear el registro: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     def update(self, request, *args, **kwargs):
         #permisos de acceso a la operacion

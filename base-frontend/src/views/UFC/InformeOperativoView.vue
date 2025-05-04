@@ -12,8 +12,7 @@
   <br />
   <Navbar-Component /><br />
   <div style="margin-left: 17em; width: 73%">
-    <Inf-Operative />
-    <PartesUFCView />
+    <Inf-Operative />    
   </div>
 
   <div style="margin-left: 12em">
@@ -163,7 +162,6 @@ import InfOperative from "@/components/InfOperative.vue";
 import Vagones_productos from "@/components/Vagones_productos.vue";
 import AdicionarVagonProducto from "@/views/UFC/AdicionarVagonesProductos.vue";
 import ConsultaRotacionVagones from "@/components/RotacionVagonesView.vue";
-import ParteUfcView from "../ParteUfcView.vue";
 import PartesUFCView from "@/components/PartesUFC.vue";
 
 export default {
@@ -178,8 +176,7 @@ export default {
     InfOperative,
     Vagones_productos,
     AdicionarVagonProducto,
-    ConsultaRotacionVagones,
-    PartesUFCView,
+    ConsultaRotacionVagones, 
   },
   data() {
     return {

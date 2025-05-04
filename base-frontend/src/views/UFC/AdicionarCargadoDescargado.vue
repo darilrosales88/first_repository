@@ -465,6 +465,8 @@ export default {
       tipos_equipos_ferroviarios: [],
       puertos: [],
       entidades: [],
+      informeOperativoId: null,
+      fechaActual: new Date().toISOString().split('T')[0] // Fecha actual en formato YYYY-MM-DD
     };
   },
 
@@ -502,9 +504,38 @@ export default {
   },
 
   methods: {
+    async verificarInformeOperativo() {
+      try {
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+        const response = await axios.get('/ufc/verificar-informe-existente/', {
+          params: { fecha_operacion: fechaFormateada }
+        });
+
+        if (response.data.existe) {
+          this.informeOperativoId = response.data.id;
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error("Error al verificar informe:", error);
+        return false;
+      }
+    },
     
     async submitForm() {
   try {
+      // 0. Verificar si existe informe operativo para la fecha actual
+      const existeInforme = await this.verificarInformeOperativo();
+        if (!existeInforme) {
+          Swal.fire(
+            "Error",
+            "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+            "error"
+          );
+          return;
+        }
     // 1. Calcular primero el valor real (asegurar que se complete antes de enviar)
     await this.calcularRealCargaDescarga();
     
@@ -528,6 +559,7 @@ export default {
     // 4. Preparar datos de envío CORRECTAMENTE
     const datosEnvio = {
       ...this.formData,
+      informe_operativo: this.informeOperativoId, // Asignar el ID del informe encontrado
       real_carga_descarga: this.formData.real_carga_descarga || 0, // Asegurar que lleva el valor calculado
       causas_incumplimiento: this.formData.causas_incumplimiento || '', // Asegurar valor
       producto_ids: Array.isArray(this.formData.lista_productos) 

@@ -255,7 +255,7 @@ export default {
       }
     },
 
-    async getRelatedData() {
+    /* async getRelatedData() {
       try {
         // Obtener datos de otros componentes/API endpoints
         const [
@@ -292,7 +292,7 @@ export default {
         console.error('Error obteniendo datos relacionados:', error);
         return {};
       }
-    },
+    }, */
 
     confirmCancel() {
       Swal.fire({

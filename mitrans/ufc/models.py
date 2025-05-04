@@ -140,13 +140,11 @@ class vagon_cargado_descargado(models.Model):
         ('ac_ccd', 'Acceso comercial/CCD'),
     ]
     
-    informe_operativo = models.ForeignKey(
-        'ufc_informe_operativo',
-        on_delete=models.CASCADE,
-        related_name='vagones_cargados_descargados',
+    informe_operativo = models.DateField(
         null=True,
         blank=True,
-        editable=False
+        editable=False,
+        verbose_name="Fecha actual"
     )
     tipo_origen = models.CharField(choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
     origen = models.CharField(max_length=40)

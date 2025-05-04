@@ -235,14 +235,21 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
     
     def validate(self, data):
         # Validación para causas_incumplimiento
-        data['causas_incumplimiento'] = data.get('causas_incumplimiento', '')
+        data['causas_incumplimiento'] = data.get('causas_incumplimiento', 'Sin causas especificadas')
         
-        # Validación para real_carga_descarga
-        if 'real_carga_descarga' not in data or data['real_carga_descarga'] is None:
-            # Calcular valor basado en registros_vagones_data si está disponible
-            registros_data = data.get('registros_vagones_data', [])
-            data['real_carga_descarga'] = len(registros_data)
-            
+        # Validación para registros_vagones_data
+        registros_data = data.get('registros_vagones_data', [])
+        if not registros_data:
+            raise serializers.ValidationError({
+                'registros_vagones_data': 'Debe proporcionar al menos un registro de vagón'
+            })
+        
+        # Validación para productos si el estado es 'cargado'
+        if data.get('estado') == 'cargado' and not data.get('producto_ids'):
+            raise serializers.ValidationError({
+                'producto_ids': 'Debe seleccionar al menos un producto para vagones cargados'
+            })
+        
         return data
 
     def create(self, validated_data):
@@ -251,16 +258,15 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 # Extraer datos para relaciones
                 productos_ids = validated_data.pop('producto_ids', [])
                 registros_data = validated_data.pop('registros_vagones_data', [])
-
-                def validate(self, data):
-                    # Forzar el valor de causas_incumplimiento si viene vacío
-                    if 'causas_incumplimiento' in data and not data['causas_incumplimiento']:
-                        data['causas_incumplimiento'] = 'Sin causas especificadas'  # Valor por defecto
-
-                # Asegurar que real_carga_descarga no sea sobrescrito
-                if validated_data.get('real_carga_descarga', 0) == 0:
-                    registros_data = validated_data.get('registros_vagones_data', [])
-                    validated_data['real_carga_descarga'] = len(registros_data)
+                
+                # Validar que hay registros de vagones
+                if not registros_data:
+                    raise serializers.ValidationError(
+                        {'registros_vagones_data': 'Debe proporcionar al menos un registro de vagón'}
+                    )
+                
+                # Calcular real_carga_descarga basado en los registros
+                validated_data['real_carga_descarga'] = len(registros_data)
                 
                 # Crear instancia principal
                 instance = super().create(validated_data)
@@ -271,17 +277,30 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 
                 # Crear y asociar registros de vagones
                 for registro_data in registros_data:
+                    # Validar campos obligatorios para cada registro
+                    required_fields = ['no_id', 'fecha_despacho', 'origen']
+                    for field in required_fields:
+                        if field not in registro_data or not registro_data[field]:
+                            raise serializers.ValidationError(
+                                {field: f'Campo requerido para cada registro de vagón'}
+                            )
+                    
                     registro = registro_vagones_cargados.objects.create(**registro_data)
                     instance.registros_vagones.add(registro)
                     
                     # Actualizar estado del equipo ferroviario
-                    self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Asignado al estado Cargado/Descargado')
+                    self.actualizar_estado_equipo_ferroviario(
+                        registro.no_id, 
+                        'Asignado al estado Cargado/Descargado'
+                    )
                 
                 return instance
                 
         except Exception as e:
-            raise serializers.ValidationError(f"Error al crear el registro: {str(e)}")
-    
+            raise serializers.ValidationError(
+                {'error': f'Error al crear el registro: {str(e)}'}
+            )
+  
     def actualizar_estado_equipo_ferroviario(self, no_id, nuevo_estado):
         """
         Método auxiliar para actualizar el estado de un equipo ferroviario

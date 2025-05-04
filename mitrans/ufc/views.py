@@ -5,13 +5,14 @@ from rest_framework.pagination import PageNumberPagination
 #importacion de modelos
 from .models import vagon_cargado_descargado,producto_UFC,en_trenes
 from .models import registro_vagones_cargados,vagones_productos
-from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones
+from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones,ufc_informe_operativo
 #importacion de serializadores asociados a los modelos
 from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descargado_serializer, 
                         producto_vagon_serializer, en_trenes_serializer,PorSituarCargaDescargaSerializer, SituadoCargaDescargaSerializers, 
                         PendienteArrastreSerializer, registro_vagones_cargados_serializer,
                         registro_vagones_cargados_filter, vagones_productos_filter, 
-                        vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer)
+                        vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer,
+                        ufc_informe_operativo_serializer,ufc_informe_operativo_filter)
 
 from Administracion.models import Auditoria
 
@@ -22,7 +23,7 @@ from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
 
 #para usar el or
-from django.db.models import Q
+from django.db.models import Q,Prefetch
 
 
 from django.utils import timezone
@@ -33,7 +34,11 @@ from .permissions import IsAdminUFCPermission,IsVisualizadorUFCPermission
 
 from rest_framework.decorators import action,api_view  # Importa el decorador action
 
-
+#Para las validaciones de las fechas en el informe operativo
+from django.db.models.functions import TruncDate
+from django.db.models import DateField
+from datetime import datetime
+from django.db.models.functions import Cast
 
 # Verifica si el usuario tiene el rol "ufc"
 class IsUFCPermission(permissions.BasePermission):
@@ -54,6 +59,185 @@ class IsUFCPermission(permissions.BasePermission):
 
 
 #**********************************************************************************************************************************
+
+#Para Informe operativo
+class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
+    queryset = ufc_informe_operativo.objects.all().order_by('-id')
+    serializer_class = ufc_informe_operativo_serializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        # Asegurar que las relaciones se mantengan
+        context['keep_relations'] = True
+        return context
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Filtrado por fecha de operación
+        fecha_operacion = self.request.query_params.get('fecha_operacion')
+        if fecha_operacion:
+            queryset = queryset.filter(fecha_operacion=fecha_operacion)
+        
+        # Precargar todas las relaciones con sus sub-relaciones
+        queryset = queryset.prefetch_related(
+            Prefetch('vagones_y_productos', 
+                    queryset=vagones_productos.objects.all().prefetch_related(
+                        'producto',
+                        'producto__producto',
+                        'producto__tipo_embalaje',
+                        'producto__unidad_medida'
+                    )),
+            Prefetch('vagones_cargados_descargados', 
+                    queryset=vagon_cargado_descargado.objects.all().prefetch_related(
+                        'producto',
+                        'producto__producto',
+                        'registros_vagones'
+                    )),            
+            Prefetch('situados_carga_descarga', 
+                    queryset=Situado_Carga_Descarga.objects.all().prefetch_related('producto')),
+            Prefetch('vagones_por_situar', 
+                    queryset=por_situar.objects.all().prefetch_related('producto')),
+            Prefetch('en_trenes', 
+                    queryset=en_trenes.objects.all().prefetch_related(
+                        'producto',
+                        'equipo_vagon'
+                    )),
+            Prefetch('vagones_pendientes_arrastre', 
+                    queryset=arrastres.objects.all().prefetch_related('producto')),
+            Prefetch('rotacion_vagones', 
+                    queryset=rotacion_vagones.objects.all().select_related('tipo_equipo_ferroviario'))
+        )
+        
+        return queryset
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Verificar si ya existe un informe para esta fecha (solo día, mes y año)
+        fecha_operacion_str = request.data.get('fecha_operacion')
+        if fecha_operacion_str:
+            try:
+                # Parsear la fecha ignorando la hora si está presente
+                fecha_operacion = datetime.strptime(fecha_operacion_str.split('T')[0], '%Y-%m-%d').date()
+                
+                # Solución para SQLite - Dos alternativas:
+
+                # Opción 1: Usando TruncDate (requiere Django 1.10+)
+                """ if ufc_informe_operativo.objects.annotate(
+                    fecha_op_date=TruncDate('fecha_operacion')
+                ).filter(fecha_op_date=fecha_operacion).exists():
+                    return Response(
+                        {"detail": "Ya existe un informe operativo para esta fecha."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    ) """
+
+                # Opción 2: Usando Cast (alternativa más universal)
+                if ufc_informe_operativo.objects.annotate(
+                     fecha_op_date=Cast('fecha_operacion', DateField())
+                 ).filter(fecha_op_date=fecha_operacion).exists():
+                     return Response(
+                         {"detail": "Ya existe un informe operativo para esta fecha."},
+                         status=status.HTTP_400_BAD_REQUEST
+                 )
+
+            except (ValueError, AttributeError):
+                # Manejar error si el formato de fecha no es válido
+                return Response(
+                    {"detail": "Formato de fecha inválido."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        informe = serializer.save()
+        
+        # Auditoría
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion=f"Insertar Informe operativo: {informe.fecha_operacion}",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        informe = serializer.save()
+
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion=f"Modificar Informe operativo: {informe.fecha_operacion}",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        instance = self.get_object()
+        fecha_oper = instance.fecha_operacion
+
+        # Registrar la acción en el modelo de Auditoria antes de eliminar
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion=f"Eliminar Informe operativo: {fecha_oper}",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de Partes informe operativo",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return super().list(request, *args, **kwargs)    
+
 #para vagones y productos
 class vagones_productos_view_set(viewsets.ModelViewSet):
     queryset = vagones_productos.objects.all().order_by('-id')  # Definir el queryset

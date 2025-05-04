@@ -5,7 +5,7 @@ from django_filters import rest_framework as filters
 from django.db.models import Q,Sum
 
 #Importando modelos de UFC
-from .models import (vagon_cargado_descargado,producto_UFC, en_trenes,nom_equipo_ferroviario
+from .models import (ufc_informe_operativo, vagon_cargado_descargado,producto_UFC, en_trenes,nom_equipo_ferroviario
                     ,por_situar,Situado_Carga_Descarga,arrastres 
                     ,registro_vagones_cargados,vagones_productos,rotacion_vagones 
                      )
@@ -22,16 +22,6 @@ from django.db import transaction
 #nom_pais_filter es una clase que se implementa para definir sobre qué campos quiero filtrar los registros de mi API, 
 #hereda de filters.FilterSet
 
-
-
-
-#****************-------------------------********************--------------------***************-----------------********************************
-#serializador para los productos de vagones cargados/descargados
-
-
-
-#****************************************************************************************************************
-#serializador para los productos del modelo vagones y  productos
 
 
 #****************-------------------------********************--------------------***************-----------------********************************
@@ -65,11 +55,27 @@ class vagones_productos_serializer(serializers.ModelSerializer):
         source='producto',  # Esto mapea al campo ManyToManyField
         write_only=True,
         required=False
-    )   
+    )
+
+    productos_info = serializers.SerializerMethodField()
+    
+    def get_productos_info(self, obj):
+        productos = obj.producto.all()
+        return [{
+            'id': p.id,
+            'nombre_producto': p.producto.nombre_producto if p.producto else None,
+            'codigo_producto': p.producto.codigo_producto if p.producto else None,
+            'tipo_embalaje': p.tipo_embalaje.nombre if p.tipo_embalaje else None,
+            'unidad_medida': p.unidad_medida.unidad_medida if p.unidad_medida else None,
+            'cantidad': p.cantidad,
+            'estado': p.estado,
+            'contiene': p.contiene
+        } for p in productos]   
     
 
     class Meta:
         model = vagones_productos
+        depth = 2  # Aumentar la profundidad de serialización
         fields = '__all__'  # O lista explícita incluyendo 'productos_list'
         extra_kwargs = {
             'producto': {'read_only': True},
@@ -830,5 +836,122 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
+    
+#///////****************************/////////////////////////**************************
+#serializador para el parte
+class ufc_informe_operativo_filter(filters.FilterSet):
+    fecha_operacion = filters.CharFilter(field_name='fecha_operacion',lookup_expr = 'exact')  
+    
+    class Meta:
+        model = ufc_informe_operativo
+        fields = '__all__' 
+        
+class ufc_informe_operativo_serializer(serializers.ModelSerializer):
+    # Serializadores anidados para las relaciones,# se usan los related_name
+    vagones_y_productos = vagones_productos_serializer(many=True, required=False)
+    vagones_cargados_descargados = vagon_cargado_descargado_serializer(many=True, required=False)
+    situados_carga_descarga = SituadoCargaDescargaSerializers(many=True, required=False)
+    vagones_por_situar = PorSituarCargaDescargaSerializer(many=True, required=False)
+    en_trenes = en_trenes_serializer(many=True, required=False)
+    vagones_pendientes_arrastre = PendienteArrastreSerializer(many=True, required=False)
+    rotacion_vagones = RotacionVagonesSerializer(many=True, required=False)
+
+    # Serializadores anidados con contextos adecuados
+    #vagones_y_productos = serializers.SerializerMethodField()
+    #vagones_cargados_descargados = serializers.SerializerMethodField()
+   
+    
+    def get_vagones_y_productos(self, obj):
+        serializer = vagones_productos_serializer(
+            obj.vagones_y_productos.all(), 
+            many=True,
+            context=self.context
+        )
+        return serializer.data
+    
+    def get_vagones_cargados_descargados(self, obj):
+        serializer = vagon_cargado_descargado_serializer(
+            obj.vagones_cargados_descargados.all(),
+            many=True,
+            context=self.context
+        )
+        return serializer.data
+    
+    def get_productos_ufc(self, obj):
+        serializer = producto_vagon_serializer(
+            obj.productos_ufc.all(),
+            many=True,
+            context=self.context
+        )
+        return serializer.data
+
+    class Meta:
+        model = ufc_informe_operativo
+        fields = '__all__'
+        depth = 3  # Profundidad suficiente para cargar todas las relaciones
+        filterset_class = ufc_informe_operativo_filter
+
+    def create(self, validated_data):
+        with transaction.atomic():
+            # Extraer datos de modelos relacionados
+            vagones_y_productos_data = validated_data.pop('vagones_y_productos', [])
+            vagones_data_cargados = validated_data.pop('vagones_cargados_descargados', [])
+            situados_data = validated_data.pop('situados_carga_descarga', [])
+            por_situar_data = validated_data.pop('vagones_por_situar', [])
+            en_trenes_data = validated_data.pop('en_trenes', [])
+            arrastres_data = validated_data.pop('vagones_pendientes_arrastre', [])
+            rotaciones_data = validated_data.pop('rotacion_vagones', [])
+
+            # Crear informe operativo
+            informe = ufc_informe_operativo.objects.create(**validated_data)
+
+            # Crear registros relacionados y asociarlos al informe
+            for vagon_producto_data in vagones_y_productos_data:
+                vagones_productos.objects.create(
+                    informe_operativo=informe,
+                    **vagon_producto_data
+                )
+
+            for vagon_data in vagones_data_cargados:
+                vagon_cargado_descargado.objects.create(
+                    informe_operativo=informe,
+                    **vagon_data
+                )            
+
+            for situado_data in situados_data:
+                Situado_Carga_Descarga.objects.create(
+                    informe_operativo=informe,
+                    **situado_data
+                )
+
+            for por_situar_data in por_situar_data:
+                por_situar.objects.create(
+                    informe_operativo=informe,
+                    **por_situar_data
+                )
+
+            for en_tren_data in en_trenes_data:
+                en_trenes.objects.create(
+                    informe_operativo=informe,
+                    **en_tren_data
+                )
+
+            for arrastre_data in arrastres_data:
+                arrastres.objects.create(
+                    informe_operativo=informe,
+                    **arrastre_data
+                )
+
+            for rotacion_data in rotaciones_data:
+                rotacion_vagones.objects.create(
+                    informe_operativo=informe,
+                    **rotacion_data
+                )
+
+            return informe
+
+
+#****************-------------------------********************--------------------***************-----------------********************************
+
     
 

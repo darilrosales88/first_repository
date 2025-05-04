@@ -13,6 +13,7 @@
   <Navbar-Component /><br />
   <div style="margin-left: 17em; width: 73%">
     <Inf-Operative />
+    <PartesUFCView />
   </div>
 
   <div style="margin-left: 12em">
@@ -162,6 +163,8 @@ import InfOperative from "@/components/InfOperative.vue";
 import Vagones_productos from "@/components/Vagones_productos.vue";
 import AdicionarVagonProducto from "@/views/UFC/AdicionarVagonesProductos.vue";
 import ConsultaRotacionVagones from "@/components/RotacionVagonesView.vue";
+import ParteUfcView from "../ParteUfcView.vue";
+import PartesUFCView from "@/components/PartesUFC.vue";
 
 export default {
   name: "UFCView",
@@ -176,11 +179,17 @@ export default {
     Vagones_productos,
     AdicionarVagonProducto,
     ConsultaRotacionVagones,
+    PartesUFCView,
   },
   data() {
     return {
       currentComponent: "PorSituarCarga_Descarga", // Componente inicial
     };
   },
+
+  // En tu componente InfOperative.vue o donde tengas el botón de guardar
+  methods: {
+    
+  }
 };
 </script>

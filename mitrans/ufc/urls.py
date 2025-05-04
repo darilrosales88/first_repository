@@ -2,13 +2,13 @@ from rest_framework import routers
 #importamos las vistas
 from .views import vagon_cargado_descargado_view_set , en_trenes_view_set, producto_vagon_view_set
 from .views import SituadoCargaDescargaViewset,PorSituarCargaDescargaViewSet,PendienteArrastreViewset,registro_vagones_cargados_view_set
-from .views import vagones_productos_view_set,verificar_productos,RotacionVagonesViewSet
+from .views import vagones_productos_view_set,verificar_productos,RotacionVagonesViewSet,ufc_informe_operativo_view_set
 
 from django.urls import path
 
 
 urlpatterns = [
-    path('producto-vagon/verificar/', verificar_productos, name='verificar-productos'),
+    path('producto-vagon/verificar/', verificar_productos, name='verificar-productos'),   
    #path('destinos/verificar-existencia/', verificar_destino, name='verificar_destino'),#verificar si existe un destino dado cliente-destino
     #path('entidades/verificar-existencia-reeup/', verificar_codigo_reeup, name='verificar_existencia_reeup'),#verificar si existe ya el codigo reeup
         
@@ -17,7 +17,8 @@ urlpatterns = [
 router = routers.DefaultRouter()
 #definimos las rutas
 
-#endpoints asociados a vagones cargados descargados
+#endpoint para informe operativo
+router.register('informe-operativo',ufc_informe_operativo_view_set,basename='informe-operativo')
 #endpoints asociados a vagones y productos
 router.register('vagones-productos',vagones_productos_view_set,basename='vagones_productos')
 #endpoints productos_UFC

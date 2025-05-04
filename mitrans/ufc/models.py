@@ -5,7 +5,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.db.models import Sum
 
-#Modelo para el informe operativp
+#Modelo para el informe operativo
 class ufc_informe_operativo(models.Model):    
 
     fecha_operacion = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de operación")
@@ -37,7 +37,8 @@ class producto_UFC(models.Model):
         ('alimentos', 'Alimentos'),
         ('prod_varios', 'Productos Varios'),
     ]
-
+   
+   
     producto = models.ForeignKey(nom_producto, on_delete=models.CASCADE)
     tipo_embalaje = models.ForeignKey(nom_tipo_embalaje, on_delete=models.CASCADE)
     unidad_medida = models.ForeignKey(nom_unidad_medida, on_delete=models.CASCADE)
@@ -77,7 +78,7 @@ class registro_vagones_cargados(models.Model):
     TIPO_ORIGEN_CHOICES = [
         ('puerto', 'Puerto'),
         ('ac_ccd', 'Acceso comercial/CCD'),
-    ]    
+    ]
 
     no_id = models.CharField(
         max_length=50,
@@ -140,12 +141,6 @@ class vagon_cargado_descargado(models.Model):
         ('ac_ccd', 'Acceso comercial/CCD'),
     ]
     
-    informe_operativo = models.DateField(
-        null=True,
-        blank=True,
-        editable=False,
-        verbose_name="Fecha actual"
-    )
     tipo_origen = models.CharField(choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
     origen = models.CharField(max_length=40)
     tipo_equipo_ferroviario = models.ForeignKey(nom_tipo_equipo_ferroviario, on_delete=models.CASCADE)
@@ -197,13 +192,6 @@ class vagon_cargado_descargado(models.Model):
 #************************************************************************************************
 #Modelo Situado
 class Situado_Carga_Descarga(models.Model):
-    informe_operativo = models.ForeignKey(
-        'ufc_informe_operativo',
-        on_delete=models.CASCADE,
-        related_name='situados_carga_descarga',
-        null=True,
-        blank=True
-    )
     
     t_origen = (
         ('puerto', 'Puerto'),
@@ -313,13 +301,7 @@ class vagones_productos(models.Model):
         ('-', '-'),
     ]
 
-    informe_operativo = models.ForeignKey(
-        'ufc_informe_operativo',
-        on_delete=models.CASCADE,
-        related_name='vagones_y_productos',
-        null=True,
-        blank=True
-    )
+    
     tipo_origen = models.CharField(choices=TIPO_ORIGEN_CHOICES, max_length = 50)
     origen = models.CharField(max_length=40)
     tipo_producto = models.CharField(choices=TIPO_PRODUCTO_CHOICES, max_length = 20,blank=True,null=True)
@@ -438,14 +420,6 @@ class en_trenes(models.Model):
         ('cargado', 'Cargado'),
     ]
 
-    informe_operativo = models.ForeignKey(
-        'ufc_informe_operativo',
-        on_delete=models.CASCADE,
-        related_name='en_trenes',
-        null=True,
-        blank=True
-    )
-
   
   #Cuando vayas a crear varias instancias con la misma ForeignKey hay que agregar "related_name"
   #Agregar "default" en los campos que tengan el parametro "choise"
@@ -467,7 +441,7 @@ class en_trenes(models.Model):
     producto = models.ManyToManyField(
         producto_UFC,
         blank=True,
-        related_name="vagones_en_trenes",
+        related_name="en_trenes",
         verbose_name="Productos"
     )
     
@@ -529,14 +503,6 @@ class por_situar(models.Model):
         ('jaula', 'Jaula'),
         ('locomotora', 'Locomotora'),
         ('tren', 'Tren'),
-    )
-
-    informe_operativo = models.ForeignKey(
-        'ufc_informe_operativo',
-        on_delete=models.CASCADE,
-        related_name='vagones_por_situar',
-        null=True,
-        blank=True
     )
     
     tipo_equipo = models.CharField(max_length=200, choices=t_equipo, verbose_name="Tipo de equipo")
@@ -626,13 +592,6 @@ class arrastres(models.Model):
         ('locomotora', 'Locomotora'),
         ('tren', 'Tren'),
     )
-    informe_operativo = models.ForeignKey(
-        'ufc_informe_operativo',
-        on_delete=models.CASCADE,
-        related_name='vagones_pendientes_arrastre',
-        null=True,
-        blank=True
-    )
     
     tipo_equipo = models.CharField(
         max_length=200, 
@@ -690,13 +649,6 @@ class arrastres(models.Model):
     
     
 class rotacion_vagones(models.Model):
-    informe_operativo = models.ForeignKey(
-        'ufc_informe_operativo',
-        on_delete=models.CASCADE,
-        related_name='rotacion_vagones',
-        null=True,
-        blank=True
-    )
     tipo_equipo_ferroviario = models.ForeignKey(
         nom_tipo_equipo_ferroviario,
         on_delete=models.CASCADE,

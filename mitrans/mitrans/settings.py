@@ -84,19 +84,6 @@ CORS_ALLOW_METHODS = (
     "PUT",
 )
 
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-    'x-request-type',  # Añade tu header personalizado aquí
-]
-
 #Modificando las configuracion por defecto del filtrado de django-rest-framework de forma global, con esto estoy 
 #permitiendo que DRF realice el filtrado (esto fue copiado de la doc oficial de DRF)
 

@@ -14,3 +14,5 @@ admin.site.register(vagones_productos)
 admin.site.register(producto_UFC)
 admin.site.register(rotacion_vagones)  
 admin.site.register(ufc_informe_operativo)
+
+# Register your models here.

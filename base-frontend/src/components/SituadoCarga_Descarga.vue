@@ -479,7 +479,7 @@ export default {
         this.selectedItem = { ...item };
         this.showDetailsModal = true; // Corregir aquí
         const response = await axios.get(
-          `http://127.0.0.1:8000/ufc/situados/${item.id}/`
+          `/ufc/situados/${item.id}/`
         );
         this.currentRecord = response.data; // Usar currentRecord en lugar de selectedItem
       } catch (error) {

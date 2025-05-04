@@ -25,6 +25,31 @@ from django.db import transaction
 
 
 #****************-------------------------********************--------------------***************-----------------********************************
+class ufc_informe_operativo_filter(filters.FilterSet):
+    fecha_operacion = filters.CharFilter(field_name='fecha_operacion',lookup_expr = 'exact')  
+    
+    class Meta:
+        model = ufc_informe_operativo
+        fields = '__all__' 
+        
+class ufc_informe_operativo_serializer(serializers.ModelSerializer):                      
+    
+    class Meta:
+        model = ufc_informe_operativo       
+        fields = '__all__'
+        filterset_class: ufc_informe_operativo_filter
+#****************-------------------------********************--------------------***************-----------------****
+
+#****************-------------------------********************--------------------***************-----------------********************************
+#serializador para los productos de vagones cargados/descargados
+
+
+
+#****************************************************************************************************************
+#serializador para los productos del modelo vagones y  productos
+
+
+#****************-------------------------********************--------------------***************-----------------********************************
 #serializador para el modelo vagones y productos
 class vagones_productos_filter(filters.FilterSet):
     origen_tipo_prod_tef = filters.CharFilter(method='filtrado_por_origen_tipo_prod_tef', lookup_expr='icontains')
@@ -55,27 +80,11 @@ class vagones_productos_serializer(serializers.ModelSerializer):
         source='producto',  # Esto mapea al campo ManyToManyField
         write_only=True,
         required=False
-    )
-
-    productos_info = serializers.SerializerMethodField()
-    
-    def get_productos_info(self, obj):
-        productos = obj.producto.all()
-        return [{
-            'id': p.id,
-            'nombre_producto': p.producto.nombre_producto if p.producto else None,
-            'codigo_producto': p.producto.codigo_producto if p.producto else None,
-            'tipo_embalaje': p.tipo_embalaje.nombre if p.tipo_embalaje else None,
-            'unidad_medida': p.unidad_medida.unidad_medida if p.unidad_medida else None,
-            'cantidad': p.cantidad,
-            'estado': p.estado,
-            'contiene': p.contiene
-        } for p in productos]   
+    )   
     
 
     class Meta:
         model = vagones_productos
-        depth = 2  # Aumentar la profundidad de serialización
         fields = '__all__'  # O lista explícita incluyendo 'productos_list'
         extra_kwargs = {
             'producto': {'read_only': True},
@@ -235,21 +244,14 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
     
     def validate(self, data):
         # Validación para causas_incumplimiento
-        data['causas_incumplimiento'] = data.get('causas_incumplimiento', 'Sin causas especificadas')
+        data['causas_incumplimiento'] = data.get('causas_incumplimiento', '')
         
-        # Validación para registros_vagones_data
-        registros_data = data.get('registros_vagones_data', [])
-        if not registros_data:
-            raise serializers.ValidationError({
-                'registros_vagones_data': 'Debe proporcionar al menos un registro de vagón'
-            })
-        
-        # Validación para productos si el estado es 'cargado'
-        if data.get('estado') == 'cargado' and not data.get('producto_ids'):
-            raise serializers.ValidationError({
-                'producto_ids': 'Debe seleccionar al menos un producto para vagones cargados'
-            })
-        
+        # Validación para real_carga_descarga
+        if 'real_carga_descarga' not in data or data['real_carga_descarga'] is None:
+            # Calcular valor basado en registros_vagones_data si está disponible
+            registros_data = data.get('registros_vagones_data', [])
+            data['real_carga_descarga'] = len(registros_data)
+            
         return data
 
     def create(self, validated_data):
@@ -258,15 +260,16 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 # Extraer datos para relaciones
                 productos_ids = validated_data.pop('producto_ids', [])
                 registros_data = validated_data.pop('registros_vagones_data', [])
-                
-                # Validar que hay registros de vagones
-                if not registros_data:
-                    raise serializers.ValidationError(
-                        {'registros_vagones_data': 'Debe proporcionar al menos un registro de vagón'}
-                    )
-                
-                # Calcular real_carga_descarga basado en los registros
-                validated_data['real_carga_descarga'] = len(registros_data)
+
+                def validate(self, data):
+                    # Forzar el valor de causas_incumplimiento si viene vacío
+                    if 'causas_incumplimiento' in data and not data['causas_incumplimiento']:
+                        data['causas_incumplimiento'] = 'Sin causas especificadas'  # Valor por defecto
+
+                # Asegurar que real_carga_descarga no sea sobrescrito
+                if validated_data.get('real_carga_descarga', 0) == 0:
+                    registros_data = validated_data.get('registros_vagones_data', [])
+                    validated_data['real_carga_descarga'] = len(registros_data)
                 
                 # Crear instancia principal
                 instance = super().create(validated_data)
@@ -277,30 +280,17 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 
                 # Crear y asociar registros de vagones
                 for registro_data in registros_data:
-                    # Validar campos obligatorios para cada registro
-                    required_fields = ['no_id', 'fecha_despacho', 'origen']
-                    for field in required_fields:
-                        if field not in registro_data or not registro_data[field]:
-                            raise serializers.ValidationError(
-                                {field: f'Campo requerido para cada registro de vagón'}
-                            )
-                    
                     registro = registro_vagones_cargados.objects.create(**registro_data)
                     instance.registros_vagones.add(registro)
                     
                     # Actualizar estado del equipo ferroviario
-                    self.actualizar_estado_equipo_ferroviario(
-                        registro.no_id, 
-                        'Asignado al estado Cargado/Descargado'
-                    )
+                    self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Asignado al estado Cargado/Descargado')
                 
                 return instance
                 
         except Exception as e:
-            raise serializers.ValidationError(
-                {'error': f'Error al crear el registro: {str(e)}'}
-            )
-  
+            raise serializers.ValidationError(f"Error al crear el registro: {str(e)}")
+    
     def actualizar_estado_equipo_ferroviario(self, no_id, nuevo_estado):
         """
         Método auxiliar para actualizar el estado de un equipo ferroviario
@@ -855,122 +845,5 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
-    
-#///////****************************/////////////////////////**************************
-#serializador para el parte
-class ufc_informe_operativo_filter(filters.FilterSet):
-    fecha_operacion = filters.CharFilter(field_name='fecha_operacion',lookup_expr = 'exact')  
-    
-    class Meta:
-        model = ufc_informe_operativo
-        fields = '__all__' 
-        
-class ufc_informe_operativo_serializer(serializers.ModelSerializer):
-    # Serializadores anidados para las relaciones,# se usan los related_name
-    vagones_y_productos = vagones_productos_serializer(many=True, required=False)
-    vagones_cargados_descargados = vagon_cargado_descargado_serializer(many=True, required=False)
-    situados_carga_descarga = SituadoCargaDescargaSerializers(many=True, required=False)
-    vagones_por_situar = PorSituarCargaDescargaSerializer(many=True, required=False)
-    en_trenes = en_trenes_serializer(many=True, required=False)
-    vagones_pendientes_arrastre = PendienteArrastreSerializer(many=True, required=False)
-    rotacion_vagones = RotacionVagonesSerializer(many=True, required=False)
-
-    # Serializadores anidados con contextos adecuados
-    #vagones_y_productos = serializers.SerializerMethodField()
-    #vagones_cargados_descargados = serializers.SerializerMethodField()
-   
-    
-    def get_vagones_y_productos(self, obj):
-        serializer = vagones_productos_serializer(
-            obj.vagones_y_productos.all(), 
-            many=True,
-            context=self.context
-        )
-        return serializer.data
-    
-    def get_vagones_cargados_descargados(self, obj):
-        serializer = vagon_cargado_descargado_serializer(
-            obj.vagones_cargados_descargados.all(),
-            many=True,
-            context=self.context
-        )
-        return serializer.data
-    
-    def get_productos_ufc(self, obj):
-        serializer = producto_vagon_serializer(
-            obj.productos_ufc.all(),
-            many=True,
-            context=self.context
-        )
-        return serializer.data
-
-    class Meta:
-        model = ufc_informe_operativo
-        fields = '__all__'
-        depth = 3  # Profundidad suficiente para cargar todas las relaciones
-        filterset_class = ufc_informe_operativo_filter
-
-    def create(self, validated_data):
-        with transaction.atomic():
-            # Extraer datos de modelos relacionados
-            vagones_y_productos_data = validated_data.pop('vagones_y_productos', [])
-            vagones_data_cargados = validated_data.pop('vagones_cargados_descargados', [])
-            situados_data = validated_data.pop('situados_carga_descarga', [])
-            por_situar_data = validated_data.pop('vagones_por_situar', [])
-            en_trenes_data = validated_data.pop('en_trenes', [])
-            arrastres_data = validated_data.pop('vagones_pendientes_arrastre', [])
-            rotaciones_data = validated_data.pop('rotacion_vagones', [])
-
-            # Crear informe operativo
-            informe = ufc_informe_operativo.objects.create(**validated_data)
-
-            # Crear registros relacionados y asociarlos al informe
-            for vagon_producto_data in vagones_y_productos_data:
-                vagones_productos.objects.create(
-                    informe_operativo=informe,
-                    **vagon_producto_data
-                )
-
-            for vagon_data in vagones_data_cargados:
-                vagon_cargado_descargado.objects.create(
-                    informe_operativo=informe,
-                    **vagon_data
-                )            
-
-            for situado_data in situados_data:
-                Situado_Carga_Descarga.objects.create(
-                    informe_operativo=informe,
-                    **situado_data
-                )
-
-            for por_situar_data in por_situar_data:
-                por_situar.objects.create(
-                    informe_operativo=informe,
-                    **por_situar_data
-                )
-
-            for en_tren_data in en_trenes_data:
-                en_trenes.objects.create(
-                    informe_operativo=informe,
-                    **en_tren_data
-                )
-
-            for arrastre_data in arrastres_data:
-                arrastres.objects.create(
-                    informe_operativo=informe,
-                    **arrastre_data
-                )
-
-            for rotacion_data in rotaciones_data:
-                rotacion_vagones.objects.create(
-                    informe_operativo=informe,
-                    **rotacion_data
-                )
-
-            return informe
-
-
-#****************-------------------------********************--------------------***************-----------------********************************
-
     
 

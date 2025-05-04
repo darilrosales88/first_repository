@@ -526,20 +526,26 @@ export default {
     
     async submitForm() {
   try {
-      // 0. Verificar si existe informe operativo para la fecha actual
-      const existeInforme = await this.verificarInformeOperativo();
-        if (!existeInforme) {
-          Swal.fire(
-            "Error",
-            "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
-            "error"
-          );
-          return;
-        }
-    // 1. Calcular primero el valor real (asegurar que se complete antes de enviar)
-    await this.calcularRealCargaDescarga();
-    
-    // 2. Validaciones básicas
+    // 0. First check if there are any wagons added
+    if (this.registros_vagones_temporales.length === 0) {
+      Swal.fire("Error", "Debe agregar al menos un vagón", "error");
+      return;
+    }
+
+    // 1. Verify if operational report exists for current date
+    const existeInforme = await this.verificarInformeOperativo();
+    if (!existeInforme) {
+      Swal.fire(
+        "Error",
+        "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+        "error"
+      );
+      this.$router.push({ name: "InfoOperativo" });
+      return;
+      
+    }
+
+    // 2. Basic validations
     if (!this.formData.tipo_equipo_ferroviario || 
         !this.formData.tipo_origen ||
         !this.formData.origen || 
@@ -549,19 +555,22 @@ export default {
       return;
     }
 
-    // 3. Validación específica para productos
+    // 3. Product validation for loaded wagons
     if (this.formData.estado === "cargado" && 
         (!this.formData.lista_productos || this.formData.lista_productos.length === 0)) {
       Swal.fire("Error", "Debe seleccionar al menos un producto.", "error");
       return;
     }
 
-    // 4. Preparar datos de envío CORRECTAMENTE
+    // 4. Calculate real value
+    await this.calcularRealCargaDescarga();
+
+    // 5. Prepare data
     const datosEnvio = {
       ...this.formData,
-      informe_operativo: this.informeOperativoId, // Asignar el ID del informe encontrado
-      real_carga_descarga: this.formData.real_carga_descarga || 0, // Asegurar que lleva el valor calculado
-      causas_incumplimiento: this.formData.causas_incumplimiento || '', // Asegurar valor
+      informe_operativo: this.informeOperativoId,
+      real_carga_descarga: this.formData.real_carga_descarga || 0,
+      causas_incumplimiento: this.formData.causas_incumplimiento || '',
       producto_ids: Array.isArray(this.formData.lista_productos) 
         ? this.formData.lista_productos 
         : [this.formData.lista_productos],
@@ -575,16 +584,10 @@ export default {
       }))
     };
 
-    console.log("Datos a enviar:", {
-      ...this.formData,
-      real_carga_descarga: this.formData.real_carga_descarga,
-      causas_incumplimiento: this.formData.causas_incumplimiento
-    });
-
-    // 5. Enviar datos
+    // 6. Send data
     const response = await axios.post("/ufc/vagones-cargados-descargados/", datosEnvio);
 
-    // 6. Limpiar después del éxito
+    // 7. Reset and show success
     this.registros_vagones_temporales = [];
     this.formData.lista_productos = [];
     this.resetForm();

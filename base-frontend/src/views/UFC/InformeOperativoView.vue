@@ -162,7 +162,6 @@ import InfOperative from "@/components/InfOperative.vue";
 import Vagones_productos from "@/components/Vagones_productos.vue";
 import AdicionarVagonProducto from "@/views/UFC/AdicionarVagonesProductos.vue";
 import ConsultaRotacionVagones from "@/components/RotacionVagonesView.vue";
-import PartesUFCView from "@/components/PartesUFC.vue";
 
 export default {
   name: "UFCView",

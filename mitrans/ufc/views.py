@@ -40,6 +40,8 @@ from django.db.models import DateField
 from datetime import datetime
 from django.db.models.functions import Cast
 
+
+
 # Verifica si el usuario tiene el rol "ufc"
 class IsUFCPermission(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -73,40 +75,8 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
         # Filtrado por fecha de operación
         fecha_operacion = self.request.query_params.get('fecha_operacion')
         if fecha_operacion:
-            queryset = queryset.filter(fecha_operacion=fecha_operacion)
+            queryset = queryset.filter(fecha_operacion=fecha_operacion)       
         
-        # Precargar todas las relaciones con sus sub-relaciones
-        queryset = queryset.prefetch_related(
-            Prefetch('vagones_y_productos', 
-                    queryset=vagones_productos.objects.all().prefetch_related(
-                        'producto',
-                        'producto__producto',
-                        'producto__tipo_embalaje',
-                        'producto__unidad_medida'
-                    )),
-            Prefetch('vagones_cargados_descargados', 
-                    queryset=vagon_cargado_descargado.objects.all().prefetch_related(
-                        'producto',
-                        'producto__producto',
-                        'registros_vagones'
-                    )),
-            
-            Prefetch('situados_carga_descarga', 
-                    queryset=Situado_Carga_Descarga.objects.all().prefetch_related('producto')),
-            Prefetch('vagones_por_situar', 
-                    queryset=por_situar.objects.all().prefetch_related('producto')),
-            Prefetch('en_trenes', 
-                    queryset=en_trenes.objects.all().prefetch_related(
-                        'producto',
-                        'equipo_vagon'
-                    )),
-            Prefetch('vagones_pendientes_arrastre', 
-                    queryset=arrastres.objects.all().prefetch_related('producto')),
-            Prefetch('rotacion_vagones', 
-                    queryset=rotacion_vagones.objects.all().select_related('tipo_equipo_ferroviario'))
-        )
-        
-        return queryset
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -259,7 +229,7 @@ def verificar_informe_existente(request):
             })
         return Response({"existe": False})
     except ValueError:
-        return Response({"error": "Formato de fecha inválido"}, status=400)  
+        return Response({"error": "Formato de fecha inválido"}, status=400)
 
 #para vagones y productos
 class vagones_productos_view_set(viewsets.ModelViewSet):
@@ -390,56 +360,29 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
-        print("Datos recibidos en create:", request.data)  # Para depuración
-        
-        try:
-            # Validación de permisos
-            if not request.user.groups.filter(name='AdminUFC').exists():
-                return Response(
-                    {"detail": "No tiene permiso para realizar esta acción."},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            
-            # Validar que se envíe informe_operativo
-            if not request.data.get('informe_operativo'):
-                return Response(
-                    {"detail": "Debe asociar un informe operativo válido."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            
-            # Validar registros_vagones_data
-            registros_data = request.data.get('registros_vagones_data', [])
-            if not registros_data:
-                return Response(
-                    {"detail": "Debe proporcionar al menos un registro de vagón."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Crear el objeto
-            instance = serializer.save()
-            
-            # Auditoría
-            navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-            direccion_ip = request.META.get('REMOTE_ADDR')
-            
-            Auditoria.objects.create(
-                usuario=request.user if request.user.is_authenticated else None,
-                direccion_ip=direccion_ip,
-                accion=f"Insertar vagón cargado/descargado: {instance.id}",
-                navegador=navegador,
-            )
-            
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-            
-        except Exception as e:
-            print(f"Error al crear vagon_cargado_descargado: {str(e)}")
+        print("Datos recibidos en create:", request.data)  # Verificar datos entrantes
+        #permisos de acceso a la operacion
+        if not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
-                {"detail": f"No se pudo crear el registro: {str(e)}"},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
             )
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        objeto_vagon_cargado_descargado = serializer.save()
+
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            direccion_ip=direccion_ip,
+            accion=f"Insertar vagón cargado/descargado: {objeto_vagon_cargado_descargado.id}",
+            navegador=navegador,
+        )
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
         #permisos de acceso a la operacion

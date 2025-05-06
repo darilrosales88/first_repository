@@ -320,7 +320,7 @@ export default {
     async getVagonesCargadosDescargados() {
       this.loading = true;
       try {
-        const response = await axios.get("/ufc/vagones-cargados-descargados/", {
+        const response = await axios.get("/ufc/vagones-cargados-descargados-hoy/", {
           params: {
             page: this.currentPage,
             page_size: this.itemsPerPage,

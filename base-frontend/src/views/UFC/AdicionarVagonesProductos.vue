@@ -7,6 +7,18 @@
           <div class="row">
             <!-- Columna 1 -->
             <div class="col-md-6">
+              <!-- Campo:Fecha de registro -->
+            <div class="mb-3">
+              <label for="fecha_registro" class="form-label">Fecha de registro</label>
+              <input
+                type="text"
+                class="form-control"
+                :value="formattedFechaRegistro"
+                id="fecha_registro"
+                name="fecha_registro"
+                readonly
+              />
+            </div>
               <!-- Campo: tipo_origen -->
               <div class="mb-3">
                 <label for="tipo_origen" class="form-label"
@@ -288,6 +300,12 @@
       };
     },
     computed: {
+      formattedFechaRegistro() {
+      if (this.formData.fecha) {
+        return new Date(this.formData.fecha).toLocaleString();
+      }
+      return new Date().toLocaleString();
+    },
     mostrarCampoProducto() {
       return this.formData.tipo_producto === 'producto';    
     },

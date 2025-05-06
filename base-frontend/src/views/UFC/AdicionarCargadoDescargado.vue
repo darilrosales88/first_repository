@@ -10,6 +10,18 @@
         <div class="row">
           <!-- Columna 1 -->
           <div class="col-md-6">
+            <!-- Campo:Fecha de registro -->
+            <div class="mb-3">
+              <label for="fecha_registro" class="form-label">Fecha de registro</label>
+              <input
+                type="text"
+                class="form-control"
+                :value="formattedFechaRegistro"
+                id="fecha_registro"
+                name="fecha_registro"
+                readonly
+              />
+            </div>
             <!-- Campo: TEF -->
             <div class="mb-3">
               <label for="tipo_equipo_ferroviario" class="form-label"
@@ -180,6 +192,8 @@
                 readonly
               />
             </div>
+
+            
             <!-- Campo: plan_diario_carga -->
             <div class="mb-3">
               <label for="plan_diario_carga" class="form-label"
@@ -441,6 +455,7 @@ export default {
       mostrarModalVagon: false,
 
       formData: {
+        fecha:"",
         tipo_equipo_ferroviario: "",
         tipo_origen: "ac_ccd",
         origen: "",
@@ -468,6 +483,15 @@ export default {
       informeOperativoId: null,
       fechaActual: new Date().toISOString().split('T')[0] // Fecha actual en formato YYYY-MM-DD
     };
+  },
+
+  computed: {
+    formattedFechaRegistro() {
+      if (this.formData.fecha) {
+        return new Date(this.formData.fecha).toLocaleString();
+      }
+      return new Date().toLocaleString();
+    }
   },
 
   mounted() {
@@ -506,6 +530,7 @@ export default {
   methods: {
     async verificarInformeOperativo() {
       try {
+        this.formData.fecha = new Date().toISOString();
         const today = new Date();
         const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
@@ -532,7 +557,7 @@ export default {
       return;
     }
 
-    // 1. Verify if operational report exists for current date
+    // 1. Verifificar que el informe operativo existe ya para la fecha creada
     const existeInforme = await this.verificarInformeOperativo();
     if (!existeInforme) {
       Swal.fire(
@@ -567,7 +592,7 @@ export default {
 
     // 5. Prepare data
     const datosEnvio = {
-      ...this.formData,
+      ...this.formData,      
       informe_operativo: this.informeOperativoId,
       real_carga_descarga: this.formData.real_carga_descarga || 0,
       causas_incumplimiento: this.formData.causas_incumplimiento || '',

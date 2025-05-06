@@ -423,18 +423,21 @@ export default {
     getPorSituar() {
       this.loading = true;
       axios
-        .get("http://127.0.0.1:8000/ufc/por-situar/")
+        .get("http://127.0.0.1:8000/ufc/por-situar-hoy/")
         .then((response) => {
           this.registrosPorSituar = response.data.results;
           this.totalItems = response.data.count;
           this.loading = false;
         })
+        
         .catch((error) => {
           console.error("Error al obtener datos:", error);
           this.errorLoading = true;
           this.loading = false;
           this.showErrorToast("No se pudieron cargar los registros");
         });
+        console.log("que lasodsjkbvbksdjfksd: ",this.registrosPorSituar);
+        
     },
 
     getNombresProductos(productos) {

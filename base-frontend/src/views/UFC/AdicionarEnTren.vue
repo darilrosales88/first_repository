@@ -17,7 +17,19 @@
           <form @submit.prevent="submitForm" class="ufc-form">
             <div class="ufc-form-grid">
               <!-- Columna Izquierda -->
+               <!-- Campo: Fecha de registro -->
               <div class="ufc-form-column">
+                <div class="mb-3">
+              <label for="fecha_registro" class="form-label">Fecha de registro</label>
+              <input
+                type="text"
+                class="form-control"
+                :value="formattedFechaRegistro"
+                id="fecha_registro"
+                name="fecha_registro"
+                readonly
+              />
+            </div>
                 <!-- Campo: locomotora -->
                 <div class="ufc-input-group">
                   <label for="locomotora"
@@ -464,6 +476,14 @@ export default {
       vagonesAgregados: [],
       numeroIdentificacionSeleccionado: null,
     };
+  },
+  computed:{
+    formattedFechaRegistro() {
+    if (this.formData.fecha) {
+      return new Date(this.formData.fecha).toLocaleString();
+    }
+    return new Date().toLocaleString();
+  }
   },
   mounted() {
     this.getProductos();

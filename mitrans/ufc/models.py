@@ -141,6 +141,7 @@ class vagon_cargado_descargado(models.Model):
         ('ac_ccd', 'Acceso comercial/CCD'),
     ]
     
+    fecha = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de registro", editable=False)
     tipo_origen = models.CharField(choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length = 50)
     origen = models.CharField(max_length=40)
     tipo_equipo_ferroviario = models.ForeignKey(nom_tipo_equipo_ferroviario, on_delete=models.CASCADE)
@@ -233,7 +234,7 @@ class Situado_Carga_Descarga(models.Model):
     )
     
     operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion", blank=True, null=True)
-    
+    fecha = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de registro", editable=False)
     producto = models.ManyToManyField(
         producto_UFC,
         blank=True,
@@ -301,7 +302,7 @@ class vagones_productos(models.Model):
         ('-', '-'),
     ]
 
-    
+    fecha = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de registro", editable=False)
     tipo_origen = models.CharField(choices=TIPO_ORIGEN_CHOICES, max_length = 50)
     origen = models.CharField(max_length=40)
     tipo_producto = models.CharField(choices=TIPO_PRODUCTO_CHOICES, max_length = 20,blank=True,null=True)
@@ -430,6 +431,7 @@ class en_trenes(models.Model):
         help_text="Seleccione una locomotora.",
         related_name="trenes_locomotora",
     )
+    fecha = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de registro", editable=False)
     numero_identificacion_locomotora = models.CharField(
         max_length=10,
         verbose_name="Número de identificación de la locomotora",
@@ -520,7 +522,7 @@ class por_situar(models.Model):
     )
     
     operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion")
-    
+    fecha = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de registro", editable=False)
     producto = models.ManyToManyField(
         producto_UFC,
         blank=True,
@@ -637,7 +639,7 @@ class arrastres(models.Model):
         max_length=40,
         verbose_name="Destino"
     )
-    
+    fecha = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de registro", editable=False)
     class Meta:
         verbose_name = "arrastre"
         verbose_name_plural = "Arrastres"

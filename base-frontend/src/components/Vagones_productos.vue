@@ -247,7 +247,7 @@
       async getVagonesProductos() {
         this.loading = true;
         try {
-          const response = await axios.get("/ufc/vagones-productos/", {
+          const response = await axios.get("/ufc/vagones-productos-hoy/", {
             params: {
               page: this.currentPage,
               page_size: this.itemsPerPage,

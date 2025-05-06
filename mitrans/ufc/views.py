@@ -340,7 +340,41 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
             navegador=navegador,
         )
 
-        return super().list(request, *args, **kwargs)    
+        return super().list(request, *args, **kwargs) 
+
+class vagones_productos_hoy_viewset(viewsets.ModelViewSet):
+    queryset = vagones_productos.objects.all()
+    serializer_class = vagones_productos_serializer
+    
+    def get_queryset(self):
+        # Obtener la fecha actual (sin la hora)
+        hoy = timezone.now().date()
+        
+        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
+        return self.queryset.annotate(
+            fecha_dia=TruncDate('fecha', output_field=DateField())
+        ).filter(fecha_dia=hoy).order_by('-fecha')
+    
+    def list(self, request, *args, **kwargs):
+        # Verificar permisos como en la vista original
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de vagones cargados/descargados hoy",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+        
+        return super().list(request, *args, **kwargs)   
 
 #/*********************************************************************************************************************************************
 #para el estado de vagones cargados/descargados
@@ -513,9 +547,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
                 'origen',
                 'fecha_llegada',
                 'observaciones'
-            )
-            #lalalalal
-            
+            )            
             return Response(list(registros_vagones))
         
         except Exception as e:
@@ -523,7 +555,43 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
                 {"error": f"No se pudieron obtener los registros completos: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+class vagon_cargado_descargado_hoy_view_set(viewsets.ModelViewSet):
+    queryset = vagon_cargado_descargado.objects.all()
+    serializer_class = vagon_cargado_descargado_serializer
     
+    def get_queryset(self):
+        # Obtener la fecha actual (sin la hora)
+        hoy = timezone.now().date()
+        
+        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
+        return self.queryset.annotate(
+            fecha_dia=TruncDate('fecha', output_field=DateField())
+        ).filter(fecha_dia=hoy).order_by('-fecha')
+    
+    def list(self, request, *args, **kwargs):
+        # Verificar permisos como en la vista original
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de vagones cargados/descargados hoy",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+        
+        return super().list(request, *args, **kwargs)
+
+
+ #***************************************************************************************************************   
 #para productos de vagones cargados/descargados
 #para productos de vagones y productos
 
@@ -760,8 +828,43 @@ class en_trenes_view_set(viewsets.ModelViewSet):
         )
 
         return super().list(request, *args, **kwargs)
+    
+class en_trenes_hoy_viewset(viewsets.ModelViewSet):
+    queryset = en_trenes.objects.all()
+    serializer_class = en_trenes_serializer
+    
+    def get_queryset(self):
+        # Obtener la fecha actual (sin la hora)
+        hoy = timezone.now().date()
+        
+        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
+        return self.queryset.annotate(
+            fecha_dia=TruncDate('fecha', output_field=DateField())
+        ).filter(fecha_dia=hoy).order_by('-fecha')
+    
+    def list(self, request, *args, **kwargs):
+        # Verificar permisos como en la vista original
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de vagones pendientes de arrastre hoy",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+        
+        return super().list(request, *args, **kwargs)
 
 
+#***********************************************************************************************************
 
 class producto_vagon_view_set(viewsets.ModelViewSet):
     queryset = producto_UFC.objects.all().order_by('-id') # Definir el queryset
@@ -871,7 +974,7 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
         )
 
         return super().list(request, *args, **kwargs)
-
+#*******************************************************************************************************
 
 
 #Voy a agregar los modulos de auditoria a los que hizo Karmal
@@ -984,12 +1087,41 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
         )
 
         return super().list(request, *args, **kwargs)
-
     
+class PorSituarCargaDescarga_hoy_ViewSet(viewsets.ModelViewSet):
+    queryset = por_situar.objects.all()
+    serializer_class = PorSituarCargaDescargaSerializer
     
+    def get_queryset(self):
+        # Obtener la fecha actual (sin la hora)
+        hoy = timezone.now().date()
+        
+        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
+        return self.queryset.annotate(
+            fecha_dia=TruncDate('fecha', output_field=DateField())
+        ).filter(fecha_dia=hoy).order_by('-fecha')
     
-    
-
+    def list(self, request, *args, **kwargs):
+        # Verificar permisos como en la vista original
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de vagones por situar hoy",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+        
+        return super().list(request, *args, **kwargs)
+    #**********************************************************************************************
 
 class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
     queryset = Situado_Carga_Descarga.objects.all().order_by("-id")
@@ -1097,6 +1229,39 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
         )
 
         return super().list(request, *args, **kwargs)
+class SituadoCargaDescarga_hoy_Viewset(viewsets.ModelViewSet):
+    queryset = Situado_Carga_Descarga.objects.all()
+    serializer_class = SituadoCargaDescargaSerializers
+    
+    def get_queryset(self):
+        # Obtener la fecha actual (sin la hora)
+        hoy = timezone.now().date()
+        
+        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
+        return self.queryset.annotate(
+            fecha_dia=TruncDate('fecha', output_field=DateField())
+        ).filter(fecha_dia=hoy).order_by('-fecha')
+    
+    def list(self, request, *args, **kwargs):
+        # Verificar permisos como en la vista original
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de vagones situados hoy",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+        
+        return super().list(request, *args, **kwargs)
 
     
     
@@ -1193,6 +1358,40 @@ class PendienteArrastreViewset(viewsets.ModelViewSet):
             navegador=navegador,
         )
 
+        return super().list(request, *args, **kwargs)
+    
+class PendienteArrastre_hoy_Viewset(viewsets.ModelViewSet):
+    queryset = arrastres.objects.all()
+    serializer_class = PendienteArrastreSerializer
+    
+    def get_queryset(self):
+        # Obtener la fecha actual (sin la hora)
+        hoy = timezone.now().date()
+        
+        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
+        return self.queryset.annotate(
+            fecha_dia=TruncDate('fecha', output_field=DateField())
+        ).filter(fecha_dia=hoy).order_by('-fecha')
+    
+    def list(self, request, *args, **kwargs):
+        # Verificar permisos como en la vista original
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de vagones pendientes de arrastre hoy",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+        
         return super().list(request, *args, **kwargs)
     
     
@@ -1294,6 +1493,40 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
         )
 
         return super().list(request, *args, **kwargs)
+    
+""" class RotacionVagones_hoy_ViewSet(viewsets.ModelViewSet):
+    queryset = rotacion_vagones.objects.all()
+    serializer_class = RotacionVagonesSerializer
+    
+    def get_queryset(self):
+        # Obtener la fecha actual (sin la hora)
+        hoy = timezone.now().date()
+        
+        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
+        return self.queryset.annotate(
+            fecha_dia=TruncDate('creado_el', output_field=DateField())
+        ).filter(fecha_dia=hoy).order_by('-creado_el')
+    
+    def list(self, request, *args, **kwargs):
+        # Verificar permisos como en la vista original
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de vagones en rotación hoy",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+        
+        return super().list(request, *args, **kwargs) """
 
 
 #*************Termina View Rotacion de Vagones **********************

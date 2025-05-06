@@ -68,6 +68,12 @@ class vagones_productos_filter(filters.FilterSet):
 
 
 class vagones_productos_serializer(serializers.ModelSerializer):
+    fecha_registro = serializers.DateTimeField(
+        source='fecha', 
+        format='%Y-%m-%d %H:%M', 
+        read_only=True,  # Solo lectura, no necesita write_only
+        help_text="Fecha y hora en que se creó el registro (automático)"
+    )
     tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')    
     tipo_equipo_ferroviario_name = serializers.ReadOnlyField(source='tipo_equipo_ferroviario.get_tipo_equipo_display')
     tipo_combustible_name = serializers.ReadOnlyField(source='get_tipo_combustible_display')    
@@ -158,6 +164,12 @@ class vagon_cargado_descargado_filter(filters.FilterSet):
 
 
 class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
+    fecha_registro = serializers.DateTimeField(
+        source='fecha', 
+        format='%Y-%m-%d %H:%M', 
+        read_only=True,
+        help_text="Fecha y hora en que se creó el registro (automático)"
+    )
     tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
     tipo_equipo_ferroviario_name = serializers.ReadOnlyField(source='tipo_equipo_ferroviario.get_tipo_equipo_display')
     estado_name = serializers.ReadOnlyField(source='get_estado_display')
@@ -187,7 +199,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
     class Meta:
         model = vagon_cargado_descargado
         fields = '__all__'  # O lista explícita incluyendo 'productos_list'
-        extra_kwargs = {
+        extra_kwargs = {            
             'producto': {'read_only': True},
             'registros_vagones': {'read_only': True}
         }
@@ -414,6 +426,12 @@ class en_trenes_filter(django_filters.FilterSet):
 
 
 class en_trenes_serializer(serializers.ModelSerializer):
+    fecha_registro = serializers.DateTimeField(
+        source='fecha', 
+        format='%Y-%m-%d %H:%M', 
+        read_only=True,  # Solo lectura, no necesita write_only
+        help_text="Fecha y hora en que se creó el registro (automático)"
+    )
    # tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
    # estado_name = serializers.ReadOnlyField(source='get_estado_display')
    # tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
@@ -439,6 +457,7 @@ class en_trenes_serializer(serializers.ModelSerializer):
         fields = (
             'id', 
             'tipo_origen', 
+            'fecha_registro',
             'origen', 
             'locomotora',
             'numero_identificacion_locomotora',
@@ -635,6 +654,12 @@ class PorSituarCargaDescargaFilter(filters.FilterSet):
 
 
 class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
+    fecha_registro = serializers.DateTimeField(
+        source='fecha', 
+        format='%Y-%m-%d %H:%M', 
+        read_only=True,  # Solo lectura, no necesita write_only
+        help_text="Fecha y hora en que se creó el registro (automático)"
+    )
     productos_info = serializers.SerializerMethodField()
     tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
     tipo_equipo_name=serializers.ReadOnlyField(source='get_tipo_equipo_display')
@@ -646,8 +671,7 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = por_situar
-        fields = ('id', 'tipo_origen', 'tipo_origen_name', 'origen', 'tipo_equipo','tipo_equipo_name', 
-                 'estado', 'operacion', 'producto', 'por_situar', 'productos_info', 'observaciones')
+        fields = '__all__'
         extra_kwargs = {
             'producto': {'required': False},
             'observaciones': {'required': False, 'allow_null': True}
@@ -688,6 +712,12 @@ class PendienteArrastreFilter(filters.FilterSet):
         fields = ['tipo_equipo']
 
 class PendienteArrastreSerializer(serializers.ModelSerializer):
+    fecha_registro = serializers.DateTimeField(
+        source='fecha', 
+        format='%Y-%m-%d %H:%M', 
+        read_only=True,  # Solo lectura, no necesita write_only
+        help_text="Fecha y hora en que se creó el registro (automático)"
+    )
     productos_info = serializers.SerializerMethodField()
     producto = serializers.PrimaryKeyRelatedField(
         many=True,
@@ -697,8 +727,7 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = arrastres
-        fields = ('id', 'tipo_origen', 'origen', 'tipo_equipo', 'estado', 
-                 'producto', 'productos_info', 'cantidad_vagones', 'tipo_destino', 'destino')
+        fields = '__all__'
         filterset_class = PendienteArrastreFilter
 
     def get_productos_info(self, obj):
@@ -729,6 +758,12 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
 
 
 class RotacionVagonesSerializer(serializers.ModelSerializer):
+    fecha_registro = serializers.DateTimeField(
+        source='fecha', 
+        format='%Y-%m-%d %H:%M', 
+        read_only=True,  # Solo lectura, no necesita write_only
+        help_text="Fecha y hora en que se creó el registro (automático)"
+    )
     tipo_equipo_ferroviario_nombre = serializers.SerializerMethodField()
     plan_carga = serializers.IntegerField(read_only=True)
     real_carga = serializers.IntegerField(read_only=True)

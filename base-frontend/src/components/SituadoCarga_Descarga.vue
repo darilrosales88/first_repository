@@ -415,14 +415,14 @@ export default {
   },
 
   mounted() {
-    this.getPorSituar();
+    this.getSituado();
   },
 
   methods: {
-    async getPorSituar() {
+    async getSituado() {
       this.loading = true;
       try {
-        const response = await axios.get("/ufc/situados/");
+        const response = await axios.get("/ufc/situados-hoy/");
         this.totalItems = response.data.count;
 
         if (
@@ -566,7 +566,7 @@ export default {
           this.loading = true;
           await axios.delete(`http://127.0.0.1:8000/ufc/situados/${id}/`);
           this.showSuccessToast("Registro eliminado");
-          await this.getPorSituar();
+          await this.getSituado();
         } catch (error) {
           this.handleApiError(error, "eliminar registro");
         } finally {
@@ -578,14 +578,14 @@ export default {
     previousPage() {
       if (this.currentPage > 1) {
         this.currentPage--;
-        this.getPorSituar();
+        this.getSituado();
       }
     },
 
     nextPage() {
       if (this.currentPage * this.itemsPerPage < this.totalItems) {
         this.currentPage++;
-        this.getPorSituar();
+        this.getSituado();
       }
     },
 

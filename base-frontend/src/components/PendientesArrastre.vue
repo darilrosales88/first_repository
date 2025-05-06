@@ -386,7 +386,7 @@ export default {
     getArrastres() {
       this.loading = true;
       axios
-        .get("http://127.0.0.1:8000/ufc/pendiente-arrastre/")
+        .get("http://127.0.0.1:8000/ufc/pendiente-arrastre-hoy/")
         .then((response) => {
           this.registrosArrastre = response.data.results;
           this.loading = false;

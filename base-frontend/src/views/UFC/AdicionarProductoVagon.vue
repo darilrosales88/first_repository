@@ -240,12 +240,20 @@ export default {
       unidades: [],
     };
   },
-
+  
   mounted() {
     // Llama al método para obtener los puertos
     this.getProductos();
     this.getEmbalaje();
     this.getUnidades();
+  },
+  computed{
+    formattedFechaRegistro() {
+      if (this.formData.fecha) {
+        return new Date(this.formData.fecha).toLocaleString();
+      }
+      return new Date().toLocaleString();
+    }
   },
 
   methods: {
@@ -268,8 +276,40 @@ export default {
       // Redirige a la vista "CrearProducto"
       this.$router.push({ name: "CrearProducto" });
     },
+    async verificarInformeOperativo() {
+      try {
+            this.formData.fecha = new Date().toISOString();
+            const today = new Date();
+            const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+            const response = await axios.get('/ufc/verificar-informe-existente/', {
+              params: { fecha_operacion: fechaFormateada }
+            });
+
+            if (response.data.existe) {
+              this.informeOperativoId = response.data.id;
+              return true;
+            }
+            return false;
+          } catch (error) {
+            console.error("Error al verificar informe:", error);
+            return false;
+          }
+        },
     async submitForm() {
       try {
+        // 1. Verifificar que el informe operativo existe ya para la fecha creada
+          const existeInforme = await this.verificarInformeOperativo();
+          if (!existeInforme) {
+            Swal.fire(
+              "Error",
+              "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+              "error"
+            );
+            this.$router.push({ name: "InfoOperativo" });
+            return;
+            
+          }
         await axios.post("/ufc/producto-vagon/", this.formData);
         Swal.fire(
           "Agregado!",

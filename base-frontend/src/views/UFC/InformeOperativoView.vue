@@ -163,6 +163,7 @@ import Vagones_productos from "@/components/Vagones_productos.vue";
 import AdicionarVagonProducto from "@/views/UFC/AdicionarVagonesProductos.vue";
 import ConsultaRotacionVagones from "@/components/RotacionVagonesView.vue";
 
+
 export default {
   name: "UFCView",
   components: {

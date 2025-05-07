@@ -5,7 +5,7 @@ from .views import SituadoCargaDescargaViewset,PorSituarCargaDescargaViewSet,Pen
 from .views import vagones_productos_view_set,verificar_productos,RotacionVagonesViewSet,ufc_informe_operativo_view_set
 from .views import verificar_informe_existente,vagon_cargado_descargado_hoy_view_set,PendienteArrastre_hoy_Viewset
 from .views import SituadoCargaDescarga_hoy_Viewset,PorSituarCargaDescarga_hoy_ViewSet,en_trenes_hoy_viewset
-from .views import vagones_productos_hoy_viewset,HistorialVagonCargadoDescargadoViewSet
+from .views import vagones_productos_hoy_viewset,HistorialVagonCargadoDescargadoViewSet,HistorialVagonesProductosViewSet
 
 
 from django.urls import path
@@ -27,6 +27,7 @@ router.register('informe-operativo',ufc_informe_operativo_view_set,basename='inf
 #endpoints asociados a vagones y productos
 router.register('vagones-productos',vagones_productos_view_set,basename='vagones_productos')
 router.register('vagones-productos-hoy',vagones_productos_hoy_viewset,basename='vagones_productos-hoy')
+router.register('historial-vagones-productos', HistorialVagonesProductosViewSet, basename='historial-vagones-productos')
 #endpoints productos_UFC
 router.register('producto-vagon',producto_vagon_view_set, basename='producto-vagon' )
 

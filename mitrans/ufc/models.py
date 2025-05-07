@@ -31,28 +31,6 @@ class ufc_informe_operativo(models.Model):
         return f"Fecha de operación {self.fecha_operacion} - fecha actual: {self.fecha_actual}" 
 
 #*************************************************************************************************************************
-def serializar_producto(producto):
-    """Función helper para serializar productos sin dependencia de serializers.py"""
-    return {
-        'id': producto.id,
-        'producto': {
-            'id': producto.producto.id if producto.producto else None,
-            'nombre': producto.producto.nombre_producto if producto.producto else None,
-            'codigo': producto.producto.codigo_producto if producto.producto else None
-        },
-        'tipo_embalaje': {
-            'id': producto.tipo_embalaje.id if producto.tipo_embalaje else None,
-            'nombre': producto.tipo_embalaje.nombre_tipo_embalaje if producto.tipo_embalaje else None
-        },
-        'unidad_medida': {
-            'id': producto.unidad_medida.id if producto.unidad_medida else None,
-            'nombre': producto.unidad_medida.unidad_medida if producto.unidad_medida else None,
-            'simbolo': producto.unidad_medida.simbolo if producto.unidad_medida else None
-        },
-        'cantidad': producto.cantidad,
-        'estado': producto.estado,
-        'contiene': producto.contiene
-    }
     
 #productos asociados a vagones en trenes
 class producto_UFC(models.Model):
@@ -582,6 +560,7 @@ class vagones_productos(models.Model):
     TIPO_PRODUCTO_CHOICES = [
         ('producto', 'Producto'),
         ('contenedor', 'Contenedor'),
+        ('combustible', 'Combustible'),
     ]
     TIPO_COMBUSTIBLE_CHOICES = [
         ('combustible_blanco', 'Combustible blanco'),
@@ -600,6 +579,10 @@ class vagones_productos(models.Model):
     plan_dia = models.IntegerField(editable=False,default=0)
     vagones_situados = models.IntegerField(editable=False,default=0)
     vagones_cargados = models.IntegerField(editable=False,default=0)
+    plan_acumulado_actual = models.IntegerField(editable=False,default=0)
+    real_acumulado_actual = models.IntegerField(editable=False,default=0)
+    plan_acumulado_anual = models.IntegerField(editable=False,default=0)
+    real_acumulado_anual = models.IntegerField(editable=False,default=0)
     plan_aseguramiento_proximos_dias = models.IntegerField(editable=False,default=0,blank=True)
     observaciones = models.TextField(
         null=True,
@@ -635,61 +618,104 @@ class vagones_productos(models.Model):
         productos_str = ", ".join(nombres_productos) if nombres_productos else "Sin productos"        
         return f"Vagones y productos: {productos_str}"   
 
-#se ejecuta la funcion actualizar_campos_automaticos cuando se inserte, modifique o elimine
-#algun registro en esos modelos
-
-#@receiver([post_save, post_delete], sender=vagon_cargado_descargado)
-#@receiver([post_save, post_delete], sender=Situado_Carga_Descarga)
-def actualizar_campos_automaticos(sender, instance, **kwargs):    
-    
+#Actualizando el resto de los campos de forma automatica, se activa cuando se inserta un registro en vagones_productos
+@receiver([post_save, post_delete], sender=vagon_cargado_descargado)
+@receiver([post_save, post_delete], sender=Situado_Carga_Descarga)
+def actualizar_campos_automaticos_vagones_productos(sender, instance, **kwargs):    
     '''Actualiza los campos automáticos en vagones_productos cuando hay cambios
-    en los modelos relacionados vagon_cargado_descargado o Situado_Carga_Descarga'''
+    en los modelos relacionados vagon_cargado_descargado, Situado_Carga_Descarga'''
     
-    # Obtener todos los objetos vagones_productos que necesitan actualización
-    objetos_actualizar = vagones_productos.objects.all()
-    print("Objetos a actualizar> ", objetos_actualizar[0])
+    # Obtener la fecha actual
+    hoy = timezone.now().date()
     
-    for vagon_producto in objetos_actualizar:
-        # Actualizar plan_dia (suma de plan_diario_carga_descarga donde operacion='carga')
-        plan_dia = vagon_cargado_descargado.objects.filter(
-            operacion='carga'
+    # Verificar si es el primer día del mes
+    es_primer_dia_mes = hoy.day == 1
+    
+    # Obtener el año actual
+    año_actual = hoy.year
+    
+    # Verificar si hay otros informes operativos en el año actual
+    informes_año_actual = ufc_informe_operativo.objects.filter(
+        fecha_operacion__year=año_actual
+    ).exclude(fecha_operacion__date=hoy)
+    
+    es_unico_informe_año = not informes_año_actual.exists()
+    
+    with transaction.atomic():
+        # Obtener todos los objetos vagones_productos que necesitan actualización
+        objetos_actualizar = vagones_productos.objects.all()
+        
+        for vagon_producto in objetos_actualizar:
+            # Actualizar campos básicos
+            plan_dia = vagon_cargado_descargado.objects.filter(
+                operacion='carga'
+            ).aggregate(total=Sum('plan_diario_carga_descarga'))['total'] or 0
             
-        ).aggregate(total=Sum('plan_diario_carga_descarga'))['total'] or 0        
-        
-        # Actualizar vagones_cargados (suma de real_carga_descarga donde operacion='carga')
-        vagones_cargados = vagon_cargado_descargado.objects.filter(
-            operacion='carga',
+            vagones_cargados = vagon_cargado_descargado.objects.filter(
+                operacion='carga',
             ).aggregate(total=Sum('real_carga_descarga'))['total'] or 0
-        
-
-        # Actualizar vagones_situados (suma de situados donde operacion='carga')
-        vagones_situados = Situado_Carga_Descarga.objects.filter(
-            operacion='carga',
+            
+            vagones_situados = Situado_Carga_Descarga.objects.filter(
+                operacion='carga',
             ).aggregate(total=Sum('situados'))['total'] or 0
-        
-
-        # Actualizar plan_aseguramiento_proximos_dias (misma lógica que vagones_cargados)
-        plan_aseguramiento = vagon_cargado_descargado.objects.filter(
-            operacion='carga',
-            ).aggregate(total=Sum('real_carga_descarga'))['total'] or 0
-        
-        
-        # Actualizar el objeto solo si alguno de los valores ha cambiado
-        if (vagon_producto.plan_dia != plan_dia or             
-            vagon_producto.vagones_cargados != vagones_cargados or
-            vagon_producto.plan_aseguramiento_proximos_dias != plan_aseguramiento or
-            vagon_producto.vagones_situados != vagones_situados):
             
+            plan_aseguramiento = vagon_cargado_descargado.objects.filter(
+                operacion='carga',
+            ).aggregate(total=Sum('real_carga_descarga'))['total'] or 0
+            
+            # Lógica para campos acumulados según los casos especificados
+            if es_unico_informe_año and es_primer_dia_mes:
+                # Caso 3: Único informe en el año y es primer día del mes
+                vagon_producto.plan_acumulado_dia_anterior = 0
+                vagon_producto.real_acumulado_dia_anterior = 0
+                vagon_producto.plan_acumulado_actual = vagon_producto.plan_acumulado_dia_anterior + plan_dia
+                vagon_producto.real_acumulado_actual = vagon_producto.real_acumulado_dia_anterior + vagones_cargados
+                vagon_producto.plan_acumulado_anual = vagon_producto.plan_acumulado_anual + plan_dia
+                vagon_producto.real_acumulado_anual = vagon_producto.real_acumulado_anual + vagones_cargados
+                
+            elif es_unico_informe_año and not es_primer_dia_mes:
+                # Caso 4: Único informe en el año pero no es primer día del mes
+                vagon_producto.plan_acumulado_actual = vagon_producto.plan_acumulado_dia_anterior + plan_dia
+                vagon_producto.real_acumulado_actual = vagon_producto.real_acumulado_dia_anterior + vagones_cargados
+                vagon_producto.plan_acumulado_anual = vagon_producto.plan_acumulado_anual + plan_dia
+                vagon_producto.real_acumulado_anual = vagon_producto.real_acumulado_anual + vagones_cargados
+                
+            elif not es_unico_informe_año and es_primer_dia_mes:
+                # Caso 5: No es único informe en el año pero es primer día del mes
+                vagon_producto.plan_acumulado_dia_anterior = 0
+                vagon_producto.real_acumulado_dia_anterior = 0
+                vagon_producto.plan_acumulado_actual = vagon_producto.plan_acumulado_dia_anterior + plan_dia
+                vagon_producto.real_acumulado_actual = vagon_producto.real_acumulado_dia_anterior + vagones_cargados
+                vagon_producto.plan_acumulado_anual = vagon_producto.plan_acumulado_anual + plan_dia
+                vagon_producto.real_acumulado_anual = vagon_producto.real_acumulado_anual + vagones_cargados
+                
+            else:
+                # Caso 6: No es único informe en el año ni es primer día del mes
+                vagon_producto.plan_acumulado_actual = vagon_producto.plan_acumulado_dia_anterior + plan_dia
+                vagon_producto.real_acumulado_actual = vagon_producto.real_acumulado_dia_anterior + vagones_cargados
+                vagon_producto.plan_acumulado_anual = vagon_producto.plan_acumulado_anual + plan_dia
+                vagon_producto.real_acumulado_anual = vagon_producto.real_acumulado_anual + vagones_cargados
+            
+            # Actualizar campos básicos
             vagon_producto.plan_dia = plan_dia
             vagon_producto.vagones_situados = vagones_situados
             vagon_producto.vagones_cargados = vagones_cargados
             vagon_producto.plan_aseguramiento_proximos_dias = plan_aseguramiento
-            vagon_producto.save(update_fields=[
-                'plan_dia', 
-                'vagones_situados', 
-                'vagones_cargados', 
-                'plan_aseguramiento_proximos_dias'
-            ])
+            
+            # Validar campos obligatorios
+            campos_obligatorios = [
+                'plan_mensual', 'plan_anual', 'plan_acumulado_dia_anterior',
+                'real_acumulado_dia_anterior', 'plan_acumulado_actual',
+                'real_acumulado_actual', 'plan_acumulado_anual', 'real_acumulado_anual'
+            ]
+            
+            campos_vacios = [campo for campo in campos_obligatorios if getattr(vagon_producto, campo) is None]
+            
+            if campos_vacios:
+                print(f"Advertencia: Los siguientes campos están vacíos en el registro {vagon_producto.id}: {', '.join(campos_vacios)}")
+            
+            # Guardar todos los cambios
+            vagon_producto.save()
 
   # Modelo para el historial de vagones_productos
 class HistorialVagonesProductos(models.Model):
@@ -737,13 +763,17 @@ def crear_historial_vagones_productos(sender, instance, created, **kwargs):
             'origen': instance.origen,
             'tipo_producto': instance.tipo_producto,
             'tipo_combustible': instance.tipo_combustible,
-            'tipo_equipo': instance.tipo_equipo_ferroviario.tipo_equipo if instance.tipo_equipo_ferroviario else None,
+            'tipo_equipo': instance.tipo_equipo_ferroviario.get_tipo_equipo_display() if instance.tipo_equipo_ferroviario else None,
             'plan_mensual': instance.plan_mensual,
             'plan_dia': instance.plan_dia,
             'vagones_situados': instance.vagones_situados,
             'vagones_cargados': instance.vagones_cargados,
-            'plan_aseguramiento': instance.plan_aseguramiento_proximos_dias,
             'plan_anual': instance.plan_anual,
+            'plan_acumulado_actual': instance.plan_acumulado_actual,
+            'real_acumulado_actual': instance.real_acumulado_actual,
+            'plan_acumulado_anual': instance.plan_acumulado_anual,
+            'real_acumulado_anual': instance.real_acumulado_anual,
+            'plan_aseguramiento_proximos_dias': instance.plan_aseguramiento_proximos_dias,
             'plan_acumulado': instance.plan_acumulado_dia_anterior,
             'real_acumulado': instance.real_acumulado_dia_anterior,
             'observaciones': instance.observaciones

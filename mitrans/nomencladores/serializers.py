@@ -204,18 +204,12 @@ class nom_territorio_serializer(serializers.ModelSerializer):
 
 class nom_puerto_filter(filters.FilterSet):   
 
-    nombre_pais = filters.CharFilter(method='filter_by_nombre_pais',lookup_expr = 'icontains')
+    nombre_puerto = filters.CharFilter(method='filter_by_nombre_puerto',lookup_expr = 'icontains')
 
     #filtrado por nombre,codigo y descripcion del producto
-    def filter_by_nombre_pais(self,queryset,value):        
+    def filter_by_nombre_puerto(self,queryset,value):        
         return queryset.filter(nombre_puerto__icontains = value) | queryset.filter(pais_name__icontains = value)  
     
-    class Meta:
-  
-        model : nom_producto    
-        fields:{
-            'nombre_pais':['icontains'],
-        } 
     
     class Meta:
   
@@ -517,7 +511,7 @@ class nom_tipo_embalaje_filter(filters.FilterSet):
     
     class Meta:
   
-        model : nom_producto    
+        model : nom_tipo_embalaje    
         fields:{
             'nombre_tipo_embalaje':['icontains'],
         }

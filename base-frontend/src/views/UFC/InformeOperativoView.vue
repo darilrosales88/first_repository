@@ -8,7 +8,15 @@
     "
   >
     <h6>Informe Operativo</h6>
-  </div>
+  </div>Historial de cargados/descargados
+  <button class="btn btn-link p-0">
+          <router-link
+            to="HistorialCargadoGescargado"
+            title="Ver historial de vagones cargados descargados"
+          >
+            <i class="bi bi-plus-circle fs-3"></i>
+          </router-link>
+        </button>
   <br />
   <Navbar-Component /><br />
   <div style="margin-left: 17em; width: 73%">

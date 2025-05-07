@@ -12,7 +12,8 @@ from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descarg
                         PendienteArrastreSerializer, registro_vagones_cargados_serializer,
                         registro_vagones_cargados_filter, vagones_productos_filter, 
                         vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer,
-                        ufc_informe_operativo_serializer,ufc_informe_operativo_filter)
+                        ufc_informe_operativo_serializer,ufc_informe_operativo_filter,
+                        HistorialVagonCargadoDescargado,HistorialVagonCargadoDescargadoSerializer)
 
 from Administracion.models import Auditoria
 
@@ -39,6 +40,7 @@ from django.db.models.functions import TruncDate
 from django.db.models import DateField
 from datetime import datetime
 from django.db.models.functions import Cast
+from django.db import transaction
 
 
 
@@ -443,33 +445,40 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
         )
 
         return Response(serializer.data)
-
     def destroy(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
         if not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
                 {"detail": "No tiene permiso para realizar esta acción."},
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        instance = self.get_object()
-        id_objeto_vagon_cargado_descargado = instance.id
-        
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Eliminar vagón cargado/descargado y sus registros asociados: {id_objeto_vagon_cargado_descargado}",
-            navegador=navegador,
-        )
-        
-        # Esto activará el método delete() del modelo que maneja la eliminación en cascada
-        instance.delete()
-        
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        try:
+            instance = self.get_object()
+            id_objeto_vagon_cargado_descargado = instance.id
+            
+            # Registrar la acción en el modelo de Auditoria antes de eliminar
+            navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+            direccion_ip = request.META.get('REMOTE_ADDR')
+            
+            Auditoria.objects.create(
+                usuario=request.user if request.user.is_authenticated else None,
+                direccion_ip=direccion_ip,
+                accion=f"Eliminar vagón cargado/descargado y sus registros asociados: {id_objeto_vagon_cargado_descargado}",
+                navegador=navegador,
+            )
+            
+            # Eliminar la instancia (esto activará el método delete() del modelo)
+            instance.delete()
+            
+            return Response(status=status.HTTP_204_NO_CONTENT)
+            
+        except Exception as e:
+            return Response(
+                {"error": f"No se pudo eliminar el registro: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
+    
     def list(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
@@ -589,10 +598,41 @@ class vagon_cargado_descargado_hoy_view_set(viewsets.ModelViewSet):
         )
         
         return super().list(request, *args, **kwargs)
-
-
- #***************************************************************************************************************   
-#para productos de vagones cargados/descargados
+    
+#vista para el historial de vagon_cargado_descargado
+class HistorialVagonCargadoDescargadoViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = HistorialVagonCargadoDescargado.objects.all().order_by('-fecha_creacion')
+    serializer_class = HistorialVagonCargadoDescargadoSerializer
+    permission_classes = [IsUFCPermission]
+    pagination_class = PageNumberPagination
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        informe_id = self.request.query_params.get('informe_id')
+        
+        if informe_id:
+            queryset = queryset.filter(informe_operativo_id=informe_id)
+            
+        return queryset.select_related('informe_operativo')
+    
+    def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Auditoría
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar historial de vagones cargados/descargados",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+        
+        return super().list(request, *args, **kwargs)
 #para productos de vagones y productos
 
 @api_view(['POST'])
@@ -1262,8 +1302,9 @@ class SituadoCargaDescarga_hoy_Viewset(viewsets.ModelViewSet):
         )
         
         return super().list(request, *args, **kwargs)
-
     
+
+ #***********************************************************************************************************************   
     
 class PendienteArrastreViewset(viewsets.ModelViewSet):
     queryset = arrastres.objects.all()

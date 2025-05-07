@@ -444,22 +444,30 @@ export default {
       this.getVagonesCargadosDescargados();
     },
 
-    async delete_tren(id) {
-      try {
-        await axios.delete(`/ufc/vagones-cargados-descargados/${id}/`);
-        this.cargados_descargados = this.cargados_descargados.filter(
-          (objeto) => objeto.id !== id
-        );
-        Swal.fire(
-          "Eliminado!",
-          "El producto ha sido eliminado exitosamente.",
-          "success"
-        );
-      } catch (error) {
-        console.error("Error al eliminar el producto:", error);
-        Swal.fire("Error", "Hubo un error al eliminar el producto.", "error");
-      }
-    },
+    async delete_vagon(id) {
+  try {
+    console.log("muestrae el id: ",id);
+    const response = await axios.delete(`/ufc/vagones-cargados-descargados/${id}/`);
+    
+    if (response.status === 204) { // Normalmente DELETE devuelve 204 No Content
+      this.cargados_descargados = this.cargados_descargados.filter(
+        (objeto) => objeto.id !== id
+      );
+      Swal.fire("Eliminado!", "El vagón ha sido eliminado.", "success");
+    } else {
+      throw new Error(`Respuesta inesperada: ${response.status}`);
+    }
+  } catch (error) {
+    console.error("Error completo:", error);
+    console.error("Respuesta del servidor:", error.response?.data);
+    
+    Swal.fire(
+      "Error",
+      error.response?.data?.message || "Error al eliminar el vagón",
+      "error"
+    );
+  }
+},
 
     cerrarModal() {
       this.mostrarModal = false;
@@ -484,7 +492,7 @@ export default {
         reverseButtons: true,
       }).then((result) => {
         if (result.isConfirmed) {
-          this.delete_tren(id);
+          this.delete_vagon(id);
         }
       });
     },

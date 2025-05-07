@@ -247,7 +247,7 @@ export default {
     this.getEmbalaje();
     this.getUnidades();
   },
-  computed{
+  computed:{
     formattedFechaRegistro() {
       if (this.formData.fecha) {
         return new Date(this.formData.fecha).toLocaleString();

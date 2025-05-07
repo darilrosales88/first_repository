@@ -563,9 +563,9 @@ class vagones_productos(models.Model):
         ('combustible', 'Combustible'),
     ]
     TIPO_COMBUSTIBLE_CHOICES = [
-        ('combustible_blanco', 'Combustible blanco'),
-        ('combustible_negro', 'Combustible negro'),
-        ('combustible_turbo', 'Combustible turbo'),
+        ('combust_blanco', 'Combustible blanco'),
+        ('combust_negro', 'Combustible negro'),
+        ('combust_turbo', 'Combustible turbo'),
         ('-', '-'),
     ]
 

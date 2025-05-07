@@ -884,6 +884,7 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
             "real_carga",
             "plan_rotacion",
             "real_rotacion",
+            "fecha_registro",
         ]
         extra_kwargs = {
             "tipo_equipo_ferroviario": {"required": True},

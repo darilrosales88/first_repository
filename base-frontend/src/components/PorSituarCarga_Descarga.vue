@@ -429,15 +429,14 @@ export default {
           this.totalItems = response.data.count;
           this.loading = false;
         })
-        
+
         .catch((error) => {
           console.error("Error al obtener datos:", error);
           this.errorLoading = true;
           this.loading = false;
           this.showErrorToast("No se pudieron cargar los registros");
         });
-        console.log("que lasodsjkbvbksdjfksd: ",this.registrosPorSituar);
-        
+      console.log("que lasodsjkbvbksdjfksd: ", this.registrosPorSituar);
     },
 
     getNombresProductos(productos) {
@@ -528,7 +527,7 @@ export default {
       if (result.isConfirmed) {
         try {
           this.loading = true;
-          await axios.delete(`/ufc/por-situar/${id}/`);
+          await axios.delete(`/ufc/por-situar-hoy/${id}/`);
           this.showSuccessToast("Registro eliminado");
           await this.getPorSituar();
         } catch (error) {

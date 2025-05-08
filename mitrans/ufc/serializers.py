@@ -1032,16 +1032,18 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
 
     def calculate_plan_carga(self,validated_data):
         """Calcula la sumatoria del plan diario de carga para la operación 'carga'."""
+        hoy=timezone.now().date()
         return (
-            vagon_cargado_descargado.objects.filter(operacion="carga",tipo_equipo_ferroviario=validated_data["tipo_equipo_ferroviario"])
+            vagon_cargado_descargado.objects.filter(fecha__date=hoy,operacion="carga",tipo_equipo_ferroviario=validated_data["tipo_equipo_ferroviario"])
             .aggregate(total_plan_carga=Sum("plan_diario_carga_descarga"))
             .get("total_plan_carga", 0) or 0
         )
 
     def calculate_real_carga(self,validated_data):
         """Calcula la sumatoria del real de carga para la operación 'carga'."""
+        hoy=timezone.now().date()
         return (
-            vagon_cargado_descargado.objects.filter(operacion="carga",tipo_equipo_ferroviario=validated_data["tipo_equipo_ferroviario"])
+            vagon_cargado_descargado.objects.filter(fecha__date=hoy,operacion="carga",tipo_equipo_ferroviario=validated_data["tipo_equipo_ferroviario"])
             .aggregate(total_real_carga=Sum("real_carga_descarga"))
             .get("total_real_carga", 0) or 0
         )

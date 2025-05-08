@@ -207,9 +207,9 @@ button[type="submit"] {
             ],
             t_combustible_options: [
               { value: '-', text: '-' },
-              { value: 'combustible_blanco', text: 'Combustible blanco' },
-              { value: 'combustible_negro', text: 'Combustible negro' },
-              { value: 'combustible_turbo', text: 'Combustible turbo' },
+              { value: 'combust_blanco', text: 'Combustible blanco' },
+              { value: 'combust_negro', text: 'Combustible negro' },
+              { value: 'combust_turbo', text: 'Combustible turbo' },
             ],   
 
           }

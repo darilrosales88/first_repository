@@ -645,7 +645,7 @@ class vagon_cargado_descargado_hoy_view_set(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
     
 #vista para el historial de vagon_cargado_descargado
-class HistorialVagonCargadoDescargadoViewSet(viewsets.ReadOnlyModelViewSet):
+class HistorialVagonCargadoDescargadoViewSet(viewsets.ModelViewSet):
     queryset = HistorialVagonCargadoDescargado.objects.all().order_by('-fecha_creacion')
     serializer_class = HistorialVagonCargadoDescargadoSerializer
     permission_classes = [IsUFCPermission]

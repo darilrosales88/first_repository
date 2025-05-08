@@ -378,7 +378,7 @@ class nom_municipio_view_set(viewsets.ModelViewSet):
         direccion_ip = request.META.get('REMOTE_ADDR')
         Auditoria.objects.create(
             usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar municipio: {municipio}",
+            accion=f"Eliminar municipio: {nombre_municipio}",
             direccion_ip=direccion_ip,
             navegador=navegador,
         )

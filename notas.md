@@ -5,8 +5,8 @@
 - Vagones y Productos
 - Registros Por Situar
 - Registros Situados
--
--
+- +-Cargados
+- Registros Pendientes
 -
 
 ## Notas de Revision Antes de la Reunion Viernes 9 de Mayo
@@ -15,9 +15,11 @@
 - Corregido Tablas de Vagones y Productos que habia problema en el adicionar a la hora de cargar los equipos ferroviarios en dependencia del combustible escogido
 - Arreglada la Vista de Rotacion que traia problema en los componentes.
 - Corregido Desplegable de productos en el adicionar de Situados Carga/Descarga
-  -Corregido que admin pueda borrar historial de cargados/descargados
+- Corregido que admin pueda borrar historial de cargados/descargados
+- Corregido problemas de En Trenes correspondiente a mal registro de las instancias
 
 ## Tareas Pendientes
 
 - La hora de los registros no se estan creando con UTC+3 Hora Havana
 - En cargados/Descargados se tiene que mostrar el Equipo Ferroviario solo los que su tipos coincidan con el tipo equipo Ferroviario que se halla selecionado
+- Ahora en Trenes no puede guardar los registros porque depende de los vagones si estan disponibles o no.

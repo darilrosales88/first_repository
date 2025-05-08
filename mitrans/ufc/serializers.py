@@ -717,7 +717,7 @@ class en_trenes_serializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         productos_data = validated_data.pop('producto', [])
-        instance = por_situar.objects.create(**validated_data)
+        instance = en_trenes.objects.create(**validated_data)
         instance.producto.set(productos_data)
         return instance
 

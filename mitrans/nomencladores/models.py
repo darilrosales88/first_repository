@@ -391,9 +391,9 @@ class nom_tipo_equipo_ferroviario(models.Model):
 
     t_combustible = (
         ('-', '-'),
-        ('combust_blanco', 'Combustible blanco'),
-        ('combust_negro', 'Combustible negro'),
-        ('combust_turbo', 'Combustible turbo'),
+        ('combustible_blanco', 'Combustible blanco'),
+        ('combustible_negro', 'Combustible negro'),
+        ('combustible_turbo', 'Combustible turbo'),
     )
     tipo_combustible = models.CharField(max_length=20,choices=t_combustible, verbose_name="Tipo de combustible",
                                     default="-", null=True,blank=True, help_text="Escoja una opción.",)

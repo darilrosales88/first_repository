@@ -16,6 +16,20 @@
           <div class="ufc-form-grid">
             <!-- Columna 1 -->
             <div>
+              <!-- Campo:Fecha de registro -->
+              <div class="mb-3">
+                <label for="fecha_registro" class="form-label"
+                  >Fecha de registro</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  :value="formattedFechaRegistro"
+                  id="fecha_registro"
+                  name="fecha_registro"
+                  readonly
+                />
+              </div>
               <!-- Campo: tipo_origen -->
               <div class="ufc-input-group">
                 <label for="tipo_origen">
@@ -31,8 +45,8 @@
                   @change="handleTipoOrigenChange"
                 >
                   <option value="" disabled>Seleccione un tipo</option>
-                  <option 
-                    v-for="option in tipo_origen_options" 
+                  <option
+                    v-for="option in tipo_origen_options"
                     :key="option.id"
                     :value="option.id"
                   >
@@ -42,80 +56,76 @@
               </div>
 
               <!-- Campo: origen -->
-<div class="ufc-input-group">
-  <label for="origen">
-    Origen <span class="required">*</span>
-  </label>
-  <select
-    v-if="formData.tipo_origen === 'ac_ccd'"
-    class="ufc-select"
-    v-model="formData.origen"
-    id="origen"
-    name="origen"
-    required
-    :disabled="isSubmitting"
-  >
-    <option value="" disabled>Seleccione un origen</option>
-    <option
-      v-for="entidad in entidades"
-      :key="entidad.id"
-      :value="entidad.nombre"
-    >
-      {{ entidad.id }}-{{ entidad.nombre }}
-    </option>
-  </select>
+              <div class="ufc-input-group">
+                <label for="origen">
+                  Origen <span class="required">*</span>
+                </label>
+                <select
+                  v-if="formData.tipo_origen === 'ac_ccd'"
+                  class="ufc-select"
+                  v-model="formData.origen"
+                  id="origen"
+                  name="origen"
+                  required
+                  :disabled="isSubmitting"
+                >
+                  <option value="" disabled>Seleccione un origen</option>
+                  <option
+                    v-for="entidad in entidades"
+                    :key="entidad.id"
+                    :value="entidad.nombre"
+                  >
+                    {{ entidad.id }}-{{ entidad.nombre }}
+                  </option>
+                </select>
 
-  <select
-    v-else-if="formData.tipo_origen === 'puerto'"
-    class="ufc-select"
-    v-model="formData.origen"
-    id="origen"
-    name="origen"
-    required
-    :disabled="isSubmitting"
-  >
-    <option value="" disabled>Seleccione un puerto</option>
-    <option
-      v-for="puerto in puertos"
-      :key="puerto.id"
-      :value="puerto.nombre_puerto"
-    >
-      {{ puerto.id }}- {{ puerto.nombre_puerto }}
-    </option>
-  </select>
-  
-  <select
-    v-else
-    class="ufc-select"
-    disabled
-  >
-    <option value="">Seleccione primero el tipo de origen</option>
-  </select>
-</div>
+                <select
+                  v-else-if="formData.tipo_origen === 'puerto'"
+                  class="ufc-select"
+                  v-model="formData.origen"
+                  id="origen"
+                  name="origen"
+                  required
+                  :disabled="isSubmitting"
+                >
+                  <option value="" disabled>Seleccione un puerto</option>
+                  <option
+                    v-for="puerto in puertos"
+                    :key="puerto.id"
+                    :value="puerto.nombre_puerto"
+                  >
+                    {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                  </option>
+                </select>
+
+                <select v-else class="ufc-select" disabled>
+                  <option value="">Seleccione primero el tipo de origen</option>
+                </select>
+              </div>
 
               <!-- Campo: tipo_equipo -->
               <div class="ufc-input-group">
-  <label for="tipo_equipo">
-    Tipo de Equipo <span class="required">*</span>
-  </label>
-  <select
-    class="ufc-select"
-    v-model="formData.tipo_equipo"
-    id="tipo_equipo"
-    name="tipo_equipo"
-    required
-    :disabled="isSubmitting"
-  >
-    <option value="" disabled>Seleccione un tipo</option>
-    <option 
-      v-for="option in tipo_equipo_options" 
-      :key="option.id"
-      :value="option.id"
-    >
-      {{ option.text }}
-    </option>
-  </select>
-</div>
+                <label for="tipo_equipo">
+                  Tipo de Equipo <span class="required">*</span>
+                </label>
+                <select
+                  class="ufc-select"
+                  v-model="formData.tipo_equipo"
+                  id="tipo_equipo"
+                  name="tipo_equipo"
+                  required
+                  :disabled="isSubmitting"
+                >
+                  <option value="" disabled>Seleccione un tipo</option>
+                  <option
+                    v-for="option in tipo_equipo_options"
+                    :key="option.id"
+                    :value="option.id"
+                  >
+                    {{ option.text }}
+                  </option>
+                </select>
+              </div>
 
               <!-- Campo: estado -->
               <div class="ufc-input-group">
@@ -136,74 +146,101 @@
               </div>
 
               <!-- Campo: operacion -->
-<div class="ufc-input-group">
-  <label for="operacion">
-    Operación <span class="required">*</span>
-  </label>
-  <select
-    class="ufc-select"
-    v-model="formData.operacion"
-    id="operacion"
-    name="operacion"
-    required
-    :disabled="isSubmitting"
-  >
-    <option value="" disabled>Seleccione una operación</option>
-    <option 
-      v-for="option in t_operacion_options" 
-      :key="option.id"
-      :value="option.id"
-    >
-      {{ option.text }}
-    </option>
-  </select>
-</div>
+              <div class="ufc-input-group">
+                <label for="operacion">
+                  Operación <span class="required">*</span>
+                </label>
+                <select
+                  class="ufc-select"
+                  v-model="formData.operacion"
+                  id="operacion"
+                  name="operacion"
+                  required
+                  :disabled="isSubmitting"
+                >
+                  <option value="" disabled>Seleccione una operación</option>
+                  <option
+                    v-for="option in t_operacion_options"
+                    :key="option.id"
+                    :value="option.id"
+                  >
+                    {{ option.text }}
+                  </option>
+                </select>
+              </div>
             </div>
 
             <!-- Columna 2 -->
             <div>
               <!-- Campo: producto -->
-<div class="ufc-input-group">
-  <label for="productos">Productos <span v-if="formData.estado === 'cargado'" class="required">*</span></label>
-  <div class="ufc-input-with-action">
-    <div class="ufc-custom-select" @click="toggleProductosDropdown">
-      <div class="ufc-select-display">
-        {{ getSelectedProductosText() || 'Seleccione productos...' }}
-      </div>
-      <i class="bi bi-chevron-down ufc-select-arrow"></i>
-      
-      <div class="ufc-productos-dropdown" v-if="showProductosDropdown">
-        <div class="ufc-productos-search-container">
-          <input
-            type="text"
-            class="ufc-productos-search"
-            placeholder="Buscar productos..."
-            v-model="productoSearch"
-            @input="filterProductos"
-            @click.stop>
-        </div>
-        <div class="ufc-productos-options">
-          <div
-            v-for="producto in filteredProductos"
-            :key="producto.id"
-            class="ufc-producto-option"
-            :class="{ 'selected': formData.productos.includes(producto.id) }"
-            @click.stop="toggleProductoSelection(producto.id)">
-            {{ producto.id }}-{{ producto.producto_name }} - {{ producto.producto_codigo }}
-          </div>
-        </div>
-      </div>
-    </div>
-    <button 
-      class="ufc-add-button"
-      @click.prevent="abrirModalAgregarProducto"
-      :disabled="isSubmitting">
-      <i class="bi bi-plus-lg"></i>
-    </button>
-  </div>
-</div>
+              <div class="ufc-input-group">
+                <label for="productos"
+                  >Productos
+                  <span v-if="formData.estado === 'cargado'" class="required"
+                    >*</span
+                  ></label
+                >
+                <div class="ufc-input-with-action">
+                  <div
+                    class="ufc-custom-select"
+                    @click="toggleProductosDropdown"
+                  >
+                    <div class="ufc-select-display">
+                      {{
+                        getSelectedProductosText() || "Seleccione productos..."
+                      }}
+                    </div>
+                    <i class="bi bi-chevron-down ufc-select-arrow"></i>
 
-<ModalAgregarProducto
+                    <div
+                      class="ufc-productos-dropdown"
+                      v-if="showProductosDropdown"
+                    >
+                      <div class="ufc-productos-search-container">
+                        <input
+                          type="text"
+                          class="ufc-productos-search"
+                          placeholder="Buscar productos..."
+                          v-model="productoSearch"
+                          @input="filterProductos"
+                          @click.stop
+                        />
+                      </div>
+                      <div class="ufc-productos-options">
+                        <div
+                          v-for="producto in filteredProductos"
+                          :key="producto.id"
+                          class="ufc-producto-option"
+                          :class="{
+                            selected: formData.productos.includes(producto.id),
+                          }"
+                          @click.stop="toggleProductoSelection(producto.id)"
+                        >
+                          {{ producto.id }}-{{ producto.producto_name }} -
+                          {{ producto.producto_codigo }}
+                          <template v-if="producto.tipo_embalaje">
+                            (Embalaje:
+                            {{
+                              producto.tipo_embalaje_name ||
+                              producto.tipo_embalaje.nombre_embalaje ||
+                              "N/A"
+                            }})
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    class="ufc-add-button"
+                    @click.prevent="abrirModalAgregarProducto"
+                    :disabled="isSubmitting"
+                  >
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </div>
+              </div>
+
+              <ModalAgregarProducto
                 v-if="mostrarModal"
                 :visible="mostrarModal"
                 @cerrar-modal="cerrarModal"
@@ -215,7 +252,6 @@
                   Situados <span class="required">*</span>
                 </label>
                 <div class="ufc-por-situar-container">
-                  
                   <input
                     type="number"
                     class="ufc-por-situar-input"
@@ -226,7 +262,6 @@
                     required
                     :disabled="isSubmitting"
                   />
-                  
                 </div>
               </div>
 
@@ -236,7 +271,6 @@
                   Pendientes al próximo día <span class="required">*</span>
                 </label>
                 <div class="ufc-por-situar-container">
-                  
                   <input
                     type="number"
                     class="ufc-por-situar-input"
@@ -247,7 +281,6 @@
                     required
                     :disabled="isSubmitting"
                   />
-                  
                 </div>
               </div>
 
@@ -307,7 +340,7 @@ export default {
   },
   data() {
     return {
-        formData: {
+      formData: {
         tipo_origen: "",
         origen: "",
         tipo_equipo: "",
@@ -321,7 +354,7 @@ export default {
       entidades: [],
       puertos: [],
       productos: [],
-      productoSearch: '',
+      productoSearch: "",
       filteredProductos: [],
       showProductosDropdown: false,
       mostrarModal: false,
@@ -346,6 +379,15 @@ export default {
     this.getProductos();
     this.getEntidades();
     this.getPuertos();
+    this.closeDropdownsOnClickOutside();
+  },
+  computed: {
+    formattedFechaRegistro() {
+      if (this.formData.fecha) {
+        return new Date(this.formData.fecha).toLocaleString();
+      }
+      return new Date().toLocaleString();
+    },
   },
   methods: {
     async getEntidades() {
@@ -390,10 +432,10 @@ export default {
 
     handleTipoOrigenChange() {
       this.formData.origen = "";
-      if (this.formData.tipo_origen === 'ac_ccd') {
-        this.formData.tipo_origen = 'ac_ccd';
-      } else if (this.formData.tipo_origen === 'puerto') {
-        this.formData.tipo_origen = 'puerto';
+      if (this.formData.tipo_origen === "ac_ccd") {
+        this.formData.tipo_origen = "ac_ccd";
+      } else if (this.formData.tipo_origen === "puerto") {
+        this.formData.tipo_origen = "puerto";
       }
     },
 
@@ -411,21 +453,60 @@ export default {
     },
 
     decrement(field) {
-      if (this.formData[field] > (field === 'situados' ? 1 : 0)) {
+      if (this.formData[field] > (field === "situados" ? 1 : 0)) {
         this.formData[field] -= 1;
       }
     },
 
+    async verificarInformeOperativo() {
+      try {
+        this.formData.fecha = new Date().toISOString();
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(
+          today.getMonth() + 1
+        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+        const response = await axios.get("/ufc/verificar-informe-existente/", {
+          params: { fecha_operacion: fechaFormateada },
+        });
+
+        if (response.data.existe) {
+          this.informeOperativoId = response.data.id;
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error("Error al verificar informe:", error);
+        return false;
+      }
+    },
+
     async submitForm() {
+      // 1. Verifificar que el informe operativo existe ya para la fecha creada
+      const existeInforme = await this.verificarInformeOperativo();
+      if (!existeInforme) {
+        Swal.fire(
+          "Error",
+          "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+          "error"
+        );
+        this.$router.push({ name: "InfoOperativo" });
+        return;
+      }
+
       this.isSubmitting = true;
       try {
         // Validación mejorada
         const errors = [];
 
-        if (!this.formData.tipo_origen || 
-    !this.tipo_origen_options.some(opt => opt.id === this.formData.tipo_origen)) {
-  errors.push("Seleccione un tipo de origen válido");
-}
+        if (
+          !this.formData.tipo_origen ||
+          !this.tipo_origen_options.some(
+            (opt) => opt.id === this.formData.tipo_origen
+          )
+        ) {
+          errors.push("Seleccione un tipo de origen válido");
+        }
 
         if (!this.formData.origen) {
           errors.push("El campo Origen es requerido");
@@ -439,8 +520,13 @@ export default {
           errors.push("El campo Operación es requerido");
         }
 
-        if (this.formData.estado === "cargado" && this.formData.productos.length === 0) {
-          throw new Error("Debe seleccionar al menos un producto cuando el estado es Cargado");
+        if (
+          this.formData.estado === "cargado" &&
+          this.formData.productos.length === 0
+        ) {
+          throw new Error(
+            "Debe seleccionar al menos un producto cuando el estado es Cargado"
+          );
         }
 
         if (this.formData.situados === null || this.formData.situados < 1) {
@@ -563,63 +649,66 @@ export default {
     },
 
     toggleProductosDropdown() {
-    this.showProductosDropdown = !this.showProductosDropdown;
-    if (this.showProductosDropdown) {
-      this.productoSearch = '';
-      this.filterProductos();
-    }
-  },
-  
-  filterProductos() {
-    if (!this.productoSearch) {
-      this.filteredProductos = this.productos;
-      return;
-    }
-    const searchTerm = this.productoSearch.toLowerCase();
-    this.filteredProductos = this.productos.filter(producto => 
-      producto.producto_name.toLowerCase().includes(searchTerm) ||
-      producto.producto_codigo.toLowerCase().includes(searchTerm) ||
-      producto.id.toString().includes(searchTerm)
-    );
-  },
-  
-  toggleProductoSelection(productoId) {
-    const index = this.formData.productos.indexOf(productoId);
-    if (index === -1) {
-      this.formData.productos.push(productoId);
-    } else {
-      this.formData.productos.splice(index, 1);
-    }
-  },
-  
-  getSelectedProductosText() {
-    if (this.formData.productos.length === 0) return '';
-    
-    // Si el estado es vacío, mostramos solo el conteo
-    if (this.formData.estado === 'vacio') {
-      return `${this.formData.productos.length} producto(s) seleccionado(s)`;
-    }
-    
-    // Para estado cargado, mostramos más detalles
-    if (this.formData.productos.length === 1) {
-      const producto = this.productos.find(p => p.id === this.formData.productos[0]);
-      return producto ? `${producto.id}-${producto.producto_name}` : '1 producto seleccionado';
-    }
-    return `${this.formData.productos.length} productos seleccionados`;
-  },
-  
-  closeDropdownsOnClickOutside() {
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.ufc-custom-select')) {
-        this.showProductosDropdown = false;
+      this.showProductosDropdown = !this.showProductosDropdown;
+      if (this.showProductosDropdown) {
+        this.productoSearch = "";
+        this.filterProductos();
       }
-    });
-  }
+    },
 
+    filterProductos() {
+      if (!this.productoSearch) {
+        this.filteredProductos = this.productos;
+        return;
+      }
+      const searchTerm = this.productoSearch.toLowerCase();
+      this.filteredProductos = this.productos.filter(
+        (producto) =>
+          producto.producto_name.toLowerCase().includes(searchTerm) ||
+          producto.producto_codigo.toLowerCase().includes(searchTerm) ||
+          producto.id.toString().includes(searchTerm)
+      );
+    },
+
+    toggleProductoSelection(productoId) {
+      const index = this.formData.productos.indexOf(productoId);
+      if (index === -1) {
+        this.formData.productos.push(productoId);
+      } else {
+        this.formData.productos.splice(index, 1);
+      }
+    },
+
+    getSelectedProductosText() {
+      if (this.formData.productos.length === 0) return "";
+
+      // Si el estado es vacío, mostramos solo el conteo
+      if (this.formData.estado === "vacio") {
+        return `${this.formData.productos.length} producto(s) seleccionado(s)`;
+      }
+
+      // Para estado cargado, mostramos más detalles
+      if (this.formData.productos.length === 1) {
+        const producto = this.productos.find(
+          (p) => p.id === this.formData.productos[0]
+        );
+        return producto
+          ? `${producto.id}-${producto.producto_name}`
+          : "1 producto seleccionado";
+      }
+      return `${this.formData.productos.length} productos seleccionados`;
+    },
+
+    closeDropdownsOnClickOutside() {
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".ufc-custom-select")) {
+          this.showProductosDropdown = false;
+        }
+      });
+    },
   },
 };
 </script>
-
 
 <style scoped>
 /* Estilos para el select personalizado de productos */
@@ -735,7 +824,7 @@ export default {
 }
 
 .ufc-form-container {
-  font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;
+  font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
   color: #333;
   padding-bottom: 20px;
 }
@@ -810,7 +899,8 @@ export default {
   color: #e74c3c;
 }
 
-.ufc-select, .ufc-input {
+.ufc-select,
+.ufc-input {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid #ddd;
@@ -820,7 +910,8 @@ export default {
   background-color: white;
 }
 
-.ufc-select:focus, .ufc-input:focus {
+.ufc-select:focus,
+.ufc-input:focus {
   border-color: #002a68;
   box-shadow: 0 0 0 3px rgba(0, 42, 104, 0.1);
   outline: none;

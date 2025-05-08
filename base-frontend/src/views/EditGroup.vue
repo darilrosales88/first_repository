@@ -243,7 +243,7 @@ export default {
   this.$store.commit('setIsLoading', true);
   const grupo_id = this.$route.params.id;
   try {
-    const response = await axios.get(`/api/obtener-grupo/${grupo_id}/`);
+    const response = await axios.get(`/apiAdmin/obtener-grupo/${grupo_id}/`);
     this.grupo = response.data;
     this.permisosAsignados = response.data.permissions || [];
 
@@ -262,7 +262,7 @@ export default {
     // Obtener los permisos disponibles
     async getPermisosDisponibles() {
   try {
-    const response = await axios.get('/api/permisos/');
+    const response = await axios.get('/apiAdmin/permisos/');
     this.permisosDisponibles = response.data;
   } catch (error) {
     console.error('Error al obtener los permisos disponibles:', error);
@@ -290,7 +290,7 @@ export default {
   const grupo_id = this.$route.params.id;
   try {
     const permisos_ids = this.permisosAsignados.map(p => p.id);
-    await axios.patch(`/api/editar-grupo/${grupo_id}/edit/`, {
+    await axios.patch(`/apiAdmin/editar-grupo/${grupo_id}/edit/`, {
       name: this.grupo.name,
       permissions: permisos_ids,
     });

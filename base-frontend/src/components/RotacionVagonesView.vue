@@ -9,72 +9,10 @@
           <i class="bi bi-search me-2"></i>Consultar rotación de los vagones
         </h5>
         <!-- Botón para abrir el modal -->
-        <button class="btn btn-sm btn-primary" @click="mostrarModal = true">
-          <i class="bi bi-plus-circle me-1"></i>Adicionar rotación
-        </button>
       </div>
 
       <!-- Cuerpo -->
       <div class="card-body p-3">
-        <!-- Formulario de búsqueda -->
-        <form @submit.prevent="consultarRotacion">
-          <div class="row mb-3 g-2">
-            <!-- Campo: Fecha inicial -->
-            <div class="col-md-6">
-              <div class="form-group">
-                <label
-                  for="fechaInicial"
-                  class="form-label small fw-semibold text-secondary"
-                >
-                  <i class="bi bi-calendar-date me-2 text-primary"></i>Fecha
-                  Inicial
-                </label>
-                <input
-                  type="date"
-                  class="form-control form-control-sm border-secondary"
-                  id="fechaInicial"
-                  v-model="formData.fechaInicial"
-                  required
-                />
-              </div>
-            </div>
-
-            <!-- Campo: Fecha final -->
-            <div class="col-md-6">
-              <div class="form-group">
-                <label
-                  for="fechaFinal"
-                  class="form-label small fw-semibold text-secondary"
-                >
-                  <i class="bi bi-calendar-check me-2 text-primary"></i>Fecha
-                  Final
-                </label>
-                <input
-                  type="date"
-                  class="form-control form-control-sm border-secondary"
-                  id="fechaFinal"
-                  v-model="formData.fechaFinal"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Botón de consulta -->
-          <div class="d-flex justify-content-end gap-2 mt-4">
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-secondary"
-              @click="resetForm"
-            >
-              <i class="bi bi-x-circle me-1"></i>Limpiar
-            </button>
-            <button type="submit" class="btn btn-sm btn-primary">
-              <i class="bi bi-search me-1"></i>Consultar
-            </button>
-          </div>
-        </form>
-
         <!-- Resumen general -->
         <div class="mt-4">
           <h6 class="text-secondary fw-semibold mb-3">
@@ -146,10 +84,22 @@
 
         <!-- Registro de rotación por tipo de equipo -->
         <div class="mt-4">
-          <h6 class="text-secondary fw-semibold mb-3">
-            <i class="bi bi-list-ul me-2"></i>Registro de rotación de cada tipo
-            de equipo ferroviario
+          <h6
+            class="d-flex justify-content-between align-items-center text-secondary fw-semibold mb-3"
+            style="padding: 0.5rem 1rem"
+          >
+            <!-- Texto centrado -->
+            <span class="d-flex align-items-center">
+              <i class="bi bi-list-ul me-2"></i>
+              Registro de rotación de cada tipo de equipo ferroviario
+            </span>
+
+            <!-- Botón alineado a la derecha -->
+            <button class="btn btn-sm btn-primary" @click="mostrarModal = true">
+              <i class="bi bi-plus-circle me-1"></i>Adicionar rotación
+            </button>
           </h6>
+
           <table class="table table-sm table-bordered table-hover">
             <thead class="table-light">
               <tr>
@@ -407,7 +357,42 @@ export default {
       this.modoEdicion = false;
       this.indiceEdicion = null;
     },
+
+    async verificarInformeOperativo() {
+      try {
+        this.formData.fecha = new Date().toISOString();
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(
+          today.getMonth() + 1
+        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+        const response = await axios.get("/ufc/verificar-informe-existente/", {
+          params: { fecha_operacion: fechaFormateada },
+        });
+
+        if (response.data.existe) {
+          this.informeOperativoId = response.data.id;
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error("Error al verificar informe:", error);
+        return false;
+      }
+    },
+
     async guardarRotacion() {
+      // 1. Verifificar que el informe operativo existe ya para la fecha creada
+      const existeInforme = await this.verificarInformeOperativo();
+      if (!existeInforme) {
+        Swal.fire(
+          "Error",
+          "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+          "error"
+        );
+        this.$router.push({ name: "InfoOperativo" });
+        return;
+      }
       if (
         !this.nuevaRotacion.tipoEquipo ||
         this.nuevaRotacion.vagonesEnServicio <= 0

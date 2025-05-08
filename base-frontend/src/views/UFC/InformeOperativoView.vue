@@ -86,10 +86,25 @@
     </div>
     <!-- Componente de Rotacion de vagones -->
     <ConsultaRotacionVagones />
+    <div class="action-buttons">
+      <button class="action-btn reject" @click="rechazar">Rechazar</button>
+      <button class="action-btn approve" @click="aprobar">Aprobar</button>
+      <button class="action-btn ready" @click="listo">Listo</button>
+    </div>
   </div>
+  
 </template>
 
 <style scoped>
+/* Estilos para los botones de acción */
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+  justify-content: flex-end;
+  padding: 10px 0;
+}
+
 /* Estilos generales del navbar */
 nav ul {
   list-style: none;

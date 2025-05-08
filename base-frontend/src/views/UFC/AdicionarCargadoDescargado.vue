@@ -270,6 +270,7 @@
             <ModalAgregarVagonCargado
               v-if="mostrarModalVagon"
               :visible="mostrarModalVagon"
+              :tipo-equipo="formData.tipo_equipo_ferroviario"
               @cerrar-modal="cerrarModalAddVagonCargado"
               @vagon-agregado="handleVagonAgregado"
             />

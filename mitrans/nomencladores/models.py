@@ -392,8 +392,8 @@ class nom_tipo_equipo_ferroviario(models.Model):
     t_combustible = (
         ('-', '-'),
         ('combust_blanco', 'Combustible blanco'),
-        ('combustible_negro', 'Combustible negro'),
-        ('combustible_turbo', 'Combustible turbo'),
+        ('combust_negro', 'Combustible negro'),
+        ('combust_turbo', 'Combustible turbo'),
     )
     tipo_combustible = models.CharField(max_length=20,choices=t_combustible, verbose_name="Tipo de combustible",
                                     default="-", null=True,blank=True, help_text="Escoja una opción.",)
@@ -497,17 +497,6 @@ class nom_equipo_ferroviario(models.Model):
         ('centro', 'Centro'),
         ('occidente', 'Occidente'),
         )
-   # estados_UFC=(
-   #     ('n/a','N/A'),
-   #     ('por_situar','Por situar carga/descarga'),
-   #     ('situados','Situados carga/descarga'),
-   #     ('cargado_descargado','Cargado/Descargado'),
-   #     ('pendiente_arrastre','Pendiente arrastre'),
-   #     ('en_trenes','En trenes'),   
-   # )
-    #agregar si esta cogido
-    
-   # estado=models.CharField(max_length=20, choices=estados_UFC,default='n/a',verbose_name='Estado del equipo')
 
     territorio = models.CharField(max_length=10,choices=territ, default="-", verbose_name="Territorio",)
 

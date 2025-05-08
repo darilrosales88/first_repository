@@ -150,6 +150,11 @@
         type: Boolean,
         required: true,
       },
+      tipoEquipo: {//esta es la variable que se usará para el tipo_equipo recibido desde el componente padre
+      type: String,
+      required: false,
+      default: null
+    }
     },
     data() {
       return {
@@ -170,6 +175,13 @@
       this.getEquipos();      
       this.getEntidades();
       this.getPuertos();
+    },
+    watch: {//aqui es donde se escucha el valor enviado por el componente padre, con newVal
+      tipoEquipo(newVal) {
+        if (newVal) {
+          this.getEquipos();
+        }
+      }
     },
     methods: {
       cerrarModal() {
@@ -205,17 +217,51 @@
   this.$emit('cerrar-modal');
   Swal.fire("Éxito", "Vagón preparado para asociar", "success");
 },
-      async getEquipos() {
-        try {
-            const response = await axios.get("/api/e-f-no-locomotora/");
-            this.equipos_ferroviarios = response.data;
-            console.log()
-        } catch (error) {
-            console.error("Error al obtener los equipos ferroviarios:", error);
-            Swal.fire("Error", "Hubo un error al obtener los equipos ferroviarios.", "error");
-        }      
+async getEquipos() {
+    try {
+      let url = "/api/e-f-no-locomotora/";
+      if (!this.tipoEquipo) {
+        Swal.fire({
+          title: "Error",
+          text: "No se ha proporcionado un tipo de equipo, vaya al componente principal y escoja uno.",
+          icon: "error",
+          willClose: () => {
+            this.cerrarModal();
+          }
+        });
+        return;
+      }
       
-      },
+      // al tipo de equipo específico lo añadimos como parámetro          
+      url += `?tipo_equipo=${this.tipoEquipo}`;
+      const response = await axios.get(url);
+      
+      // en caso de que no exista EF para el tipo seleccionado en el componente padre
+      if (response.data.length === 0) {
+        Swal.fire({
+          title: "Error",
+          text: "No existen equipos ferroviarios para el tipo seleccionado.",
+          icon: "error",
+          willClose: () => {
+            this.cerrarModal();
+          }
+        });
+        return;
+      }
+
+      this.equipos_ferroviarios = response.data;
+    } catch (error) {
+      console.error("Error al obtener los equipos ferroviarios:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Hubo un error al obtener los equipos ferroviarios.",
+        icon: "error",
+        willClose: () => {
+          this.cerrarModal();
+        }
+      });
+    }      
+  },
       async getEntidades() {
         try {
           let allEntidades = [];
@@ -265,18 +311,23 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.8);
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 2000; /* asegurar que es menor que el de SweetAlert */
   }
   
   .modal-content {
     background-color: white;
-    padding: 20px;
+    padding: 25px;
     border-radius: 8px;
-    width: 80%;
-    max-width: 600px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    z-index: 2001; /* asegurar que es menor que el de SweetAlert */
   }
 
   /* Estilos para el modal hijo (debe estar en el componente hijo), que se sobreponga por encima del comp padre */
@@ -310,4 +361,10 @@
   display: none !important;
 }
   </style>
+<style>
+/* Estilo global para SweetAlert */
+.swal2-container {
+  z-index: 999999 !important;
+}
+</style>
   

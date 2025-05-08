@@ -126,14 +126,8 @@
                 <td>{{ equipo.real_rotacion }}</td>
                 <td>
                   <button
-                    class="btn btn-sm btn-warning me-2"
-                    @click="editarRotacion(index)"
-                  >
-                    <i class="bi bi-pencil-square"></i>
-                  </button>
-                  <button
                     class="btn btn-sm btn-danger"
-                    @click="eliminarRotacion(index)"
+                    @click="eliminarRotacion(equipo.id)"
                   >
                     <i class="bi bi-trash"></i>
                   </button>
@@ -382,7 +376,7 @@ export default {
     },
 
     async guardarRotacion() {
-      // 1. Verifificar que el informe operativo existe ya para la fecha creada
+      // 1. Verificar si existe informe operativo para la fecha actual
       const existeInforme = await this.verificarInformeOperativo();
       if (!existeInforme) {
         Swal.fire(
@@ -393,33 +387,31 @@ export default {
         this.$router.push({ name: "InfoOperativo" });
         return;
       }
+
+      // 2. Validar campos obligatorios
       if (
         !this.nuevaRotacion.tipoEquipo ||
         this.nuevaRotacion.vagonesEnServicio <= 0
       ) {
-        this.$swal.fire(
-          "Error",
+        Swal.fire(
+          "Campos incompletos",
           "Por favor, complete todos los campos obligatorios.",
-          "error"
+          "warning"
         );
         return;
       }
 
       try {
-        // Simula una llamada a la API para guardar la nueva rotación
-        await this.simularGuardarAPI(this.nuevaRotacion);
-
-        // Agrega el nuevo registro a la tabla
-        this.registrosRotacion.push({
-          tipoEquipoFerroviario: this.nuevaRotacion.tipoEquipo,
-          enServicio: this.nuevaRotacion.vagonesEnServicio,
-          planCarga: 0,
-          realCarga: 0,
-          planRotacion: 0,
-          realRotacion: 0,
+        // 3. Hacer POST real a la API
+        const response = await axios.post("/ufc/rotaciones/", {
+          tipo_equipo_ferroviario: this.nuevaRotacion.tipoEquipo,
+          en_servicio: this.nuevaRotacion.vagonesEnServicio,
         });
 
-        this.$swal.fire(
+        // 4. Actualizar la tabla local con el nuevo registro desde la respuesta del backend
+
+        // 5. Mostrar mensaje de éxito y cerrar el modal
+        Swal.fire(
           "Éxito",
           "La rotación ha sido guardada correctamente.",
           "success"
@@ -427,32 +419,24 @@ export default {
         this.cerrarModal();
       } catch (error) {
         console.error("Error al guardar la rotación:", error);
-        this.$swal.fire(
-          "Error",
-          "Hubo un problema al guardar la rotación.",
-          "error"
-        );
+
+        let mensajeError = "Hubo un problema al guardar la rotación.";
+        if (error.response && error.response.data) {
+          const errores = error.response.data;
+          mensajeError =
+            Object.values(errores).flat().join(" ") ||
+            "Hubo un problema al guardar la rotación.";
+        }
+
+        Swal.fire("Error", mensajeError, "error");
       }
-    },
-    editarRotacion(indice) {
-      this.modoEdicion = true;
-      this.indiceEdicion = indice;
-
-      // Carga los datos del registro seleccionado en el formulario
-      const rotacion = this.registrosRotacion[indice];
-      this.nuevaRotacion = {
-        tipoEquipo: rotacion.tipoEquipoFerroviario,
-        vagonesEnServicio: rotacion.enServicio,
-      };
-
-      this.mostrarModal = true;
     },
     async actualizarRotacion() {
       if (
         !this.nuevaRotacion.tipoEquipo ||
         this.nuevaRotacion.vagonesEnServicio <= 0
       ) {
-        this.$swal.fire(
+        Swal.fire(
           "Error",
           "Por favor, complete todos los campos obligatorios.",
           "error"
@@ -471,7 +455,7 @@ export default {
           realRotacion: 0,
         };
 
-        this.$swal.fire(
+        Swal.fire(
           "Éxito",
           "La rotación ha sido actualizada correctamente.",
           "success"
@@ -479,16 +463,16 @@ export default {
         this.cerrarModal();
       } catch (error) {
         console.error("Error al actualizar la rotación:", error);
-        this.$swal.fire(
+        Swal.fire(
           "Error",
           "Hubo un problema al actualizar la rotación.",
           "error"
         );
       }
     },
-    eliminarRotacion(indice) {
-      this.$swal
-        .fire({
+    async eliminarRotacion(id) {
+      try {
+        const result = await Swal.fire({
           title: "¿Está seguro?",
           text: "Esta acción no se puede deshacer.",
           icon: "warning",
@@ -497,26 +481,28 @@ export default {
           cancelButtonColor: "#d33",
           confirmButtonText: "Sí, eliminar",
           cancelButtonText: "Cancelar",
-        })
-        .then((result) => {
-          if (result.isConfirmed) {
-            // Elimina el registro de la tabla
-            this.registrosRotacion.splice(indice, 1);
-            this.$swal.fire(
-              "Eliminado",
-              "El registro ha sido eliminado correctamente.",
-              "success"
-            );
-          }
         });
-    },
-    simularGuardarAPI(nuevaRotacion) {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          console.log("Nueva rotación guardada:", nuevaRotacion);
-          resolve();
-        }, 1000); // Simula un retraso de 1 segundo
-      });
+
+        if (result.isConfirmed) {
+          await axios.delete(`/ufc/rotaciones/${id}/`);
+
+          await Swal.fire(
+            "Eliminado",
+            "El registro ha sido eliminado correctamente.",
+            "success"
+          );
+
+          // Actualizar los datos sin recargar la página
+          await this.get_rotaciones();
+        }
+      } catch (error) {
+        console.error("Error al eliminar la rotación:", error);
+        Swal.fire(
+          "Error",
+          "Ocurrió un error al eliminar el registro.",
+          "error"
+        );
+      }
     },
   },
 };

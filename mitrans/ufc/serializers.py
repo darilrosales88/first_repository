@@ -717,13 +717,17 @@ class en_trenes_serializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         productos_data = validated_data.pop('producto', [])
+        equipo_vagon_data=validated_data.pop('equipo_vagon',[])
         instance = en_trenes.objects.create(**validated_data)
         instance.producto.set(productos_data)
+        instance.equipo_vagon.set(equipo_vagon_data)
         return instance
 
     def update(self, instance, validated_data):
         productos_data = validated_data.pop('producto', None)
+        equipo_vagon_data=validated_data.pop('equipo_vagon',None)
         instance = super().update(instance, validated_data)
+        instance.equipo_vagon.set(equipo_vagon_data)
         if productos_data is not None:
             instance.producto.set(productos_data)
         return instance

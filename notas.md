@@ -1,32 +1,25 @@
 # Validación de Permisos y Grupos de Usuarios
 
-## Grupos de Usuarios Backend
+## Requisitos funcionales pinchando en talla
 
-- Se implementaron dos nuevos grupos de usuarios:
-  - `AdminUFC`
-  - `AdminNomencladores`
+- Vagones y Productos
+- Registros Por Situar
+- Registros Situados
+- +-Cargados
+- Registros Pendientes
+-
+
+## Notas de Revision Antes de la Reunion Viernes 9 de Mayo
+
+- Corregido problema de los DELETE en el CRUD
+- Corregido Tablas de Vagones y Productos que habia problema en el adicionar a la hora de cargar los equipos ferroviarios en dependencia del combustible escogido
+- Arreglada la Vista de Rotacion que traia problema en los componentes.
+- Corregido Desplegable de productos en el adicionar de Situados Carga/Descarga
+- Corregido que admin pueda borrar historial de cargados/descargados
+- Corregido problemas de En Trenes correspondiente a mal registro de las instancias
 
 ## Tareas Pendientes
 
-### Backend
-
-- Actualizar el sistema de validación de permisos
-- Implementar la actualización de registros cuando se modifican los permisos de un usuario
-- Asegurar que los permisos se reflejen correctamente en tiempo real
-
-### Frontend
-
-- Implementar sistema de validación de permisos
-- Mostrar/ocultar funcionalidades según los permisos del usuario
-- Actualizar la interfaz cuando cambien los permisos del usuario
-
-### Estilos
-
-- Faltan los estilos propuestos por karmal en los siguientes registros:
-  - `Cargados/Descargados`
-  - `Pendientes`
-
-## Consideraciones
-
-- Los cambios en permisos deben ser reflejados inmediatamente en la sesión del usuario
-- Mantener sincronización entre los permisos del backend y frontend
+- La hora de los registros no se estan creando con UTC+3 Hora Havana
+- En cargados/Descargados se tiene que mostrar el Equipo Ferroviario solo los que su tipos coincidan con el tipo equipo Ferroviario que se halla selecionado
+- Ahora en Trenes no puede guardar los registros porque depende de los vagones si estan disponibles o no.

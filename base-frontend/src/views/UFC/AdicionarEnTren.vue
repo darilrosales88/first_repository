@@ -17,19 +17,21 @@
           <form @submit.prevent="submitForm" class="ufc-form">
             <div class="ufc-form-grid">
               <!-- Columna Izquierda -->
-               <!-- Campo: Fecha de registro -->
+              <!-- Campo: Fecha de registro -->
               <div class="ufc-form-column">
                 <div class="mb-3">
-              <label for="fecha_registro" class="form-label">Fecha de registro</label>
-              <input
-                type="text"
-                class="form-control"
-                :value="formattedFechaRegistro"
-                id="fecha_registro"
-                name="fecha_registro"
-                readonly
-              />
-            </div>
+                  <label for="fecha_registro" class="form-label"
+                    >Fecha de registro</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    :value="formattedFechaRegistro"
+                    id="fecha_registro"
+                    name="fecha_registro"
+                    readonly
+                  />
+                </div>
                 <!-- Campo: locomotora -->
                 <div class="ufc-input-group">
                   <label for="locomotora"
@@ -477,13 +479,13 @@ export default {
       numeroIdentificacionSeleccionado: null,
     };
   },
-  computed:{
+  computed: {
     formattedFechaRegistro() {
-    if (this.formData.fecha) {
-      return new Date(this.formData.fecha).toLocaleString();
-    }
-    return new Date().toLocaleString();
-  }
+      if (this.formData.fecha) {
+        return new Date(this.formData.fecha).toLocaleString();
+      }
+      return new Date().toLocaleString();
+    },
   },
   mounted() {
     this.getProductos();
@@ -533,9 +535,12 @@ export default {
       const vagonesJson = localStorage.getItem("vagonesAgregados");
       if (vagonesJson) {
         const vagones = JSON.parse(vagonesJson);
+        /*  this.formData["equipo_vagon"] = vagones; */
+        /*  this.formData["equipo_vagon"] = [];
         for (const vagon of vagones) {
           this.formData["equipo_vagon"].push(vagon["vagon_id"]);
-        }
+        } */
+        this.formData.equipo_vagon = vagones.map((vagon) => vagon.vagon_id);
         try {
           if (!this.formData.tipo_origen) {
             throw new Error("El campo Tipo de Origen es requerido");
@@ -565,7 +570,7 @@ export default {
             throw new Error("La cantidad por situar debe ser al menos 1");
           }
           console.log("Datos del formulario:", this.formData);
-          await axios.post("/ufc/en-trenes/", this.formData);
+          await axios.post("/ufc/en-trenes-hoy/", this.formData);
           Swal.fire({
             title: "¡Éxito!",
             text: "El formulario ha sido procesado correctamente",

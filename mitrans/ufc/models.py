@@ -322,7 +322,7 @@ def eliminar_historial_vagon_cargado_descargado(sender, instance, **kwargs):
     try:
         # Buscar el historial que contiene datos de este vagon
         historiales = HistorialVagonCargadoDescargado.objects.filter(
-            datos_vagon__contains={'id': instance.id}
+            datos_vagon__icontains={'id': instance.id}
         )
         
         # Eliminar todos los registros de historial encontrados
@@ -540,7 +540,7 @@ def eliminar_historial_situado(sender, instance, **kwargs):
     try:
         # Buscar el historial que contiene datos de este situado
         historiales = HistorialSituadoCargaDescarga.objects.filter(
-            datos_situado__contains={'id': instance.id}
+            datos_situado__icontains={'id': instance.id}
         )
         
         # Eliminar todos los registros de historial encontrados
@@ -563,9 +563,9 @@ class vagones_productos(models.Model):
         ('combustible', 'Combustible'),
     ]
     TIPO_COMBUSTIBLE_CHOICES = [
-        ('combustible_blanco', 'Combustible blanco'),
-        ('combustible_negro', 'Combustible negro'),
-        ('combustible_turbo', 'Combustible turbo'),
+        ('combust_blanco', 'Combustible blanco'),
+        ('combust_negro', 'Combustible negro'),
+        ('combust_turbo', 'Combustible turbo'),
         ('-', '-'),
     ]
 
@@ -809,7 +809,7 @@ def crear_historial_vagones_productos(sender, instance, created, **kwargs):
 def eliminar_historial_vagones_productos(sender, instance, **kwargs):
     try:
         HistorialVagonesProductos.objects.filter(
-            datos_vagon_producto__contains={'id': instance.id}
+            datos_vagon_producto__icontains={'id': instance.id}
         ).delete()
     except Exception as e:
         print(f"Error eliminando historial de vagones-productos: {str(e)}") 
@@ -1000,7 +1000,7 @@ def eliminar_historial_en_trenes(sender, instance, **kwargs):
     try:
         # Buscar el historial que contiene datos de este tren
         historiales = HistorialEnTrenes.objects.filter(
-            datos_tren__contains={'id': instance.id}
+            datos_tren__icontains={'id': instance.id}
         )
         
         # Eliminar todos los registros de historial encontrados
@@ -1187,7 +1187,7 @@ def eliminar_historial_por_situar(sender, instance, **kwargs):
     try:
         # Buscar el historial que contiene datos de este por_situar
         historiales = HistorialVagonPorSituar.objects.filter(
-            datos_vagon__contains={'id': instance.id}
+            datos_vagon__icontains={'id': instance.id}
         )
         
         # Eliminar todos los registros de historial encontrados
@@ -1381,7 +1381,7 @@ def eliminar_historial_arrastre(sender, instance, **kwargs):
     try:
         # Buscar el historial que contiene datos de este arrastre
         historiales = HistorialArrastres.objects.filter(
-            datos_arrastre__contains={'id': instance.id}
+            datos_arrastre__icontains={'id': instance.id}
         )
         
         # Eliminar todos los registros de historial encontrados
@@ -1486,7 +1486,7 @@ def crear_historial_rotacion_vagones(sender, instance, created, **kwargs):
 def eliminar_historial_rotacion_vagones(sender, instance, **kwargs):
     try:
         HistorialRotacionVagones.objects.filter(
-            datos_rotacion__contains={'id': instance.id}
+            datos_rotacion__icontains={'id': instance.id}
         ).delete()
     except Exception as e:
         print(f"Error eliminando historial de rotación de vagones: {str(e)}")

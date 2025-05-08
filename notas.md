@@ -24,3 +24,13 @@
 - La hora de los registros no se estan creando con UTC+3 Hora Havana
 - En cargados/Descargados se tiene que mostrar el Equipo Ferroviario solo los que su tipos coincidan con el tipo equipo Ferroviario que se halla selecionado
 - Ahora en Trenes no puede guardar los registros porque depende de los vagones si estan disponibles o no.
+
+
+
+
+            t_combustible_options: [
+              { value: '-', text: '-' },
+              { value: 'combustible_blanco', text: 'Combustible blanco' },
+              { value: 'combustible_negro', text: 'Combustible negro' },
+              { value: 'combustible_turbo', text: 'Combustible turbo' },
+            ],   

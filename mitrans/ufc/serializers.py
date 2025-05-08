@@ -42,6 +42,7 @@ class ufc_informe_operativo_serializer(serializers.ModelSerializer):
         model = ufc_informe_operativo       
         fields = '__all__'
         filterset_class: ufc_informe_operativo_filter
+        
 #****************-------------------------********************--------------------***************-----------------****
 class DateTimeToDateField(serializers.ReadOnlyField):
     """Campo personalizado para convertir datetime a date"""

@@ -175,6 +175,8 @@ a {
 </style>
 
 <script>
+import Swal from 'sweetalert2';
+import axios from "axios";
 import NavbarComponent from "@/components/NavbarComponent.vue";
 import PorSituarCarga_Descarga from "@/components/PorSituarCarga_Descarga.vue";
 import SituadoCarga_Descarga from "@/components/SituadoCarga_Descarga.vue";
@@ -203,12 +205,147 @@ export default {
   },
   data() {
     return {
+      userPermissions: [],
+      userGroups: [],
       currentComponent: "PorSituarCarga_Descarga", // Componente inicial
+      informeOperativoId: null,
     };
+    
+  },
+  async created() {
+    await this.fetchUserPermissionsAndGroups();
   },
 
   // En tu componente InfOperative.vue o donde tengas el botón de guardar
   methods: {
+    async rechazar() {      
+      if (!this.hasGroup('RevisorUFC')) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Acceso denegado',
+          text: 'Solo los revisores de UFC pueden rechazar la creación del parte.',
+          confirmButtonColor: '#002a68',
+        });
+        return;
+      }      
+      this.CambiarEstado("Rechazado");
+    },
+    async aprobar() {      
+      if (!this.hasGroup('RevisorUFC')) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Acceso denegado',
+          text: 'Solo los revisores de UFC pueden aprobar operaciones.',
+          confirmButtonColor: '#002a68',
+        });
+        return;
+      }      
+      // Lógica para aprobar (solo se ejecuta si el usuario pertenece al grupo)
+      console.log("Operación aprobada");
+    },
+    async listo() {      
+      if (!this.hasGroup('AdminUFC')) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Acceso denegado',
+          text: 'Solo los rreadores del parte UFC pueden poner a Listo.',
+          confirmButtonColor: '#002a68',
+        });
+        return;
+      }      
+      // Lógica para aprobar (solo se ejecuta si el usuario pertenece al grupo)
+      console.log("Operación aprobada");
+    },
+    hasPermission(permission) {
+      return this.userPermissions.some((p) => p.name === permission);
+    },
+    hasGroup(group) {
+      return this.userGroups.some((g) => g.name === group);
+    },
+    async fetchUserPermissionsAndGroups() {
+      try {
+        const userId = localStorage.getItem("userid");
+        if (userId) {
+          const response = await axios.get(`/apiAdmin/user/${userId}/permissions-and-groups/`);
+          this.userPermissions = response.data.permissions;
+          this.userGroups = response.data.groups;
+          console.log("Grupos: ", this.userGroups);
+        }
+      } catch (error) {
+        console.error("Error al obtener permisos y grupos:", error);
+      }
+    },
+
+    async CambiarEstado(NuevoEstado) {
+  try {
+    // Verificar si existe un informe operativo para hoy
+    const existeInforme = await this.verificarInformeOperativo();
+    
+    if (!existeInforme || !this.informeOperativoId) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No existe un informe operativo para la fecha actual.',
+        confirmButtonColor: '#002a68',
+      });
+      return;
+    }
+
+    // Actualizar el estado del informe
+    const response = await axios.patch(`/ufc/informe-operativo/${this.informeOperativoId}/`, {
+      estado_parte: NuevoEstado
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (response.status === 200) {
+      await Swal.fire({
+        icon: 'success',
+        title: 'Éxito',
+        text: `El estado del parte ha sido actualizado a "${NuevoEstado}" correctamente.`,
+        confirmButtonColor: '#002a68',
+      });
+      // Actualizar la vista si es necesario
+      this.$forceUpdate();
+    }
+  } catch (error) {
+    console.error("Detalles del error:", {
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data
+    });
+    await Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: error.response?.data?.detail || 'Ocurrió un error al actualizar el estado.',
+      confirmButtonColor: '#002a68',
+    });
+  }
+},
+          async verificarInformeOperativo() {
+        try {          
+          const today = new Date();
+          const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+          console.log("fecha formateada: ",fechaFormateada);
+          const response = await axios.get('/ufc/verificar-informe-existente/', {
+            params: { fecha_operacion: fechaFormateada }
+          });
+
+          if (response.data.existe) {
+            this.informeOperativoId = response.data.id;
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error("Error al verificar informe:", error);
+          return false;
+        }
+      },
+        
+      
     
   }
 };

@@ -21,6 +21,7 @@ class ufc_informe_operativo(models.Model):
     total_vagones_situados = models.IntegerField(editable=False,default=0)
     plan_total_acumulado_actual = models.IntegerField(editable=False,default=0)
     real_total_acumulado_actual = models.IntegerField(editable=False,default=0)
+    estado_parte = models.CharField(editable=False,default="Creado",max_length=14)
 
     class Meta:
         verbose_name = "Parte informe operativo"

@@ -18,7 +18,7 @@ User = get_user_model()
 
 # Vista para gestionar grupos
 class GroupViewSet(viewsets.ModelViewSet):
-    queryset = Group.objects.all()
+    queryset = Group.objects.all().order_by("-id")
     serializer_class = GroupSerializer
     permission_classes = [IsAuthenticated]  # Asegura que solo usuarios autenticados puedan acceder
 
@@ -65,7 +65,7 @@ class GroupViewSet(viewsets.ModelViewSet):
 def obtener_grupo(request, grupo_id):
     try:
         grupo = Group.objects.get(id=grupo_id)
-        permisos = grupo.permissions.all()
+        permisos = grupo.permissions.all().order_by("-id")
         data = {
             'id': grupo.id,
             'name': grupo.name,
@@ -79,7 +79,7 @@ def obtener_grupo(request, grupo_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def obtener_permisos(request):
-    permisos = Permission.objects.all()
+    permisos = Permission.objects.all().order_by("-id")
     data = [{'id': p.id, 'name': p.name} for p in permisos]
     return Response(data)
 
@@ -109,8 +109,8 @@ def get_user_permissions_and_groups(request, user_id):
         }
 
         # Obtener permisos y grupos
-        groups = user.groups.all()
-        permissions = user.user_permissions.all()
+        groups = user.groups.all().order_by("-id")
+        permissions = user.user_permissions.all().order_by("-id")
 
         # Formatear grupos y permisos
         grupos_formateados = [{'id': g.id, 'name': g.name} for g in groups]
@@ -132,7 +132,7 @@ User = get_user_model()
 
 # Vista para gestionar usuarios
 class nom_user_view_set(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.all()
+    queryset = CustomUser.objects.all().order_by("-id")
     serializer_class = UserPermissionSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = user_filter  # Asegúrate de que esté correctamente referenciado
@@ -191,8 +191,8 @@ class UserCreateView(APIView):
 def obtener_usuario(request, user_id):
     try:
         user = CustomUser.objects.get(id=user_id)
-        grupos = user.groups.all()
-        permisos = user.user_permissions.all()
+        grupos = user.groups.all().order_by("-id")
+        permisos = user.user_permissions.all().order_by("-id")
         data = {
             'id': user.id,
             'username': user.username,

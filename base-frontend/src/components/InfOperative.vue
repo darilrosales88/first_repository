@@ -54,7 +54,7 @@
                   class="form-control form-control-sm border-secondary" 
                   id="planMensualTotal" 
                   v-model="formData.planMensualTotal"
-                  required
+                  
                 >
               </div>
             </div>
@@ -69,7 +69,7 @@
                   class="form-control form-control-sm border-secondary" 
                   id="planDiarioTotal" 
                   v-model="formData.planDiarioTotal"
-                  required
+                  
                 >
               </div>
             </div>
@@ -87,7 +87,7 @@
                   class="form-control form-control-sm border-secondary" 
                   id="realTotalVagones" 
                   v-model="formData.realTotalVagones"
-                  required
+                  
                 >
               </div>
             </div>
@@ -102,7 +102,7 @@
                   class="form-control form-control-sm border-secondary" 
                   id="totalVagonesSituados" 
                   v-model="formData.totalVagonesSituados"
-                  required
+                  
                 >
               </div>
             </div>
@@ -120,7 +120,7 @@
                   class="form-control form-control-sm border-secondary" 
                   id="planTotalAcumulado" 
                   v-model="formData.planTotalAcumulado"
-                  required
+                  
                 >
               </div>
             </div>
@@ -135,7 +135,7 @@
                   class="form-control form-control-sm border-secondary" 
                   id="realTotalAcumulado" 
                   v-model="formData.realTotalAcumulado"
-                  required
+                  
                 >
               </div>
             </div>
@@ -157,132 +157,174 @@
 </template>
 
 <script>
+import Swal from 'sweetalert2';
+import axios from 'axios';
+
 export default {
   name: 'InfOperative',
   data() {
     return {
       formData: {
         fechaOperacion: '',
-        planMensualTotal: '',
-        realTotalVagones: '',
-        planTotalAcumulado: '',
         fechaActual: '',
-        planDiarioTotal: '',
-        totalVagonesSituados: '',
-        realTotalAcumulado: ''
-      }
+
+      },
+      errores: '',
+      isLoading: false
     }
   },
   methods: {
-    submitForm() {
-      // Aquí iría la lógica para enviar los datos
-      console.log('Datos del formulario:', this.formData);
-      // Mostrar mensaje de éxito
-      this.$swal.fire(
-        '¡Éxito!',
-        'El registro ha sido guardado correctamente.',
-        'success'
-      );
-      this.resetForm();
+    validateForm() {
+      this.errores = '';
+      let isValid = true;
+
+
+      // Validación de fechas
+      const today = new Date().toISOString().split('T')[0];
+      if (this.formData.fechaActual !== today) {
+        this.errores += 'La fecha actual debe ser la de hoy.<br>';
+        isValid = false;
+      }
+
+      if (new Date(this.formData.fechaOperacion) > new Date()) {
+        this.errores += 'La fecha de operación no puede ser futura.<br>';
+        isValid = false;
+      }
+
+      return isValid;
     },
+
+    getFieldLabel(field) {
+      const labels = {
+        fechaOperacion: 'Fecha de Operación',        
+        fechaActual: 'Fecha Actual',
+      };
+      return labels[field] || field;
+    },
+
+    async submitForm() {
+      if (!this.validateForm()) {
+        await Swal.fire({
+          title: 'Errores en el formulario',
+          html: this.errores,
+          icon: 'error',
+          confirmButtonText: 'Entendido'
+        });
+        return;
+      }
+
+      this.isLoading = true;
+      try {
+        const dataToSend = {
+          fecha_operacion: this.formData.fechaOperacion,
+          fecha_actual: this.formData.fechaActual,
+          plan_mensual_total: this.formData.planMensualTotal,
+          plan_diario_total_vagones_cargados: this.formData.planDiarioTotal,
+          real_total_vagones_cargados: this.formData.realTotalVagones,
+          total_vagones_situados: this.formData.totalVagonesSituados,
+          plan_total_acumulado_actual: this.formData.planTotalAcumulado,
+          real_total_acumulado_actual: this.formData.realTotalAcumulado
+        };
+        console.log("INfomracion a enviarrrrrrrrrrrrrr: ",dataToSend)
+
+        const response = await axios.post('/ufc/informe-operativo/', dataToSend);
+
+        await Swal.fire({
+          title: '¡Éxito!',
+          text: 'Los datos operativos se han guardado correctamente.',
+          icon: 'success',
+          confirmButtonText: 'Aceptar'
+        });
+        this.resetForm();
+      } catch (error) {
+        console.error('Error al guardar operación:', error);
+        
+        let errorMessage = 'Ocurrió un error al guardar los datos.';
+        if (error.response?.data) {
+          errorMessage = Object.values(error.response.data).join('<br>');
+        }
+        
+        await Swal.fire({
+          title: 'Error',
+          html: errorMessage,
+          icon: 'error',
+          confirmButtonText: 'Entendido'
+        });
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    /* async getRelatedData() {
+      try {
+        // Obtener datos de otros componentes/API endpoints
+        const [
+          vagonesproductosRes,
+          vagonesRes,
+          registrosRes,
+          productosRes,
+          situadosRes,
+          enTrenesRes,
+          arrastresRes,
+          rotacionesRes
+        ] = await Promise.all([
+          axios.get('/ufc/vagones-productos/'),
+          axios.get('/ufc/vagones-cargados-descargados/'),
+          axios.get('/ufc/registro-vagones-cargados/'),
+          axios.get('/ufc/productos-ufc/'),
+          axios.get('/ufc/situados/'),
+          axios.get('/ufc/en-trenes/'),
+          axios.get('/ufc/pendiente-arrastre/'),
+          axios.get('/ufc/rotaciones/')
+        ]);
+
+        return {
+          vagones_y_productos: vagonesproductosRes.data,
+          vagones_cargados_descargados: vagonesRes.data,
+          registros_vagones: registrosRes.data,
+          productos: productosRes.data,
+          situados_carga_descarga: situadosRes.data,
+          en_trenes_list: enTrenesRes.data,
+          arrastres_list: arrastresRes.data,
+          rotaciones_vagones: rotacionesRes.data
+        };
+      } catch (error) {
+        console.error('Error obteniendo datos relacionados:', error);
+        return {};
+      }
+    }, */
+
+    confirmCancel() {
+      Swal.fire({
+        title: '¿Cancelar operación?',
+        text: '¿Está seguro de que desea cancelar? Los datos no guardados se perderán.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'No, continuar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.resetForm();
+          this.$router.back();
+        }
+      });
+    },
+
     resetForm() {
+      const today = new Date().toISOString().split('T')[0];
       this.formData = {
-        fechaOperacion: '',
-        planMensualTotal: '',
-        realTotalVagones: '',
-        planTotalAcumulado: '',
-        fechaActual: '',
-        planDiarioTotal: '',
-        totalVagonesSituados: '',
-        realTotalAcumulado: ''
+        fechaOperacion: today,       
+        fechaActual: today,
+
       };
     }
   },
   mounted() {
-    // Establecer fecha actual por defecto
     const today = new Date().toISOString().split('T')[0];
     this.formData.fechaActual = today;
     this.formData.fechaOperacion = today;
   }
 }
 </script>
-
-<style scoped>
-.card {
-  border-radius: 0.5rem;
-  border: 1px solid #e0e0e0;
-}
-
-.card-header {
-  background-color: #f8f9fa;
-  border-bottom: 2px solid #e0e0e0 !important;
-  padding: 0.75rem 1.25rem;
-}
-
-.form-label {
-  margin-bottom: 0.3rem;
-  letter-spacing: 0.02rem;
-}
-
-.form-control {
-  border-radius: 0.35rem;
-  padding: 0.4rem 0.75rem;
-  border: 1px solid #ced4da;
-  font-size: 0.875rem;
-  transition: border-color 0.15s ease-in-out;
-}
-
-.form-control:focus {
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
-}
-
-.btn {
-  border-radius: 0.35rem;
-  padding: 0.4rem 0.9rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  letter-spacing: 0.02rem;
-}
-
-.btn-primary {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
-}
-
-.btn-primary:hover {
-  background-color: #0b5ed7;
-  transform: translateY(-1px);
-}
-
-.btn-outline-secondary:hover {
-  background-color: #f8f9fa;
-}
-
-/* Mejor separación entre grupos de formulario */
-.form-group {
-  margin-bottom: 0.5rem;
-}
-
-/* Efecto sutil al pasar el ratón sobre inputs */
-.form-control:hover {
-  border-color: #adb5bd;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .card-body {
-    padding: 1rem;
-  }
-  
-  .btn {
-    width: 100%;
-  }
-  
-  .d-flex {
-    flex-direction: column;
-    gap: 0.5rem !important;
-  }
-}
-</style>

@@ -10,6 +10,18 @@
         <div class="row">
           <!-- Columna 1 -->
           <div class="col-md-6">
+            <!-- Campo:Fecha de registro -->
+            <div class="mb-3">
+              <label for="fecha_registro" class="form-label">Fecha de registro</label>
+              <input
+                type="text"
+                class="form-control"
+                :value="formattedFechaRegistro"
+                id="fecha_registro"
+                name="fecha_registro"
+                readonly
+              />
+            </div>
             <!-- Campo: TEF -->
             <div class="mb-3">
               <label for="tipo_equipo_ferroviario" class="form-label"
@@ -180,6 +192,8 @@
                 readonly
               />
             </div>
+
+            
             <!-- Campo: plan_diario_carga -->
             <div class="mb-3">
               <label for="plan_diario_carga" class="form-label"
@@ -210,7 +224,7 @@
               />
             </div>
             <!-- Campo: producto -->
-            <div class="mb-3" v-if="formData.estado === 'cargado'">
+            <div class="mb-3">
               <label for="producto" class="form-label">
                 Productos
                 <button
@@ -267,7 +281,7 @@
               </label>
               <textarea
                 class="form-control"
-                v-model="causas_incumplimiento"
+                v-model="formData.causas_incumplimiento"
                 id="causas_incumplimiento"
                 name="causas_incumplimiento"
                 rows="3"
@@ -441,6 +455,7 @@ export default {
       mostrarModalVagon: false,
 
       formData: {
+        fecha:"",
         tipo_equipo_ferroviario: "",
         tipo_origen: "ac_ccd",
         origen: "",
@@ -465,7 +480,18 @@ export default {
       tipos_equipos_ferroviarios: [],
       puertos: [],
       entidades: [],
+      informeOperativoId: null,
+      fechaActual: new Date().toISOString().split('T')[0] // Fecha actual en formato YYYY-MM-DD
     };
+  },
+
+  computed: {
+    formattedFechaRegistro() {
+      if (this.formData.fecha) {
+        return new Date(this.formData.fecha).toLocaleString();
+      }
+      return new Date().toLocaleString();
+    }
   },
 
   mounted() {
@@ -502,87 +528,113 @@ export default {
   },
 
   methods: {
-    async submitForm() {
-      // Validación de campos obligatorios base
-      if (
-        !this.formData.tipo_equipo_ferroviario ||
-        !this.formData.tipo_origen ||
-        !this.formData.origen ||
-        !this.formData.tipo_destino ||
-        !this.formData.destino
-      ) {
-        Swal.fire(
-          "Error",
-          "Por favor complete todos los campos obligatorios",
-          "error"
-        );
-        return;
-      }
-
-      // Validación específica para productos cuando estado es "cargado"
-      if (
-        this.formData.estado === "cargado" &&
-        (!this.formData.lista_productos ||
-          this.formData.lista_productos.length === 0)
-      ) {
-        Swal.fire(
-          "Error",
-          "Debe seleccionar al menos un producto cuando el estado es 'Cargado'",
-          "error"
-        );
-        return;
-      }
-
-      // Asegurar que tenemos el cálculo más reciente
-      await this.calcularRealCargaDescarga();
-
+    async verificarInformeOperativo() {
       try {
-        const datosEnvio = {
-          ...this.formData,
-          producto_ids: Array.isArray(this.formData.lista_productos)
-            ? this.formData.lista_productos
-            : [this.formData.lista_productos],
-          registros_vagones_data: this.registros_vagones_temporales.map(
-            (v) => ({
-              no_id: v.no_id,
-              fecha_despacho: v.fecha_despacho,
-              tipo_origen: v.tipo_origen,
-              origen: v.origen,
-              fecha_llegada: v.fecha_llegada,
-              observaciones: v.observaciones,
-            })
-          ),
-        };
+        this.formData.fecha = new Date().toISOString();
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-        const response = await axios.post(
-          "/ufc/vagones-cargados-descargados/",
-          datosEnvio
-        );
-
-        // Limpiar después del éxito
-        this.registros_vagones_temporales = [];
-        this.formData.lista_productos = [];
-        this.resetForm();
-
-        await Swal.fire({
-          title: "Éxito",
-          text: "Registro creado correctamente",
-          icon: "success",
-          confirmButtonText: "Aceptar",
+        const response = await axios.get('/ufc/verificar-informe-existente/', {
+          params: { fecha_operacion: fechaFormateada }
         });
 
-        this.$router.push({ name: "InfoOperativo" });
-      } catch (error) {
-        console.error("Error al guardar:", error.response);
-        let errorMsg = "No se pudo guardar el registro";
-
-        if (error.response?.data) {
-          errorMsg += `: ${JSON.stringify(error.response.data)}`;
+        if (response.data.existe) {
+          this.informeOperativoId = response.data.id;
+          return true;
         }
-
-        Swal.fire("Error", errorMsg, "error");
+        return false;
+      } catch (error) {
+        console.error("Error al verificar informe:", error);
+        return false;
       }
     },
+    
+    async submitForm() {
+  try {
+    // 0. First check if there are any wagons added
+    if (this.registros_vagones_temporales.length === 0) {
+      Swal.fire("Error", "Debe agregar al menos un vagón", "error");
+      return;
+    }
+
+    // 1. Verifificar que el informe operativo existe ya para la fecha creada
+    const existeInforme = await this.verificarInformeOperativo();
+    if (!existeInforme) {
+      Swal.fire(
+        "Error",
+        "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+        "error"
+      );
+      this.$router.push({ name: "InfoOperativo" });
+      return;
+      
+    }
+
+    // 2. Basic validations
+    if (!this.formData.tipo_equipo_ferroviario || 
+        !this.formData.tipo_origen ||
+        !this.formData.origen || 
+        !this.formData.tipo_destino ||
+        !this.formData.destino) {
+      Swal.fire("Error", "Por favor complete todos los campos obligatorios", "error");
+      return;
+    }
+
+    // 3. Product validation for loaded wagons
+    if (this.formData.estado === "cargado" && 
+        (!this.formData.lista_productos || this.formData.lista_productos.length === 0)) {
+      Swal.fire("Error", "Debe seleccionar al menos un producto.", "error");
+      return;
+    }
+
+    // 4. Calculate real value
+    await this.calcularRealCargaDescarga();
+
+    // 5. Prepare data
+    const datosEnvio = {
+      ...this.formData,      
+      informe_operativo: this.informeOperativoId,
+      real_carga_descarga: this.formData.real_carga_descarga || 0,
+      causas_incumplimiento: this.formData.causas_incumplimiento || '',
+      producto_ids: Array.isArray(this.formData.lista_productos) 
+        ? this.formData.lista_productos 
+        : [this.formData.lista_productos],
+      registros_vagones_data: this.registros_vagones_temporales.map(v => ({
+        no_id: v.no_id,
+        fecha_despacho: v.fecha_despacho,
+        tipo_origen: v.tipo_origen,
+        origen: v.origen,
+        fecha_llegada: v.fecha_llegada,
+        observaciones: v.observaciones
+      }))
+    };
+
+    // 6. Send data
+    const response = await axios.post("/ufc/vagones-cargados-descargados/", datosEnvio);
+
+    // 7. Reset and show success
+    this.registros_vagones_temporales = [];
+    this.formData.lista_productos = [];
+    this.resetForm();
+
+    await Swal.fire({
+      title: "Éxito",
+      text: "Registro creado correctamente",
+      icon: "success",
+      confirmButtonText: "Aceptar"
+    });
+
+    this.$router.push({ name: "InfoOperativo" });
+
+  } catch (error) {
+    console.error("Error al guardar:", error.response);
+    let errorMsg = "No se pudo guardar el registro";
+    if (error.response?.data) {
+      errorMsg += `: ${JSON.stringify(error.response.data)}`;
+    }
+    Swal.fire("Error", errorMsg, "error");
+  }
+},
 
     async calcularRealCargaDescarga() {
       if (

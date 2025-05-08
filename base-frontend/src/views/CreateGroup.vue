@@ -252,7 +252,7 @@ export default {
     },
     async getPermisosDisponibles() {
       try {
-        const response = await axios.get('/api/permisos/');
+        const response = await axios.get('/apiAdmin/permisos/');
         this.permisosDisponibles = response.data;
       } catch (error) {
         console.error('Error al obtener los permisos disponibles:', error);
@@ -277,7 +277,7 @@ export default {
         permissions: this.permisosAsignados.map(p => p.id), // Incluir los IDs de los permisos asignados
       };
       try {
-        await axios.post('/api/groups/', grupo);
+        await axios.post('/apiAdmin/groups/', grupo);
         this.$router.push('/groups');
         Swal.fire('Agregado!', 'El grupo ha sido insertado exitosamente.', 'success');
       } catch (error) {

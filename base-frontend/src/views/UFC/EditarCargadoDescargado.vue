@@ -224,7 +224,7 @@
             </div>
 
             <!-- Campo: producto -->
-            <div class="mb-3" v-if="formData.estado === 'cargado'">
+            <div class="mb-3">
               <label for="producto" class="form-label">
                 Productos
                 <button

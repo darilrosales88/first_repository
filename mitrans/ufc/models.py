@@ -10,6 +10,7 @@ from django.db.models.functions import TruncDate
 from django.utils import timezone
 
 
+
 #Modelo para el informe operativo
 class ufc_informe_operativo(models.Model):    
 
@@ -21,15 +22,23 @@ class ufc_informe_operativo(models.Model):
     total_vagones_situados = models.IntegerField(editable=False,default=0)
     plan_total_acumulado_actual = models.IntegerField(editable=False,default=0)
     real_total_acumulado_actual = models.IntegerField(editable=False,default=0)
-    estado_parte = models.CharField(editable=False,default="Creado",max_length=14)
+    estado_parte = models.CharField(default="Creado",max_length=14)
 
     class Meta:
+        permissions = [
+            ("puede_rechazar_informe", "Puede rechazar informes operativos"),
+            ("puede_aprobar_informe", "Puede aprobar informes operativos"),
+            ("puede_cambiar_a_listo", "Puede cambiar el estado del informe a listo"),
+        ]
         verbose_name = "Parte informe operativo"
         verbose_name_plural = "Parte informe operativo"
         ordering = ["-fecha_operacion"]
 
     def __str__(self):
         return f"Fecha de operación {self.fecha_operacion} - fecha actual: {self.fecha_actual}" 
+
+
+
 
 #*************************************************************************************************************************
     

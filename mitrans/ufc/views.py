@@ -583,6 +583,12 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
         
         try:
             instance = self.get_object()
+            registros_asociados = instance.registros_vagones.all()
+            
+            for registro in registros_asociados:
+                self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
+            
+            registros_asociados.delete()
             id_objeto_vagon_cargado_descargado = instance.id
             
             # Registrar la acción en el modelo de Auditoria antes de eliminar
@@ -607,6 +613,15 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
+    def actualizar_estado_equipo_ferroviario(self, no_id, nuevo_estado):
+        from nomencladores.models import nom_equipo_ferroviario
+        if no_id:
+            equipo = nom_equipo_ferroviario.objects.filter(numero_identificacion=no_id).first()
+            if equipo:
+                equipo.estado_actual = nuevo_estado
+                equipo.save()
+    
     
     def list(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
@@ -706,6 +721,24 @@ class vagon_cargado_descargado_hoy_view_set(viewsets.ModelViewSet):
         return self.queryset.annotate(
             fecha_dia=TruncDate('fecha', output_field=DateField())
         ).filter(fecha_dia=hoy).order_by('-fecha')
+        
+        
+    def perform_destroy(self, instance):
+        registros_asociados = instance.registros_vagones.all()
+        
+        for registro in registros_asociados:
+            self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
+        
+        registros_asociados.delete()
+        instance.delete()
+
+    def actualizar_estado_equipo_ferroviario(self, no_id, nuevo_estado):
+        from nomencladores.models import nom_equipo_ferroviario
+        if no_id:
+            equipo = nom_equipo_ferroviario.objects.filter(numero_identificacion=no_id).first()
+            if equipo:
+                equipo.estado_actual = nuevo_estado
+                equipo.save()
     
     def list(self, request, *args, **kwargs):
         # Verificar permisos como en la vista original

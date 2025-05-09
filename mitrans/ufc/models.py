@@ -1,6 +1,6 @@
 from django.db import models
 from nomencladores.models import nom_tipo_equipo_ferroviario,nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_equipo_ferroviario
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.db.models import Sum,Prefetch
@@ -8,6 +8,7 @@ from django.db.models import Sum,Prefetch
 from django.db import transaction
 from django.db.models.functions import TruncDate
 from django.utils import timezone
+
 
 
 
@@ -22,23 +23,14 @@ class ufc_informe_operativo(models.Model):
     total_vagones_situados = models.IntegerField(editable=False,default=0)
     plan_total_acumulado_actual = models.IntegerField(editable=False,default=0)
     real_total_acumulado_actual = models.IntegerField(editable=False,default=0)
-    estado_parte = models.CharField(default="Creado",max_length=14)
 
     class Meta:
-        permissions = [
-            ("puede_rechazar_informe", "Puede rechazar informes operativos"),
-            ("puede_aprobar_informe", "Puede aprobar informes operativos"),
-            ("puede_cambiar_a_listo", "Puede cambiar el estado del informe a listo"),
-        ]
         verbose_name = "Parte informe operativo"
         verbose_name_plural = "Parte informe operativo"
         ordering = ["-fecha_operacion"]
 
     def __str__(self):
         return f"Fecha de operación {self.fecha_operacion} - fecha actual: {self.fecha_actual}" 
-
-
-
 
 #*************************************************************************************************************************
     
@@ -344,6 +336,7 @@ def eliminar_historial_vagon_cargado_descargado(sender, instance, **kwargs):
 #Modelo Situado
 class Situado_Carga_Descarga(models.Model):
     
+    
     t_origen = (
         ('puerto', 'Puerto'),
         ('ac_ccd', 'Acceso Comercial')
@@ -483,7 +476,6 @@ def crear_historial_situado(sender, instance, created, **kwargs):
 
         # 3. Serialización a prueba de errores
         productos_data = []
-        print(situado,situado.producto)
         for p in situado.producto.all():
             try:
                 productos_data.append({
@@ -574,9 +566,9 @@ class vagones_productos(models.Model):
         ('combustible', 'Combustible'),
     ]
     TIPO_COMBUSTIBLE_CHOICES = [
-        ('combustible_blanco', 'Combustible blanco'),
-        ('combustible_negro', 'Combustible negro'),
-        ('combustible_turbo', 'Combustible turbo'),
+        ('combust_blanco', 'Combustible blanco'),
+        ('combust_negro', 'Combustible negro'),
+        ('combust_turbo', 'Combustible turbo'),
         ('-', '-'),
     ]
 
@@ -1024,6 +1016,7 @@ def eliminar_historial_en_trenes(sender, instance, **kwargs):
 
 class por_situar(models.Model):
     
+    
     t_origen = (
         ('puerto', 'Puerto'),
         ('ac_ccd', 'Acceso Comercial')
@@ -1210,6 +1203,7 @@ def eliminar_historial_por_situar(sender, instance, **kwargs):
     
 #**********************************************************************************************************************
 class arrastres(models.Model):
+    
     
     TIPO_ORIGEN_DESTINO_CHOICES = [
         ('puerto', 'Puerto'),
@@ -1502,4 +1496,46 @@ def eliminar_historial_rotacion_vagones(sender, instance, **kwargs):
     except Exception as e:
         print(f"Error eliminando historial de rotación de vagones: {str(e)}")
     
+ 
+ 
+ 
+class vagones_por_situar_situados_pendientes(models.Model):
+    equipo_ferroviario = models.ForeignKey(
+        nom_equipo_ferroviario,
+        on_delete=models.CASCADE,
+        verbose_name="Equipo ferroviario"
+    )
+    dias = models.PositiveIntegerField(
+        verbose_name="Días",
+        validators=[MinValueValidator(1)]
+    )
     
+    # Relaciones con los modelos principales
+    por_situar = models.ForeignKey(
+        'por_situar',
+        on_delete=models.CASCADE,
+        related_name='vagones_asociados',
+        null=True,
+        blank=True
+    )
+    arrastre = models.ForeignKey(
+        'arrastres',
+        on_delete=models.CASCADE,
+        related_name='vagones_asociados',
+        null=True,
+        blank=True
+    )
+    situado = models.ForeignKey(
+        'Situado_Carga_Descarga',
+        on_delete=models.CASCADE,
+        related_name='vagones_asociados',
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        verbose_name = "Vagón asociado"
+        verbose_name_plural = "Vagones asociados"
+        
+    def __str__(self):
+        return f"{self.equipo_ferroviario} - {self.dias} días"  

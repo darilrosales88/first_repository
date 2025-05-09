@@ -7,8 +7,8 @@ from django.db.models import Q,Sum
 #Importando modelos de UFC
 from .models import (ufc_informe_operativo, vagon_cargado_descargado,producto_UFC, en_trenes,nom_equipo_ferroviario
                     ,por_situar,Situado_Carga_Descarga,arrastres,HistorialVagonesProductos 
-                    ,registro_vagones_cargados,vagones_productos,rotacion_vagones,HistorialVagonCargadoDescargado
-                     )
+                    ,registro_vagones_cargados,vagones_productos,rotacion_vagones,HistorialVagonCargadoDescargado,
+                     vagones_por_situar_situados_pendientes)
 
 from Administracion.models import Auditoria 
 from rest_framework.response import Response
@@ -42,7 +42,6 @@ class ufc_informe_operativo_serializer(serializers.ModelSerializer):
         model = ufc_informe_operativo       
         fields = '__all__'
         filterset_class: ufc_informe_operativo_filter
-        
 #****************-------------------------********************--------------------***************-----------------****
 class DateTimeToDateField(serializers.ReadOnlyField):
     """Campo personalizado para convertir datetime a date"""
@@ -335,9 +334,6 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
             'registros_vagones': {'read_only': True}
         }
 
-    
-    
-    
     def update(self, instance, validated_data):
         try:
             with transaction.atomic():
@@ -416,6 +412,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 if validated_data.get('real_carga_descarga', 0) == 0:
                     registros_data = validated_data.get('registros_vagones_data', [])
                     validated_data['real_carga_descarga'] = len(registros_data)
+                
                 # Crear instancia principal
                 instance = super().create(validated_data)
                 
@@ -423,13 +420,9 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 if productos_ids:
                     instance.producto.set(productos_ids)
                 
-               
                 # Crear y asociar registros de vagones
                 for registro_data in registros_data:
-                    print(registro_data)
-                    registro = registro_vagones_cargados.objects.create(**registro_data) # se parte aqui
-                    
-                    print(registro)
+                    registro = registro_vagones_cargados.objects.create(**registro_data)
                     instance.registros_vagones.add(registro)
                     
                     # Actualizar estado del equipo ferroviario
@@ -724,17 +717,13 @@ class en_trenes_serializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         productos_data = validated_data.pop('producto', [])
-        equipo_vagon_data=validated_data.pop('equipo_vagon',[])
         instance = en_trenes.objects.create(**validated_data)
         instance.producto.set(productos_data)
-        instance.equipo_vagon.set(equipo_vagon_data)
         return instance
 
     def update(self, instance, validated_data):
         productos_data = validated_data.pop('producto', None)
-        equipo_vagon_data=validated_data.pop('equipo_vagon',None)
         instance = super().update(instance, validated_data)
-        instance.equipo_vagon.set(equipo_vagon_data)
         if productos_data is not None:
             instance.producto.set(productos_data)
         return instance
@@ -1039,18 +1028,16 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
 
     def calculate_plan_carga(self,validated_data):
         """Calcula la sumatoria del plan diario de carga para la operación 'carga'."""
-        hoy=timezone.now().date()
         return (
-            vagon_cargado_descargado.objects.filter(fecha__date=hoy,operacion="carga",tipo_equipo_ferroviario=validated_data["tipo_equipo_ferroviario"])
+            vagon_cargado_descargado.objects.filter(operacion="carga",tipo_equipo_ferroviario=validated_data["tipo_equipo_ferroviario"])
             .aggregate(total_plan_carga=Sum("plan_diario_carga_descarga"))
             .get("total_plan_carga", 0) or 0
         )
 
     def calculate_real_carga(self,validated_data):
         """Calcula la sumatoria del real de carga para la operación 'carga'."""
-        hoy=timezone.now().date()
         return (
-            vagon_cargado_descargado.objects.filter(fecha__date=hoy,operacion="carga",tipo_equipo_ferroviario=validated_data["tipo_equipo_ferroviario"])
+            vagon_cargado_descargado.objects.filter(operacion="carga",tipo_equipo_ferroviario=validated_data["tipo_equipo_ferroviario"])
             .aggregate(total_real_carga=Sum("real_carga_descarga"))
             .get("total_real_carga", 0) or 0
         )
@@ -1113,3 +1100,9 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
         return instance
     
 
+class VagonesAsociadosSerializer(serializers.ModelSerializer):
+    equipo_ferroviario_nombre = serializers.CharField(source='equipo_ferroviario.get_tipo_equipo_display', read_only=True)
+    
+    class Meta:
+        model = vagones_por_situar_situados_pendientes
+        fields = ['id', 'equipo_ferroviario', 'equipo_ferroviario_nombre', 'dias']

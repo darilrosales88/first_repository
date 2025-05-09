@@ -6,7 +6,7 @@ from .views import vagones_productos_view_set,verificar_productos,RotacionVagone
 from .views import verificar_informe_existente,vagon_cargado_descargado_hoy_view_set,PendienteArrastre_hoy_Viewset
 from .views import SituadoCargaDescarga_hoy_Viewset,PorSituarCargaDescarga_hoy_ViewSet,en_trenes_hoy_viewset
 from .views import vagones_productos_hoy_viewset,HistorialVagonCargadoDescargadoViewSet,HistorialVagonesProductosViewSet
-from .views import actualizar_estado_parte
+from .views import VagonesAsociadosViewSet
 
 
 from django.urls import path
@@ -15,7 +15,6 @@ from django.urls import path
 urlpatterns = [
     path('verificar-informe-existente/', verificar_informe_existente, name='verificar-informe-existente'), 
     path('producto-vagon/verificar/', verificar_productos, name='verificar-productos'),
-    path('actualizar-estado-parte/', actualizar_estado_parte, name='actualizar_estado_parte'),
    #path('destinos/verificar-existencia/', verificar_destino, name='verificar_destino'),#verificar si existe un destino dado cliente-destino
     #path('entidades/verificar-existencia-reeup/', verificar_codigo_reeup, name='verificar_existencia_reeup'),#verificar si existe ya el codigo reeup
         
@@ -48,6 +47,7 @@ router.register('situados', SituadoCargaDescargaViewset, basename="situados")
 router.register('situados-hoy', SituadoCargaDescarga_hoy_Viewset, basename="situados-hoy")
 router.register('pendiente-arrastre', PendienteArrastreViewset, basename ="pendiente-arrastre")
 router.register('pendiente-arrastre-hoy', PendienteArrastre_hoy_Viewset, basename ="pendiente-arrastre-hoy")
+router.register('vagones-asociados', VagonesAsociadosViewSet, basename='vagones-asociados')
 
 #endpoint para rotacion de vagones
 router.register("rotaciones", RotacionVagonesViewSet, basename="rotacion-vagones")

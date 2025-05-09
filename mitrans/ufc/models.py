@@ -483,6 +483,7 @@ def crear_historial_situado(sender, instance, created, **kwargs):
 
         # 3. Serialización a prueba de errores
         productos_data = []
+        print(situado,situado.producto)
         for p in situado.producto.all():
             try:
                 productos_data.append({

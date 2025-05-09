@@ -103,7 +103,6 @@
                   <select
                     class="ufc-select"
                     v-model="formData.tipo_equipo"
-                    @click="buscarEquipos"
                     required
                   >
                     <option value="" disabled>Seleccione un tipo</option>
@@ -289,11 +288,78 @@
               >
                 <i class="bi bi-x-circle"></i> Cancelar
               </button>
+              <button
+                type="button"
+                class="ufc-button primary"
+                @click="agregarVagon"
+              >
+                <i class="bi bi-plus-circle"></i> Agregar Vagon
+              </button>
               <button type="submit" class="ufc-button primary">
                 <i class="bi bi-check-circle"></i> Guardar
               </button>
             </div>
           </form>
+          <div class="ufc-vagones-agregados">
+            <h3 class="ufc-subtitle">
+              <i class="bi bi-list-check"></i> Vagones agregados
+            </h3>
+
+            <div class="ufc-table-container">
+              <table class="ufc-table">
+                <thead>
+                  <tr>
+                    <th>No.</th>
+                    <th>No. ID en trenes</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(vagon, index) in vagonesAgregados" :key="index">
+                    <td>{{ index + 1 }}</td>
+                    <td>
+                      {{ vagon["datos"]["equipo_vagon"] }}
+                    </td>
+                    <td>
+                      <button
+                        class="ufc-button danger ufc-button-sm"
+                        @click="eliminarVagon(index)"
+                      >
+                        <i class="bi bi-trash"></i> Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Validación de cantidad de vagones -->
+            <div
+              class="ufc-validation-message"
+              :class="{
+                warning: vagonesAgregados.length < formData.cantidad_vagones,
+                success: vagonesAgregados.length === formData.cantidad_vagones,
+                error: vagonesAgregados.length > formData.cantidad_vagones,
+              }"
+            >
+              <p v-if="vagonesAgregados.length < formData.cantidad_vagones">
+                Faltan
+                {{ formData.cantidad_vagones - vagonesAgregados.length }}
+                vagones por agregar.
+              </p>
+              <p
+                v-else-if="
+                  vagonesAgregados.length === formData.cantidad_vagones
+                "
+              >
+                Todos los vagones han sido agregados.
+              </p>
+              <p v-else>
+                Se han agregado más vagones de los permitidos. Por favor,
+                elimina los excedentes.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1135,18 +1201,29 @@ export default {
       puertos: [],
       entidades: [],
       vagon: [],
+      vagonesAgregados: [],
+      numeroIdentificacionSeleccionado: null,
     };
   },
+  computed: {
+    formattedFechaRegistro() {
+      if (this.formData.fecha) {
+        return new Date(this.formData.fecha).toLocaleString();
+      }
+      return new Date().toLocaleString();
+    },
+  },
 
-  mounted() {
-    this.getTren();
+  async mounted() {
     this.getProductos();
-    this.getEquipos();
     this.getLocomotoras();
     this.getEntidades();
     this.getPuertos();
     this.filteredProductos = this.productos;
     this.closeDropdownsOnClickOutside();
+    this.getEquipos();
+    await this.getTren();
+    this.buscarEquipos();
   },
 
   methods: {
@@ -1194,13 +1271,18 @@ export default {
           ...this.vagon,
           producto: this.vagon.producto ? [this.vagon.producto] : [],
         };
+        this.formData.producto = [];
       } catch (error) {
         console.error("Error al obtener el vagon:", error);
       }
     },
     async submitForm() {
       try {
+        console.log(this.formData.producto);
+        const vagonesJson = localStorage.getItem("vagonesAgregados");
+        const vagones = JSON.parse(vagonesJson);
         const vagon_id = this.$route.params.id;
+        this.formData.equipo_vagon = vagones.map((vagon) => vagon.vagon_id);
         await axios.patch(`/ufc/en-trenes/${vagon_id}/`, this.formData);
 
         Swal.fire({
@@ -1258,8 +1340,9 @@ export default {
       }
     },
     async buscarEquipos() {
+      const tipo_equipo_buscar = this.formData.tipo_equipo;
       try {
-        let peticion = `/api/equipos_ferroviarios/?id_tipo_equipo_territorio=${this.formData["tipo_equipo"]}`;
+        let peticion = `/api/equipos_ferroviarios/?id_tipo_equipo_territorio=${tipo_equipo_buscar}`;
         let allEquipos = [];
         while (peticion) {
           const response = await axios.get(peticion);

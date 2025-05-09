@@ -1848,12 +1848,17 @@ class nom_embarcacion_view_set(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 
-#retorna todos los equipos ferroviarios excepto los de tipo "Locomotora", y que no se encuentren presentes en el estado 
-#vagones cargados/descargados
+#retorna todos los equipos ferroviarios excepto los de tipo "Locomotora", y que no se encuentren presentes
+#en la tabla de vagones registrado asociada al estado cargado_descargado
 class equipo_ferroviario_no_locomotora(APIView):
     def get(self, request):
         tipos_no_locomotoras = nom_tipo_equipo_ferroviario.objects.exclude(tipo_equipo='locomotora')
         
+        # Filtro adicional si se proporciona tipo_equipo
+        tipo_equipo = request.query_params.get('tipo_equipo', None)
+        if tipo_equipo:
+            tipos_no_locomotoras = tipos_no_locomotoras.filter(id=tipo_equipo)
+
         # Usamos subquery para mejor rendimiento
         vagones_registrados = registro_vagones_cargados.objects.exclude(
             Q(no_id__isnull=True) | Q(no_id__exact='')
@@ -1861,9 +1866,7 @@ class equipo_ferroviario_no_locomotora(APIView):
         
         equipos_no_locomotoras = nom_equipo_ferroviario.objects.filter(
             tipo_equipo__in=tipos_no_locomotoras
-        ).exclude(
-            numero_identificacion__in=vagones_registrados
-        )
+        ).exclude(   numero_identificacion__in=vagones_registrados) #Esto lo tuve que comentar para poder hacer que me salieran los equipos *******
         
         serializer = nom_equipo_ferroviario_serializer(equipos_no_locomotoras, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

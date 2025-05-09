@@ -104,9 +104,9 @@
                 id="tipo_combustible"
                 name="tipo_combustible"
               >
-                <option value="combust_blanco">Combustible blanco</option>
-                <option value="combust_negro">Combustible negro</option>
-                <option value="combust_turbo">Combustible turbo</option>
+                <option value="combustible_blanco">Combustible blanco</option>
+                <option value="combustible_negro">Combustible negro</option>
+                <option value="combustible_turbo">Combustible turbo</option>
               </select>
             </div>
             <!-- Campo: TEF -->

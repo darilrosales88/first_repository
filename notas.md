@@ -5,9 +5,10 @@
 - Vagones y Productos
 - Registros Por Situar
 - Registros Situados
-- +-Cargados
+- Cargados 2 +2
 - Registros Pendientes
--
+- Registros en trenes
+- Listo pal cliente casi
 
 ## Notas de Revision Antes de la Reunion Viernes 9 de Mayo
 

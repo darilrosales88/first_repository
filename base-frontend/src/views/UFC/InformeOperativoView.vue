@@ -86,10 +86,25 @@
     </div>
     <!-- Componente de Rotacion de vagones -->
     <ConsultaRotacionVagones />
+    <div class="action-buttons">
+      <button class="action-btn reject" @click="rechazar">Rechazar</button>
+      <button class="action-btn approve" @click="aprobar">Aprobar</button>
+      <button class="action-btn ready" @click="listo">Listo</button>
+    </div>
   </div>
+  
 </template>
 
 <style scoped>
+/* Estilos para los botones de acción */
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+  justify-content: flex-end;
+  padding: 10px 0;
+}
+
 /* Estilos generales del navbar */
 nav ul {
   list-style: none;
@@ -160,6 +175,8 @@ a {
 </style>
 
 <script>
+import Swal from 'sweetalert2';
+import axios from "axios";
 import NavbarComponent from "@/components/NavbarComponent.vue";
 import PorSituarCarga_Descarga from "@/components/PorSituarCarga_Descarga.vue";
 import SituadoCarga_Descarga from "@/components/SituadoCarga_Descarga.vue";
@@ -170,7 +187,6 @@ import InfOperative from "@/components/InfOperative.vue";
 import Vagones_productos from "@/components/Vagones_productos.vue";
 import AdicionarVagonProducto from "@/views/UFC/AdicionarVagonesProductos.vue";
 import ConsultaRotacionVagones from "@/components/RotacionVagonesView.vue";
-
 
 export default {
   name: "UFCView",
@@ -188,13 +204,165 @@ export default {
   },
   data() {
     return {
-      currentComponent: "PorSituarCarga_Descarga", // Componente inicial
+      userPermissions: [],
+      userGroups: [],
+      currentComponent: "PorSituarCarga_Descarga",
+      informeOperativoId: null,
+      loadingPermissions: false,
     };
   },
+  
+  async created() {
+    await this.fetchUserPermissionsAndGroups();
+  },
 
-  // En tu componente InfOperative.vue o donde tengas el botón de guardar
   methods: {
-    
+    async rechazar() {      
+      if (!this.hasPermission('puede_rechazar_informe')) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Acceso denegado',
+          text: 'No tienes permiso para rechazar informes operativos.',
+          confirmButtonColor: '#002a68',
+        });
+        return;
+      }      
+      await this.CambiarEstado("Rechazado");
+    },
+
+    async aprobar() {      
+      if (!this.hasPermission('puede_aprobar_informe')) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Acceso denegado',
+          text: 'No tienes permiso para aprobar informes operativos.',
+          confirmButtonColor: '#002a68',
+        });
+        return;
+      }      
+      await this.CambiarEstado("Aprobado");
+    },
+
+    async listo() {      
+      if (!this.hasPermission('puede_cambiar_a_listo')) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Acceso denegado',
+          text: 'No tienes permiso para cambiar el estado a Listo.',
+          confirmButtonColor: '#002a68',
+        });
+        return;
+      }      
+      await this.CambiarEstado("Listo");
+    },
+
+    hasPermission(permission) {
+      if (!this.userPermissions || !Array.isArray(this.userPermissions)) {
+        console.warn('userPermissions no está disponible o no es un array');
+        return false;
+      }
+      return this.userPermissions.some((p) => p.codename === permission);
+    },
+
+    hasGroup(group) {
+      if (!this.userGroups || !Array.isArray(this.userGroups)) {
+        return false;
+      }
+      return this.userGroups.some((g) => g.name === group);
+    },
+
+    async fetchUserPermissionsAndGroups() {
+      this.loadingPermissions = true;
+      try {
+        const userId = localStorage.getItem("userid");
+        if (userId) {
+          const response = await axios.get(`/apiAdmin/user/${userId}/permissions-and-groups/`);
+          
+          // Verificación profunda de la respuesta
+          console.log("Respuesta completa de permisos:", {
+            permissions: response.data?.permissions,
+            groups: response.data?.groups
+          });
+
+          this.userPermissions = response.data?.permissions || [];
+          this.userGroups = response.data?.groups || [];
+        }
+      } catch (error) {
+        console.error("Error al obtener permisos:", {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status
+        });
+        this.userPermissions = [];
+        this.userGroups = [];
+      } finally {
+        this.loadingPermissions = false;
+      }
+    },
+
+    async CambiarEstado(NuevoEstado) {
+      try {
+        const existeInforme = await this.verificarInformeOperativo();
+        
+        if (!existeInforme || !this.informeOperativoId) {
+          await Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No existe un informe operativo para la fecha actual.',
+            confirmButtonColor: '#002a68',
+          });
+          return;
+        }
+
+        const response = await axios.patch(
+          `/ufc/informe-operativo/${this.informeOperativoId}/`, 
+          { estado_parte: NuevoEstado },
+          { headers: { 'Content-Type': 'application/json' } }
+        );
+
+        if (response.status === 200) {
+          await Swal.fire({
+            icon: 'success',
+            title: 'Éxito',
+            text: `Estado actualizado a "${NuevoEstado}" correctamente.`,
+            confirmButtonColor: '#002a68',
+          });
+          this.$forceUpdate();
+        }
+      } catch (error) {
+        console.error("Error al cambiar estado:", {
+          url: error.config?.url,
+          status: error.response?.status,
+          data: error.response?.data
+        });
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.response?.data?.detail || 'Error al actualizar el estado.',
+          confirmButtonColor: '#002a68',
+        });
+      }
+    },
+
+    async verificarInformeOperativo() {
+      try {
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+        const response = await axios.get('/ufc/verificar-informe-existente/', {
+          params: { fecha_operacion: fechaFormateada }
+        });
+
+        if (response.data.existe) {
+          this.informeOperativoId = response.data.id;
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error("Error al verificar informe:", error);
+        return false;
+      }
+    },
   }
 };
 </script>

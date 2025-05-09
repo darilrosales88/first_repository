@@ -57,12 +57,12 @@
             <th scope="col">Descripción</th>
             <th scope="col">Acciones</th>
           </tr>
-        </thead>
+        </thead><!-- aqyuies -->
         <tbody>
           <tr v-for="item in tipos_equipos" :key="item.id">
-            <td>{{ getTipoEquipoText(item.tipo_equipo) }}</td>
-            <td>{{ getTipoCargaText(item.tipo_carga) }}</td>
-            <td>{{ getTipoCombustibleText(item.tipo_combustible) }}</td>
+            <td>{{ item.tipo_equipo_name }}</td>
+            <td>{{ item.tipo_carga }}</td>
+            <td>{{ item.tipo_combustible_name }}</td>
             <td>{{ item.longitud }}</td>
             <td>{{ item.peso_neto_sin_carga }}</td>
             <td>{{ item.peso_maximo_con_carga }}</td>

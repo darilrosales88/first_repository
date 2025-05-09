@@ -607,7 +607,7 @@ class vagones_productos(models.Model):
         blank=True,
         related_name='vagones_productos'
     )
-    plan_anual = models.IntegerField()
+    plan_anual = models.IntegerField(default=0)
     plan_acumulado_dia_anterior = models.IntegerField()
     real_acumulado_dia_anterior = models.IntegerField()
 

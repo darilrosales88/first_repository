@@ -558,7 +558,7 @@ export default {
       return;
     }
 
-    // 1. Verifificar que el informe operativo existe ya para la fecha creada
+    // 1. Verificar que el informe operativo existe ya para la fecha creada
     const existeInforme = await this.verificarInformeOperativo();
     if (!existeInforme) {
       Swal.fire(
@@ -568,10 +568,20 @@ export default {
       );
       this.$router.push({ name: "InfoOperativo" });
       return;
-      
     }
 
-    // 2. Basic validations
+    // 2. Verificar que el informe no esté en estado "Aprobado"
+    const informeResponse = await axios.get(`/ufc/informe-operativo/${this.informeOperativoId}/`);
+    if (informeResponse.data.estado_parte === "Aprobado") {
+      Swal.fire(
+        "Error",
+        "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
+        "error"
+      );
+      return;
+    }
+
+    // 3. Basic validations
     if (!this.formData.tipo_equipo_ferroviario || 
         !this.formData.tipo_origen ||
         !this.formData.origen || 
@@ -581,17 +591,17 @@ export default {
       return;
     }
 
-    // 3. Product validation for loaded wagons
+    // 4. Product validation for loaded wagons
     if (this.formData.estado === "cargado" && 
         (!this.formData.lista_productos || this.formData.lista_productos.length === 0)) {
       Swal.fire("Error", "Debe seleccionar al menos un producto.", "error");
       return;
     }
 
-    // 4. Calculate real value
+    // 5. Calculate real value
     await this.calcularRealCargaDescarga();
 
-    // 5. Prepare data
+    // 6. Prepare data
     const datosEnvio = {
       ...this.formData,      
       informe_operativo: this.informeOperativoId,
@@ -610,10 +620,10 @@ export default {
       }))
     };
 
-    // 6. Send data
+    // 7. Send data
     const response = await axios.post("/ufc/vagones-cargados-descargados/", datosEnvio);
 
-    // 7. Reset and show success
+    // 8. Reset and show success
     this.registros_vagones_temporales = [];
     this.formData.lista_productos = [];
     this.resetForm();

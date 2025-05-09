@@ -254,10 +254,6 @@ export default {
   name: "ConsultaRotacionVagones",
   data() {
     return {
-      formData: {
-        fechaInicial: "",
-        fechaFinal: "",
-      },
       resumen: {
         totalVagonesEnServicio: 0,
         planCarga: 0,
@@ -352,7 +348,7 @@ export default {
       this.indiceEdicion = null;
     },
 
-    async verificarInformeOperativo() {
+    /*  async verificarInformeOperativo() {
       try {
         this.formData.fecha = new Date().toISOString();
         const today = new Date();
@@ -373,12 +369,12 @@ export default {
         console.error("Error al verificar informe:", error);
         return false;
       }
-    },
+    }, */
 
     async guardarRotacion() {
       // 1. Verificar si existe informe operativo para la fecha actual
-      const existeInforme = await this.verificarInformeOperativo();
-      if (!existeInforme) {
+      /* const existeInforme = await this.verificarInformeOperativo(); */
+      if (0) {
         Swal.fire(
           "Error",
           "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
@@ -407,7 +403,7 @@ export default {
           tipo_equipo_ferroviario: this.nuevaRotacion.tipoEquipo,
           en_servicio: this.nuevaRotacion.vagonesEnServicio,
         });
-
+        await this.get_rotaciones();
         // 4. Actualizar la tabla local con el nuevo registro desde la respuesta del backend
 
         // 5. Mostrar mensaje de éxito y cerrar el modal

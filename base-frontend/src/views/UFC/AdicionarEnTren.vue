@@ -605,6 +605,7 @@ export default {
           confirmButtonText: "Entendido",
         });
       }
+      this.$router.push({ name: "InfoOperativo" });
     },
     onVagonChange(event) {
       const selectedId = this.formData.equipo_vagon;

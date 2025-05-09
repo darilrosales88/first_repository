@@ -65,7 +65,7 @@
             <td>{{ item.numero_identificacion }}</td>
             <td>{{ item.territorio_name }}</td>
             <td>{{ item.tipo_carga }}</td>
-            <td>{{ item.tipo_combustible }}</td>
+            <td>{{ item.tipo_combustible_name }}</td>
             <td>{{ item.peso_maximo }}</td>
             <td>
               <button

@@ -448,12 +448,12 @@ class nom_equipo_ferroviario_serializer(serializers.ModelSerializer):
     #aqui se captura el texto de la seleccion del tipo de equipo y no el valor 
     tipo_equipo_name = serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
     territorio_name = serializers.ReadOnlyField(source = 'get_territorio_display') 
- 
+    tipo_combustible_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_combustible_display')
        
     
     class Meta:
         model = nom_equipo_ferroviario       
-        fields = ('id','tipo_equipo','tipo_equipo_name','estado_actual', 'numero_identificacion','territorio','territorio_name','tipo_carga','tipo_combustible','peso_maximo')
+        fields = ('id','tipo_equipo','tipo_equipo_name','estado_actual', 'numero_identificacion','territorio','territorio_name','tipo_carga','tipo_combustible','tipo_combustible_name','peso_maximo')
         filterset_class: nom_equipo_ferroviario_filter 
 
 #****************-------------------------********************--------------------***************-----------------********************************

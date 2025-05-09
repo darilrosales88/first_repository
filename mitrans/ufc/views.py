@@ -43,6 +43,11 @@ from datetime import datetime
 from django.db.models.functions import Cast
 from django.db import transaction
 
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+import json
+
 
 
 # Verifica si el usuario tiene el rol "ufc"
@@ -151,7 +156,44 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
         )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    #funcion añadida para la actualizacion del campo estado_parte***
+    def partial_update(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='RevisorUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        instance = self.get_object()
+        
+        # Solo permitir actualizar el estado_parte
+        if 'estado_parte' not in request.data:
+            return Response(
+                {"detail": "Se requiere el campo 'estado_parte'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        serializer = self.get_serializer(
+            instance, 
+            data={'estado_parte': request.data['estado_parte']}, 
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
 
+        # Auditoría
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user,
+            accion=f"Actualizar estado del Informe operativo a {serializer.data['estado_parte']}",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return Response(serializer.data)
+ 
     def update(self, request, *args, **kwargs):
         
         if not request.user.groups.filter(name='AdminUFC').exists():
@@ -242,6 +284,48 @@ def verificar_informe_existente(request):
         return Response({"existe": False})
     except ValueError:
         return Response({"error": "Formato de fecha inválido"}, status=400)
+    
+#vista para cambiar estado_parte en ufc_informe_operativo
+# En tu archivo views.py de la app ufc
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from .models import ufc_informe_operativo
+from django.utils import timezone
+import json
+
+@require_http_methods(["POST"])
+def actualizar_estado_parte(request):
+    try:
+        data = json.loads(request.body)
+        nuevo_estado = data.get('nuevo_estado')
+        
+        if not nuevo_estado:
+            return JsonResponse({'error': 'Estado no proporcionado'}, status=400)
+        
+        # Obtener la fecha actual
+        hoy = timezone.now().date()
+        
+        # Buscar el informe del día actual
+        informe = ufc_informe_operativo.objects.filter(
+            fecha_operacion__date=hoy
+        ).first()
+        
+        if not informe:
+            return JsonResponse({'error': 'No existe un informe operativo para la fecha actual'}, status=404)
+        
+        informe.estado_parte = nuevo_estado
+        informe.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Estado actualizado a {nuevo_estado} correctamente',
+            'nuevo_estado': nuevo_estado,
+            'informe_id': informe.id
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+#****************************************************************************************************************************
 
 #para vagones y productos
 class vagones_productos_view_set(viewsets.ModelViewSet):
@@ -499,6 +583,12 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
         
         try:
             instance = self.get_object()
+            registros_asociados = instance.registros_vagones.all()
+            
+            for registro in registros_asociados:
+                self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
+            
+            registros_asociados.delete()
             id_objeto_vagon_cargado_descargado = instance.id
             
             # Registrar la acción en el modelo de Auditoria antes de eliminar
@@ -523,6 +613,15 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
+    def actualizar_estado_equipo_ferroviario(self, no_id, nuevo_estado):
+        from nomencladores.models import nom_equipo_ferroviario
+        if no_id:
+            equipo = nom_equipo_ferroviario.objects.filter(numero_identificacion=no_id).first()
+            if equipo:
+                equipo.estado_actual = nuevo_estado
+                equipo.save()
+    
     
     def list(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
@@ -622,6 +721,24 @@ class vagon_cargado_descargado_hoy_view_set(viewsets.ModelViewSet):
         return self.queryset.annotate(
             fecha_dia=TruncDate('fecha', output_field=DateField())
         ).filter(fecha_dia=hoy).order_by('-fecha')
+        
+        
+    def perform_destroy(self, instance):
+        registros_asociados = instance.registros_vagones.all()
+        
+        for registro in registros_asociados:
+            self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
+        
+        registros_asociados.delete()
+        instance.delete()
+
+    def actualizar_estado_equipo_ferroviario(self, no_id, nuevo_estado):
+        from nomencladores.models import nom_equipo_ferroviario
+        if no_id:
+            equipo = nom_equipo_ferroviario.objects.filter(numero_identificacion=no_id).first()
+            if equipo:
+                equipo.estado_actual = nuevo_estado
+                equipo.save()
     
     def list(self, request, *args, **kwargs):
         # Verificar permisos como en la vista original

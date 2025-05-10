@@ -509,6 +509,7 @@ class HistorialVagonesProductosViewSet(viewsets.ReadOnlyModelViewSet):
 
 #/*********************************************************************************************************************************************
 #para el estado de vagones cargados/descargados
+#para el estado de vagones cargados/descargados
 class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
     queryset = vagon_cargado_descargado.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = vagon_cargado_descargado_serializer
@@ -583,12 +584,6 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
         
         try:
             instance = self.get_object()
-            registros_asociados = instance.registros_vagones.all()
-            
-            for registro in registros_asociados:
-                self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
-            
-            registros_asociados.delete()
             id_objeto_vagon_cargado_descargado = instance.id
             
             # Registrar la acción en el modelo de Auditoria antes de eliminar
@@ -613,15 +608,6 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
-    def actualizar_estado_equipo_ferroviario(self, no_id, nuevo_estado):
-        from nomencladores.models import nom_equipo_ferroviario
-        if no_id:
-            equipo = nom_equipo_ferroviario.objects.filter(numero_identificacion=no_id).first()
-            if equipo:
-                equipo.estado_actual = nuevo_estado
-                equipo.save()
-    
     
     def list(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
@@ -708,7 +694,6 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
                 {"error": f"No se pudieron obtener los registros completos: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
 class vagon_cargado_descargado_hoy_view_set(viewsets.ModelViewSet):
     queryset = vagon_cargado_descargado.objects.all()
     serializer_class = vagon_cargado_descargado_serializer

@@ -335,9 +335,6 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
             'registros_vagones': {'read_only': True}
         }
 
-    
-    
-    
     def update(self, instance, validated_data):
         try:
             with transaction.atomic():
@@ -416,6 +413,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 if validated_data.get('real_carga_descarga', 0) == 0:
                     registros_data = validated_data.get('registros_vagones_data', [])
                     validated_data['real_carga_descarga'] = len(registros_data)
+                
                 # Crear instancia principal
                 instance = super().create(validated_data)
                 
@@ -423,13 +421,9 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 if productos_ids:
                     instance.producto.set(productos_ids)
                 
-               
                 # Crear y asociar registros de vagones
                 for registro_data in registros_data:
-                    print(registro_data)
-                    registro = registro_vagones_cargados.objects.create(**registro_data) # se parte aqui
-                    
-                    print(registro)
+                    registro = registro_vagones_cargados.objects.create(**registro_data)
                     instance.registros_vagones.add(registro)
                     
                     # Actualizar estado del equipo ferroviario
@@ -460,7 +454,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
             p.producto.nombre_producto 
             for p in obj.producto.all() 
             if hasattr(p, 'producto')
-        ])   
+        ])  
 
 #serializador para el historial de vagon_cargado_descargado**************************************************
 

@@ -298,7 +298,7 @@ export default {
         showCancelButton: true,
         confirmButtonColor: '#002a68',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, aprobar',
+        confirmButtonText: 'Sí, rechazar',
         cancelButtonText: 'Cancelar'
       });
 
@@ -353,7 +353,7 @@ export default {
         showCancelButton: true,
         confirmButtonColor: '#002a68',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, aprobar',
+        confirmButtonText: 'Sí, poner a listo',
         cancelButtonText: 'Cancelar'
       });
 

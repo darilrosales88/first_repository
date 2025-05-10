@@ -8,6 +8,8 @@ from django.db.models import Sum,Prefetch
 from django.db import transaction
 from django.db.models.functions import TruncDate
 from django.utils import timezone
+from datetime import datetime, date
+from django.db.models.functions import Cast
 
 
 
@@ -16,12 +18,12 @@ class ufc_informe_operativo(models.Model):
 
     fecha_operacion = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de operación")
     fecha_actual = models.DateTimeField(auto_now=True, verbose_name="Fecha actual")
-    plan_mensual_total = models.IntegerField(editable=False,default=0)
-    plan_diario_total_vagones_cargados = models.IntegerField(editable=False,default=0)
-    real_total_vagones_cargados = models.IntegerField(editable=False,default=0)
-    total_vagones_situados = models.IntegerField(editable=False,default=0)
-    plan_total_acumulado_actual = models.IntegerField(editable=False,default=0)
-    real_total_acumulado_actual = models.IntegerField(editable=False,default=0)
+    plan_mensual_total = models.IntegerField(default=0)
+    plan_diario_total_vagones_cargados = models.IntegerField(default=0)
+    real_total_vagones_cargados = models.IntegerField(default=0)
+    total_vagones_situados = models.IntegerField(default=0)
+    plan_total_acumulado_actual = models.IntegerField(default=0)
+    real_total_acumulado_actual = models.IntegerField(default=0)
     estado_parte = models.CharField(default="Creado",max_length=14)
 
     class Meta:
@@ -36,9 +38,6 @@ class ufc_informe_operativo(models.Model):
 
     def __str__(self):
         return f"Fecha de operación {self.fecha_operacion} - fecha actual: {self.fecha_actual}" 
-
-
-
 
 #*************************************************************************************************************************
     
@@ -629,9 +628,10 @@ class vagones_productos(models.Model):
         productos_str = ", ".join(nombres_productos) if nombres_productos else "Sin productos"        
         return f"Vagones y productos: {productos_str}"   
 
-#Actualizando el resto de los campos de forma automatica, se activa cuando se inserta un registro en vagones_productos
-@receiver([post_save, post_delete], sender=vagon_cargado_descargado)
-@receiver([post_save, post_delete], sender=Situado_Carga_Descarga)
+
+#funcion que calcula automaticamente los valores de los campos de vagones_productos
+@receiver(post_save, sender=vagon_cargado_descargado)
+@receiver(post_save, sender=Situado_Carga_Descarga)
 def actualizar_campos_automaticos_vagones_productos(sender, instance, **kwargs):    
     '''Actualiza los campos automáticos en vagones_productos cuando hay cambios
     en los modelos relacionados vagon_cargado_descargado, Situado_Carga_Descarga'''
@@ -1501,5 +1501,86 @@ def eliminar_historial_rotacion_vagones(sender, instance, **kwargs):
         ).delete()
     except Exception as e:
         print(f"Error eliminando historial de rotación de vagones: {str(e)}")
-    
-    
+
+
+#funcion que calcula de forma automatica los campos del parte ufc_informe_operativo
+@receiver(post_save, sender=vagon_cargado_descargado)
+@receiver(post_save, sender=Situado_Carga_Descarga)
+@receiver(post_save, sender=vagones_productos)
+def calcular_informe_operativo_diario(sender, instance, created, **kwargs):
+    """
+    Calcula y actualiza los datos del informe operativo diario.
+    Se ejecuta después de guardar un vagon_cargado_descargado.
+    """
+    try:
+        # Usamos una transacción atómica para evitar inconsistencias
+        with transaction.atomic():
+            # Obtener la fecha actual (sin la hora)
+            hoy = date.today()
+            
+            # Verificar si ya existe un informe para hoy
+            informe, created = ufc_informe_operativo.objects.get_or_create(
+                fecha_operacion__date=hoy,
+                defaults={'fecha_operacion': timezone.now()}
+            )
+            
+            # 1. Sumatoria de plan_mensual de vagones_productos (solo del día actual)
+            plan_mensual_total = vagones_productos.objects.filter(
+                fecha__date=hoy
+            ).aggregate(
+                total=Sum('plan_mensual')
+            )['total'] or 0
+            
+            # 2. Sumatoria de plan_diario_carga_descarga (solo del día actual)
+            plan_diario_total = vagon_cargado_descargado.objects.filter(
+                fecha__date=hoy
+            ).aggregate(
+                total=Sum('plan_diario_carga_descarga')
+            )['total'] or 0
+            
+            # 3. Sumatoria de real_carga_descarga (solo del día actual)
+            real_total = vagon_cargado_descargado.objects.filter(
+                fecha__date=hoy
+            ).aggregate(
+                total=Sum('real_carga_descarga')
+            )['total'] or 0
+            
+            # 4. Sumatoria de situados (solo del día actual) - Versión compatible
+            situados_total = 0
+            situados_qs = Situado_Carga_Descarga.objects.filter(
+                fecha__date=hoy
+            ).only('situados')
+            
+            for situado in situados_qs:
+                try:
+                    situados_total += int(situado.situados) if situado.situados else 0
+                except (ValueError, TypeError):
+                    continue
+            
+            # 5. Sumatoria de plan_acumulado_actual (solo del día actual)
+            plan_acumulado_actual = vagones_productos.objects.filter(
+                fecha__date=hoy
+            ).aggregate(
+                total=Sum('plan_acumulado_actual')
+            )['total'] or 0
+            
+            # 6. Sumatoria de real_acumulado_actual (solo del día actual)
+            real_acumulado_actual = vagones_productos.objects.filter(
+                fecha__date=hoy
+            ).aggregate(
+                total=Sum('real_acumulado_actual')
+            )['total'] or 0
+            
+            # Actualizar el informe con los valores calculados
+            informe.plan_mensual_total = plan_mensual_total
+            informe.plan_diario_total_vagones_cargados = plan_diario_total
+            informe.real_total_vagones_cargados = real_total
+            informe.total_vagones_situados = situados_total
+            informe.plan_total_acumulado_actual = plan_acumulado_actual
+            informe.real_total_acumulado_actual = real_acumulado_actual
+            informe.save()
+            
+    except Exception as e:
+        # En producción, usa logging.getLogger(__name__).error(...)
+        print(f"Error al calcular el informe operativo: {str(e)}")
+        # No relanzamos la excepción para no interrumpir el flujo principal

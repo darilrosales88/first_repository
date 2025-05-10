@@ -340,6 +340,7 @@ export default {
   },
   data() {
     return {
+      informeOperativoId: null,
       formData: {
         tipo_origen: "",
         origen: "",
@@ -493,6 +494,18 @@ export default {
         this.$router.push({ name: "InfoOperativo" });
         return;
       }
+
+      // 2. Verificar que el informe no esté en estado "Aprobado"
+    const informeResponse = await axios.get(`/ufc/informe-operativo/${this.informeOperativoId}/`);
+    console.log("anijijijijiji",informeResponse.data.estado_parte);
+    if (informeResponse.data.estado_parte === "Aprobado") {
+      Swal.fire(
+        "Error",
+        "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
+        "error"
+      );
+      return;
+    }
 
       this.isSubmitting = true;
       try {

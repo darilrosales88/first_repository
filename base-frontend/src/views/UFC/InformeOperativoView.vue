@@ -11,7 +11,7 @@
   </div>Historial de cargados/descargados
   <button class="btn btn-link p-0">
           <router-link
-            to="HistorialCargadoGescargado"
+            to="HistorialCargadoDescargado"
             title="Ver historial de vagones cargados descargados"
           >
             <i class="bi bi-plus-circle fs-3"></i>
@@ -282,7 +282,7 @@ export default {
 
   methods: {
     async rechazar() {      
-      if (!this.hasPermission('puede_rechazar_informe')) {
+      if (!this.hasGroup('RevisorUFC')) {
         await Swal.fire({
           icon: 'error',
           title: 'Acceso denegado',
@@ -309,7 +309,7 @@ export default {
     },
 
     async aprobar() {      
-      if (!this.hasPermission('puede_aprobar_informe')) {
+      if (!this.hasGroup('RevisorUFC')) {
         await Swal.fire({
           icon: 'error',
           title: 'Acceso denegado',
@@ -337,7 +337,7 @@ export default {
       }
     },
     async listo() {      
-      if (!this.hasPermission('puede_cambiar_a_listo')) {
+      if (!this.hasGroup('AdminUFC')) {
         await Swal.fire({
           icon: 'error',
           title: 'Acceso denegado',

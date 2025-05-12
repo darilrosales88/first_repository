@@ -677,6 +677,8 @@ async calcularRealCargaDescarga() {
           this.userPermissions = response.data.permissions;
           this.userGroups = response.data.groups;
         }
+        console.log("Permisos: ",this.userPermissions );
+        console.log("Grupos: ",this.userGroups );
       } catch (error) {
         console.error("Error al obtener permisos y grupos:", error);
       }

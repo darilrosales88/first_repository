@@ -47,8 +47,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 import json
-
-
+from datetime import date
 
 # Verifica si el usuario tiene el rol "ufc"
 class IsUFCPermission(permissions.BasePermission):
@@ -159,7 +158,7 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
     
     #funcion añadida para la actualizacion del campo estado_parte***
     def partial_update(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='RevisorUFC').exists():
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
                 {"detail": "No tiene permiso para realizar esta acción."},
                 status=status.HTTP_403_FORBIDDEN
@@ -524,6 +523,14 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
             return self.filter_class({'tef_prod_estado': search}, queryset=queryset).qs
         
         return queryset
+    def perform_destroy(self, instance):
+        registros_asociados = instance.registros_vagones.all()
+        
+        for registro in registros_asociados:
+            self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
+        
+        registros_asociados.delete()
+        instance.delete()
 
     def create(self, request, *args, **kwargs):
         print("Datos recibidos en create:", request.data)  # Verificar datos entrantes
@@ -646,7 +653,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
             total += registro.registros_vagones.count()
             
         return Response({'total': total})
-    # En el vagon_cargado_descargado_view_set, agrega este nuevo método:
+   
     @action(detail=True, methods=['get'], url_path='registros-vagones')
     def obtener_registros_vagones(self, request, pk=None):
         """
@@ -1682,39 +1689,4 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
 
         return super().list(request, *args, **kwargs)
     
-""" class RotacionVagones_hoy_ViewSet(viewsets.ModelViewSet):
-    queryset = rotacion_vagones.objects.all()
-    serializer_class = RotacionVagonesSerializer
-    
-    def get_queryset(self):
-        # Obtener la fecha actual (sin la hora)
-        hoy = timezone.now().date()
-        
-        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
-        return self.queryset.annotate(
-            fecha_dia=TruncDate('creado_el', output_field=DateField())
-        ).filter(fecha_dia=hoy).order_by('-creado_el')
-    
-    def list(self, request, *args, **kwargs):
-        # Verificar permisos como en la vista original
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de vagones en rotación hoy",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        
-        return super().list(request, *args, **kwargs) """
-
-
 #*************Termina View Rotacion de Vagones **********************

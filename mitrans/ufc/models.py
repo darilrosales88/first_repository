@@ -340,6 +340,14 @@ def eliminar_historial_vagon_cargado_descargado(sender, instance, **kwargs):
         
     except Exception as e:
         print(f"Error al eliminar historial del vagon {instance.id}: {str(e)}")
+
+
+    
+    
+    
+    
+    return
+
 #************************************************************************************************************************
 #Modelo Situado
 class Situado_Carga_Descarga(models.Model):
@@ -1502,4 +1510,13 @@ def eliminar_historial_rotacion_vagones(sender, instance, **kwargs):
     except Exception as e:
         print(f"Error eliminando historial de rotación de vagones: {str(e)}")
     
+@receiver(post_save, sender=vagon_cargado_descargado)
+def actualizar_rotaciones(sender, instance, **kwargs):
+    """
+    Esta funcion actualiza la rotacion de vagones al crear un nuevo registro de vagon_cargado
+    ***********
+    """
+    rotacion_tipo_equipo= rotacion_vagones.objects.filter(tipo_equipo_ferroviario=instance.tipo_equipo_ferroviario).values()
     
+    #for rotacion in rotacion_tipo_equipo:
+        

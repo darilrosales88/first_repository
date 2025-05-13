@@ -117,7 +117,7 @@
                   <select
                     class="ufc-select"
                     v-model="formData.tipo_equipo"
-                    @change="buscarEquipos"
+                    @select="buscarEquipos"
                     required
                   >
                     <option value="" disabled>Seleccione un tipo</option>
@@ -493,6 +493,7 @@ export default {
     this.getLocomotoras();
     this.getEntidades();
     this.getPuertos();
+    this.getEquipos();
     this.filteredProductos = this.productos;
     this.closeDropdownsOnClickOutside();
   },
@@ -720,7 +721,7 @@ export default {
         );
       }
     },
-    async getEquipos() {
+    async buscarEquipos() {
       try {
         let url = "/api/e-f-no-locomotora/";
         if (!this.formData.tipo_equipo) {

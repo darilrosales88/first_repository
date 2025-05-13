@@ -171,7 +171,7 @@
                 required
               >
                 <option value="cargado">Cargado</option>
-                <option value="vacio">Vacio</option>
+                <option value="vacio">Vacío</option>
               </select>
             </div>
           </div>

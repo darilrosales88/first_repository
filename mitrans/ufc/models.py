@@ -16,8 +16,8 @@ from django.db.models.functions import Cast
 #Modelo para el informe operativo
 class ufc_informe_operativo(models.Model):    
 
-    fecha_operacion = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de operación")
-    fecha_actual = models.DateTimeField(auto_now=True, verbose_name="Fecha actual")
+    fecha_operacion = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de operación", unique=True)
+    fecha_actual = models.DateTimeField(auto_now=True, verbose_name="Fecha actual", unique=True)
     plan_mensual_total = models.IntegerField(default=0)
     plan_diario_total_vagones_cargados = models.IntegerField(default=0)
     real_total_vagones_cargados = models.IntegerField(default=0)
@@ -241,7 +241,7 @@ class HistorialVagonCargadoDescargado(models.Model):
     def __str__(self):
         return f"Historial para informe {self.informe_operativo.id} - {self.fecha_creacion}"
 
-#funcion que se encarga de almacenar el historial de vagon_cargado_dscargado, la activa la creacion del modelo padre
+#funcion que se encarga de almacenar el historial de vagon_cargado_descargado, la activa la creacion del modelo padre
 @receiver(post_save, sender=ufc_informe_operativo)
 def crear_historial_vagones_al_aprobar(sender, instance, created, **kwargs):
     """
@@ -1525,11 +1525,16 @@ def calcular_informe_operativo_diario(sender, instance, created, **kwargs):
             # Obtener la fecha actual (sin la hora)
             hoy = date.today()
             
-            # Verificar si ya existe un informe para hoy
-            informe, created = ufc_informe_operativo.objects.get_or_create(
-                fecha_operacion__date=hoy,
-                defaults={'fecha_operacion': timezone.now()}
-            )
+            informe = ufc_informe_operativo.objects.filter(
+                fecha_operacion__date=hoy
+            ).order_by('-fecha_operacion').first()
+            
+            """ # Obtener el informe más reciente para hoy o crear uno nuevo            
+
+            if not informe:
+                informe = ufc_informe_operativo.objects.create(
+                    fecha_operacion=timezone.now()
+                ) """
             
             # 1. Sumatoria de plan_mensual de vagones_productos (solo del día actual)
             plan_mensual_total = vagones_productos.objects.filter(

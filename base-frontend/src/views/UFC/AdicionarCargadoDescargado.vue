@@ -171,7 +171,7 @@
                 required
               >
                 <option value="cargado">Cargado</option>
-                <option value="vacio">Vacio</option>
+                <option value="vacio">Vacío</option>
               </select>
             </div>
           </div>
@@ -285,8 +285,7 @@
                 v-model="formData.causas_incumplimiento"
                 id="causas_incumplimiento"
                 name="causas_incumplimiento"
-                rows="3"
-                required
+                rows="3"                
               ></textarea>
             </div>
           </div>

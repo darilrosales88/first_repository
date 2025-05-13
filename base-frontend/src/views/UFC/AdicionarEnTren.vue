@@ -117,7 +117,7 @@
                   <select
                     class="ufc-select"
                     v-model="formData.tipo_equipo"
-                    @click="buscarEquipos"
+                    @select="buscarEquipos"
                     required
                   >
                     <option value="" disabled>Seleccione un tipo</option>
@@ -452,6 +452,7 @@ export default {
   },
   data() {
     return {
+      informeOperativoId: null,
       formData: {
         locomotora: "",
         tipo_origen: "acc_d",
@@ -489,10 +490,10 @@ export default {
   },
   mounted() {
     this.getProductos();
-    this.getEquipos();
     this.getLocomotoras();
     this.getEntidades();
     this.getPuertos();
+    this.getEquipos();
     this.filteredProductos = this.productos;
     this.closeDropdownsOnClickOutside();
   },
@@ -511,6 +512,28 @@ export default {
           this.$router.push({ name: "InfoOperativo" });
         }
       });
+    },
+    async verificarInformeOperativo() {
+      try {
+        this.formData.fecha = new Date().toISOString();
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(
+          today.getMonth() + 1
+        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+        const response = await axios.get("/ufc/verificar-informe-existente/", {
+          params: { fecha_operacion: fechaFormateada },
+        });
+
+        if (response.data.existe) {
+          this.informeOperativoId = response.data.id;
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error("Error al verificar informe:", error);
+        return false;
+      }
     },
     resetForm() {
       this.formData = {
@@ -532,81 +555,136 @@ export default {
       localStorage.removeItem("formData");
     },
     async submitForm() {
-      const vagonesJson = localStorage.getItem("vagonesAgregados");
-      if (vagonesJson) {
-        const vagones = JSON.parse(vagonesJson);
-        /*  this.formData["equipo_vagon"] = vagones; */
-        /*  this.formData["equipo_vagon"] = [];
-        for (const vagon of vagones) {
-          this.formData["equipo_vagon"].push(vagon["vagon_id"]);
-        } */
-        this.formData.equipo_vagon = vagones.map((vagon) => vagon.vagon_id);
-        try {
-          if (!this.formData.tipo_origen) {
-            throw new Error("El campo Tipo de Origen es requerido");
-          }
+      try {
+        const existeInforme = await this.verificarInformeOperativo();
+        if (!existeInforme) {
+          Swal.fire(
+            "Error",
+            "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+            "error"
+          );
+          return;
+        }
 
-          if (!this.formData.origen) {
-            throw new Error("El campo Origen es requerido");
-          }
-
-          if (!this.formData.tipo_equipo) {
-            throw new Error("El campo Tipo de Equipo es requerido");
-          }
-
-          if (
-            this.formData.estado === "cargado" &&
-            this.formData.producto.length === 0
-          ) {
-            throw new Error(
-              "Debe seleccionar al menos un producto cuando el estado es Cargado"
-            );
-          }
-
-          if (
-            !this.formData.cantidad_vagones ||
-            this.formData.cantidad_vagones < 1
-          ) {
-            throw new Error("La cantidad por situar debe ser al menos 1");
-          }
-          console.log("Datos del formulario:", this.formData);
-          await axios.post("/ufc/en-trenes-hoy/", this.formData);
-          Swal.fire({
-            title: "¡Éxito!",
-            text: "El formulario ha sido procesado correctamente",
-            icon: "success",
-            confirmButtonText: "Aceptar",
-          });
-          this.resetForm();
-        } catch (error) {
-          console.error("Error al enviar el formulario:", error);
-
-          let errorMessage = "Hubo un error al enviar el formulario";
-          if (error.response) {
-            if (error.response.data) {
-              errorMessage = error.response.data.non_field_errors
-                ? error.response.data.non_field_errors[0]
-                : Object.values(error.response.data).join("\n");
-            }
-          }
-
+        // 1. Verificar que hay vagones agregados
+        const vagonesJson = localStorage.getItem("vagonesAgregados");
+        if (!vagonesJson) {
           Swal.fire({
             title: "Error",
-            text: errorMessage,
+            text: "No hay vagones para agregar",
             icon: "error",
             confirmButtonText: "Entendido",
           });
+          return;
         }
-      } else {
+
+        // 2. Verificar si existe un informe operativo para la fecha actual
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(
+          today.getMonth() + 1
+        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+        const informeResponse = await axios.get(
+          "/ufc/verificar-informe-existente/",
+          {
+            params: { fecha_operacion: fechaFormateada },
+          }
+        );
+
+        if (!informeResponse.data.existe) {
+          Swal.fire(
+            "Error",
+            "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+            "error"
+          );
+          return;
+        }
+
+        // 3. Verificar que el informe no esté en estado "Aprobado"
+        const informeDetalleResponse = await axios.get(
+          `/ufc/informe-operativo/${informeResponse.data.id}/`
+        );
+        if (informeDetalleResponse.data.estado_parte === "Aprobado") {
+          Swal.fire(
+            "Error",
+            "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
+            "error"
+          );
+          return;
+        }
+
+        // 4. Validaciones básicas del formulario
+        if (!this.formData.tipo_origen) {
+          throw new Error("El campo Tipo de Origen es requerido");
+        }
+
+        if (!this.formData.origen) {
+          throw new Error("El campo Origen es requerido");
+        }
+
+        if (!this.formData.tipo_equipo) {
+          throw new Error("El campo Tipo de Equipo es requerido");
+        }
+
+        if (
+          this.formData.estado === "cargado" &&
+          this.formData.producto.length === 0
+        ) {
+          throw new Error(
+            "Debe seleccionar al menos un producto cuando el estado es Cargado"
+          );
+        }
+
+        if (
+          !this.formData.cantidad_vagones ||
+          this.formData.cantidad_vagones < 1
+        ) {
+          throw new Error("La cantidad por situar debe ser al menos 1");
+        }
+
+        // 5. Preparar datos para enviar
+        const vagones = JSON.parse(vagonesJson);
+        this.formData.equipo_vagon = vagones.map((vagon) => vagon.vagon_id);
+        this.formData.informe_operativo = informeResponse.data.id; // Añadir el ID del informe operativo
+
+        console.log("Datos del formulario:", this.formData);
+
+        // 6. Enviar datos al backend
+        await axios.post("/ufc/en-trenes-hoy/", this.formData);
+
+        // 7. Mostrar éxito y resetear formulario
+        Swal.fire({
+          title: "¡Éxito!",
+          text: "El formulario ha sido procesado correctamente",
+          icon: "success",
+          confirmButtonText: "Aceptar",
+        });
+
+        this.resetForm();
+      } catch (error) {
+        console.error("Error al enviar el formulario:", error);
+
+        let errorMessage = "Hubo un error al enviar el formulario";
+        if (error.response) {
+          if (error.response.data) {
+            errorMessage = error.response.data.non_field_errors
+              ? error.response.data.non_field_errors[0]
+              : Object.values(error.response.data).join("\n");
+          }
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
         Swal.fire({
           title: "Error",
-          text: "No hay vagones para agregar",
+          text: errorMessage,
           icon: "error",
           confirmButtonText: "Entendido",
         });
       }
       this.$router.push({ name: "InfoOperativo" });
     },
+
     onVagonChange(event) {
       const selectedId = this.formData.equipo_vagon;
       const selectedVagon = this.equipos_vagones.find(
@@ -645,17 +723,39 @@ export default {
     },
     async buscarEquipos() {
       try {
-        let peticion = `/api/equipos_ferroviarios/?id_tipo_equipo_territorio=${this.formData["tipo_equipo"]}`;
-        let allEquipos = [];
-        while (peticion) {
-          const response = await axios.get(peticion);
-          allEquipos = [...allEquipos, ...response.data.results];
-          peticion = response.data.next;
+        let url = "/api/e-f-no-locomotora/";
+        if (!this.formData.tipo_equipo) {
+          return;
         }
-        this.equipos_vagones = allEquipos;
+
+        // al tipo de equipo específico lo añadimos como parámetro
+        url += `?tipo_equipo=${this.formData.tipo_equipo}`;
+        const response = await axios.get(url);
+
+        // en caso de que no exista EF para el tipo seleccionado en el componente padre
+        if (response.data.length === 0) {
+          Swal.fire({
+            title: "Error",
+            text: "No existen equipos ferroviarios para el tipo seleccionado.",
+            icon: "error",
+            willClose: () => {
+              this.cerrarModal();
+            },
+          });
+          return;
+        }
+
+        this.equipos_ferroviarios = response.data;
       } catch (error) {
-        console.error("Error al obtener los equipos:", error);
-        Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
+        console.error("Error al obtener los equipos ferroviarios:", error);
+        Swal.fire({
+          title: "Error",
+          text: "Hubo un error al obtener los equipos ferroviarios.",
+          icon: "error",
+          willClose: () => {
+            this.cerrarModal();
+          },
+        });
       }
     },
     async getEntidades() {

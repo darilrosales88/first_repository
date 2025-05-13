@@ -8,21 +8,23 @@ from django.db.models import Sum,Prefetch
 from django.db import transaction
 from django.db.models.functions import TruncDate
 from django.utils import timezone
-
+from datetime import datetime, date
+from django.db.models.functions import Cast
 
 
 
 #Modelo para el informe operativo
 class ufc_informe_operativo(models.Model):    
 
-    fecha_operacion = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de operación")
-    fecha_actual = models.DateTimeField(auto_now=True, verbose_name="Fecha actual")
-    plan_mensual_total = models.IntegerField(editable=False,default=0)
-    plan_diario_total_vagones_cargados = models.IntegerField(editable=False,default=0)
-    real_total_vagones_cargados = models.IntegerField(editable=False,default=0)
-    total_vagones_situados = models.IntegerField(editable=False,default=0)
-    plan_total_acumulado_actual = models.IntegerField(editable=False,default=0)
-    real_total_acumulado_actual = models.IntegerField(editable=False,default=0)
+    fecha_operacion = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de operación", unique=True)
+    fecha_actual = models.DateTimeField(auto_now=True, verbose_name="Fecha actual", unique=True)
+    plan_mensual_total = models.IntegerField(default=0)
+    plan_diario_total_vagones_cargados = models.IntegerField(default=0)
+    real_total_vagones_cargados = models.IntegerField(default=0)
+    total_vagones_situados = models.IntegerField(default=0)
+    plan_total_acumulado_actual = models.IntegerField(default=0)
+    real_total_acumulado_actual = models.IntegerField(default=0)
+    estado_parte = models.CharField(default="Creado",max_length=14)
 
     class Meta:
         verbose_name = "Parte informe operativo"
@@ -182,12 +184,14 @@ class vagon_cargado_descargado(models.Model):
         try:
             from nomencladores.models import nom_equipo_ferroviario
             
-            # Procesar en pequeñas transacciones independientes
-            registros = list(self.registros_vagones.all())
+            # Obtener todos los registros asociados antes de eliminarlos
+            registros_asociados = list(self.registros_vagones.all())
             
-            for registro in registros:
+            # Actualizar estado de equipos y eliminar registros asociados
+            for registro in registros_asociados:
                 try:
                     with transaction.atomic():
+                        # Actualizar estado del equipo
                         equipo = nom_equipo_ferroviario.objects.filter(
                             numero_identificacion=registro.no_id
                         ).first()
@@ -195,21 +199,23 @@ class vagon_cargado_descargado(models.Model):
                         if equipo:
                             equipo.estado_actual = 'Disponible'
                             equipo.save()
+                        
+                        # Eliminar el registro asociado
+                        registro.delete()
                 except Exception as e:
-                    print(f"Error al actualizar equipo {registro.no_id}: {str(e)}")
+                    print(f"Error al procesar registro {registro.no_id}: {str(e)}")
                     continue
             
-            # Eliminar relaciones (operaciones menos críticas)
+            # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
             self.registros_vagones.clear()
             self.producto.clear()
             
-            # Eliminar el registro principal
+            # Finalmente eliminar el registro principal
             super().delete(*args, **kwargs)
             
         except Exception as e:
-            print(f"Error crítico: {str(e)}")
+            print(f"Error crítico al eliminar vagon_cargado_descargado {self.id}: {str(e)}")
             raise
-    
 #Modelo para almacenar el historial de vagon_cargado_descargado y sus relaciones
 class HistorialVagonCargadoDescargado(models.Model):
     informe_operativo = models.ForeignKey(
@@ -230,91 +236,82 @@ class HistorialVagonCargadoDescargado(models.Model):
     def __str__(self):
         return f"Historial para informe {self.informe_operativo.id} - {self.fecha_creacion}"
 
-#funcion que se encarga de almacenar el historial de vagon_cargado_dscargado, la activa la creacion del modelo padre
-@receiver(post_save, sender=vagon_cargado_descargado)
-def crear_historial_vagones_cargados_descargados(sender, instance, created, **kwargs):
+#funcion que se encarga de almacenar el historial de vagon_cargado_descargado, la activa la creacion del modelo padre
+@receiver(post_save, sender=ufc_informe_operativo)
+def crear_historial_vagones_al_aprobar(sender, instance, created, **kwargs):
     """
-    Crea un historial del vagon cargado/descargado asociado al informe operativo de su fecha
+    Crea historial de todos los vagones cargados/descargados cuando se aprueba el informe operativo
     """
-    if not created:  # Solo nos interesan las creaciones nuevas
-        return
-    
-    def _crear_historial_Cargado_descargado_despues_de_guardar():
-        # Obtener solo la fecha (sin hora) del vagon
-        fecha_vagon = instance.fecha.date()
+    if instance.estado_parte == "Aprobado":
+        # Obtener la fecha del informe operativo (sin hora)
+        fecha_informe = instance.fecha_operacion.date()
         
-        # Buscar si existe un informe operativo para esta fecha
-        informe = ufc_informe_operativo.objects.annotate(
-            fecha_op=TruncDate('fecha_operacion')
-        ).filter(fecha_op=fecha_vagon).first()
-        
-        if not informe:
-            return  # No hacer nada si no hay informe para esta fecha
-        
-        # Obtener el vagon con todas sus relaciones
-        vagon_completo = vagon_cargado_descargado.objects.select_related(
+        # Obtener todos los vagones cargados/descargados de esta fecha
+        vagones = vagon_cargado_descargado.objects.filter(
+            fecha__date=fecha_informe
+        ).select_related(
             'tipo_equipo_ferroviario'
         ).prefetch_related(
             'producto__producto',
             'producto__tipo_embalaje',
             'producto__unidad_medida',
             'registros_vagones'
-        ).get(pk=instance.pk)
+        )
         
-        # Serializar datos del vagon
-        datos_vagon = {
-            'id': vagon_completo.id,
-            'tipo_origen': vagon_completo.tipo_origen,
-            'origen': vagon_completo.origen,
-            'tipo_equipo_ferroviario_id': vagon_completo.tipo_equipo_ferroviario.id if vagon_completo.tipo_equipo_ferroviario else None,
-            'tipo_equipo_ferroviario_name': vagon_completo.tipo_equipo_ferroviario.get_tipo_equipo_display() if vagon_completo.tipo_equipo_ferroviario else None,
-            'estado': vagon_completo.estado,
-            'operacion': vagon_completo.operacion,
-            'plan_diario_carga_descarga': vagon_completo.plan_diario_carga_descarga,
-            'real_carga_descarga': vagon_completo.real_carga_descarga,
-            'tipo_destino': vagon_completo.tipo_destino,
-            'destino': vagon_completo.destino,
-            'causas_incumplimiento': vagon_completo.causas_incumplimiento,
-            'fecha': str(vagon_completo.fecha)
-        }
-        
-        # Serializar productos relacionados
-        productos = []
-        for producto in vagon_completo.producto.all():
-            productos.append({
+        # Crear historial para cada vagon
+        for vagon in vagones:
+            # Serializar datos del vagon
+            datos_vagon = {
+                'id': vagon.id,
+                'tipo_origen': vagon.tipo_origen,
+                'origen': vagon.origen,
+                'tipo_equipo_ferroviario_id': vagon.tipo_equipo_ferroviario.id if vagon.tipo_equipo_ferroviario else None,
+                'tipo_equipo_ferroviario_name': vagon.tipo_equipo_ferroviario.get_tipo_equipo_display() if vagon.tipo_equipo_ferroviario else None,
+                'estado': vagon.get_estado_display(),
+                'operacion': vagon.operacion,
+                'plan_diario_carga_descarga': vagon.plan_diario_carga_descarga,
+                'real_carga_descarga': vagon.real_carga_descarga,
+                'tipo_destino': vagon.tipo_destino,
+                'destino': vagon.destino,
+                'causas_incumplimiento': vagon.causas_incumplimiento,
+                'fecha': str(vagon.fecha)
+            }
+            
+            # Serializar productos relacionados
+            productos = []
+            for producto in vagon.producto.all():
+                productos.append({
                     'id': producto.id,
                     'producto_name': producto.producto.nombre_producto,
                     'tipo_embalaje_name': producto.tipo_embalaje.nombre_tipo_embalaje if producto.tipo_embalaje else None,
                     'unidad_medida_simbolo': producto.unidad_medida.simbolo if producto.unidad_medida else None,
                     'cantidad': producto.cantidad,
-                    'estado': producto.estado,
+                    'estado': producto.get_estado_display(),
                     'contiene': producto.contiene
-            })
-        
-        # Serializar registros de vagones relacionados
-        registros = []
-        for registro in vagon_completo.registros_vagones.all():
-            registros.append({
-                'id': registro.id,
-                'no_id': registro.no_id,
-                'fecha_despacho': str(registro.fecha_despacho) if registro.fecha_despacho else None,
-                'tipo_origen': registro.tipo_origen,
-                'origen': registro.origen,
-                'fecha_llegada': str(registro.fecha_llegada) if registro.fecha_llegada else None,
-                'observaciones': registro.observaciones
-            })
-        
-        # Crear registro de historial
-        HistorialVagonCargadoDescargado.objects.create(
-            informe_operativo=informe,
-            datos_vagon=datos_vagon,
-            datos_productos=productos,
-            datos_registros_vagones=registros
-        )
-
-    # Usamos transaction.on_commit para ejecutar después de que la transacción se complete
-    transaction.on_commit(_crear_historial_Cargado_descargado_despues_de_guardar)
-
+                })
+            
+            # Serializar registros de vagones relacionados
+            registros = []
+            for registro in vagon.registros_vagones.all():
+                registros.append({
+                    'id': registro.id,
+                    'no_id': registro.no_id,
+                    'fecha_despacho': str(registro.fecha_despacho) if registro.fecha_despacho else None,
+                    'tipo_origen': registro.tipo_origen,
+                    'origen': registro.origen,
+                    'fecha_llegada': str(registro.fecha_llegada) if registro.fecha_llegada else None,
+                    'observaciones': registro.observaciones
+                })
+            
+            # Crear o actualizar registro de historial
+            HistorialVagonCargadoDescargado.objects.update_or_create(
+                informe_operativo=instance,
+                defaults={
+                    'datos_vagon': datos_vagon,
+                    'datos_productos': productos,
+                    'datos_registros_vagones': registros
+                }
+            )
 #Elimina el registro del historial asociado al vagon que se esta eliminando
 @receiver(post_delete, sender=vagon_cargado_descargado)
 def eliminar_historial_vagon_cargado_descargado(sender, instance, **kwargs):
@@ -323,8 +320,9 @@ def eliminar_historial_vagon_cargado_descargado(sender, instance, **kwargs):
     """
     try:
         # Buscar el historial que contiene datos de este vagon
+        #datos_vagon__id es la forma correcta de buscar por el campo específico id dentro del JSONField.
         historiales = HistorialVagonCargadoDescargado.objects.filter(
-            datos_vagon__icontains={'id': instance.id}
+            datos_vagon__id=instance.id  # Sintaxis correcta para buscar en JSON
         )
         
         # Eliminar todos los registros de historial encontrados
@@ -332,6 +330,8 @@ def eliminar_historial_vagon_cargado_descargado(sender, instance, **kwargs):
         
     except Exception as e:
         print(f"Error al eliminar historial del vagon {instance.id}: {str(e)}")
+
+
 #************************************************************************************************************************
 #Modelo Situado
 class Situado_Carga_Descarga(models.Model):
@@ -600,7 +600,7 @@ class vagones_productos(models.Model):
         blank=True,
         related_name='vagones_productos'
     )
-    plan_anual = models.IntegerField()
+    plan_anual = models.IntegerField(default=0)
     plan_acumulado_dia_anterior = models.IntegerField()
     real_acumulado_dia_anterior = models.IntegerField()
 
@@ -621,9 +621,10 @@ class vagones_productos(models.Model):
         productos_str = ", ".join(nombres_productos) if nombres_productos else "Sin productos"        
         return f"Vagones y productos: {productos_str}"   
 
-#Actualizando el resto de los campos de forma automatica, se activa cuando se inserta un registro en vagones_productos
-@receiver([post_save, post_delete], sender=vagon_cargado_descargado)
-@receiver([post_save, post_delete], sender=Situado_Carga_Descarga)
+
+#funcion que calcula automaticamente los valores de los campos de vagones_productos
+@receiver(post_save, sender=vagon_cargado_descargado)
+@receiver(post_save, sender=Situado_Carga_Descarga)
 def actualizar_campos_automaticos_vagones_productos(sender, instance, **kwargs):    
     '''Actualiza los campos automáticos en vagones_productos cuando hay cambios
     en los modelos relacionados vagon_cargado_descargado, Situado_Carga_Descarga'''
@@ -807,15 +808,24 @@ def crear_historial_vagones_productos(sender, instance, created, **kwargs):
         )
 
     transaction.on_commit(_crear_historial_vagones_productos)
-# Señal para eliminar el historial
+# Señal para eliminar el historial de HistorialVagonesProductos asociado al id de vagones_productos
 @receiver(post_delete, sender=vagones_productos)
 def eliminar_historial_vagones_productos(sender, instance, **kwargs):
+    """
+    Elimina el registro de historial asociado cuando se elimina un vagones_productos
+    """
     try:
-        HistorialVagonesProductos.objects.filter(
-            datos_vagon_producto__icontains={'id': instance.id}
-        ).delete()
+        # Buscar el historial que contiene datos de este vagon
+        #datos_vagon_producto__id es la forma correcta de buscar por el campo específico id dentro del JSONField.
+        historiales = HistorialVagonesProductos.objects.filter(
+            datos_vagon_producto__id=instance.id  # Sintaxis correcta para buscar en JSON
+        )
+        
+        # Eliminar todos los registros de historial encontrados
+        historiales.delete()
+        
     except Exception as e:
-        print(f"Error eliminando historial de vagones-productos: {str(e)}") 
+        print(f"Error al eliminar historial del vagon {instance.id}: {str(e)}")
 
 #************************************************************************************************************************************
 #Modelo para representar en_trenes
@@ -1495,6 +1505,107 @@ def eliminar_historial_rotacion_vagones(sender, instance, **kwargs):
         ).delete()
     except Exception as e:
         print(f"Error eliminando historial de rotación de vagones: {str(e)}")
+
+
+#funcion que calcula de forma automatica los campos del parte ufc_informe_operativo
+@receiver(post_save, sender=vagon_cargado_descargado)
+@receiver(post_save, sender=Situado_Carga_Descarga)
+@receiver(post_save, sender=vagones_productos)
+def calcular_informe_operativo_diario(sender, instance, created, **kwargs):
+    """
+    Calcula y actualiza los datos del informe operativo diario.
+    Se ejecuta después de guardar un vagon_cargado_descargado.
+    """
+    try:
+        # Usamos una transacción atómica para evitar inconsistencias
+        with transaction.atomic():
+            # Obtener la fecha actual (sin la hora)
+            hoy = date.today()
+            
+            informe = ufc_informe_operativo.objects.filter(
+                fecha_operacion__date=hoy
+            ).order_by('-fecha_operacion').first()
+            
+            """ # Obtener el informe más reciente para hoy o crear uno nuevo            
+
+            if not informe:
+                informe = ufc_informe_operativo.objects.create(
+                    fecha_operacion=timezone.now()
+                ) """
+            
+            # 1. Sumatoria de plan_mensual de vagones_productos (solo del día actual)
+            plan_mensual_total = vagones_productos.objects.filter(
+                fecha__date=hoy
+            ).aggregate(
+                total=Sum('plan_mensual')
+            )['total'] or 0
+            
+            # 2. Sumatoria de plan_diario_carga_descarga (solo del día actual)
+            plan_diario_total = vagon_cargado_descargado.objects.filter(
+                fecha__date=hoy
+            ).aggregate(
+                total=Sum('plan_diario_carga_descarga')
+            )['total'] or 0
+            
+            # 3. Sumatoria de real_carga_descarga (solo del día actual)
+            real_total = vagon_cargado_descargado.objects.filter(
+                fecha__date=hoy
+            ).aggregate(
+                total=Sum('real_carga_descarga')
+            )['total'] or 0
+            
+            # 4. Sumatoria de situados (solo del día actual) - Versión compatible
+            situados_total = 0
+            situados_qs = Situado_Carga_Descarga.objects.filter(
+                fecha__date=hoy
+            ).only('situados')
+            
+            for situado in situados_qs:
+                try:
+                    situados_total += int(situado.situados) if situado.situados else 0
+                except (ValueError, TypeError):
+                    continue
+            
+            # 5. Sumatoria de plan_acumulado_actual (solo del día actual)
+            plan_acumulado_actual = vagones_productos.objects.filter(
+                fecha__date=hoy
+            ).aggregate(
+                total=Sum('plan_acumulado_actual')
+            )['total'] or 0
+            
+            # 6. Sumatoria de real_acumulado_actual (solo del día actual)
+            real_acumulado_actual = vagones_productos.objects.filter(
+                fecha__date=hoy
+            ).aggregate(
+                total=Sum('real_acumulado_actual')
+            )['total'] or 0
+            
+            # Actualizar el informe con los valores calculados
+            informe.plan_mensual_total = plan_mensual_total
+            informe.plan_diario_total_vagones_cargados = plan_diario_total
+            informe.real_total_vagones_cargados = real_total
+            informe.total_vagones_situados = situados_total
+            informe.plan_total_acumulado_actual = plan_acumulado_actual
+            informe.real_total_acumulado_actual = real_acumulado_actual
+            informe.save()
+            
+    except Exception as e:
+        # En producción, usa logging.getLogger(__name__).error(...)
+        print(f"Error al calcular el informe operativo: {str(e)}")
+        # No relanzamos la excepción para no interrumpir el flujo principal
+
+#ejecutar la funcion de actualizacion de los campos del parte cuando se elimina uno de los registros de los modelos que la activan
+#Cuando se elimine un registro de unode  esos modelos, se llama a la función recalcular_informe_operativo_al_eliminar
+#Esta función a su vez llamará a calcular_informe_operativo_diario con created=False (ya que no es una creación)
+#La función original recalculará todos los valores del informe operativo basándose en los registros restantes
+@receiver(post_delete, sender=vagon_cargado_descargado)
+@receiver(post_delete, sender=Situado_Carga_Descarga)
+@receiver(post_delete, sender=vagones_productos)
+def recalcular_informe_operativo_al_eliminar(sender, instance, **kwargs):
+    """
+    Recalcula el informe operativo cuando se elimina un registro de los modelos relacionados
+    """
+    calcular_informe_operativo_diario(sender, instance, created=False, **kwargs)
     
  
  

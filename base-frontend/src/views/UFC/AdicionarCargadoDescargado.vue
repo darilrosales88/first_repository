@@ -517,11 +517,13 @@ export default {
     },
 
     "formData.lista_productos": {
-      handler() {
+    handler(newVal, oldVal) {
+      if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
         this.calcularRealCargaDescarga();
-      },
-      deep: true,
+      }
     },
+    deep: true
+  }
   },
   async created() {
     await this.fetchUserPermissionsAndGroups(); // Espera a que se carguen los permisos
@@ -552,122 +554,86 @@ export default {
     
     async submitForm() {
   try {
-    // 0. First check if there are any wagons added
+    const existeInforme = await this.verificarInformeOperativo();
+      if (!existeInforme) {
+        Swal.fire(
+          "Error",
+          "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+          "error"
+        );
+        this.$router.push({ name: "InfoOperativo" });
+        return;
+      }
+    // Validación básica
     if (this.registros_vagones_temporales.length === 0) {
       Swal.fire("Error", "Debe agregar al menos un vagón", "error");
       return;
     }
 
-    // 1. Verificar que el informe operativo existe ya para la fecha creada
-    const existeInforme = await this.verificarInformeOperativo();
-    if (!existeInforme) {
-      Swal.fire(
-        "Error",
-        "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
-        "error"
-      );
-      this.$router.push({ name: "InfoOperativo" });
-      return;
-    }
-
-    // 2. Verificar que el informe no esté en estado "Aprobado"
-    const informeResponse = await axios.get(`/ufc/informe-operativo/${this.informeOperativoId}/`);
-    if (informeResponse.data.estado_parte === "Aprobado") {
-      Swal.fire(
-        "Error",
-        "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
-        "error"
-      );
-      return;
-    }
-
-    // 3. Basic validations
-    if (!this.formData.tipo_equipo_ferroviario || 
-        !this.formData.tipo_origen ||
-        !this.formData.origen || 
-        !this.formData.tipo_destino ||
-        !this.formData.destino) {
-      Swal.fire("Error", "Por favor complete todos los campos obligatorios", "error");
-      return;
-    }
-
-    // 4. Product validation for loaded wagons
-    if (this.formData.estado === "cargado" && 
-        (!this.formData.lista_productos || this.formData.lista_productos.length === 0)) {
-      Swal.fire("Error", "Debe seleccionar al menos un producto.", "error");
-      return;
-    }
-
-    // 5. Calculate real value
-    await this.calcularRealCargaDescarga();
-
-    // 6. Prepare data
+    // Preparar datos para enviar
     const datosEnvio = {
-      ...this.formData,      
-      informe_operativo: this.informeOperativoId,
-      real_carga_descarga: this.formData.real_carga_descarga || 0,
-      causas_incumplimiento: this.formData.causas_incumplimiento || '',
-      producto_ids: Array.isArray(this.formData.lista_productos) 
-        ? this.formData.lista_productos 
-        : [this.formData.lista_productos],
+      tipo_equipo_ferroviario: this.formData.tipo_equipo_ferroviario,
+      tipo_origen: this.formData.tipo_origen,
+      origen: this.formData.origen,
+      tipo_destino: this.formData.tipo_destino,
+      destino: this.formData.destino,
+      estado: this.formData.estado,
+      operacion: this.formData.operacion,
+      plan_diario_carga_descarga: Number(this.formData.plan_diario_carga_descarga),
+      causas_incumplimiento: this.formData.causas_incumplimiento || 'Sin causas especificadas',
+      producto_ids: Array.isArray(this.formData.lista_productos) ? 
+                   this.formData.lista_productos : 
+                   [this.formData.lista_productos].filter(Boolean),
       registros_vagones_data: this.registros_vagones_temporales.map(v => ({
         no_id: v.no_id,
         fecha_despacho: v.fecha_despacho,
-        tipo_origen: v.tipo_origen,
-        origen: v.origen,
-        fecha_llegada: v.fecha_llegada,
-        observaciones: v.observaciones
-      }))
+        tipo_origen: v.tipo_origen || this.formData.tipo_origen,
+        origen: v.origen || this.formData.origen,
+        fecha_llegada: v.fecha_llegada || null,
+        observaciones: v.observaciones || ''
+      })),
+      informe_operativo: this.informeOperativoId
     };
 
-    // 7. Send data
+    // Enviar datos
     const response = await axios.post("/ufc/vagones-cargados-descargados/", datosEnvio);
-
-    // 8. Reset and show success
-    this.registros_vagones_temporales = [];
-    this.formData.lista_productos = [];
-    this.resetForm();
-
-    await Swal.fire({
-      title: "Éxito",
-      text: "Registro creado correctamente",
-      icon: "success",
-      confirmButtonText: "Aceptar"
-    });
-
+    
+    // Manejar respuesta exitosa
+    Swal.fire("Éxito", "Registro creado correctamente", "success");
     this.$router.push({ name: "InfoOperativo" });
-
+    
   } catch (error) {
-    console.error("Error al guardar:", error.response);
-    let errorMsg = "No se pudo guardar el registro";
+    console.error("Error detallado:", error.response?.data);
+    let errorMsg = "Error al guardar el registro";
+    
     if (error.response?.data) {
-      errorMsg += `: ${JSON.stringify(error.response.data)}`;
+      if (typeof error.response.data === 'object') {
+        errorMsg += ": " + JSON.stringify(error.response.data);
+      } else {
+        errorMsg += ": " + error.response.data;
+      }
     }
+    
     Swal.fire("Error", errorMsg, "error");
   }
 },
+async calcularRealCargaDescarga() {
+  if (!this.formData.lista_productos?.length) {
+    this.formData.real_carga_descarga = 0;
+    return;
+  }
 
-    async calcularRealCargaDescarga() {
-      if (
-        !this.formData.lista_productos ||
-        this.formData.lista_productos.length === 0
-      ) {
-        this.formData.real_carga_descarga = 0;
-        return;
-      }
-
-      try {
-        const response = await axios.post(
-          "/ufc/vagones-cargados-descargados/calcular_total_vagones_por_productos/",
-          { producto_ids: this.formData.lista_productos }
-        );
-
-        this.formData.real_carga_descarga = response.data.total;
-      } catch (error) {
-        console.error("Error al calcular el total de vagones:", error);
-        this.formData.real_carga_descarga = 0;
-      }
-    },
+  try {
+    const response = await axios.post(
+      "/ufc/vagones-cargados-descargados/calcular_total_vagones_por_productos/",
+      { producto_ids: [...this.formData.lista_productos] } // Enviar copia
+    );
+    this.formData.real_carga_descarga = response.data.total;
+  } catch (error) {
+    console.error("Error al calcular:", error);
+    this.formData.real_carga_descarga = 0;
+  }
+},
 
     resetForm() {
       this.formData = {
@@ -711,6 +677,8 @@ export default {
           this.userPermissions = response.data.permissions;
           this.userGroups = response.data.groups;
         }
+        console.log("Permisos: ",this.userPermissions );
+        console.log("Grupos: ",this.userGroups );
       } catch (error) {
         console.error("Error al obtener permisos y grupos:", error);
       }

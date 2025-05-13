@@ -10,21 +10,7 @@
       <div class="card-body p-3">
         <form @submit.prevent="submitForm">
           <!-- Fila 1 -->
-          <div class="row mb-3 g-2">
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="fechaOperacion" class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-calendar-date me-2 text-primary"></i>Fecha de Operación
-                </label>
-                <input 
-                  type="date" 
-                  class="form-control form-control-sm border-secondary" 
-                  id="fechaOperacion" 
-                  v-model="formData.fechaOperacion"
-                  required
-                >
-              </div>
-            </div>
+          <div class="row mb-3 g-2">        
             
             <div class="col-md-6">
               <div class="form-group">
@@ -35,8 +21,9 @@
                   type="date" 
                   class="form-control form-control-sm border-secondary" 
                   id="fechaActual" 
-                  v-model="formData.fechaActual"
+                  v-model="formData.fecha_actual"
                   required
+                  :disabled="isExistingRecord"
                 >
               </div>
             </div>
@@ -50,11 +37,11 @@
                   <i class="bi bi-calendar-month me-2 text-primary"></i>Plan Mensual Total
                 </label>
                 <input 
-                  type="text" 
+                  type="number" 
                   class="form-control form-control-sm border-secondary" 
                   id="planMensualTotal" 
-                  v-model="formData.planMensualTotal"
-                  
+                  v-model="formData.plan_mensual_total"
+                  :disabled="isExistingRecord"
                 >
               </div>
             </div>
@@ -65,11 +52,11 @@
                   <i class="bi bi-calendar-day me-2 text-primary"></i>Plan Diario Total Vagones Cargados
                 </label>
                 <input 
-                  type="text" 
+                  type="number" 
                   class="form-control form-control-sm border-secondary" 
                   id="planDiarioTotal" 
-                  v-model="formData.planDiarioTotal"
-                  
+                  v-model="formData.plan_diario_total_vagones_cargados"
+                  :disabled="isExistingRecord"
                 >
               </div>
             </div>
@@ -83,11 +70,11 @@
                   <i class="bi bi-train-freight-front me-2 text-primary"></i>Real Total Vagones Cargados
                 </label>
                 <input 
-                  type="text" 
+                  type="number" 
                   class="form-control form-control-sm border-secondary" 
                   id="realTotalVagones" 
-                  v-model="formData.realTotalVagones"
-                  
+                  v-model="formData.real_total_vagones_cargados"
+                  :disabled="isExistingRecord"
                 >
               </div>
             </div>
@@ -98,11 +85,11 @@
                   <i class="bi bi-pin-map me-2 text-primary"></i>Total de Vagones Situados
                 </label>
                 <input 
-                  type="text" 
+                  type="number" 
                   class="form-control form-control-sm border-secondary" 
                   id="totalVagonesSituados" 
-                  v-model="formData.totalVagonesSituados"
-                  
+                  v-model="formData.total_vagones_situados"
+                  :disabled="isExistingRecord"
                 >
               </div>
             </div>
@@ -116,11 +103,11 @@
                   <i class="bi bi-graph-up me-2 text-primary"></i>Plan Total Acumulado Actual
                 </label>
                 <input 
-                  type="text" 
+                  type="number" 
                   class="form-control form-control-sm border-secondary" 
                   id="planTotalAcumulado" 
-                  v-model="formData.planTotalAcumulado"
-                  
+                  v-model="formData.plan_total_acumulado_actual"
+                  :disabled="isExistingRecord"
                 >
               </div>
             </div>
@@ -131,22 +118,19 @@
                   <i class="bi bi-graph-up-arrow me-2 text-primary"></i>Real Total Acumulado Actual
                 </label>
                 <input 
-                  type="text" 
+                  type="number" 
                   class="form-control form-control-sm border-secondary" 
                   id="realTotalAcumulado" 
-                  v-model="formData.realTotalAcumulado"
-                  
+                  v-model="formData.real_total_acumulado_actual"
+                  :disabled="isExistingRecord"
                 >
               </div>
             </div>
           </div>
           
           <!-- Botones -->
-          <div class="d-flex justify-content-end gap-2 mt-4">
-            <button type="button" class="btn btn-sm btn-outline-secondary" @click="resetForm">
-              <i class="bi bi-x-circle me-1"></i>Cancelar
-            </button>
-            <button type="submit" class="btn btn-sm btn-primary">
+          <div class="d-flex justify-content-end gap-2 mt-4">            
+            <button type="submit" class="btn btn-sm btn-primary" :disabled="isExistingRecord || isLoading">
               <i class="bi bi-save me-1"></i>Guardar
             </button>
           </div>
@@ -164,70 +148,101 @@ export default {
   name: 'InfOperative',
   data() {
     return {
+      informeOperativoId: null,
+      isExistingRecord: false,
       formData: {
-        fechaOperacion: '',
-        fechaActual: '',
-
+        fecha_actual: '',
+        plan_mensual_total: 0,
+        plan_diario_total_vagones_cargados: 0,
+        real_total_vagones_cargados: 0,
+        total_vagones_situados: 0,
+        plan_total_acumulado_actual: 0,
+        real_total_acumulado_actual: 0
       },
-      errores: '',
-      isLoading: false
+      isLoading: false,
+      checkInterval: null // Almacenaremos el intervalo aquí
+    }
+  },
+  async mounted() {
+    // Obtener la fecha actual en formato YYYY-MM-DD según la zona horaria local
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000; // offset en milisegundos
+    const localISOTime = new Date(now - offset).toISOString().split('T')[0];
+    this.formData.fecha_actual = localISOTime;
+    
+    // Check for existing record on load
+    await this.checkExistingRecord();
+    
+    // Configurar el intervalo para verificar cada 10 segundos
+    this.checkInterval = setInterval(async () => {
+      await this.checkExistingRecord();
+    }, 10000); // 10000 milisegundos = 10 segundos
+  },
+  beforeUnmount() {
+    // Limpiar el intervalo cuando el componente se desmonte
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
     }
   },
   methods: {
-    validateForm() {
-      this.errores = '';
-      let isValid = true;
+    async checkExistingRecord() {
+      try {
+    
+        // Enviar la fecha ya ajustada a la vista para ver si existe el parte
+        const response = await axios.get('/ufc/verificar-informe-existente/', {
+          params: { fecha_operacion: this.formData.fecha_actual }
+        });
 
-
-      // Validación de fechas
-      const today = new Date().toISOString().split('T')[0];
-      if (this.formData.fechaActual !== today) {
-        this.errores += 'La fecha actual debe ser la de hoy.<br>';
-        isValid = false;
+        if (response.data.existe) {
+          this.informeOperativoId = response.data.id;
+          this.isExistingRecord = true;
+          
+          // Cargar datos del informe creado
+          const recordResponse = await axios.get(`/ufc/informe-operativo/${this.informeOperativoId}/`);
+          
+          // Formatear la fecha para mostrar solo YYYY-MM-DD
+          if (recordResponse.data.fecha_actual) {
+            this.formData.fecha = new Date().toISOString();
+            const today = new Date();
+            const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            this.formData = {
+              ...recordResponse.data,
+              fecha_actual: fechaFormateada
+            };
+          } else {
+            this.formData = recordResponse.data;
+          }
+        }
+      } catch (error) {
+        console.error("Error al verificar informe:", error);
       }
-
-      if (new Date(this.formData.fechaOperacion) > new Date()) {
-        this.errores += 'La fecha de operación no puede ser futura.<br>';
-        isValid = false;
-      }
-
-      return isValid;
-    },
-
-    getFieldLabel(field) {
-      const labels = {
-        fechaOperacion: 'Fecha de Operación',        
-        fechaActual: 'Fecha Actual',
-      };
-      return labels[field] || field;
     },
 
     async submitForm() {
-      if (!this.validateForm()) {
-        await Swal.fire({
-          title: 'Errores en el formulario',
-          html: this.errores,
-          icon: 'error',
-          confirmButtonText: 'Entendido'
-        });
+      if (this.isExistingRecord) {
+        Swal.fire(
+          "Error",
+          "Ya existe un informe creado para la fecha actual.",
+          "error"
+        );
         return;
       }
 
       this.isLoading = true;
       try {
         const dataToSend = {
-          fecha_operacion: this.formData.fechaOperacion,
-          fecha_actual: this.formData.fechaActual,
-          plan_mensual_total: this.formData.planMensualTotal,
-          plan_diario_total_vagones_cargados: this.formData.planDiarioTotal,
-          real_total_vagones_cargados: this.formData.realTotalVagones,
-          total_vagones_situados: this.formData.totalVagonesSituados,
-          plan_total_acumulado_actual: this.formData.planTotalAcumulado,
-          real_total_acumulado_actual: this.formData.realTotalAcumulado
+          fecha_actual: this.formData.fecha_actual, // Usamos la fecha ya ajustada
+          plan_mensual_total: this.formData.plan_mensual_total || 0,
+          plan_diario_total_vagones_cargados: this.formData.plan_diario_total_vagones_cargados || 0,
+          real_total_vagones_cargados: this.formData.real_total_vagones_cargados || 0,
+          total_vagones_situados: this.formData.total_vagones_situados || 0,
+          plan_total_acumulado_actual: this.formData.plan_total_acumulado_actual || 0,
+          real_total_acumulado_actual: this.formData.real_total_acumulado_actual || 0
         };
-        console.log("INfomracion a enviarrrrrrrrrrrrrr: ",dataToSend)
 
         const response = await axios.post('/ufc/informe-operativo/', dataToSend);
+        this.informeOperativoId = response.data.id;
+        this.isExistingRecord = true;
 
         await Swal.fire({
           title: '¡Éxito!',
@@ -235,7 +250,6 @@ export default {
           icon: 'success',
           confirmButtonText: 'Aceptar'
         });
-        this.resetForm();
       } catch (error) {
         console.error('Error al guardar operación:', error);
         
@@ -254,77 +268,6 @@ export default {
         this.isLoading = false;
       }
     },
-
-    /* async getRelatedData() {
-      try {
-        // Obtener datos de otros componentes/API endpoints
-        const [
-          vagonesproductosRes,
-          vagonesRes,
-          registrosRes,
-          productosRes,
-          situadosRes,
-          enTrenesRes,
-          arrastresRes,
-          rotacionesRes
-        ] = await Promise.all([
-          axios.get('/ufc/vagones-productos/'),
-          axios.get('/ufc/vagones-cargados-descargados/'),
-          axios.get('/ufc/registro-vagones-cargados/'),
-          axios.get('/ufc/productos-ufc/'),
-          axios.get('/ufc/situados/'),
-          axios.get('/ufc/en-trenes/'),
-          axios.get('/ufc/pendiente-arrastre/'),
-          axios.get('/ufc/rotaciones/')
-        ]);
-
-        return {
-          vagones_y_productos: vagonesproductosRes.data,
-          vagones_cargados_descargados: vagonesRes.data,
-          registros_vagones: registrosRes.data,
-          productos: productosRes.data,
-          situados_carga_descarga: situadosRes.data,
-          en_trenes_list: enTrenesRes.data,
-          arrastres_list: arrastresRes.data,
-          rotaciones_vagones: rotacionesRes.data
-        };
-      } catch (error) {
-        console.error('Error obteniendo datos relacionados:', error);
-        return {};
-      }
-    }, */
-
-    confirmCancel() {
-      Swal.fire({
-        title: '¿Cancelar operación?',
-        text: '¿Está seguro de que desea cancelar? Los datos no guardados se perderán.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, cancelar',
-        cancelButtonText: 'No, continuar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.resetForm();
-          this.$router.back();
-        }
-      });
-    },
-
-    resetForm() {
-      const today = new Date().toISOString().split('T')[0];
-      this.formData = {
-        fechaOperacion: today,       
-        fechaActual: today,
-
-      };
-    }
   },
-  mounted() {
-    const today = new Date().toISOString().split('T')[0];
-    this.formData.fechaActual = today;
-    this.formData.fechaOperacion = today;
-  }
 }
 </script>

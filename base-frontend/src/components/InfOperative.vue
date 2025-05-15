@@ -189,6 +189,9 @@ export default {
         total_vagones_situados: 0,
         plan_total_acumulado_actual: 0,
         real_total_acumulado_actual: 0,
+        provincia: null,
+        creado_por: null,
+        aprobado_por: null,
       },
       isLoading: false,
       checkInterval: null, // Almacenaremos el intervalo aquí
@@ -200,6 +203,7 @@ export default {
     const offset = now.getTimezoneOffset() * 60000; // offset en milisegundos
     const localISOTime = new Date(now - offset).toISOString().split("T")[0];
     this.formData.fecha_actual = localISOTime;
+    await this.obtenerUsername(); //Busca el nombre del usuario
 
     // Check for existing record on load
     await this.checkExistingRecord();
@@ -248,6 +252,19 @@ export default {
         console.error("Error al verificar informe:", error);
       }
     },
+    async obtenerUsername() {
+      try {
+        const userId = localStorage.getItem("userid");
+        if (userId) {
+          const response = await axios.get(`/apiAdmin/users/${userId}/`);
+          this.formData.creado_por = response.data.id;
+          this.formData.provincia = response.data.provincia.id;
+        }
+      } catch (error) {
+        console.error("Error al obtener Nombre de Usuario:", error);
+        Swal.fire("Error", "Error al obtener Nombre de Usuario:", "error");
+      }
+    },
 
     async submitForm() {
       if (this.isExistingRecord) {
@@ -273,6 +290,9 @@ export default {
             this.formData.plan_total_acumulado_actual || 0,
           real_total_acumulado_actual:
             this.formData.real_total_acumulado_actual || 0,
+          provincia: this.formData.provincia,
+          creado_por: this.formData.creado_por,
+          aprobado_por: this.formData.aprobado_por,
         };
 
         const response = await axios.post(

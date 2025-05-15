@@ -1,5 +1,9 @@
 from django.db import models
-from nomencladores.models import nom_tipo_equipo_ferroviario,nom_producto,nom_tipo_embalaje,nom_unidad_medida,nom_equipo_ferroviario
+from nomencladores.models import( nom_tipo_equipo_ferroviario,nom_producto,
+                                 nom_tipo_embalaje,nom_unidad_medida,
+                                 nom_equipo_ferroviario,nom_provincia   
+                                 )
+from Administracion.models import CustomUser
 from django.core.validators import RegexValidator
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
@@ -25,6 +29,9 @@ class ufc_informe_operativo(models.Model):
     plan_total_acumulado_actual = models.IntegerField(default=0)
     real_total_acumulado_actual = models.IntegerField(default=0)
     estado_parte = models.CharField(default="Creado",max_length=14)
+    provincia=models.ForeignKey(nom_provincia,on_delete=models.CASCADE,blank=True, null=True, verbose_name="Provincia")
+    creado_por=models.ForeignKey(CustomUser,on_delete=models.CASCADE, blank=True, null=True, verbose_name="Creado por: ", related_name="informe_creador" )
+    aprobado_por=models.ForeignKey(CustomUser,on_delete=models.CASCADE, blank=True,null=True, verbose_name="Aprobado por: ", related_name="informe_aprobador")
 
     class Meta:
         permissions = [

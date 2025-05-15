@@ -20,7 +20,13 @@ from django.db import transaction
 import json
 from django.utils import timezone
 from .models import HistorialVagonCargadoDescargado, vagon_cargado_descargado, registro_vagones_cargados
-from nomencladores.models import nom_equipo_ferroviario,nom_tipo_equipo_ferroviario
+from nomencladores.models import nom_equipo_ferroviario,nom_tipo_equipo_ferroviario,nom_provincia
+from Administracion.models import CustomUser
+
+#######Importamos serializadores externos para poder tener una lectura mas detallada
+from nomencladores.serializers import nom_provincia_serializer
+from Administracion.serializers import UserPermissionSerializer
+
 
 #para cada modelo del que deseemos realizar el filtrado debemos hacer un filtrado
 #nom_pais_filter es una clase que se implementa para definir sobre qué campos quiero filtrar los registros de mi API, 
@@ -1138,6 +1144,17 @@ class ufc_informe_operativo_serializer(serializers.ModelSerializer):
     por_situar_list = serializers.SerializerMethodField()
     vagones_productos_list = serializers.SerializerMethodField()
     rotacion_vagones_list = serializers.SerializerMethodField()
+    
+    creado_por = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(), 
+        write_only=True
+    )
+    provincia = serializers.PrimaryKeyRelatedField(
+        queryset=nom_provincia.objects.all(),
+        write_only=True
+    )
+    
+    creado_por_detalle=UserPermissionSerializer(source='creado_por', read_only=True)
     class Meta:
         model = ufc_informe_operativo       
         fields = [
@@ -1148,6 +1165,10 @@ class ufc_informe_operativo_serializer(serializers.ModelSerializer):
             'real_total_vagones_cargados',
             'total_vagones_situados',
             'estado_parte',
+            'provincia',
+            'creado_por',
+            'creado_por_detalle',
+            'aprobado_por',
             'arrastres_list',
             'en_trenes_list',
             'vagones_cargados_descargados_list',

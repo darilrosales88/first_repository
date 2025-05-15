@@ -1,4 +1,5 @@
 <template>
+  <!-- El template permanece exactamente igual -->
   <div class="cargado-container">
     <!-- Header con título y acciones -->
     <div class="ps-header">
@@ -117,12 +118,20 @@
             </tr>
 
             <!-- Estado vacío -->
-            <tr v-if="!loading && cargados_descargados.length === 0 && busqueda_existente">
+            <tr
+              v-if="
+                !loading &&
+                cargados_descargados.length === 0 &&
+                busqueda_existente
+              "
+            >
               <td colspan="7" class="ps-empty-td">
                 <div class="ps-empty-state">
                   <i class="bi bi-database-exclamation"></i>
                   <h3>No hay registros</h3>
-                  <p>No hay vagones cargados/descargados registrados actualmente</p>
+                  <p>
+                    No hay vagones cargados/descargados registrados actualmente
+                  </p>
                   <router-link
                     to="/AdicionarVagonCargadoDescargado"
                     class="ps-empty-action"
@@ -139,7 +148,9 @@
     </div>
 
     <!-- Paginación mejorada -->
-    <div class="ps-pagination d-flex justify-content-between align-items-center">
+    <div
+      class="ps-pagination d-flex justify-content-between align-items-center"
+    >
       <div class="ps-pagination-info">
         Mostrando {{ Math.min(currentPage * itemsPerPage, totalItems) }} de
         {{ totalItems }} registros
@@ -299,7 +310,6 @@
   </div>
 </template>
 
-
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -363,7 +373,7 @@ export default {
     async getVagonesCargadosDescargados() {
       this.loading = true;
       try {
-        const response = await axios.get("/ufc/vagones-cargados-descargados-hoy/", {
+        const response = await axios.get("/ufc/vagones-cargados-descargados/", {
           params: {
             page: this.currentPage,
             page_size: this.itemsPerPage,
@@ -445,29 +455,33 @@ export default {
     },
 
     async delete_vagon(id) {
-  try {
-    console.log("muestrae el id: ",id);
-    const response = await axios.delete(`/ufc/vagones-cargados-descargados/${id}/`);
-    
-    if (response.status === 204) { // Normalmente DELETE devuelve 204 No Content
-      this.cargados_descargados = this.cargados_descargados.filter(
-        (objeto) => objeto.id !== id
-      );
-      Swal.fire("Eliminado!", "El vagón ha sido eliminado.", "success");
-    } else {
-      throw new Error(`Respuesta inesperada: ${response.status}`);
-    }
-  } catch (error) {
-    console.error("Error completo:", error);
-    console.error("Respuesta del servidor:", error.response?.data);
-    
-    Swal.fire(
-      "Error",
-      error.response?.data?.message || "Error al eliminar el vagón",
-      "error"
-    );
-  }
-},
+      try {
+        console.log("muestrae el id: ", id);
+        const response = await axios.delete(
+          `/ufc/vagones-cargados-descargados/${id}/`
+        );
+
+        if (response.status === 204) {
+          // Normalmente DELETE devuelve 204 No Content
+          this.cargados_descargados = this.cargados_descargados.filter(
+            (objeto) => objeto.id !== id
+          );
+          Swal.fire("Eliminado!", "El vagón ha sido eliminado.", "success");
+        } else {
+          throw new Error(`Respuesta inesperada: ${response.status}`);
+        }
+      } catch (error) {
+        console.error("Error completo:", error);
+        console.error("Respuesta del servidor:", error.response?.data);
+
+        Swal.fire(
+          "Error",
+          error.response?.data?.message || "Error al eliminar el vagón",
+          "error"
+        );
+      }
+      window.location.reload();
+    },
 
     cerrarModal() {
       this.mostrarModal = false;
@@ -573,49 +587,6 @@ export default {
   gap: 1.5rem;
 }
 
-/* Botón de agregar como icono */
-.ps-add-icon {
-  background: var(--ps-primary);
-  color: white;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  transition: var(--ps-transition);
-  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
-  position: relative;
-  overflow: hidden;
-  border: none;
-}
-
-.ps-add-icon::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.3) 0%,
-    rgba(255, 255, 255, 0) 70%
-  );
-  opacity: 0;
-  transition: var(--ps-transition);
-}
-
-.ps-add-icon:hover {
-  transform: translateY(-3px) scale(1.1);
-  box-shadow: 0 6px 16px rgba(67, 97, 238, 0.4);
-}
-
-.ps-add-icon:hover::after {
-  opacity: 1;
-}
-
 /* Buscador */
 .ps-search-container {
   position: relative;
@@ -716,89 +687,36 @@ export default {
   color: var(--ps-dark);
 }
 
-.ps-td-index {
-  font-weight: 600;
-  color: var(--ps-gray);
-}
-
-.ps-td-actions {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-}
-
-/* Botones de acción con efecto transparente al hover */
-.ps-action-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Botones de acción */
+.btn-small {
+  font-size: 22px;
+  color: black;
+  margin-right: 5px;
+  outline: none;
   border: none;
-  cursor: pointer;
-  transition: var(--ps-transition);
-  background: transparent;
-  color: var(--ps-gray);
-  position: relative;
-  overflow: hidden;
+  background: none;
+  padding: 0;
 }
 
-.ps-action-btn::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: currentColor;
-  opacity: 0.1;
-  transition: var(--ps-transition);
+.btn-eye {
+  font-size: 22px;
+  margin-right: 5px;
+  outline: none;
+  border: none;
+  background: none;
+  padding: 0;
 }
 
-.ps-action-btn:hover {
-  transform: translateY(-2px);
-  opacity: 0.8;
+.btn:hover {
+  scale: 1.1;
 }
 
-.ps-action-btn:hover::before {
-  opacity: 0.2;
-}
-
-.ps-action-view {
-  color: var(--ps-info);
-}
-
-.ps-action-edit {
-  color: var(--ps-warning);
-}
-
-.ps-action-delete {
-  color: var(--ps-danger);
-}
-
-.ps-action-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none !important;
-}
-
-.ps-action-btn i {
-  position: relative;
-  z-index: 1;
+.btn:focus {
+  outline: none;
+  box-shadow: none;
 }
 
 /* Badges y estados */
-.ps-badge {
-  display: inline-block;
-  padding: 0.25rem 0.6rem;
-  border-radius: 50px;
-  font-weight: 600;
-  font-size: 0.8rem;
-  background: var(--ps-primary);
-  color: white;
-}
-
 .ps-status {
   display: inline-block;
   padding: 0.25rem 0.75rem;
@@ -1245,34 +1163,5 @@ export default {
     width: 100%;
     justify-content: center;
   }
-}
-
-/* Estilos para los botones de acción */
-.btn-small {
-  font-size: 22px;
-  color: black;
-  margin-right: 5px;
-  outline: none;
-  border: none;
-  background: none;
-  padding: 0;
-}
-
-.btn-eye {
-  font-size: 22px;
-  margin-right: 5px;
-  outline: none;
-  border: none;
-  background: none;
-  padding: 0;
-}
-
-.btn:hover {
-  scale: 1.1;
-}
-
-.btn:focus {
-  outline: none;
-  box-shadow: none;
 }
 </style>

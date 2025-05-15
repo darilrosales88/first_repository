@@ -230,8 +230,8 @@ export default {
           );
 
           // Formatear la fecha para mostrar solo YYYY-MM-DD
-          if (recordResponse.data.fecha_actual) {
-            this.formData.fecha = new Date().toISOString();
+          if (recordResponse.data.fecha_operacion) {
+            this.formData.fecha_actual = recordResponse.data.fecha_operacion;
             const today = new Date();
             const fechaFormateada = `${today.getFullYear()}-${String(
               today.getMonth() + 1

@@ -1147,6 +1147,7 @@ class ufc_informe_operativo_serializer(serializers.ModelSerializer):
             'plan_diario_total_vagones_cargados',
             'real_total_vagones_cargados',
             'total_vagones_situados',
+            'estado_parte',
             'arrastres_list',
             'en_trenes_list',
             'vagones_cargados_descargados_list',

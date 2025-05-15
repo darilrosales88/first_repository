@@ -311,6 +311,7 @@
     },
     data() {
       return {
+        informeOperativoId: null,
         formData: {
           tipo_origen: "",
           origen: "",
@@ -462,19 +463,30 @@
   
       async submitForm() {
         try {
-          //validando que primero esté creado el parte
-            const existeInforme = await this.verificarInformeOperativo();
-            if (!existeInforme) {
-              Swal.fire(
-                "Error",
-                "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
-                "error"
-              );
-              this.$router.push({ name: "InfoOperativo" });
-              return;
-              
-            }
-          // Validación de campos requeridos
+          // 1. Verificar si existe un informe operativo para la fecha actual
+          const existeInforme = await this.verificarInformeOperativo();
+          if (!existeInforme) {
+            Swal.fire(
+              "Error",
+              "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+              "error"
+            );
+            this.$router.push({ name: "InfoOperativo" });
+            return;
+          }
+
+          // 2. Verificar que el informe no esté en estado "Aprobado"
+          const informeDetalleResponse = await axios.get(`/ufc/informe-operativo/${this.informeOperativoId}/`);
+          if (informeDetalleResponse.data.estado_parte === "Aprobado") {
+            Swal.fire(
+              "Error",
+              "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
+              "error"
+            );
+            return;
+          }
+
+          // 3. Validación de campos requeridos
           if (!this.formData.tipo_origen) {
             throw new Error("El campo Tipo de Origen es requerido");
           }
@@ -506,8 +518,8 @@
           if (!this.formData.cantidad_vagones || this.formData.cantidad_vagones < 1) {
             throw new Error("La cantidad de vagones debe ser al menos 1");
           }
-  
-          // Preparar los datos para enviar
+
+          // 4. Preparar los datos para enviar
           const payload = {
             tipo_origen: this.formData.tipo_origen,
             origen: this.formData.origen,
@@ -519,12 +531,13 @@
             producto: this.formData.productos,
             cantidad_vagones: this.formData.cantidad_vagones,
             observaciones: this.formData.observaciones,
+            informe_operativo: this.informeOperativoId // Añadir el ID del informe operativo
           };
-  
-          // Enviar los datos al backend
+
+          // 5. Enviar los datos al backend
           const response = await axios.post("/ufc/pendiente-arrastre/", payload);
           
-          // Mostrar mensaje de éxito
+          // 6. Mostrar mensaje de éxito
           Swal.fire({
             title: "¡Éxito!",
             text: "El registro ha sido creado correctamente",
@@ -533,7 +546,7 @@
           }).then(() => {
             this.resetForm();
           });
-  
+
         } catch (error) {
           console.error("Error al enviar el formulario:", error);
           

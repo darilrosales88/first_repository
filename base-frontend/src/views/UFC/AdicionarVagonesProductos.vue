@@ -291,6 +291,7 @@ export default {
 
   data() {
     return {
+      informeOperativoId: null,
       mostrarModalProducto: false,
       formData: {
         tipo_equipo_ferroviario: "",
@@ -299,7 +300,7 @@ export default {
         tipo_combustible: "",
         tipo_producto: "",
         plan_mensual: "",
-        plan_anual: "",
+        plan_anual: 0,
         plan_acumulado_dia_anterior: 0,
         real_acumulado_dia_anterior: 0,
         lista_productos: [],
@@ -337,7 +338,11 @@ export default {
     },
     esPlanAnualEditable() {
       // Casos 3 y 4: Editable cuando es único informe en el año
-      return this.esUnicoInformeAnual;
+      // Cuando no es editable, forzar el valor a 0
+    if (!this.esUnicoInformeAnual) {
+      this.formData.plan_anual = 0;
+    }
+    return this.esUnicoInformeAnual;
     },
   },
 
@@ -396,6 +401,32 @@ export default {
     // Envío del formulario
     async submitForm() {
       try {
+        // 1. Verifificar que el informe operativo existe ya para la fecha creada
+        const existeInforme = await this.verificarInformeOperativo();
+        if (!existeInforme) {
+          Swal.fire(
+            "Error",
+            "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+            "error"
+          );
+          this.$router.push({ name: "InfoOperativo" });
+          return;
+          
+        }
+        // 2. Verificar que el informe no esté en estado "Aprobado"
+        const informeResponse = await axios.get(`/ufc/informe-operativo/${this.informeOperativoId}/`);
+        
+        if (informeResponse.data.estado_parte === "Aprobado") {
+          Swal.fire(
+            "Error",
+            "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
+            "error"
+          );
+          return;
+        }
+        // Convertir plan_anual a número entero
+        this.formData.plan_anual = parseInt(this.formData.plan_anual) || 0;
+
         // 1. Preparar los IDs de productos
         const productosParaEnviar = this.prepararProductosParaEnvio();
 
@@ -483,6 +514,26 @@ export default {
         return response.data.todos_existen;
       } catch (error) {
         console.error("Error al validar productos:", error);
+        return false;
+      }
+    },
+    async verificarInformeOperativo() {
+      try {
+        this.formData.fecha = new Date().toISOString();
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+        const response = await axios.get('/ufc/verificar-informe-existente/', {
+          params: { fecha_operacion: fechaFormateada }
+        });
+
+        if (response.data.existe) {
+          this.informeOperativoId = response.data.id;
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error("Error al verificar informe:", error);
         return false;
       }
     },

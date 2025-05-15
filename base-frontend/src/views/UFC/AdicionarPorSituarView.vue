@@ -447,19 +447,29 @@ export default {
 
     async submitForm() {
       try {
-        //validando que primero esté creado el parte
+        // 1. Verificar que exista un informe operativo
         const existeInforme = await this.verificarInformeOperativo();
-            if (!existeInforme) {
-              Swal.fire(
-                "Error",
-                "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
-                "error"
-              );
-              this.$router.push({ name: "InfoOperativo" });
-              return;
-              
-            }
-            
+        if (!existeInforme) {
+          Swal.fire(
+            "Error",
+            "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+            "error"
+          );
+          this.$router.push({ name: "InfoOperativo" });
+          return;
+        }
+
+        // 2. Verificar que el informe no esté aprobado
+        const informeNoAprobado = await this.verificarEstadoInforme();
+        if (!informeNoAprobado) {
+          Swal.fire(
+            "Error",
+            "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
+            "error"
+          );
+          return;
+        }
+
         // Validación de campos requeridos
         if (!this.formData.tipo_origen) {
           throw new Error("El campo Tipo de Origen es requerido");
@@ -497,10 +507,12 @@ export default {
           tipo_equipo: this.formData.tipo_equipo,
           operacion: this.formData.operacion,
           estado: this.formData.estado,
-          producto: this.formData.productos, // Array de IDs de productos
+          producto: this.formData.productos,
           por_situar: this.formData.por_situar,
           observaciones: this.formData.observaciones,
+          informe_operativo: this.informeOperativoId // Incluir el ID del informe
         };
+
         // Enviar los datos al backend
         const response = await axios.post("/ufc/por-situar/", payload);
 
@@ -534,6 +546,17 @@ export default {
           icon: "error",
           confirmButtonText: "Entendido",
         });
+      }
+    },
+    async verificarEstadoInforme() {
+      try {
+        if (!this.informeOperativoId) return false;
+        
+        const response = await axios.get(`/ufc/informe-operativo/${this.informeOperativoId}/`);
+        return response.data.estado_parte !== "Aprobado";
+      } catch (error) {
+        console.error("Error al verificar estado del informe:", error);
+        return false;
       }
     },
 

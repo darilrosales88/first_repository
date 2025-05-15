@@ -647,7 +647,7 @@ const routes = [
   {
     path: "/ufc",
     name: "ufc",
-    component: () => import("../views/UFCView.vue"),
+    component: () => import("../views/UFC/UFCView.vue"),
     meta: {
       requireLogin: true,
     },

@@ -1149,12 +1149,15 @@ class ufc_informe_operativo_serializer(serializers.ModelSerializer):
         queryset=CustomUser.objects.all(), 
         write_only=True
     )
-    provincia = serializers.PrimaryKeyRelatedField(
-        queryset=nom_provincia.objects.all(),
+    
+    aprobado_por = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(), 
         write_only=True
     )
     
+    
     creado_por_detalle=UserPermissionSerializer(source='creado_por', read_only=True)
+    aprobado_por_detalle=UserPermissionSerializer(source='aprobado_por', read_only=True)
     class Meta:
         model = ufc_informe_operativo       
         fields = [
@@ -1165,10 +1168,10 @@ class ufc_informe_operativo_serializer(serializers.ModelSerializer):
             'real_total_vagones_cargados',
             'total_vagones_situados',
             'estado_parte',
-            'provincia',
             'creado_por',
             'creado_por_detalle',
             'aprobado_por',
+            'aprobado_por_detalle',
             'arrastres_list',
             'en_trenes_list',
             'vagones_cargados_descargados_list',

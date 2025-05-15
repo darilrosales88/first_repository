@@ -29,19 +29,7 @@ from nomencladores.models import nom_equipo_ferroviario,nom_tipo_equipo_ferrovia
 
 
 #****************-------------------------********************--------------------***************-----------------********************************
-class ufc_informe_operativo_filter(filters.FilterSet):
-    fecha_operacion = filters.CharFilter(field_name='fecha_operacion',lookup_expr = 'exact')  
-    
-    class Meta:
-        model = ufc_informe_operativo
-        fields = '__all__' 
-        
-class ufc_informe_operativo_serializer(serializers.ModelSerializer):                      
-    
-    class Meta:
-        model = ufc_informe_operativo       
-        fields = '__all__'
-        filterset_class: ufc_informe_operativo_filter
+
         
 #****************-------------------------********************--------------------***************-----------------****
 class DateTimeToDateField(serializers.ReadOnlyField):
@@ -1135,3 +1123,71 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
         return instance
     
 
+class ufc_informe_operativo_filter(filters.FilterSet):
+    fecha_operacion = filters.CharFilter(field_name='fecha_operacion',lookup_expr = 'exact')  
+    
+    class Meta:
+        model = ufc_informe_operativo
+        fields = '__all__' 
+        
+class ufc_informe_operativo_serializer(serializers.ModelSerializer):                      
+    arrastres_list = serializers.SerializerMethodField()
+    en_trenes_list = serializers.SerializerMethodField()
+    vagones_cargados_descargados_list = serializers.SerializerMethodField()
+    situados_carga_descarga_list = serializers.SerializerMethodField()
+    por_situar_list = serializers.SerializerMethodField()
+    vagones_productos_list = serializers.SerializerMethodField()
+    rotacion_vagones_list = serializers.SerializerMethodField()
+    class Meta:
+        model = ufc_informe_operativo       
+        fields = [
+            'id',
+            'fecha_operacion',
+            'plan_mensual_total',
+            'plan_diario_total_vagones_cargados',
+            'real_total_vagones_cargados',
+            'total_vagones_situados',
+            'arrastres_list',
+            'en_trenes_list',
+            'vagones_cargados_descargados_list',
+            'situados_carga_descarga_list',
+            'por_situar_list',
+            'vagones_productos_list',
+            'rotacion_vagones_list',
+        ]
+        filterset_class: ufc_informe_operativo_filter
+        
+    def get_arrastres_list(self, obj):
+        """Obtiene todos los arrastres asociados al informe operativo."""
+        arrastres_queryset = obj.arrastres.all()
+        return PendienteArrastreSerializer(arrastres_queryset, many=True).data
+
+    def get_en_trenes_list(self, obj):
+        """Obtiene todos los trenes asociados al informe operativo."""
+        en_trenes_queryset = obj.en_trenes.all()
+        return en_trenes_serializer(en_trenes_queryset, many=True).data
+
+    def get_vagones_cargados_descargados_list(self, obj):
+        """Obtiene todos los vagones cargados/descargados asociados al informe operativo."""
+        vagones_cargados_descargados_queryset = obj.vagones_cargados_descargados.all()
+        return vagon_cargado_descargado_serializer(vagones_cargados_descargados_queryset, many=True).data
+
+    def get_situados_carga_descarga_list(self, obj):
+        """Obtiene todos los situados de carga/descarga asociados al informe operativo."""
+        situados_carga_descarga_queryset = obj.situados.all()
+        return SituadoCargaDescargaSerializers(situados_carga_descarga_queryset, many=True).data
+
+    def get_por_situar_list(self, obj):
+        """Obtiene todos los registros por situar asociados al informe operativo."""
+        por_situar_queryset = obj.por_situar.all()
+        return PorSituarCargaDescargaSerializer(por_situar_queryset, many=True).data
+
+    def get_vagones_productos_list(self, obj):
+        """Obtiene todos los productos de vagones asociados al informe operativo."""
+        vagones_productos_queryset = obj.vagones_productos.all()
+        return vagones_productos_serializer(vagones_productos_queryset, many=True).data
+
+    def get_rotacion_vagones_list(self, obj):
+        """Obtiene todas las rotaciones de vagones asociadas al informe operativo."""
+        rotacion_vagones_queryset = obj.rotacion.all()
+        return RotacionVagonesSerializer(rotacion_vagones_queryset, many=True).data

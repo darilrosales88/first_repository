@@ -181,6 +181,13 @@ class vagon_cargado_descargado(models.Model):
         verbose_name="Registros de vagones asociados"
     )
 
+    informe_operativo = models.ForeignKey(
+        ufc_informe_operativo,
+        on_delete=models.CASCADE,
+        related_name='vagones_cargados_descargados',
+        null=True, blank=True
+    )
+
     class Meta:
         verbose_name_plural = "Vagones cargados/descargados"
         verbose_name = "Vagón cargado/descargado"  
@@ -415,6 +422,14 @@ class Situado_Carga_Descarga(models.Model):
         ]
     )
     
+    informe_operativo = models.ForeignKey(
+        ufc_informe_operativo,
+        on_delete=models.CASCADE,
+        related_name='situados',
+        null=True, blank=True
+    )
+
+    
     observaciones = models.TextField(
         verbose_name="Observaciones",
         help_text="Ingrese observaciones adicionales. Admite letras, números y caracteres especiales.",
@@ -608,6 +623,14 @@ class vagones_productos(models.Model):
     plan_anual = models.IntegerField(default=0)
     plan_acumulado_dia_anterior = models.IntegerField()
     real_acumulado_dia_anterior = models.IntegerField()
+    
+    informe_operativo = models.ForeignKey(
+        ufc_informe_operativo,
+        on_delete=models.CASCADE,
+        related_name='vagones_productos',
+        null=True, blank=True
+    )
+
 
     class Meta:
         verbose_name_plural = "Vagones y productos"
@@ -892,6 +915,15 @@ class en_trenes(models.Model):
         blank=True,  # Permite que el campo esté vacío
         null=True,   # Permite valores nulos en la base de datos
     )
+    
+    informe_operativo = models.ForeignKey(
+        ufc_informe_operativo,
+        on_delete=models.CASCADE,
+        related_name='en_trenes',
+        null=True, blank=True
+    )
+
+    
     def save(self, *args, **kwargs):
         # Llenar el campo numero_identificacion_locomotora con el valor de la locomotora relacionada
         if self.locomotora:
@@ -1097,6 +1129,13 @@ class por_situar(models.Model):
         blank=True,
         null=True,
     )
+    informe_operativo = models.ForeignKey(
+        ufc_informe_operativo,
+        on_delete=models.CASCADE,
+        related_name='por_situar',
+        null=True, blank=True
+    )
+
 
     class Meta:
         verbose_name = "Por situar"
@@ -1298,6 +1337,14 @@ class arrastres(models.Model):
         verbose_name="Destino"
     )
     fecha = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de registro", editable=False)
+    
+    informe_operativo = models.ForeignKey(
+        ufc_informe_operativo,
+        on_delete=models.CASCADE,
+        related_name='arrastres',
+        null=True, blank=True
+    )
+
     class Meta:
         verbose_name = "arrastre"
         verbose_name_plural = "Arrastres"
@@ -1426,13 +1473,21 @@ class rotacion_vagones(models.Model):
     plan_rotacion = models.PositiveIntegerField(verbose_name="Plan rotación")
     real_rotacion = models.PositiveIntegerField(verbose_name="Real rotación")
 
-    creado_el = models.DateTimeField(auto_now_add=True, verbose_name="Creado el")
+    fecha = models.DateTimeField(auto_now_add=True,  verbose_name="Fecha de registro")
     actualizado_el = models.DateTimeField(auto_now=True, verbose_name="Actualizado el")
+    
+    informe_operativo = models.ForeignKey(
+        ufc_informe_operativo,
+        on_delete=models.CASCADE,
+        related_name='rotacion',
+        null=True, blank=True
+    )
+
 
     class Meta:
         verbose_name = "Registro de rotación"
         verbose_name_plural = "Registros de rotación"
-        ordering = ["-creado_el"]
+        ordering = ["-fecha"]
 
     def __str__(self):
         return f"{self.tipo_equipo_ferroviario.tipo_equipo} - Servicio: {self.en_servicio}"
@@ -1462,7 +1517,7 @@ def crear_historial_rotacion_vagones(sender, instance, created, **kwargs):
         return
 
     def _crear_historial():
-        fecha_registro = instance.creado_el.date()
+        fecha_registro = instance.fecha.date()
         
         informe = ufc_informe_operativo.objects.annotate(
             fecha_op=TruncDate('fecha_operacion')
@@ -1488,7 +1543,7 @@ def crear_historial_rotacion_vagones(sender, instance, created, **kwargs):
             'real_carga': registro_completo.real_carga,
             'plan_rotacion': registro_completo.plan_rotacion,
             'real_rotacion': registro_completo.real_rotacion,
-            'creado_el': str(registro_completo.creado_el),
+            'fecha': str(registro_completo.fecha),
             'actualizado_el': str(registro_completo.actualizado_el)
         }
 

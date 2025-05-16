@@ -43,7 +43,6 @@ class VagonesAsociadosSerializer(serializers.ModelSerializer):
         fields = ['id', 'equipo_ferroviario', 'equipo_ferroviario_nombre', 'dias']
 
 #****************-------------------------********************--------------------***************-----------------********************************
-c
 #****************-------------------------********************--------------------***************-----------------****
 class DateTimeToDateField(serializers.ReadOnlyField):
     """Campo personalizado para convertir datetime a date"""

@@ -890,7 +890,7 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         read_only=True,  # Solo lectura, no necesita write_only
         help_text="Fecha y hora en que se creó el registro (automático)"
     )
-    productos_info = serializers.SerializerMethodField()
+    #productos_info = serializers.SerializerMethodField()
     tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
     tipo_equipo_name=serializers.ReadOnlyField(source='get_tipo_equipo_display')
     producto = serializers.PrimaryKeyRelatedField(

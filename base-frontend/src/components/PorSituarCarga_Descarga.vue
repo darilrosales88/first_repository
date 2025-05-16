@@ -423,7 +423,7 @@ export default {
     getPorSituar() {
       this.loading = true;
       axios
-        .get("http://127.0.0.1:8000/ufc/por-situar-hoy/")
+        .get("http://127.0.0.1:8000/ufc/por-situar/")
         .then((response) => {
           this.registrosPorSituar = response.data.results;
           this.totalItems = response.data.count;

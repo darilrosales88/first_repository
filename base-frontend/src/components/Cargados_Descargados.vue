@@ -118,12 +118,20 @@
             </tr>
 
             <!-- Estado vacío -->
-            <tr v-if="!loading && cargados_descargados.length === 0 && busqueda_existente">
+            <tr
+              v-if="
+                !loading &&
+                cargados_descargados.length === 0 &&
+                busqueda_existente
+              "
+            >
               <td colspan="7" class="ps-empty-td">
                 <div class="ps-empty-state">
                   <i class="bi bi-database-exclamation"></i>
                   <h3>No hay registros</h3>
-                  <p>No hay vagones cargados/descargados registrados actualmente</p>
+                  <p>
+                    No hay vagones cargados/descargados registrados actualmente
+                  </p>
                   <router-link
                     to="/AdicionarVagonCargadoDescargado"
                     class="ps-empty-action"
@@ -140,7 +148,9 @@
     </div>
 
     <!-- Paginación mejorada -->
-    <div class="ps-pagination d-flex justify-content-between align-items-center">
+    <div
+      class="ps-pagination d-flex justify-content-between align-items-center"
+    >
       <div class="ps-pagination-info">
         Mostrando {{ Math.min(currentPage * itemsPerPage, totalItems) }} de
         {{ totalItems }} registros
@@ -300,7 +310,6 @@
   </div>
 </template>
 
-
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -446,29 +455,33 @@ export default {
     },
 
     async delete_vagon(id) {
-  try {
-    console.log("muestrae el id: ",id);
-    const response = await axios.delete(`/ufc/vagones-cargados-descargados/${id}/`);
-    
-    if (response.status === 204) { // Normalmente DELETE devuelve 204 No Content
-      this.cargados_descargados = this.cargados_descargados.filter(
-        (objeto) => objeto.id !== id
-      );
-      Swal.fire("Eliminado!", "El vagón ha sido eliminado.", "success");
-    } else {
-      throw new Error(`Respuesta inesperada: ${response.status}`);
-    }
-  } catch (error) {
-    console.error("Error completo:", error);
-    console.error("Respuesta del servidor:", error.response?.data);
-    
-    Swal.fire(
-      "Error",
-      error.response?.data?.message || "Error al eliminar el vagón",
-      "error"
-    );
-  }
-},
+      try {
+        console.log("muestrae el id: ", id);
+        const response = await axios.delete(
+          `/ufc/vagones-cargados-descargados/${id}/`
+        );
+
+        if (response.status === 204) {
+          // Normalmente DELETE devuelve 204 No Content
+          this.cargados_descargados = this.cargados_descargados.filter(
+            (objeto) => objeto.id !== id
+          );
+          Swal.fire("Eliminado!", "El vagón ha sido eliminado.", "success");
+        } else {
+          throw new Error(`Respuesta inesperada: ${response.status}`);
+        }
+      } catch (error) {
+        console.error("Error completo:", error);
+        console.error("Respuesta del servidor:", error.response?.data);
+
+        Swal.fire(
+          "Error",
+          error.response?.data?.message || "Error al eliminar el vagón",
+          "error"
+        );
+      }
+      window.location.reload();
+    },
 
     cerrarModal() {
       this.mostrarModal = false;

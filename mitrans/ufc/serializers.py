@@ -7,8 +7,8 @@ from django.db.models import Q,Sum
 #Importando modelos de UFC
 from .models import (ufc_informe_operativo, vagon_cargado_descargado,producto_UFC, en_trenes,nom_equipo_ferroviario
                     ,por_situar,Situado_Carga_Descarga,arrastres,HistorialVagonesProductos 
-                    ,registro_vagones_cargados,vagones_productos,rotacion_vagones,HistorialVagonCargadoDescargado,
-                     vagones_por_situar_situados_pendientes)
+                    ,registro_vagones_cargados,vagones_productos,rotacion_vagones,HistorialVagonCargadoDescargado
+                     )
 
 from Administracion.models import Auditoria 
 from rest_framework.response import Response

@@ -186,7 +186,7 @@
                           @click.stop
                         />
                       </div>
-                      <div class="ufc-productos-options">
+                      <div class="ufc-productos-options" v-if="hasGroup('AdminUFC')">
                         <div
                           v-for="producto in filteredProductos"
                           :key="producto.id"
@@ -315,6 +315,8 @@ export default {
         por_situar: 1,
         observaciones: "",
       },
+      userGroups: [], // Inicializa como array vacío
+      userPermissions: [], // Inicializa como array vacío
       productoSearch: "",
       filteredProductos: [],
       showProductosDropdown: false,
@@ -352,7 +354,33 @@ export default {
       return new Date().toLocaleString();
     }
   },
+  async created() {
+    await this.fetchUserPermissionsAndGroups(); // Espera a que se carguen los permisos
+    //await this.GetRegistroVagonesCargadosDescargados(); // Luego carga los registros
+  },
   methods: {
+    // Verifica si el usuario pertenece a un grupo específico
+    hasGroup(group) {
+      return this.userGroups.some((g) => g.name === group);
+    },
+    // Obtiene los permisos y grupos del usuario
+    async fetchUserPermissionsAndGroups() {
+      try {
+        const userId = localStorage.getItem("userid");
+        if (userId) {
+          const response = await axios.get(
+            `/apiAdmin/user/${userId}/permissions-and-groups/`
+          );
+          this.userPermissions = response.data.permissions;
+          this.userGroups = response.data.groups;
+        }
+        console.log("Permisos: ",this.userPermissions );
+        console.log("Grupos: ",this.userGroups );
+      } catch (error) {
+        console.error("Error al obtener permisos y grupos:", error);
+      }
+    },
+
     async verificarInformeOperativo() {
         try {
           this.formData.fecha = new Date().toISOString();

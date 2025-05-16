@@ -1151,6 +1151,7 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        print("mayeya")
         if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
                 {"detail": "No tiene permiso para realizar esta acción."},
@@ -1667,11 +1668,11 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
             navegador=navegador,
         )
 
-        instance.delete()#Probando configuracion
+        instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+        if not request.user.groups.filter(name='Admin').exists() and not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
                 {"detail": "No tiene permiso para realizar esta acción."},
                 status=status.HTTP_403_FORBIDDEN

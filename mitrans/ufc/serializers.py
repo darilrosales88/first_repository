@@ -35,12 +35,7 @@ from Administracion.serializers import UserPermissionSerializer
 
 
 
-class VagonesAsociadosSerializer(serializers.ModelSerializer):
-    equipo_ferroviario_nombre = serializers.CharField(source='equipo_ferroviario.get_tipo_equipo_display', read_only=True)
-    
-    class Meta:
-        model = vagones_por_situar_situados_pendientes
-        fields = ['id', 'equipo_ferroviario', 'equipo_ferroviario_nombre', 'dias']
+
 
 #****************-------------------------********************--------------------***************-----------------********************************
 #****************-------------------------********************--------------------***************-----------------****
@@ -861,14 +856,6 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
     situados = serializers.IntegerField()
     pendiente_proximo_dia = serializers.IntegerField()
     
-    vagones = VagonesAsociadosSerializer(many=True, read_only=True)
-    vagones_ids = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=vagones_por_situar_situados_pendientes.objects.all(),
-        source='vagones',
-        write_only=True,
-        required=False
-    )
     
     class Meta:
         model = Situado_Carga_Descarga

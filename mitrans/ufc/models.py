@@ -18,23 +18,7 @@ from django.db.models.functions import Cast
 
 
 #Modelo para el informe operativo
-class vagones_por_situar_situados_pendientes(models.Model):
-    equipo_ferroviario = models.ForeignKey(
-        nom_equipo_ferroviario,
-        on_delete=models.CASCADE,
-        verbose_name="Equipo ferroviario"
-    )
-    dias = models.PositiveIntegerField(
-        verbose_name="Días",
-        validators=[MinValueValidator(1)]
-    )
 
-    class Meta:
-        verbose_name = "Vagón asociado"
-        verbose_name_plural = "Vagones asociados"
-        
-    def __str__(self):
-        return f"{self.equipo_ferroviario} - {self.dias} días"  
 
 
 
@@ -65,7 +49,7 @@ class ufc_informe_operativo(models.Model):
 #*************************************************************************************************************************
 
 class vagones_dias(models.Model):
-    equipo_ferroviario=models.ForeignKey(nom_equipo_ferroviario,on_delete=models.CASCADE,related_name="registro_por_dias",verbose_name="Vagones por Dias", null=True,blank=True)
+    equipo_ferroviario=models.ForeignKey(nom_equipo_ferroviario,on_delete=models.SET_NULL,related_name="registro_por_dias",verbose_name="Vagones por Dias", null=True,blank=True)
     cant_dias=models.PositiveSmallIntegerField(verbose_name="Cantidad de Dias")
 
 
@@ -459,18 +443,6 @@ class Situado_Carga_Descarga(models.Model):
         null=True,   # Permite valores nulos en la base de datos
     )
 
-    vagones = models.ManyToManyField(
-        vagones_por_situar_situados_pendientes,
-        related_name='situado_registros',
-        blank=True,
-        verbose_name="Vagones asociados"
-    )
-    
-    def save(self, *args, **kwargs):
-        # Actualizar el campo situados con la cantidad de vagones
-        if self.pk:  # Solo si el objeto ya existe
-            self.situados = str(self.vagones.count())
-        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Situado "
@@ -1255,28 +1227,6 @@ class por_situar(models.Model):
         null=True, blank=True
     )
 
-
-    vagones = models.ManyToManyField(
-        vagones_por_situar_situados_pendientes,
-        related_name='por_situar_registros',
-        blank=True,
-        verbose_name="Vagones asociados"
-    )
-    
- 
-
-    vagones = models.ManyToManyField(
-        vagones_por_situar_situados_pendientes,
-        related_name='por_situar_registros',
-        blank=True,
-        verbose_name="Vagones asociados"
-    )
-    
-    def save(self, *args, **kwargs):
-        # Actualizar el campo por_situar con la cantidad de vagones
-        if self.pk:  # Solo si el objeto ya existe
-            self.por_situar = str(self.vagones.count())
-        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Por situar"

@@ -1120,7 +1120,7 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
 
 #Voy a agregar los modulos de auditoria a los que hizo Karmal
 class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
-    queryset = por_situar.objects.all().order_by("-id").prefetch_related('vagones')
+    queryset = por_situar.objects.all().order_by("-id").prefetch_related('equipo_vagon')
     serializer_class = PorSituarCargaDescargaSerializer
     filter_backends = [DjangoFilterBackend]
     
@@ -1265,7 +1265,7 @@ class PorSituarCargaDescarga_hoy_ViewSet(viewsets.ModelViewSet):
     #**********************************************************************************************
 
 class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
-    queryset = Situado_Carga_Descarga.objects.all().order_by("-id").prefetch_related('vagones')
+    queryset = Situado_Carga_Descarga.objects.all().order_by("-id").prefetch_related('equipo_vagon')
     serializer_class = SituadoCargaDescargaSerializers
     filter_backends = [DjangoFilterBackend]
     permission_classes = [IsUFCPermission] 
@@ -1408,7 +1408,7 @@ class SituadoCargaDescarga_hoy_Viewset(viewsets.ModelViewSet):
  #***********************************************************************************************************************   
     
 class PendienteArrastreViewset(viewsets.ModelViewSet):
-    queryset = arrastres.objects.all().prefetch_related('vagones')
+    queryset = arrastres.objects.all().prefetch_related('equipo_vagon')
     a=arrastres.objects.create
     serializer_class = PendienteArrastreSerializer
     permission_classes = [IsUFCPermission] 

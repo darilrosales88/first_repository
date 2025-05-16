@@ -7,7 +7,7 @@ from .views import vagones_productos_view_set,verificar_productos,RotacionVagone
 from .views import verificar_informe_existente,vagon_cargado_descargado_hoy_view_set,PendienteArrastre_hoy_Viewset
 from .views import SituadoCargaDescarga_hoy_Viewset,PorSituarCargaDescarga_hoy_ViewSet,en_trenes_hoy_viewset
 from .views import vagones_productos_hoy_viewset,HistorialVagonCargadoDescargadoViewSet,HistorialVagonesProductosViewSet,VagonesDiasViewSet
-from .views import actualizar_estado_parte
+
 
 
 from django.urls import path

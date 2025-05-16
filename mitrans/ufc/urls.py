@@ -47,7 +47,7 @@ router.register('situados', SituadoCargaDescargaViewset, basename="situados")
 router.register('situados-hoy', SituadoCargaDescarga_hoy_Viewset, basename="situados-hoy")
 router.register('pendiente-arrastre', PendienteArrastreViewset, basename ="pendiente-arrastre")
 router.register('pendiente-arrastre-hoy', PendienteArrastre_hoy_Viewset, basename ="pendiente-arrastre-hoy")
-router.register('vagones-asociados', VagonesAsociadosViewSet, basename='vagones-asociados')
+router.register(r'vagones-asociados', VagonesAsociadosViewSet, basename='vagones-asociados')
 
 #endpoint para rotacion de vagones
 router.register("rotaciones", RotacionVagonesViewSet, basename="rotacion-vagones")

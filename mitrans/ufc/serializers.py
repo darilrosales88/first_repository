@@ -28,6 +28,14 @@ from nomencladores.models import nom_equipo_ferroviario,nom_tipo_equipo_ferrovia
 
 
 
+
+class VagonesAsociadosSerializer(serializers.ModelSerializer):
+    equipo_ferroviario_nombre = serializers.CharField(source='equipo_ferroviario.get_tipo_equipo_display', read_only=True)
+    
+    class Meta:
+        model = vagones_por_situar_situados_pendientes
+        fields = ['id', 'equipo_ferroviario', 'equipo_ferroviario_nombre', 'dias']
+
 #****************-------------------------********************--------------------***************-----------------********************************
 class ufc_informe_operativo_filter(filters.FilterSet):
     fecha_operacion = filters.CharFilter(field_name='fecha_operacion',lookup_expr = 'exact')  
@@ -802,62 +810,39 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
     situados = serializers.IntegerField()
     pendiente_proximo_dia = serializers.IntegerField()
     
+    vagones = VagonesAsociadosSerializer(many=True, read_only=True)
+    vagones_ids = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=vagones_por_situar_situados_pendientes.objects.all(),
+        source='vagones',
+        write_only=True,
+        required=False
+    )
+    
     class Meta:
         model = Situado_Carga_Descarga
-        fields = ('id', 'tipo_origen' , 'tipo_origen_name', 'origen', 'tipo_equipo' , 'tipo_equipo_name', 'estado', 
-                 'operacion', 'producto', 'productos_info', 'situados', 
-                 'pendiente_proximo_dia', 'observaciones')
+        fields = ('id', 'tipo_origen', 'tipo_origen_name', 'origen', 'tipo_equipo', 
+                 'tipo_equipo_name', 'estado', 'operacion', 'producto', 'productos_info', 
+                 'situados', 'pendiente_proximo_dia', 'observaciones', 'vagones', 'vagones_ids')
         extra_kwargs = {
+            'situados': {'read_only': True},
             'producto': {'required': False},
             'observaciones': {'required': False, 'allow_null': True}
         }
 
-    def get_productos_info(self, obj):
-        productos = obj.producto.all()
-        return [{
-            'id': p.id,
-            'nombre_producto': p.producto.nombre_producto,
-            'codigo_producto': p.producto.codigo_producto,
-            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
-            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
-            'cantidad': p.cantidad,
-            'estado': p.estado,
-            'contiene': p.contiene
-        } for p in productos] # (truco) Esta bueno este truquito para evitar errores si el objeto no tiene el atributo
-        
-    def to_internal_value(self, data):
-        # Convertir los valores de string a integer antes de la validación
-        if 'situados' in data:
-            data['situados'] = int(data['situados']) if data['situados'] else 0
-        if 'pendiente_proximo_dia' in data:
-            data['pendiente_proximo_dia'] = int(data['pendiente_proximo_dia']) if data['pendiente_proximo_dia'] else 0
-        return super().to_internal_value(data)
-        
-    def validate(self, data):
-        # Validar que el producto sea opcional
-        if 'producto' not in data:
-            data['producto'] = []
-        return data
-
     def create(self, validated_data):
-        productos_data = validated_data.pop('producto', [])
+        vagones_data = validated_data.pop('vagones', [])
         instance = super().create(validated_data)
-        
-        # Asociar productos MANUALMENTE después de crear la instancia
-        if productos_data:
-            instance.producto.set(productos_data)
-            instance.save()  # Guardar explícitamente
-        
+        instance.vagones.set(vagones_data)
+        instance.save()  # Para actualizar el contador situados
         return instance
 
     def update(self, instance, validated_data):
-        productos_data = validated_data.pop('producto', None)
+        vagones_data = validated_data.pop('vagones', None)
         instance = super().update(instance, validated_data)
-        
-        if productos_data is not None:
-            instance.producto.set(productos_data)
-            instance.save()
-        
+        if vagones_data is not None:
+            instance.vagones.set(vagones_data)
+            instance.save()  # Para actualizar el contador situados
         return instance        
         
         
@@ -885,39 +870,37 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         queryset=producto_UFC.objects.all(),
         required=False
     )
+    vagones = VagonesAsociadosSerializer(many=True, read_only=True)
+    vagones_ids = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=vagones_por_situar_situados_pendientes.objects.all(),
+        source='vagones',
+        write_only=True,
+        required=False
+    )
     
     class Meta:
         model = por_situar
         fields = '__all__'
         extra_kwargs = {
+            'por_situar': {'read_only': True},
             'producto': {'required': False},
             'observaciones': {'required': False, 'allow_null': True}
         }
 
-    def get_productos_info(self, obj):
-        productos = obj.producto.all()
-        return [{
-            'id': p.id,
-            'nombre_producto': p.producto.nombre_producto,
-            'codigo_producto': p.producto.codigo_producto,
-            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
-            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
-            'cantidad': p.cantidad,
-            'estado': p.estado,
-            'contiene': p.contiene
-        } for p in productos]
-
     def create(self, validated_data):
-        productos_data = validated_data.pop('producto', [])
-        instance = por_situar.objects.create(**validated_data)
-        instance.producto.set(productos_data)
+        vagones_data = validated_data.pop('vagones', [])
+        instance = super().create(validated_data)
+        instance.vagones.set(vagones_data)
+        instance.save()  # Para actualizar el contador por_situar
         return instance
 
     def update(self, instance, validated_data):
-        productos_data = validated_data.pop('producto', None)
+        vagones_data = validated_data.pop('vagones', None)
         instance = super().update(instance, validated_data)
-        if productos_data is not None:
-            instance.producto.set(productos_data)
+        if vagones_data is not None:
+            instance.vagones.set(vagones_data)
+            instance.save()  # Para actualizar el contador por_situar
         return instance
 
 
@@ -941,36 +924,35 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
         queryset=producto_UFC.objects.all(),
         required=False
     )
+    vagones = VagonesAsociadosSerializer(many=True, read_only=True)
+    vagones_ids = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=vagones_por_situar_situados_pendientes.objects.all(),
+        source='vagones',
+        write_only=True,
+        required=False
+    )
     
     class Meta:
         model = arrastres
         fields = '__all__'
-        filterset_class = PendienteArrastreFilter
-
-    def get_productos_info(self, obj):
-        productos = obj.producto.all()
-        return [{
-           'id': p.id,
-            'nombre_producto': p.producto.nombre_producto,
-            'codigo_producto': p.producto.codigo_producto,
-            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
-            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
-            'cantidad': p.cantidad,
-            'estado': p.estado,
-            'contiene': p.contiene
-        } for p in productos]
+        extra_kwargs = {
+            'cantidad_vagones': {'read_only': True}
+        }
 
     def create(self, validated_data):
-        productos_data = validated_data.pop('producto', [])
-        instance = arrastres.objects.create(**validated_data)
-        instance.producto.set(productos_data)
+        vagones_data = validated_data.pop('vagones', [])
+        instance = super().create(validated_data)
+        instance.vagones.set(vagones_data)
+        instance.save()  # Para actualizar el contador cantidad_vagones
         return instance
 
     def update(self, instance, validated_data):
-        productos_data = validated_data.pop('producto', None)
+        vagones_data = validated_data.pop('vagones', None)
         instance = super().update(instance, validated_data)
-        if productos_data is not None:
-            instance.producto.set(productos_data)
+        if vagones_data is not None:
+            instance.vagones.set(vagones_data)
+            instance.save()  # Para actualizar el contador cantidad_vagones
         return instance
 
 
@@ -1098,11 +1080,3 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
-    
-
-class VagonesAsociadosSerializer(serializers.ModelSerializer):
-    equipo_ferroviario_nombre = serializers.CharField(source='equipo_ferroviario.get_tipo_equipo_display', read_only=True)
-    
-    class Meta:
-        model = vagones_por_situar_situados_pendientes
-        fields = ['id', 'equipo_ferroviario', 'equipo_ferroviario_nombre', 'dias']

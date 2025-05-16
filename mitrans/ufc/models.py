@@ -13,6 +13,27 @@ from django.utils import timezone
 
 
 #Modelo para el informe operativo
+class vagones_por_situar_situados_pendientes(models.Model):
+    equipo_ferroviario = models.ForeignKey(
+        nom_equipo_ferroviario,
+        on_delete=models.CASCADE,
+        verbose_name="Equipo ferroviario"
+    )
+    dias = models.PositiveIntegerField(
+        verbose_name="Días",
+        validators=[MinValueValidator(1)]
+    )
+
+    class Meta:
+        verbose_name = "Vagón asociado"
+        verbose_name_plural = "Vagones asociados"
+        
+    def __str__(self):
+        return f"{self.equipo_ferroviario} - {self.dias} días"  
+
+
+
+
 class ufc_informe_operativo(models.Model):    
 
     fecha_operacion = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de operación")
@@ -417,6 +438,19 @@ class Situado_Carga_Descarga(models.Model):
         blank=True,  # Permite que el campo esté vacío
         null=True,   # Permite valores nulos en la base de datos
     )
+
+    vagones = models.ManyToManyField(
+        vagones_por_situar_situados_pendientes,
+        related_name='situado_registros',
+        blank=True,
+        verbose_name="Vagones asociados"
+    )
+    
+    def save(self, *args, **kwargs):
+        # Actualizar el campo situados con la cantidad de vagones
+        if self.pk:  # Solo si el objeto ya existe
+            self.situados = str(self.vagones.count())
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Situado "
@@ -1084,6 +1118,19 @@ class por_situar(models.Model):
         null=True,
     )
 
+    vagones = models.ManyToManyField(
+        vagones_por_situar_situados_pendientes,
+        related_name='por_situar_registros',
+        blank=True,
+        verbose_name="Vagones asociados"
+    )
+    
+    def save(self, *args, **kwargs):
+        # Actualizar el campo por_situar con la cantidad de vagones
+        if self.pk:  # Solo si el objeto ya existe
+            self.por_situar = str(self.vagones.count())
+        super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = "Por situar"
         verbose_name_plural = "Por situar"
@@ -1285,6 +1332,21 @@ class arrastres(models.Model):
         verbose_name="Destino"
     )
     fecha = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de registro", editable=False)
+
+    vagones = models.ManyToManyField(
+        vagones_por_situar_situados_pendientes,
+        related_name='arrastre_registros',
+        blank=True,
+        verbose_name="Vagones asociados"
+    )
+    
+    def save(self, *args, **kwargs):
+        # Actualizar el campo cantidad_vagones con la cantidad de vagones
+        if self.pk:  # Solo si el objeto ya existe
+            self.cantidad_vagones = str(self.vagones.count())
+        super().save(*args, **kwargs)
+
+
     class Meta:
         verbose_name = "arrastre"
         verbose_name_plural = "Arrastres"
@@ -1499,43 +1561,3 @@ def eliminar_historial_rotacion_vagones(sender, instance, **kwargs):
  
  
  
-class vagones_por_situar_situados_pendientes(models.Model):
-    equipo_ferroviario = models.ForeignKey(
-        nom_equipo_ferroviario,
-        on_delete=models.CASCADE,
-        verbose_name="Equipo ferroviario"
-    )
-    dias = models.PositiveIntegerField(
-        verbose_name="Días",
-        validators=[MinValueValidator(1)]
-    )
-    
-    # Relaciones con los modelos principales
-    por_situar = models.ForeignKey(
-        'por_situar',
-        on_delete=models.CASCADE,
-        related_name='vagones_asociados',
-        null=True,
-        blank=True
-    )
-    arrastre = models.ForeignKey(
-        'arrastres',
-        on_delete=models.CASCADE,
-        related_name='vagones_asociados',
-        null=True,
-        blank=True
-    )
-    situado = models.ForeignKey(
-        'Situado_Carga_Descarga',
-        on_delete=models.CASCADE,
-        related_name='vagones_asociados',
-        null=True,
-        blank=True
-    )
-
-    class Meta:
-        verbose_name = "Vagón asociado"
-        verbose_name_plural = "Vagones asociados"
-        
-    def __str__(self):
-        return f"{self.equipo_ferroviario} - {self.dias} días"  

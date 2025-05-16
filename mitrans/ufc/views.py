@@ -1064,7 +1064,7 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
 
 #Voy a agregar los modulos de auditoria a los que hizo Karmal
 class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
-    queryset = por_situar.objects.all().order_by("-id")
+    queryset = por_situar.objects.all().order_by("-id").prefetch_related('vagones')
     serializer_class = PorSituarCargaDescargaSerializer
     filter_backends = [DjangoFilterBackend]
     
@@ -1209,7 +1209,7 @@ class PorSituarCargaDescarga_hoy_ViewSet(viewsets.ModelViewSet):
     #**********************************************************************************************
 
 class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
-    queryset = Situado_Carga_Descarga.objects.all().order_by("-id")
+    queryset = Situado_Carga_Descarga.objects.all().order_by("-id").prefetch_related('vagones')
     serializer_class = SituadoCargaDescargaSerializers
     filter_backends = [DjangoFilterBackend]
     permission_classes = [IsUFCPermission] 
@@ -1352,7 +1352,7 @@ class SituadoCargaDescarga_hoy_Viewset(viewsets.ModelViewSet):
  #***********************************************************************************************************************   
     
 class PendienteArrastreViewset(viewsets.ModelViewSet):
-    queryset = arrastres.objects.all()
+    queryset = arrastres.objects.all().prefetch_related('vagones')
     a=arrastres.objects.create
     serializer_class = PendienteArrastreSerializer
     permission_classes = [IsUFCPermission] 
@@ -1623,47 +1623,109 @@ class VagonesAsociadosViewSet(viewsets.ModelViewSet):
     queryset = vagones_por_situar_situados_pendientes.objects.all()
     serializer_class = VagonesAsociadosSerializer
     permission_classes = [IsUFCPermission]
-
+    
     def get_queryset(self):
         queryset = super().get_queryset()
-        modelo_padre = self.request.query_params.get('modelo_padre')
-        padre_id = self.request.query_params.get('padre_id')
         
-        if modelo_padre and padre_id:
-            if modelo_padre == 'por_situar':
-                queryset = queryset.filter(por_situar_id=padre_id)
-            elif modelo_padre == 'arrastre':
-                queryset = queryset.filter(arrastre_id=padre_id)
-            elif modelo_padre == 'situado':
-                queryset = queryset.filter(situado_id=padre_id)
-                
+        # Filtrar por tipo de relación si se especifica
+        relacion = self.request.query_params.get('relacion')
+        relacion_id = self.request.query_params.get('relacion_id')
+        
+        if relacion and relacion_id:
+            if relacion == 'por_situar':
+                queryset = queryset.filter(por_situar_registros__id=relacion_id)
+            elif relacion == 'arrastre':
+                queryset = queryset.filter(arrastre_registros__id=relacion_id)
+            elif relacion == 'situado':
+                queryset = queryset.filter(situado_registros__id=relacion_id)
+        
         return queryset
-
+    
     def create(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
-        # Determinar a qué modelo padre pertenece
-        modelo_padre = request.data.get('modelo_padre')
-        padre_id = request.data.get('padre_id')
-        
-        if not modelo_padre or not padre_id:
+        vagon_asociado = serializer.save()
+
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            direccion_ip=direccion_ip,
+            accion=f"Insertado vagon asociado: {vagon_asociado.id}",
+            navegador=navegador,
+        )
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
-                {"detail": "Se requiere modelo_padre y padre_id"},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        vagon_asociado = serializer.save()
+
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            direccion_ip=direccion_ip,
+            accion=f"Modificado vagon asociado: {vagon_asociado.id}",
+            navegador=navegador,
+        )
+
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
             )
         
-        with transaction.atomic():
-            vagon = serializer.save()
-            
-            # Asignar al modelo padre correspondiente
-            if modelo_padre == 'por_situar':
-                vagon.por_situar_id = padre_id
-            elif modelo_padre == 'arrastre':
-                vagon.arrastre_id = padre_id
-            elif modelo_padre == 'situado':
-                vagon.situado_id = padre_id
-                
-            vagon.save()
-            
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        instance = self.get_object()
+        id_vagon = instance.id
+
+        # Registrar la acción en el modelo de Auditoria antes de eliminar
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            direccion_ip=direccion_ip,
+            accion=f"Eliminado vagon asociado {id_vagon}",
+            navegador=navegador,
+        )
+
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de vagones asociados",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return super().list(request, *args, **kwargs)

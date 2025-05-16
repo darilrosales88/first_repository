@@ -828,7 +828,6 @@ class producto_vagon_serializer(serializers.ModelSerializer):
             super().__init__(*args, **kwargs)
         
   
-    
 class SituadoCargaDescargaFilter(filters.FilterSet):
     tipo_equipo = filters.CharFilter(lookup_expr='icontains')  # Filtro exacto (puedes usar 'icontains' para parcial
     
@@ -856,31 +855,62 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
     situados = serializers.IntegerField()
     pendiente_proximo_dia = serializers.IntegerField()
     
-    
     class Meta:
         model = Situado_Carga_Descarga
-        fields = ('id', 'tipo_origen', 'tipo_origen_name', 'origen', 'tipo_equipo', 
-                 'tipo_equipo_name','equipo_vagon','equipo_vagon_detalle', 'estado', 'operacion', 'producto', 'productos_info', 
-                 'situados', 'pendiente_proximo_dia', 'observaciones', 'vagones', 'vagones_ids')
+        fields = ('id', 'tipo_origen' , 'tipo_origen_name', 'origen', 'tipo_equipo' , 'tipo_equipo_name','equipo_vagon','equipo_vagon_detalle', 'estado', 
+                 'operacion', 'producto', 'productos_info', 'situados', 
+                 'pendiente_proximo_dia', 'observaciones')
         extra_kwargs = {
-            'situados': {'read_only': True},
             'producto': {'required': False},
             'observaciones': {'required': False, 'allow_null': True}
         }
 
+    def get_productos_info(self, obj):
+        productos = obj.producto.all()
+        return [{
+            'id': p.id,
+            'nombre_producto': p.producto.nombre_producto,
+            'codigo_producto': p.producto.codigo_producto,
+            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
+            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
+            'cantidad': p.cantidad,
+            'estado': p.estado,
+            'contiene': p.contiene
+        } for p in productos] # (truco) Esta bueno este truquito para evitar errores si el objeto no tiene el atributo
+        
+    def to_internal_value(self, data):
+        # Convertir los valores de string a integer antes de la validación
+        if 'situados' in data:
+            data['situados'] = int(data['situados']) if data['situados'] else 0
+        if 'pendiente_proximo_dia' in data:
+            data['pendiente_proximo_dia'] = int(data['pendiente_proximo_dia']) if data['pendiente_proximo_dia'] else 0
+        return super().to_internal_value(data)
+        
+    def validate(self, data):
+        # Validar que el producto sea opcional
+        if 'producto' not in data:
+            data['producto'] = []
+        return data
+
     def create(self, validated_data):
-        vagones_data = validated_data.pop('vagones', [])
+        productos_data = validated_data.pop('producto', [])
         instance = super().create(validated_data)
-        instance.vagones.set(vagones_data)
-        instance.save()  # Para actualizar el contador situados
+        
+        # Asociar productos MANUALMENTE después de crear la instancia
+        if productos_data:
+            instance.producto.set(productos_data)
+            instance.save()  # Guardar explícitamente
+        
         return instance
 
     def update(self, instance, validated_data):
-        vagones_data = validated_data.pop('vagones', None)
+        productos_data = validated_data.pop('producto', None)
         instance = super().update(instance, validated_data)
-        if vagones_data is not None:
-            instance.vagones.set(vagones_data)
-            instance.save()  # Para actualizar el contador situados
+        
+        if productos_data is not None:
+            instance.producto.set(productos_data)
+            instance.save()
+        
         return instance        
         
         
@@ -900,7 +930,7 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         read_only=True,  # Solo lectura, no necesita write_only
         help_text="Fecha y hora en que se creó el registro (automático)"
     )
-    #productos_info = serializers.SerializerMethodField()
+    productos_info = serializers.SerializerMethodField()
     tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
     tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
     producto = serializers.PrimaryKeyRelatedField(
@@ -920,10 +950,22 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         model = por_situar
         fields = '__all__'
         extra_kwargs = {
-            'por_situar': {'read_only': True},
             'producto': {'required': False},
             'observaciones': {'required': False, 'allow_null': True}
         }
+
+    def get_productos_info(self, obj):
+        productos = obj.producto.all()
+        return [{
+            'id': p.id,
+            'nombre_producto': p.producto.nombre_producto,
+            'codigo_producto': p.producto.codigo_producto,
+            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
+            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
+            'cantidad': p.cantidad,
+            'estado': p.estado,
+            'contiene': p.contiene
+        } for p in productos]
 
     def create(self, validated_data):
         # Extraer datos de vagones
@@ -1000,23 +1042,32 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
     class Meta:
         model = arrastres
         fields = '__all__'
-        extra_kwargs = {
-            'cantidad_vagones': {'read_only': True}
-        }
+        filterset_class = PendienteArrastreFilter
+
+    def get_productos_info(self, obj):
+        productos = obj.producto.all()
+        return [{
+           'id': p.id,
+            'nombre_producto': p.producto.nombre_producto,
+            'codigo_producto': p.producto.codigo_producto,
+            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
+            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
+            'cantidad': p.cantidad,
+            'estado': p.estado,
+            'contiene': p.contiene
+        } for p in productos]
 
     def create(self, validated_data):
-        vagones_data = validated_data.pop('vagones', [])
-        instance = super().create(validated_data)
-        instance.vagones.set(vagones_data)
-        instance.save()  # Para actualizar el contador cantidad_vagones
+        productos_data = validated_data.pop('producto', [])
+        instance = arrastres.objects.create(**validated_data)
+        instance.producto.set(productos_data)
         return instance
 
     def update(self, instance, validated_data):
-        vagones_data = validated_data.pop('vagones', None)
+        productos_data = validated_data.pop('producto', None)
         instance = super().update(instance, validated_data)
-        if vagones_data is not None:
-            instance.vagones.set(vagones_data)
-            instance.save()  # Para actualizar el contador cantidad_vagones
+        if productos_data is not None:
+            instance.producto.set(productos_data)
         return instance
 
 

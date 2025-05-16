@@ -66,7 +66,7 @@
               <td class="io-td">Informe operativo</td>
               <td class="io-td">
                 {{
-                  informe.creado_por_detalle.provincia.nombre_provincia || "-"
+                  informe.creado_por_detalle?.provincia.nombre_provincia || "-"
                 }}
               </td>
               <td class="io-td">
@@ -79,7 +79,7 @@
                 </span>
               </td>
               <td class="io-td">
-                {{ informe.creado_por_detalle.first_name || "-" }}
+                {{ informe.creado_por_detalle?.first_name || "-" }}
               </td>
               <td class="io-td">
                 {{
@@ -245,14 +245,14 @@
                 <div class="io-detail-item">
                   <span class="io-detail-label">Creado por:</span>
                   <span class="io-detail-value">{{
-                    currentInforme.creado_por_detalle.first_name || "N/A"
+                    currentInforme.creado_por_detalle?.first_name || "N/A"
                   }}</span>
                 </div>
 
                 <div class="io-detail-item">
                   <span class="io-detail-label">Aprobado por:</span>
                   <span class="io-detail-value">{{
-                    currentInforme.aprobado_por_detalle.first_name || "N/A"
+                    currentInforme.aprobado_por_detalle?.first_name || "N/A"
                   }}</span>
                 </div>
               </div>
@@ -267,7 +267,7 @@
                 <div class="io-detail-item">
                   <span class="io-detail-label">Provincia:</span>
                   <span class="io-detail-value">{{
-                    currentInforme?.creado_por_detalle.provincia
+                    currentInforme?.creado_por_detalle?.provincia
                       .nombre_provincia || "N/A"
                   }}</span>
                 </div>

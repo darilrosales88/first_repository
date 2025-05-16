@@ -21,6 +21,6 @@
 
 ## Tareas Pendientes
 
-- La hora de los registros no se estan creando con UTC+3 Hora Havana
-- En cargados/Descargados se tiene que mostrar el Equipo Ferroviario solo los que su tipos coincidan con el tipo equipo Ferroviario que se halla selecionado
-- Ahora en Trenes no puede guardar los registros porque depende de los vagones si estan disponibles o no.
+-Modal de producto vagon se desaparece en Arrastre
+-Modificar los editar y los adicionar de los 3 estados Por Situar Situado Pendiente
+-Solucionar problemas del serializer

@@ -3,6 +3,7 @@ from django_filters import rest_framework as filters
 from django.contrib.auth.models import Permission, Group
 from django.contrib.auth import get_user_model
 from .models import CustomUser, Auditoria
+from nomencladores.serializers import nom_provincia_serializer, nom_entidades_serializer
 
 CustomUser = get_user_model()
 
@@ -44,7 +45,7 @@ class user_filter(filters.FilterSet):
 class UserPermissionSerializer(serializers.ModelSerializer):
     groups = serializers.PrimaryKeyRelatedField(queryset=Group.objects.all(), many=True)
     user_permissions = serializers.PrimaryKeyRelatedField(queryset=Permission.objects.all(), many=True)
-    
+    provincia=serializers.SerializerMethodField()
 
     cargo_name = serializers.ReadOnlyField(source = 'cargo.nombre_cargo')
     entidad_name = serializers.ReadOnlyField(source = 'entidad.nombre')
@@ -52,9 +53,14 @@ class UserPermissionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser        
-        fields = ['id', 'username', 'email', 'first_name', 'last_name','role','role_name', 'entidad','cargo','cargo_name','entidad_name', 'password', 'groups', 'user_permissions']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name','role','role_name','provincia' ,'entidad','cargo','cargo_name','entidad_name', 'password', 'groups', 'user_permissions']
         extra_kwargs = {'password': {'write_only': True, 'required': False}}
     
+    
+    def get_provincia(self, obj):
+        """Obtiene todos los arrastres asociados al informe operativo."""
+        provincia_queryset = obj.entidad.provincia
+        return nom_provincia_serializer(provincia_queryset).data
 
     def update(self, instance, validated_data):
         instance.username = validated_data.get('username', instance.username)

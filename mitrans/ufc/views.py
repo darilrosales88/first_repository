@@ -5,7 +5,7 @@ from rest_framework.pagination import PageNumberPagination
 #importacion de modelos
 from .models import vagon_cargado_descargado,producto_UFC,en_trenes
 from .models import registro_vagones_cargados,vagones_productos,HistorialVagonesProductos
-from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones,ufc_informe_operativo,vagones_por_situar_situados_pendientes
+from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones,ufc_informe_operativo,vagones_dias
 #importacion de serializadores asociados a los modelos
 from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descargado_serializer, 
                         producto_vagon_serializer, en_trenes_serializer,PorSituarCargaDescargaSerializer, SituadoCargaDescargaSerializers, 
@@ -14,8 +14,9 @@ from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descarg
                         vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer,
                         ufc_informe_operativo_serializer,ufc_informe_operativo_filter,
                         HistorialVagonCargadoDescargado,HistorialVagonCargadoDescargadoSerializer,
-                        HistorialVagonesProductosSerializer,VagonesAsociadosSerializer)
-
+                        HistorialVagonesProductosSerializer,vagones_dias_serializer
+                        )
+from django.core.cache import cache
 from Administracion.models import Auditoria
 
 from rest_framework.response import Response
@@ -264,6 +265,7 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
 #Verificando que exista el informe creado antes de insertar
 @api_view(['GET'])
 def verificar_informe_existente(request):
+    print(request)
     fecha_operacion = request.query_params.get('fecha_operacion')
     if not fecha_operacion:
         return Response({"error": "Parámetro fecha_operacion requerido"}, status=400)
@@ -1095,6 +1097,7 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        print("mayeya")
         if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
                 {"detail": "No tiene permiso para realizar esta acción."},
@@ -1534,6 +1537,15 @@ class PendienteArrastre_hoy_Viewset(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
     
     
+    
+    
+    
+#*************Registro de vagones Dia*******************
+class VagonesDiasViewSet(viewsets.ModelViewSet):
+    queryset=vagones_dias.objects.all()
+    serializer_class=vagones_dias_serializer    
+    
+    
 #*************Empieza View Rotacion de Vagones **********************
 class RotacionVagonesViewSet(viewsets.ModelViewSet):
     """
@@ -1615,7 +1627,7 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+        if not request.user.groups.filter(name='Admin').exists() and not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
                 {"detail": "No tiene permiso para realizar esta acción."},
                 status=status.HTTP_403_FORBIDDEN

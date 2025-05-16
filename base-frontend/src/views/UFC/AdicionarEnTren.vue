@@ -117,7 +117,7 @@
                   <select
                     class="ufc-select"
                     v-model="formData.tipo_equipo"
-                    @select="buscarEquipos"
+                    @change="buscarEquipos"
                     required
                   >
                     <option value="" disabled>Seleccione un tipo</option>
@@ -745,7 +745,7 @@ export default {
           return;
         }
 
-        this.equipos_ferroviarios = response.data;
+        this.equipos_vagones = response.data;
       } catch (error) {
         console.error("Error al obtener los equipos ferroviarios:", error);
         Swal.fire({

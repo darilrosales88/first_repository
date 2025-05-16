@@ -8,6 +8,13 @@ from nomencladores.models import (
 )
 from django.core.validators import RegexValidator
 
+# Usamos un delay para asegurar que las relaciones ManyToMany estén establecidas
+from django.db import transaction
+from django.utils import timezone
+from datetime import datetime, date
+from django.db.models.functions import Cast
+
+
 # Modelo para el informe operativo
 class ufc_informe_operativo(models.Model):
 

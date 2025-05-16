@@ -23,7 +23,6 @@ from .models import (
     producto_UFC,
     HistorialEnTrenes,
     HistorialRotacionVagones,
-    HistorialSituadoCargaDescarga,
 )
 
 
@@ -575,7 +574,6 @@ def crear_historial_situado(sender, instance, created, **kwargs):
     # Retardo opcional para asegurar consistencia (solo en desarrollo)
     import os
 
-    # XXX
     if os.environ.get("DEBUG") == "True":
         import time
 

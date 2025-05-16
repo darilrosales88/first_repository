@@ -83,7 +83,7 @@
               </td>
               <td class="io-td">
                 {{
-                  informe.aprobado
+                  informe.aprobado_por_detalle
                     ? informe.aprobado_por_detalle.first_name
                     : "-"
                 }}<!-- Uso de operador ternario una talla -->
@@ -245,14 +245,14 @@
                 <div class="io-detail-item">
                   <span class="io-detail-label">Creado por:</span>
                   <span class="io-detail-value">{{
-                    currentInforme.creado_por?.username || "N/A"
+                    currentInforme.creado_por_detalle.first_name || "N/A"
                   }}</span>
                 </div>
 
                 <div class="io-detail-item">
                   <span class="io-detail-label">Aprobado por:</span>
                   <span class="io-detail-value">{{
-                    currentInforme.aprobado_por?.username || "N/A"
+                    currentInforme.aprobado_por_detalle.first_name || "N/A"
                   }}</span>
                 </div>
               </div>
@@ -267,7 +267,8 @@
                 <div class="io-detail-item">
                   <span class="io-detail-label">Provincia:</span>
                   <span class="io-detail-value">{{
-                    currentInforme.provincia?.nombre || "N/A"
+                    currentInforme?.creado_por_detalle.provincia
+                      .nombre_provincia || "N/A"
                   }}</span>
                 </div>
               </div>

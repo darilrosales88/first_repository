@@ -334,15 +334,32 @@ export default {
       // Si el usuario confirma, proceder con la aprobación
       if (result.isConfirmed) {
         const userId = localStorage.getItem("userid");
-        const response = await axios.patch(
-          `/ufc/informe-operativo/${this.informeOperativoId}/`,
-
-          { aprobado_por: userId },
-          { headers: { "Content-Type": "application/json" } }
-        );
-        if (response.status == 200) {
-          await this.CambiarEstado("Aprobado");
-        } else {
+        const existeInforme = await this.verificarInformeOperativo();
+        if (!existeInforme || !this.informeOperativoId) {
+          await Swal.fire({
+            icon: "error",
+            title: "Acceso denegado",
+            text: "No hay ningun Informe Operativo para esta fecha. ",
+            confirmButtonColor: "#002a68",
+          });
+        }
+        try {
+          const response = await axios.put(
+            `/ufc/informe-operativo/${this.informeOperativoId}/`,
+            { estado_parte: "Aprobado", aprobado_por: userId },
+            { headers: { "Content-Type": "application/json" } }
+          );
+          if (response.status == 200) {
+            await Swal.fire({
+              icon: "success",
+              title: "Éxito",
+              text: `Estado actualizado a "Aprobado" correctamente.`,
+              confirmButtonColor: "#002a68",
+            });
+            this.$forceUpdate();
+          }
+        } catch (error) {
+          console.error(error);
           await Swal.fire({
             icon: "error",
             title: "Acceso denegado",

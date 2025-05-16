@@ -1147,12 +1147,16 @@ class ufc_informe_operativo_serializer(serializers.ModelSerializer):
     
     creado_por = serializers.PrimaryKeyRelatedField(
         queryset=CustomUser.objects.all(), 
-        write_only=True
+        write_only=True,
+        required=False,
+        allow_null=True,
     )
     
     aprobado_por = serializers.PrimaryKeyRelatedField(
         queryset=CustomUser.objects.all(), 
-        write_only=True
+        write_only=True,
+        required=False,
+        allow_null=True,
     )
     
     

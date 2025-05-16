@@ -1477,8 +1477,8 @@ class rotacion_vagones(models.Model):
     en_servicio = models.PositiveIntegerField(verbose_name="En servicio")
     plan_carga = models.PositiveIntegerField(verbose_name="Plan carga")
     real_carga = models.PositiveIntegerField(verbose_name="Real carga")
-    plan_rotacion = models.PositiveIntegerField(verbose_name="Plan rotación")
-    real_rotacion = models.PositiveIntegerField(verbose_name="Real rotación")
+    plan_rotacion = models.FloatField(verbose_name="Plan rotación")
+    real_rotacion = models.FloatField(verbose_name="Real rotación")
 
     fecha = models.DateTimeField(auto_now_add=True,  verbose_name="Fecha de registro")
     actualizado_el = models.DateTimeField(auto_now=True, verbose_name="Actualizado el")

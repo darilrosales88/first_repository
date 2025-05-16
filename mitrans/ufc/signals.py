@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import date
 
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.db.models import Sum, Prefetch
@@ -183,13 +183,6 @@ def calcular_informe_operativo_diario(sender, instance, created, **kwargs):
                 .order_by("-fecha_operacion")
                 .first()
             )
-
-            """ # Obtener el informe más reciente para hoy o crear uno nuevo            
-
-            if not informe:
-                informe = ufc_informe_operativo.objects.create(
-                    fecha_operacion=timezone.now()
-                ) """
 
             # 1. Sumatoria de plan_mensual de vagones_productos (solo del día actual)
             plan_mensual_total = (
@@ -496,7 +489,6 @@ def crear_historial_situado(sender, instance, created, **kwargs):
         ).get(pk=instance.pk)
 
         # 2. Debug avanzado - Verificar conexión M2M en BD
-        # XXX
         from django.db import connection
 
         with connection.cursor() as cursor:
@@ -575,7 +567,6 @@ def crear_historial_situado(sender, instance, created, **kwargs):
     # Retardo opcional para asegurar consistencia (solo en desarrollo)
     import os
 
-    # XXX
     if os.environ.get("DEBUG") == "True":
         import time
 

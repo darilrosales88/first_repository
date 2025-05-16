@@ -1,4 +1,7 @@
+from django.core.validators import RegexValidator
 from django.db import models
+from django.db import transaction
+
 from nomencladores.models import (
     nom_tipo_equipo_ferroviario,
     nom_producto,
@@ -6,7 +9,6 @@ from nomencladores.models import (
     nom_unidad_medida,
     nom_equipo_ferroviario,
 )
-from django.core.validators import RegexValidator
 
 # Modelo para el informe operativo
 class ufc_informe_operativo(models.Model):

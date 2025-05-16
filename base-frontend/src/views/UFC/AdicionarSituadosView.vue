@@ -248,22 +248,22 @@
 
               <!-- Campo: situados -->
               <div class="ufc-input-group">
-                <label for="situados">
-                  Situados <span class="required">*</span>
-                </label>
-                <div class="ufc-por-situar-container">
-                  <input
-                    type="number"
-                    class="ufc-por-situar-input"
-                    v-model.number="formData.situados"
-                    id="situados"
-                    name="situados"
-                    min="1"
-                    required
-                    :disabled="isSubmitting"
-                  />
-                </div>
-              </div>
+  <label for="situados">
+    Situados <span class="required">*</span>
+  </label>
+  <div class="ufc-por-situar-container">
+    <input
+      type="number"
+      class="ufc-por-situar-input"
+      v-model.number="formData.situados"
+      id="situados"
+      name="situados"
+      min="1"
+      required
+      readonly
+    />
+  </div>
+</div>
 
               <!-- Campo: pendiente_proximo_dia -->
               <div class="ufc-input-group">
@@ -332,12 +332,18 @@
 <div class="ufc-vagones-container">
   <div class="ufc-vagones-header">
     <h3><i class="bi bi-train-freight-front"></i> Vagones Asociados</h3>
-    <button 
-      class="ufc-button primary small"
-      @click="abrirModalAgregarVagon"
-    >
-      <i class="bi bi-plus-circle"></i> Agregar Vagón
-    </button>
+    <div>
+      <span class="ufc-vagones-count">
+        {{ vagonesAsociados.length }} / {{ formData.situados }}
+      </span>
+      <button 
+        class="ufc-button primary small"
+        @click="abrirModalAgregarVagon"
+        :disabled="vagonesAsociados.length >= formData.situados"
+      >
+        <i class="bi bi-plus-circle"></i> Agregar Vagón
+      </button>
+    </div>
   </div>
 
   <!-- Tabla cuando hay datos -->
@@ -355,7 +361,6 @@
           <td>{{ vagon.equipo_ferroviario_nombre }}</td>
           <td>{{ vagon.dias }}</td>
           <td class="ufc-actions-cell">
-            
             <button 
               class="ufc-icon-button danger"
               @click="eliminarVagon(index)"
@@ -492,15 +497,15 @@ export default {
         { id: "carga", text: "Carga" },
         { id: "descarga", text: "Descarga" },
       ],
-      vagonesAsociados: [],
+      vagonesAsociados: [], // Aquí se almacenarán los vagones antes de enviar
+      equiposFerroviarios: [], // Lista de equipos disponibles
       mostrarModalVagon: false,
-      modoEdicionVagon: false,
-      vagonEditIndex: null,
       vagonForm: {
         equipo_ferroviario: '',
         dias: 1
       },
-      equiposFerroviarios: []
+      vagonEditIndex: null,
+      modoEdicionVagon: false
     };
   },
   mounted() {
@@ -519,79 +524,102 @@ export default {
   },
   methods: {
     async abrirModalAgregarVagon() {
-    try {
-      // Cargar equipos ferroviarios disponibles
-      const response = await axios.get('/api/equipos-ferroviarios/', {
-        params: {
-          exclude_tipo: 'locomotora' // Excluir locomotoras
+      try {
+        // Cargar equipos ferroviarios disponibles
+        const response = await axios.get('/api/equipos-ferroviarios/', {
+          params: {
+            exclude_tipo: 'locomotora', // Excluir locomotoras
+            estado: 'activo' // Solo equipos activos
+          }
+        });
+        
+        // Filtrar equipos que no estén ya en la lista de vagones asociados
+        const equiposDisponibles = response.data.results.filter(equipo => 
+          !this.vagonesAsociados.some(v => v.equipo_ferroviario === equipo.id)
+        );
+        
+        this.equiposFerroviarios = equiposDisponibles;
+        
+        if (this.equiposFerroviarios.length === 0) {
+          Swal.fire({
+            title: 'No hay equipos disponibles',
+            text: 'Todos los equipos ferroviarios ya están asociados o no hay equipos activos',
+            icon: 'info'
+          });
+          return;
+        }
+        
+        this.modoEdicionVagon = false;
+        this.vagonForm = {
+          equipo_ferroviario: this.equiposFerroviarios[0]?.id || '',
+          dias: 1
+        };
+        this.mostrarModalVagon = true;
+      } catch (error) {
+        console.error("Error al cargar equipos:", error);
+        Swal.fire("Error", "No se pudieron cargar los equipos ferroviarios", "error");
+      }
+    },
+
+    guardarVagon() {
+      // Validación
+      if (!this.vagonForm.equipo_ferroviario || !this.vagonForm.dias || this.vagonForm.dias < 1) {
+        Swal.fire('Error', 'Complete todos los campos correctamente', 'error');
+        return;
+      }
+      
+      // Buscar el equipo seleccionado para obtener su nombre
+      const equipoSeleccionado = this.equiposFerroviarios.find(
+        e => e.id === this.vagonForm.equipo_ferroviario
+      );
+      
+      const vagonData = {
+        equipo_ferroviario: this.vagonForm.equipo_ferroviario,
+        equipo_ferroviario_nombre: equipoSeleccionado 
+          ? `${equipoSeleccionado.numero_identificacion} - ${equipoSeleccionado.tipo_equipo.tipo_equipo}`
+          : 'Equipo no encontrado',
+        dias: this.vagonForm.dias
+      };
+      
+      if (this.modoEdicionVagon) {
+        // Editar existente
+        this.vagonesAsociados[this.vagonEditIndex] = vagonData;
+        Swal.fire('Actualizado', 'El vagón ha sido actualizado', 'success');
+      } else {
+        // Agregar nuevo
+        this.vagonesAsociados.push(vagonData);
+        Swal.fire('Agregado', 'El vagón ha sido agregado', 'success');
+      }
+      
+      // Actualizar el campo situados automáticamente
+      this.formData.situados = this.vagonesAsociados.length;
+      
+      this.cerrarModalVagon();
+    },
+
+    eliminarVagon(index) {
+      Swal.fire({
+        title: '¿Eliminar vagón?',
+        text: "Esta acción no se puede deshacer",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#002a68',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.vagonesAsociados.splice(index, 1);
+          // Actualizar el campo situados automáticamente
+          this.formData.situados = this.vagonesAsociados.length;
+          Swal.fire(
+            'Eliminado',
+            'El vagón ha sido eliminado',
+            'success'
+          );
         }
       });
-      this.equiposFerroviarios = response.data.results;
-      
-      this.modoEdicionVagon = false;
-      this.vagonForm = {
-        equipo_ferroviario: '',
-        dias: 1
-      };
-      this.mostrarModalVagon = true;
-    } catch (error) {
-      console.error("Error al cargar equipos:", error);
-      Swal.fire("Error", "No se pudieron cargar los equipos ferroviarios", "error");
-    }
-  },
-
-  eliminarVagon(index) {
-    Swal.fire({
-      title: '¿Eliminar vagón?',
-      text: "Esta acción no se puede deshacer",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#002a68',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.vagonesAsociados.splice(index, 1);
-        Swal.fire(
-          'Eliminado',
-          'El vagón ha sido eliminado',
-          'success'
-        );
-      }
-    });
-  },
-
-  guardarVagon() {
-    // Validación
-    if (!this.vagonForm.equipo_ferroviario || !this.vagonForm.dias || this.vagonForm.dias < 1) {
-      Swal.fire('Error', 'Complete todos los campos correctamente', 'error');
-      return;
-    }
-    
-    // Buscar el equipo seleccionado para obtener su nombre
-    const equipoSeleccionado = this.equiposFerroviarios.find(
-      e => e.id === this.vagonForm.equipo_ferroviario
-    );
-    
-    const vagonData = {
-      equipo_ferroviario: this.vagonForm.equipo_ferroviario,
-      equipo_ferroviario_nombre: equipoSeleccionado 
-        ? `${equipoSeleccionado.numero_identificacion} - ${equipoSeleccionado.tipo_equipo.tipo_equipo}`
-        : 'Equipo no encontrado',
-      dias: this.vagonForm.dias
-    };
-    
-    if (this.modoEdicionVagon) {
-      // Editar existente
-      this.vagonesAsociados[this.vagonEditIndex] = vagonData;
-    } else {
-      // Agregar nuevo
-      this.vagonesAsociados.push(vagonData);
-    }
-    
-    this.cerrarModalVagon();
-  },
+    },
   
   cerrarModalVagon() {
     this.mostrarModalVagon = false;
@@ -768,6 +796,23 @@ export default {
           throw new Error(errors.join("\n"));
         }
 
+        if (this.vagonesAsociados.length !== this.formData.situados) {
+        Swal.fire({
+          title: 'Advertencia',
+          text: `El número de vagones asociados (${this.vagonesAsociados.length}) no coincide con la cantidad "Situados" (${this.formData.situados}). ¿Desea actualizar el campo "Situados" para que coincida?`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, actualizar',
+          cancelButtonText: 'No, corregir manualmente'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.formData.situados = this.vagonesAsociados.length;
+          }
+        });
+        return;
+      }
+
+
         // Preparar datos para enviar
         const payload = {
           tipo_origen: this.formData.tipo_origen,
@@ -784,55 +829,25 @@ export default {
           dias: v.dias
         }))
         };
-        // Configuración de axios para manejar mejor los errores
-        const config = {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          validateStatus: function (status) {
-            return status >= 200 && status < 500;
-          },
-        };
+        
 
         // Enviar datos al endpoint
-        const response = await axios.post(
-          "http://127.0.0.1:8000/ufc/situados/",
-          payload,
-          config
-        );
+        const response = await axios.post("/ufc/situados/", payload);
 
-        if (response.status === 201) {
-          await Swal.fire({
-            title: "Éxito",
-            text: "Registro creado correctamente",
-            icon: "success",
-          });
-          this.resetForm();
-          this.$router.push({ name: "InfoOperativo" });
-        } else {
-          let errorMessage = "Error al crear el registro";
-          if (response.data) {
-            // Procesar errores del backend
-            if (typeof response.data === "string") {
-              errorMessage = response.data;
-            } else if (response.data.detail) {
-              errorMessage = response.data.detail;
-            } else if (response.data.non_field_errors) {
-              errorMessage = response.data.non_field_errors.join(", ");
-            } else {
-              errorMessage = Object.entries(response.data)
-                .map(
-                  ([key, value]) =>
-                    `${key}: ${Array.isArray(value) ? value.join(", ") : value}`
-                )
-                .join("\n");
-            }
-          }
-          throw new Error(errorMessage);
-        }
+        // Mostrar mensaje de éxito
+        await Swal.fire({
+          title: "¡Éxito!",
+          text: "El registro ha sido creado correctamente",
+          icon: "success",
+          confirmButtonText: "Aceptar",
+        });
+
+        // Resetear el formulario después de enviar
+        this.resetForm();
+        this.$router.push({ name: 'ListaSituados' });
+
       } catch (error) {
-        console.error("Error en submitForm:", error);
+        console.error("Error al enviar el formulario:", error);
         Swal.fire({
           title: "Error",
           text: error.message || "Ocurrió un error al procesar la solicitud",
@@ -850,11 +865,12 @@ export default {
         tipo_equipo: "",
         estado: "cargado",
         operacion: "",
-        productos: [], // Resetear a array vacío
+        productos: [],
         situados: 1,
         pendiente_proximo_dia: 0,
         observaciones: "",
       };
+      this.vagonesAsociados = [];
     },
 
     async confirmCancel() {

@@ -229,21 +229,20 @@
 
               <!-- Campo: por_situar -->
               <div class="ufc-input-group">
-                <label for="por_situar"
-                  >Por Situar <span class="required">*</span></label
-                >
-                <div class="ufc-por-situar-container">
-                  <input
-                    type="number"
-                    class="ufc-por-situar-input"
-                    v-model.number="formData.por_situar"
-                    min="1"
-                    required
-                  />
-                  <span class="ufc-por-situar-suffix">unidades</span>
-                </div>
-              </div>
+            <label for="por_situar">Por Situar <span class="required">*</span></label>
+            <div class="ufc-por-situar-container">
+              <input
+                type="number"
+                class="ufc-por-situar-input"
+                v-model.number="formData.por_situar"
+                min="1"
+                required
+                readonly
+              />
+              <span class="ufc-por-situar-suffix">unidades</span>
             </div>
+          </div>
+          </div>
           </div>
 
           <!-- Observaciones (full width) -->
@@ -274,55 +273,58 @@
 
       <!-- Tabla de Vagones Asociados (FUERA del formulario) -->
       <div class="ufc-vagones-card">
-        <div class="ufc-vagones-header">
-          <h3><i class="bi bi-train-freight-front"></i> Vagones Asociados</h3>
-          <button
-            class="ufc-button primary small"
-            @click="abrirModalAgregarVagon"
-          >
-            <i class="bi bi-plus-circle"></i> Agregar Vagón
-          </button>
-        </div>
+  <div class="ufc-vagones-header">
+    <h3><i class="bi bi-train-freight-front"></i> Vagones Asociados</h3>
+    <div>
+      <span class="ufc-vagones-count">
+        {{ vagonesAsociados.length }} / {{ formData.por_situar }}
+      </span>
+      <button 
+        class="ufc-button primary small"
+        @click="abrirModalAgregarVagon"
+        :disabled="vagonesAsociados.length >= formData.por_situar"
+      >
+        <i class="bi bi-plus-circle"></i> Agregar Vagón
+      </button>
+    </div>
+  </div>
 
-        <!-- Tabla cuando hay datos -->
-        <div
-          v-if="vagonesAsociados.length > 0"
-          class="ufc-vagones-table-container"
-        >
-          <table class="ufc-vagones-table">
-            <thead>
-              <tr>
-                <th>Equipo Ferroviario</th>
-                <th>Días</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(vagon, index) in vagonesAsociados" :key="index">
-                <td>{{ vagon.equipo_ferroviario_nombre }}</td>
-                <td>{{ vagon.dias }}</td>
-                <td class="ufc-actions-cell">
-                  <button
-                    class="ufc-icon-button danger"
-                    @click="eliminarVagon(index)"
-                    title="Eliminar"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+  <!-- Tabla cuando hay datos -->
+  <div v-if="vagonesAsociados.length > 0" class="ufc-vagones-table-container">
+    <table class="ufc-vagones-table">
+      <thead>
+        <tr>
+          <th>Equipo Ferroviario</th>
+          <th>Días</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(vagon, index) in vagonesAsociados" :key="index">
+          <td>{{ vagon.equipo_ferroviario_nombre }}</td>
+          <td>{{ vagon.dias }}</td>
+          <td class="ufc-actions-cell">
+            <button 
+              class="ufc-icon-button danger"
+              @click="eliminarVagon(index)"
+              title="Eliminar"
+            >
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
-        <!-- Mensaje cuando no hay datos -->
-        <div v-else class="ufc-vagones-empty">
-          <div class="ufc-empty-state">
-            <i class="bi bi-train-freight-front"></i>
-            <p>No hay vagones asociados</p>
-          </div>
-        </div>
-      </div>
+  <!-- Mensaje cuando no hay datos -->
+  <div v-else class="ufc-vagones-empty">
+    <div class="ufc-empty-state">
+      <i class="bi bi-train-freight-front"></i>
+      <p>No hay vagones asociados</p>
+    </div>
+  </div>
+</div>
     </div>
 
     <!-- Modal para agregar producto -->
@@ -452,16 +454,15 @@ export default {
         { id: "carga", text: "Carga" },
         { id: "descarga", text: "Descarga" },
       ],
-      vagonesAsociados: [],
-      mostrarModalVagon: false,
-      modoEdicionVagon: false,
-      vagonEditIndex: null,
-      vagonForm: {
-        equipo_ferroviario: '',
-        dias: 1
-      },
-      equiposFerroviarios: [],
-      informeOperativoId: null
+      vagonesAsociados: [], // Aquí se almacenarán los vagones antes de enviar
+    equiposFerroviarios: [], // Lista de equipos disponibles
+    mostrarModalVagon: false,
+    vagonForm: {
+      equipo_ferroviario: '',
+      dias: 1
+    },
+    vagonEditIndex: null,
+    modoEdicionVagon: false
     };
   },
   mounted() {
@@ -492,14 +493,14 @@ export default {
             estado: 'activo' // Solo equipos activos
           }
         });
-
+        
         // Filtrar equipos que no estén ya en la lista de vagones asociados
-        const equiposDisponibles = response.data.results.filter(equipo =>
+        const equiposDisponibles = response.data.results.filter(equipo => 
           !this.vagonesAsociados.some(v => v.equipo_ferroviario === equipo.id)
         );
-
+        
         this.equiposFerroviarios = equiposDisponibles;
-
+        
         if (this.equiposFerroviarios.length === 0) {
           Swal.fire({
             title: 'No hay equipos disponibles',
@@ -508,7 +509,7 @@ export default {
           });
           return;
         }
-
+        
         this.modoEdicionVagon = false;
         this.vagonForm = {
           equipo_ferroviario: this.equiposFerroviarios[0]?.id || '',
@@ -521,15 +522,43 @@ export default {
       }
     },
 
-    editarVagon(index) {
-      const vagon = this.vagonesAsociados[index];
-      this.vagonForm = {
-        equipo_ferroviario: vagon.equipo_ferroviario,
-        dias: vagon.dias
+    guardarVagon() {
+      // Validación
+      if (!this.vagonForm.equipo_ferroviario || !this.vagonForm.dias || this.vagonForm.dias < 1) {
+        Swal.fire('Error', 'Complete todos los campos correctamente', 'error');
+        return;
+      }
+      
+      // Buscar el equipo seleccionado para obtener su nombre
+      const equipoSeleccionado = this.equiposFerroviarios.find(
+        e => e.id === this.vagonForm.equipo_ferroviario
+      );
+      
+      if (!equipoSeleccionado) {
+        Swal.fire('Error', 'No se encontró el equipo seleccionado', 'error');
+        return;
+      }
+      
+      const vagonData = {
+        equipo_ferroviario: this.vagonForm.equipo_ferroviario,
+        equipo_ferroviario_nombre: `${equipoSeleccionado.numero_identificacion} - ${equipoSeleccionado.tipo_equipo.tipo_equipo}`,
+        dias: this.vagonForm.dias
       };
-      this.vagonEditIndex = index;
-      this.modoEdicionVagon = true;
-      this.mostrarModalVagon = true;
+      
+      if (this.modoEdicionVagon) {
+        // Editar existente
+        this.vagonesAsociados[this.vagonEditIndex] = vagonData;
+        Swal.fire('Actualizado', 'El vagón ha sido actualizado', 'success');
+      } else {
+        // Agregar nuevo
+        this.vagonesAsociados.push(vagonData);
+        Swal.fire('Agregado', 'El vagón ha sido agregado', 'success');
+      }
+      
+      // Actualizar el campo por_situar automáticamente
+      this.formData.por_situar = this.vagonesAsociados.length;
+      
+      this.cerrarModalVagon();
     },
 
     eliminarVagon(index) {
@@ -545,6 +574,8 @@ export default {
       }).then((result) => {
         if (result.isConfirmed) {
           this.vagonesAsociados.splice(index, 1);
+          // Actualizar el campo por_situar automáticamente
+          this.formData.por_situar = this.vagonesAsociados.length;
           Swal.fire(
             'Eliminado',
             'El vagón ha sido eliminado',
@@ -552,48 +583,6 @@ export default {
           );
         }
       });
-    },
-
-    guardarVagon() {
-      // Validación
-      if (!this.vagonForm.equipo_ferroviario || !this.vagonForm.dias || this.vagonForm.dias < 1) {
-        Swal.fire('Error', 'Complete todos los campos correctamente', 'error');
-        return;
-      }
-
-      // Buscar el equipo seleccionado para obtener su nombre
-      const equipoSeleccionado = this.equiposFerroviarios.find(
-        e => e.id === this.vagonForm.equipo_ferroviario
-      );
-
-      if (!equipoSeleccionado) {
-        Swal.fire('Error', 'No se encontró el equipo seleccionado', 'error');
-        return;
-      }
-
-      const vagonData = {
-        equipo_ferroviario: this.vagonForm.equipo_ferroviario,
-        equipo_ferroviario_nombre: `${equipoSeleccionado.numero_identificacion} - ${equipoSeleccionado.tipo_equipo.tipo_equipo}`,
-        dias: this.vagonForm.dias
-      };
-
-      if (this.modoEdicionVagon) {
-        // Editar existente
-        this.vagonesAsociados[this.vagonEditIndex] = vagonData;
-        Swal.fire('Actualizado', 'El vagón ha sido actualizado', 'success');
-      } else {
-        // Agregar nuevo
-        this.vagonesAsociados.push(vagonData);
-        Swal.fire('Agregado', 'El vagón ha sido agregado', 'success');
-      }
-
-      this.cerrarModalVagon();
-    },
-
-    cerrarModalVagon() {
-      this.mostrarModalVagon = false;
-      this.vagonEditIndex = null;
-      this.modoEdicionVagon = false;
     },
 
     async verificarInformeOperativo() {
@@ -728,6 +717,22 @@ export default {
         return;
       }
 
+      if (this.vagonesAsociados.length !== this.formData.por_situar) {
+        Swal.fire({
+          title: 'Advertencia',
+          text: `El número de vagones asociados (${this.vagonesAsociados.length}) no coincide con la cantidad "Por Situar" (${this.formData.por_situar}). ¿Desea actualizar el campo "Por Situar" para que coincida?`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, actualizar',
+          cancelButtonText: 'No, corregir manualmente'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.formData.por_situar = this.vagonesAsociados.length;
+          }
+        });
+        return;
+      }
+
       try {
         // Preparar los datos para enviar
         const payload = {
@@ -740,11 +745,10 @@ export default {
           por_situar: this.formData.por_situar,
           observaciones: this.formData.observaciones,
           informe_operativo: this.informeOperativoId,
-          vagones_asociados: this.vagonesAsociados.map(v => ({
+          vagones: this.vagonesAsociados.map(v => ({
             equipo_ferroviario: v.equipo_ferroviario,
             dias: v.dias
           }))
-          informe_operativo: this.informeOperativoId // Incluir el ID del informe
         };
 
         // Enviar los datos al backend
@@ -760,7 +764,7 @@ export default {
 
         // Resetear el formulario después de enviar
         this.resetForm();
-        this.$router.push({ name: 'ListaPorSituar' }); // Redirigir a la lista
+        this.$router.push({ name: 'ListaPorSituar' });
 
       } catch (error) {
         console.error("Error al enviar el formulario:", error);

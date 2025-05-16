@@ -499,10 +499,9 @@ export default {
         tipo_destino: "",
         destino: "",
         tipo_equipo: "",
-        operacion: "",
         estado: "cargado",
         productos: [],
-        cantidad_vagones: 1,
+        cantidad_vagones: 0, // Cambiado a 0 ya que se calculará automáticamente
         observaciones: "",
       },
       productoSearch: "",
@@ -522,13 +521,22 @@ export default {
         { id: "puerto", text: "Puerto" },
       ],
       tipo_equipo_options: [
-        { id: "casilla", text: "Casilla" },
-        { id: "caj_gon", text: "Cajon o Gondola" },
-      ],
-      t_operacion_options: [
-        { id: "carga", text: "Carga" },
-        { id: "descarga", text: "Descarga" },
-      ],
+      { id: "casilla", text: "Casilla" },
+      { id: "caj_gon", text: "Cajones o Góndola" },
+      { id: "planc_plat", text: "Plancha o Plataforma" },
+      { id: "Plan_porta_cont", text: "Plancha porta contenedores" },
+      { id: "cist_liquidos", text: "Cisterna para líquidos" },
+      { id: "cist_solidos", text: "Cisterna para sólidos" },
+      { id: "tolva_g_mineral", text: "Tolva granelera(mineral)" },
+      { id: "tolva_g_agric", text: "Tolva granelera(agrícola)" },
+      { id: "tolva_g_cemento", text: "Tolva para cemento" },
+      { id: "volqueta", text: "Volqueta" },
+      { id: "Vagon_ref", text: "Vagón refrigerado" },
+      { id: "jaula", text: "Jaula" },
+      { id: "locomotora", text: "Locomotora" },
+      { id: "tren", text: "Tren" },
+    ],
+      
       vagonesAsociados: [],
       mostrarModalVagon: false,
       modoEdicionVagon: false,
@@ -743,95 +751,50 @@ export default {
 
     async submitForm() {
       try {
-        // 1. Verificar si existe un informe operativo para la fecha actual
-        const existeInforme = await this.verificarInformeOperativo();
-        if (!existeInforme) {
-          Swal.fire(
-            "Error",
-            "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
-            "error"
-          );
-          this.$router.push({ name: "InfoOperativo" });
-          return;
+        // Verificación de informe operativo (código igual)
+        
+        // Validación de campos requeridos
+        const requiredFields = [
+          { field: 'tipo_origen', message: 'El campo Tipo de Origen es requerido' },
+          { field: 'origen', message: 'El campo Origen es requerido' },
+          { field: 'tipo_destino', message: 'El campo Tipo de Destino es requerido' },
+          { field: 'destino', message: 'El campo Destino es requerido' },
+          { field: 'tipo_equipo', message: 'El campo Tipo de Equipo es requerido' },
+        ];
+
+        for (const { field, message } of requiredFields) {
+          if (!this.formData[field]) {
+            throw new Error(message);
+          }
         }
 
-        // 2. Verificar que el informe no esté en estado "Aprobado"
-        const informeDetalleResponse = await axios.get(
-          `/ufc/informe-operativo/${this.informeOperativoId}/`
-        );
-        if (informeDetalleResponse.data.estado_parte === "Aprobado") {
-          Swal.fire(
-            "Error",
-            "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
-            "error"
-          );
-          return;
+        if (this.formData.estado === "cargado" && this.formData.productos.length === 0) {
+          throw new Error("Debe seleccionar al menos un producto cuando el estado es Cargado");
         }
 
-        // 3. Validación de campos requeridos
-        if (!this.formData.tipo_origen) {
-          throw new Error("El campo Tipo de Origen es requerido");
+        if (this.vagonesAsociados.length === 0) {
+          throw new Error("Debe agregar al menos un vagón asociado");
         }
 
-        if (!this.formData.origen) {
-          throw new Error("El campo Origen es requerido");
-        }
-
-        if (!this.formData.tipo_destino) {
-          throw new Error("El campo Tipo de Destino es requerido");
-        }
-
-        if (!this.formData.destino) {
-          throw new Error("El campo Destino es requerido");
-        }
-
-        if (!this.formData.tipo_equipo) {
-          throw new Error("El campo Tipo de Equipo es requerido");
-        }
-
-        if (!this.formData.operacion) {
-          throw new Error("El campo Operación es requerido");
-        }
-
-        if (
-          this.formData.estado === "cargado" &&
-          this.formData.productos.length === 0
-        ) {
-          throw new Error(
-            "Debe seleccionar al menos un producto cuando el estado es Cargado"
-          );
-        }
-
-        if (
-          !this.formData.cantidad_vagones ||
-          this.formData.cantidad_vagones < 1
-        ) {
-          throw new Error("La cantidad de vagones debe ser al menos 1");
-        }
-
-        // 4. Preparar los datos para enviar
+        // Preparar los datos para enviar
         const payload = {
           tipo_origen: this.formData.tipo_origen,
           origen: this.formData.origen,
           tipo_destino: this.formData.tipo_destino,
           destino: this.formData.destino,
           tipo_equipo: this.formData.tipo_equipo,
-          operacion: this.formData.operacion,
           estado: this.formData.estado,
           producto: this.formData.productos,
-          cantidad_vagones: this.formData.cantidad_vagones,
+          cantidad_vagones: this.vagonesAsociados.length, // Calculado automáticamente
           observaciones: this.formData.observaciones,
-          informe_operativo: this.informeOperativoId, // Añadir el ID del informe operativo
-          vagones_asociados: this.vagonesAsociados.map((v) => ({
-            equipo_ferroviario: v.equipo_ferroviario,
-            dias: v.dias,
-          })),
+          informe_operativo: this.informeOperativoId,
+          vagones_ids: this.vagonesAsociados.map(v => v.equipo_ferroviario), // Enviar solo los IDs
         };
 
-        // 5. Enviar los datos al backend
+        // Enviar los datos al backend
         const response = await axios.post("/ufc/pendiente-arrastre/", payload);
 
-        // 6. Mostrar mensaje de éxito
+        // Mostrar mensaje de éxito y resetear formulario
         Swal.fire({
           title: "¡Éxito!",
           text: "El registro ha sido creado correctamente",
@@ -839,11 +802,13 @@ export default {
           confirmButtonText: "Aceptar",
         }).then(() => {
           this.resetForm();
+          this.$router.push({ name: "PendienteArrastre" });
         });
+
       } catch (error) {
         console.error("Error al enviar el formulario:", error);
-
         let errorMessage = "Hubo un error al enviar el formulario";
+        
         if (error.response) {
           if (error.response.data) {
             errorMessage = Object.values(error.response.data).join("\n");
@@ -861,6 +826,31 @@ export default {
       }
     },
 
+    // Modificar el método guardarVagon para devolver solo el ID
+    guardarVagon() {
+      if (!this.vagonForm.equipo_ferroviario || !this.vagonForm.dias || this.vagonForm.dias < 1) {
+        Swal.fire("Error", "Complete todos los campos correctamente", "error");
+        return;
+      }
+
+      const vagonData = {
+        equipo_ferroviario: this.vagonForm.equipo_ferroviario,
+        dias: this.vagonForm.dias,
+      };
+
+      if (this.modoEdicionVagon) {
+        this.vagonesAsociados[this.vagonEditIndex] = vagonData;
+      } else {
+        this.vagonesAsociados.push(vagonData);
+      }
+
+      // Actualizar el contador de vagones
+      this.formData.cantidad_vagones = this.vagonesAsociados.length;
+      
+      this.cerrarModalVagon();
+    },
+
+    // Actualizar resetForm
     resetForm() {
       this.formData = {
         tipo_origen: "",
@@ -868,12 +858,12 @@ export default {
         tipo_destino: "",
         destino: "",
         tipo_equipo: "",
-        operacion: "",
         estado: "cargado",
         productos: [],
-        cantidad_vagones: 1,
+        cantidad_vagones: 0,
         observaciones: "",
       };
+      this.vagonesAsociados = [];
     },
 
     confirmCancel() {

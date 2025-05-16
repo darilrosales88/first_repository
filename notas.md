@@ -22,3 +22,4 @@
 ## Tareas Pendientes
 
 -Modal de producto vagon se desaparece en Arrastre
+-Modificar los editar y los adicionar de los 3 estados Por Situar Situado Pendiente

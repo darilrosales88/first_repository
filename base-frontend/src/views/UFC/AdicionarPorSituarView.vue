@@ -19,17 +19,19 @@
             <!-- Columna Izquierda -->
             <div class="ufc-form-column">
               <!-- Campo:Fecha de registro -->
-            <div class="mb-3">
-              <label for="fecha_registro" class="form-label">Fecha de registro</label>
-              <input
-                type="text"
-                class="form-control"
-                :value="formattedFechaRegistro"
-                id="fecha_registro"
-                name="fecha_registro"
-                readonly
-              />
-            </div>
+              <div class="mb-3">
+                <label for="fecha_registro" class="form-label"
+                  >Fecha de registro</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  :value="formattedFechaRegistro"
+                  id="fecha_registro"
+                  name="fecha_registro"
+                  readonly
+                />
+              </div>
               <!-- Campo: tipo_origen -->
               <div class="ufc-input-group">
                 <label for="tipo_origen"
@@ -103,15 +105,18 @@
                 <select
                   class="ufc-select"
                   v-model="formData.tipo_equipo"
+                  @change="buscarEquipos"
                   required
                 >
                   <option value="" disabled>Seleccione un tipo</option>
                   <option
-                    v-for="option in tipo_equipo_options"
-                    :key="option.id"
-                    :value="option.id"
+                    v-for="equipo in equipos"
+                    :key="equipo.id"
+                    :value="equipo.id"
                   >
-                    {{ option.text }}
+                    {{ equipo.id }}-{{ equipo.tipo_equipo_name }}-{{
+                      equipo.tipo_carga_name
+                    }}
                   </option>
                 </select>
               </div>
@@ -323,13 +328,12 @@ export default {
       productos: [],
       loading: false,
       mostrarModal: false,
+      equipos: [],
+      equipos_vagones: [],
+      vagonesAgregados: [],
       tipo_origen_options: [
         { id: "ac_ccd", text: "comercial/AccesoCCD" },
         { id: "puerto", text: "Puerto" },
-      ],
-      tipo_equipo_options: [
-        { id: "casilla", text: "Casilla" },
-        { id: "caj_gon", text: "Cajon o Gondola" },
       ],
       t_operacion_options: [
         { id: "carga", text: "Carga" },
@@ -341,38 +345,41 @@ export default {
     this.getProductos();
     this.getEntidades();
     this.getPuertos();
+    this.getEquipos();
     this.filteredProductos = this.productos;
     this.closeDropdownsOnClickOutside();
   },
-  computed:{
+  computed: {
     formattedFechaRegistro() {
       if (this.formData.fecha) {
         return new Date(this.formData.fecha).toLocaleString();
       }
       return new Date().toLocaleString();
-    }
+    },
   },
   methods: {
     async verificarInformeOperativo() {
-        try {
-          this.formData.fecha = new Date().toISOString();
-          const today = new Date();
-          const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      try {
+        this.formData.fecha = new Date().toISOString();
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(
+          today.getMonth() + 1
+        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-          const response = await axios.get('/ufc/verificar-informe-existente/', {
-            params: { fecha_operacion: fechaFormateada }
-          });
+        const response = await axios.get("/ufc/verificar-informe-existente/", {
+          params: { fecha_operacion: fechaFormateada },
+        });
 
-          if (response.data.existe) {
-            this.informeOperativoId = response.data.id;
-            return true;
-          }
-          return false;
-        } catch (error) {
-          console.error("Error al verificar informe:", error);
-          return false;
+        if (response.data.existe) {
+          this.informeOperativoId = response.data.id;
+          return true;
         }
-      },
+        return false;
+      } catch (error) {
+        console.error("Error al verificar informe:", error);
+        return false;
+      }
+    },
     async getEntidades() {
       try {
         const response = await axios.get("/api/entidades/");
@@ -380,6 +387,52 @@ export default {
       } catch (error) {
         console.error("Error al obtener entidades:", error);
         Swal.fire("Error", "No se pudieron obtener las entidades", "error");
+      }
+    },
+    async getEquipos() {
+      try {
+        const response = await axios.get("/api/tipo-e-f-no-locomotora/");
+        this.equipos = response.data;
+      } catch (error) {
+        console.error("Error al obtener los equipos:", error);
+        Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
+      }
+    },
+    async buscarEquipos() {
+      try {
+        let url = "/api/e-f-no-locomotora/";
+        if (!this.formData.tipo_equipo) {
+          return;
+        }
+
+        // al tipo de equipo específico lo añadimos como parámetro
+        url += `?tipo_equipo=${this.formData.tipo_equipo}`;
+        const response = await axios.get(url);
+
+        // en caso de que no exista EF para el tipo seleccionado en el componente padre
+        if (response.data.length === 0) {
+          Swal.fire({
+            title: "Error",
+            text: "No existen equipos ferroviarios para el tipo seleccionado.",
+            icon: "error",
+            willClose: () => {
+              this.cerrarModal();
+            },
+          });
+          return;
+        }
+
+        this.equipos_vagones = response.data;
+      } catch (error) {
+        console.error("Error al obtener los equipos ferroviarios:", error);
+        Swal.fire({
+          title: "Error",
+          text: "Hubo un error al obtener los equipos ferroviarios.",
+          icon: "error",
+          willClose: () => {
+            this.cerrarModal();
+          },
+        });
       }
     },
 
@@ -510,7 +563,7 @@ export default {
           producto: this.formData.productos,
           por_situar: this.formData.por_situar,
           observaciones: this.formData.observaciones,
-          informe_operativo: this.informeOperativoId // Incluir el ID del informe
+          informe_operativo: this.informeOperativoId, // Incluir el ID del informe
         };
 
         // Enviar los datos al backend
@@ -551,8 +604,10 @@ export default {
     async verificarEstadoInforme() {
       try {
         if (!this.informeOperativoId) return false;
-        
-        const response = await axios.get(`/ufc/informe-operativo/${this.informeOperativoId}/`);
+
+        const response = await axios.get(
+          `/ufc/informe-operativo/${this.informeOperativoId}/`
+        );
         return response.data.estado_parte !== "Aprobado";
       } catch (error) {
         console.error("Error al verificar estado del informe:", error);

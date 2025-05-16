@@ -47,7 +47,12 @@ class ufc_informe_operativo(models.Model):
         return f"Fecha de operación {self.fecha_operacion} - fecha actual: {self.fecha_actual}" 
 
 #*************************************************************************************************************************
-    
+
+class vagones_dias(models.Model):
+    equipo_ferroviario=models.ForeignKey(nom_equipo_ferroviario,on_delete=models.CASCADE,related_name="registro_por_dias",verbose_name="Vagones por Dias", null=True,blank=True)
+    cant_dias=models.PositiveSmallIntegerField(verbose_name="Cantidad de Dias")
+
+
 #productos asociados a vagones en trenes
 class producto_UFC(models.Model):
    
@@ -355,33 +360,24 @@ def eliminar_historial_vagon_cargado_descargado(sender, instance, **kwargs):
 #Modelo Situado
 class Situado_Carga_Descarga(models.Model):
     
-    t_origen = (
+    TIPO_ORIGEN_DESTINO_CHOICES = [
         ('puerto', 'Puerto'),
-        ('ac_ccd', 'Acceso Comercial')
-    )
+        ('ac_ccd', 'Acceso comercial/CCD'),
+    ]
     
-    tipo_origen = models.CharField(max_length=100, choices=t_origen, verbose_name="Tipo de origen", blank=True, null=True)
+    tipo_origen = models.CharField(max_length=100, choices=TIPO_ORIGEN_DESTINO_CHOICES, verbose_name="Tipo de origen", blank=True, null=True)
     origen = models.CharField(max_length=200, verbose_name="Origen")
     
-    t_equipo = (
-        ('casilla', 'Casilla'),
-        ('caj_gon', 'Cajones o Góndola'),
-        ('planc_plat', 'Plancha o Plataforma'),
-        ('Plan_porta_cont', 'Plancha porta contenedores'),
-        ('cist_liquidos', 'Cisterna para líquidos'),
-        ('cist_solidos', 'Cisterna para sólidos'),
-        ('tolva_g_mineral', 'Tolva granelera(mineral)'),
-        ('tolva_g_agric', 'Tolva granelera(agrícola)'),
-        ('tolva_g_cemento', 'Tolva para cemento'),
-        ('volqueta', 'Volqueta'),
-        ('Vagon_ref', 'Vagón refrigerado'),
-        ('jaula', 'Jaula'),
-        ('locomotora', 'Locomotora'),
-        ('tren', 'Tren'),
+    
+    
+    tipo_equipo=models.ForeignKey(nom_tipo_equipo_ferroviario, on_delete=models.SET_NULL,null=True, blank=True,default="", max_length=50)
+    #tipo_equipo=models.CharField(max_length=100)
+    equipo_vagon=models.ManyToManyField(
+        vagones_dias,
+        blank=True,
+        related_name="situados_vagones_dias",
+        verbose_name="Equipos Situados"
     )
-    
-    tipo_equipo = models.CharField(max_length=200, choices=t_equipo, verbose_name="Tipo de equipo", blank=True, null=True)
-    
     status =(
         ('vacio', 'Vacio'),
         ('cargado', 'Cargado')
@@ -429,6 +425,8 @@ class Situado_Carga_Descarga(models.Model):
         ]
     )
     
+    
+    
     informe_operativo = models.ForeignKey(
         ufc_informe_operativo,
         on_delete=models.CASCADE,
@@ -448,6 +446,43 @@ class Situado_Carga_Descarga(models.Model):
         verbose_name = "Situado "
         verbose_name_plural = "Situados"
         ordering = ['tipo_origen', 'origen']
+        
+    def delete(self, *args, **kwargs):
+        try:
+            from nomencladores.models import nom_equipo_ferroviario
+            
+            # Obtener todos los registros asociados antes de eliminarlos
+            registros_asociados = list(self.equipo_vagon.all())
+            
+            # Actualizar estado de equipos y eliminar registros asociados
+            for registro in registros_asociados:
+                try:
+                    with transaction.atomic():
+                        # Actualizar estado del equipo
+                        equipo = nom_equipo_ferroviario.objects.filter(
+                            numero_identificacion=registro.no_id
+                        ).first()
+                        
+                        if equipo:
+                            equipo.estado_actual = 'Disponible'
+                            equipo.save()
+                        
+                        # Eliminar el registro asociado
+                        registro.delete()
+                except Exception as e:
+                    print(f"Error al procesar registro {registro.no_id}: {str(e)}")
+                    continue
+            
+            # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
+            self.equipo_vagon.clear()
+            self.producto.clear()
+            
+            # Finalmente eliminar el registro principal
+            super().delete(*args, **kwargs)
+            
+        except Exception as e:
+            print(f"Error crítico al eliminar vagon_cargado_descargado {self.id}: {str(e)}")
+            raise
 
     def __str__(self):
         return f"{self.tipo_origen} - {self.origen} - {self.tipo_equipo}"
@@ -871,7 +906,7 @@ class en_trenes(models.Model):
         ('ac_ccd', 'Acceso comercial/CCD'),
     ]
     
-    TIPO_EQUIPO_CHOICES=nom_tipo_equipo_ferroviario.t_equipo
+    #TIPO_EQUIPO_CHOICES=nom_tipo_equipo_ferroviario.t_equipo
     
     ESTADO_CHOICES = [
         ('vacio', 'Vacío'),
@@ -914,7 +949,7 @@ class en_trenes(models.Model):
         nom_equipo_ferroviario,
         blank=True,
         related_name="en_trenes_vagones",
-        verbose_name="Productos"
+        verbose_name="Vagones en Trenes"
     )
     observaciones = models.TextField(
         verbose_name="Observaciones",
@@ -940,6 +975,41 @@ class en_trenes(models.Model):
         verbose_name = "Tren"
         verbose_name_plural="Trenes"
          
+    def delete(self, *args, **kwargs):
+        try:
+            from nomencladores.models import nom_equipo_ferroviario
+            
+            # Obtener todos los registros asociados antes de eliminarlos
+            registros_asociados = list(self.equipo_vagon.all())
+            
+            # Actualizar estado de equipos y eliminar registros asociados
+            for registro in registros_asociados:
+                try:
+                    with transaction.atomic():
+                        # Actualizar estado del equipo
+                        equipo = nom_equipo_ferroviario.objects.filter(
+                            numero_identificacion=registro.no_id
+                        ).first()
+                        
+                        if equipo:
+                            equipo.estado_actual = 'Disponible'
+                            equipo.save()
+                        
+                        # Eliminar el registro asociado
+                        registro.delete()
+                except Exception as e:
+                    print(f"Error al procesar registro {registro.no_id}: {str(e)}")
+                    continue
+            
+            # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
+            self.equipo_vagon.clear()
+            self.producto.clear()
+            
+            # Finalmente eliminar el registro principal
+            super().delete(*args, **kwargs)
+            
+        except Exception as e:
+            print(f"Error crítico al eliminar vagon_cargado_descargado {self.id}: {str(e)}")
     
     def __str__(self):
         return f"En trenes {self.id} -{self.numero_identificacion_locomotora}- {self.get_estado_display()}"
@@ -1095,8 +1165,20 @@ class por_situar(models.Model):
         ('tren', 'Tren'),
     )
     
-    tipo_equipo = models.CharField(max_length=200, choices=t_equipo, verbose_name="Tipo de equipo")
+    tipo_equipo = models.ForeignKey(
+        nom_tipo_equipo_ferroviario,
+        on_delete=models.SET_NULL,
+        verbose_name="Tipo de equipo", 
+        blank=True, 
+        null=True
+    )
     
+    equipo_vagon=models.ManyToManyField(
+        vagones_dias,
+        blank=True,
+        related_name="por_situar_vagones_dias",
+        verbose_name="Equipos por Situar"
+    )
     status =(
         ('vacio', 'Vacio'),
         ('cargado', 'Cargado')
@@ -1149,6 +1231,42 @@ class por_situar(models.Model):
         verbose_name_plural = "Por situar"
         ordering = ['tipo_origen', 'origen']
 
+    def delete(self, *args, **kwargs):
+        try:
+            from nomencladores.models import nom_equipo_ferroviario
+            
+            # Obtener todos los registros asociados antes de eliminarlos
+            registros_asociados = list(self.equipo_vagon.all())
+            
+            # Actualizar estado de equipos y eliminar registros asociados
+            for registro in registros_asociados:
+                try:
+                    with transaction.atomic():
+                        # Actualizar estado del equipo
+                        equipo = nom_equipo_ferroviario.objects.filter(
+                            numero_identificacion=registro.no_id
+                        ).first()
+                        
+                        if equipo:
+                            equipo.estado_actual = 'Disponible'
+                            equipo.save()
+                        
+                        # Eliminar el registro asociado
+                        registro.delete()
+                except Exception as e:
+                    print(f"Error al procesar registro {registro.no_id}: {str(e)}")
+                    continue
+            
+            # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
+            self.equipo_vagon.clear()
+            self.producto.clear()
+            
+            # Finalmente eliminar el registro principal
+            super().delete(*args, **kwargs)
+            
+        except Exception as e:
+            print(f"Error crítico al eliminar vagon_cargado_descargado {self.id}: {str(e)}")
+    
     def __str__(self):
         return f"{self.tipo_origen} - {self.origen} - {self.tipo_equipo}"
     
@@ -1299,12 +1417,19 @@ class arrastres(models.Model):
         ('tren', 'Tren'),
     )
     
-    tipo_equipo = models.CharField(
-        max_length=200, 
-        choices=TIPO_EQUIPO_CHOICES, 
+    tipo_equipo = models.ForeignKey(
+        nom_tipo_equipo_ferroviario,
+        on_delete=models.SET_NULL,
         verbose_name="Tipo de equipo", 
         blank=True, 
         null=True
+    )
+    
+    equipo_vagon=models.ManyToManyField(
+        vagones_dias,
+        blank=True,
+        related_name="arrastre_vagones_dias",
+        verbose_name="Equipos en Arrastre"
     )
     
     ESTADO_CHOICES = (
@@ -1357,6 +1482,43 @@ class arrastres(models.Model):
         verbose_name_plural = "Arrastres"
      #   db_table = "arrastres"  # Esto asegura que la tabla se llame exactamente "arrastres"
      #no quiero que la tabla se llame arrastres, quiero que se llame ufc_arrastre
+    
+    
+    def delete(self, *args, **kwargs):
+        try:
+            from nomencladores.models import nom_equipo_ferroviario
+            
+            # Obtener todos los registros asociados antes de eliminarlos
+            registros_asociados = list(self.equipo_vagon.all())
+            
+            # Actualizar estado de equipos y eliminar registros asociados
+            for registro in registros_asociados:
+                try:
+                    with transaction.atomic():
+                        # Actualizar estado del equipo
+                        equipo = nom_equipo_ferroviario.objects.filter(
+                            numero_identificacion=registro.no_id
+                        ).first()
+                        
+                        if equipo:
+                            equipo.estado_actual = 'Disponible'
+                            equipo.save()
+                        
+                        # Eliminar el registro asociado
+                        registro.delete()
+                except Exception as e:
+                    print(f"Error al procesar registro {registro.no_id}: {str(e)}")
+                    continue
+            
+            # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
+            self.equipo_vagon.clear()
+            self.producto.clear()
+            
+            # Finalmente eliminar el registro principal
+            super().delete(*args, **kwargs)
+            
+        except Exception as e:
+            print(f"Error crítico al eliminar vagon_cargado_descargado {self.id}: {str(e)}")
     
     def __str__(self):
         return f"Arrastre Pendiente{self.id} - {self.origen}"

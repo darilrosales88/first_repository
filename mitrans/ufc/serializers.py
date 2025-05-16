@@ -19,12 +19,12 @@ from rest_framework import status
 from django.db import transaction 
 import json
 from django.utils import timezone
-from .models import HistorialVagonCargadoDescargado, vagon_cargado_descargado, registro_vagones_cargados
+from .models import HistorialVagonCargadoDescargado, vagon_cargado_descargado, registro_vagones_cargados,vagones_dias
 from nomencladores.models import nom_equipo_ferroviario,nom_tipo_equipo_ferroviario,nom_provincia
 from Administracion.models import CustomUser
 
 #######Importamos serializadores externos para poder tener una lectura mas detallada
-from nomencladores.serializers import nom_provincia_serializer
+from nomencladores.serializers import nom_equipo_ferroviario_serializer
 from Administracion.serializers import UserPermissionSerializer
 
 
@@ -46,6 +46,25 @@ class DateTimeToDateField(serializers.ReadOnlyField):
         return None
 
 #****************-------------------------********************--------------------***************-----------------********************************
+
+#Serializador para Modelo dVagones por dias de situados, por situar, Arrastres
+class vagones_dias_serializer(serializers.ModelSerializer):
+    
+    equipo_ferroviario = serializers.PrimaryKeyRelatedField(
+        queryset=nom_equipo_ferroviario.objects.all(), 
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    equipo_ferroviario_detalle=nom_equipo_ferroviario_serializer(source="equipo_ferroviario", read_only=True)
+    
+    class Meta:
+        model = vagones_dias
+        fields = '__all__'  # O lista explícita incluyendo 'productos_list'
+        
+
+
+
 #serializador para el modelo vagones y productos
 class vagones_productos_filter(filters.FilterSet):
     origen_tipo_prod_tef = filters.CharFilter(method='filtrado_por_origen_tipo_prod_tef', lookup_expr='icontains')
@@ -700,7 +719,7 @@ class en_trenes_serializer(serializers.ModelSerializer):
 
     equipo_vagon = serializers.PrimaryKeyRelatedField(
         many=True,
-        queryset=nom_equipo_ferroviario.objects.all(),
+        queryset=vagones_dias.objects.all(),
         required=False
     )
    
@@ -820,18 +839,24 @@ class SituadoCargaDescargaFilter(filters.FilterSet):
 class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
     productos_info = serializers.SerializerMethodField()
     tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
-    tipo_equipo_name=serializers.ReadOnlyField(source='get_tipo_equipo_display')
+    tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
     producto = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=producto_UFC.objects.all(),
         required=False
     )
+    equipo_vagon = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=vagones_dias.objects.all(),
+        required=False
+    )
+    equipo_vagon_detalle=vagones_dias_serializer(many=True, source='equipo_vagon', read_only=True)
     situados = serializers.IntegerField()
     pendiente_proximo_dia = serializers.IntegerField()
     
     class Meta:
         model = Situado_Carga_Descarga
-        fields = ('id', 'tipo_origen' , 'tipo_origen_name', 'origen', 'tipo_equipo' , 'tipo_equipo_name', 'estado', 
+        fields = ('id', 'tipo_origen' , 'tipo_origen_name', 'origen', 'tipo_equipo' , 'tipo_equipo_name','equipo_vagon','equipo_vagon_detalle', 'estado', 
                  'operacion', 'producto', 'productos_info', 'situados', 
                  'pendiente_proximo_dia', 'observaciones')
         extra_kwargs = {
@@ -912,6 +937,12 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         queryset=producto_UFC.objects.all(),
         required=False
     )
+    equipo_vagon = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=vagones_dias.objects.all(),
+        required=False,
+    )
+    equipo_vagon_detalle=vagones_dias_serializer(many=True,source='equipo_vagon', read_only=True)
     
     class Meta:
         model = por_situar
@@ -962,13 +993,20 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
         read_only=True,  # Solo lectura, no necesita write_only
         help_text="Fecha y hora en que se creó el registro (automático)"
     )
+    tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
     productos_info = serializers.SerializerMethodField()
     producto = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=producto_UFC.objects.all(),
         required=False
     )
-    
+    equipo_vagon = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=vagones_dias.objects.all(),
+        required=False,
+        write_only=True
+    )
+    equipo_vagon_detalle=vagones_dias_serializer(many=True, source='equipo_vagon', read_only=True)
     class Meta:
         model = arrastres
         fields = '__all__'

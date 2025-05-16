@@ -65,7 +65,7 @@
             >
               <td class="ps-td">{{ getTipoOrigenText(item.tipo_origen) }}</td>
               <td class="ps-td">{{ item.origen }}</td>
-              <td class="ps-td">{{ item.tipo_equipo }}</td>
+              <td class="ps-td">{{ item.tipo_equipo_name }}</td>
               <td class="ps-td">
                 <span
                   :class="`ps-status ps-status-${getStatusClass(item.estado)}`"

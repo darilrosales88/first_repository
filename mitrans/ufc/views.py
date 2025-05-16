@@ -5,7 +5,7 @@ from rest_framework.pagination import PageNumberPagination
 #importacion de modelos
 from .models import vagon_cargado_descargado,producto_UFC,en_trenes
 from .models import registro_vagones_cargados,vagones_productos,HistorialVagonesProductos
-from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones,ufc_informe_operativo
+from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones,ufc_informe_operativo,vagones_dias
 #importacion de serializadores asociados a los modelos
 from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descargado_serializer, 
                         producto_vagon_serializer, en_trenes_serializer,PorSituarCargaDescargaSerializer, SituadoCargaDescargaSerializers, 
@@ -14,7 +14,8 @@ from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descarg
                         vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer,
                         ufc_informe_operativo_serializer,ufc_informe_operativo_filter,
                         HistorialVagonCargadoDescargado,HistorialVagonCargadoDescargadoSerializer,
-                        HistorialVagonesProductosSerializer)
+                        HistorialVagonesProductosSerializer,vagones_dias_serializer
+                        )
 from django.core.cache import cache
 from Administracion.models import Auditoria
 
@@ -1589,6 +1590,15 @@ class PendienteArrastre_hoy_Viewset(viewsets.ModelViewSet):
         )
         
         return super().list(request, *args, **kwargs)
+    
+    
+    
+    
+    
+#*************Registro de vagones Dia*******************
+class VagonesDiasViewSet(viewsets.ModelViewSet):
+    queryset=vagones_dias.objects.all()
+    serializer_class=vagones_dias_serializer    
     
     
 #*************Empieza View Rotacion de Vagones **********************

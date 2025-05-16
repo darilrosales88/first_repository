@@ -51,7 +51,6 @@ class DateTimeToDateField(serializers.ReadOnlyField):
 class vagones_dias_serializer(serializers.ModelSerializer):
     # Mantenemos los campos existentes para lectura
     equipo_ferroviario_detalle = nom_equipo_ferroviario_serializer(
-        many=True,
         source="equipo_ferroviario", 
         read_only=True
     )
@@ -937,16 +936,17 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
     )
     productos_info = serializers.SerializerMethodField()
     tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
-    tipo_equipo_name=serializers.ReadOnlyField(source='get_tipo_equipo_display')
+    tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
     producto = serializers.PrimaryKeyRelatedField(
+        write_only=True,
         many=True,
         queryset=producto_UFC.objects.all(),
         required=False
     )
-    equipo_vagon = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=vagones_dias.objects.all(),
-        required=False,
+    equipo_vagon = serializers.ListField(
+        child=serializers.DictField(),
+        write_only=True,
+        required=False
     )
     equipo_vagon_detalle=vagones_dias_serializer(many=True,source='equipo_vagon', read_only=True)
     
@@ -972,16 +972,46 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         } for p in productos]
 
     def create(self, validated_data):
+        # Extraer datos de vagones
+        vagones_data = validated_data.pop('equipo_vagon', [])
         productos_data = validated_data.pop('producto', [])
-        instance = por_situar.objects.get(**validated_data)
-        instance.producto.get(productos_data)
+        
+        # Crear instancia principal
+        instance = super().create(validated_data)
+        
+        # Crear registros de vagones_dias y asociarlos
+        for vagon_data in vagones_data:
+            vagon = vagones_dias.objects.create(
+                equipo_ferroviario_id=vagon_data['equipo_ferroviario'],
+                cant_dias=vagon_data['cant_dias']
+            )
+            instance.equipo_vagon.add(vagon)
+        
+        # Asociar productos
+        instance.producto.set(productos_data)
+        
         return instance
 
     def update(self, instance, validated_data):
+        vagones_data = validated_data.pop('equipo_vagon', None)
         productos_data = validated_data.pop('producto', None)
+        
         instance = super().update(instance, validated_data)
+        
+        # Actualizar vagones si se proporcionan
+        if vagones_data is not None:
+            instance.equipo_vagon.clear()
+            for vagon_data in vagones_data:
+                vagon = vagones_dias.objects.create(
+                    equipo_ferroviario_id=vagon_data['equipo_ferroviario'],
+                    cant_dias=vagon_data['cant_dias']
+                )
+                instance.equipo_vagon.add(vagon)
+        
+        # Actualizar productos si se proporcionan
         if productos_data is not None:
             instance.producto.set(productos_data)
+        
         return instance
 
 

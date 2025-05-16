@@ -191,7 +191,10 @@
                           @click.stop
                         />
                       </div>
-                      <div class="ufc-productos-options" v-if="hasGroup('AdminUFC')">
+                      <div
+                        class="ufc-productos-options"
+                        v-if="hasGroup('AdminUFC')"
+                      >
                         <div
                           v-for="producto in filteredProductos"
                           :key="producto.id"
@@ -533,8 +536,8 @@ export default {
           this.userPermissions = response.data.permissions;
           this.userGroups = response.data.groups;
         }
-        console.log("Permisos: ",this.userPermissions );
-        console.log("Grupos: ",this.userGroups );
+        console.log("Permisos: ", this.userPermissions);
+        console.log("Grupos: ", this.userGroups);
       } catch (error) {
         console.error("Error al obtener permisos y grupos:", error);
       }
@@ -784,14 +787,16 @@ export default {
           producto: this.formData.productos,
           por_situar: this.formData.por_situar,
           observaciones: this.formData.observaciones,
-          /*  equipo_vagon: this.vagonesAgregados.map((v) => ({
-            cant_dias: v.cant_dias,
-            equipo_ferroviario: v.equipo_ferroviario.id,
-          })), */
+          informe_operativo: this.informeOperativoId,
 
-          informe_operativo: this.informeOperativoId, // Incluir el ID del informe
+          // Datos de los vagones (estructura corregida)
+          equipo_vagon: this.vagonesAgregados.map((vagon) => ({
+            equipo_ferroviario: vagon.equipo_ferroviario.id, // ID del equipo
+            cant_dias: vagon.cant_dias,
+            // Otros campos necesarios para el vagon
+          })),
         };
-
+        console.log("Payload a enviar:", payload);
         // Enviar los datos al backend
         const response = await axios.post("/ufc/por-situar/", payload);
 

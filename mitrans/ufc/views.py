@@ -1667,7 +1667,7 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
             navegador=navegador,
         )
 
-        instance.delete()
+        instance.delete()#Probando configuracion
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):

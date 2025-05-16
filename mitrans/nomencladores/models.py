@@ -331,7 +331,7 @@ class nom_entidades(models.Model):
     class Meta:
         verbose_name = "Entidad"
         verbose_name_plural = "Entidades"
-        #unique_together = [['nombre', 'abreviatura','osde_oace_organismo', 'provincia','tipo_entidad']]
+        #unique_together = [['nombre', 'abreviatura', 'provincia','tipo_entidad']]
 
 # -----------------------------Aqui termina Modelo nom_entidades-----------------------------------------
 
@@ -547,6 +547,7 @@ class nom_producto(models.Model):
         ('-', '-'),
         ('alimento', 'Alimento'),
         ('combustible', 'Combustible'),
+        ('contenedor', 'Contenedor'),
         ('otros', 'Otros'),
     )
     tipo_producto = models.CharField(max_length=20, choices=t_producto, default="-",verbose_name="Tipo de producto")

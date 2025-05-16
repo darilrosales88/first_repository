@@ -191,10 +191,7 @@
                           @click.stop
                         />
                       </div>
-                      <div
-                        class="ufc-productos-options"
-                        v-if="hasGroup('AdminUFC')"
-                      >
+                      <div class="ufc-productos-options">
                         <div
                           v-for="producto in filteredProductos"
                           :key="producto.id"

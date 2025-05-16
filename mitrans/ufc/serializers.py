@@ -51,12 +51,14 @@ class DateTimeToDateField(serializers.ReadOnlyField):
 class vagones_dias_serializer(serializers.ModelSerializer):
     # Mantenemos los campos existentes para lectura
     equipo_ferroviario_detalle = nom_equipo_ferroviario_serializer(
+        many=True,
         source="equipo_ferroviario", 
         read_only=True
     )
     
     # Cambiamos el campo equipo_ferroviario para manejar la estructura deseada
-    equipo_ferroviario = serializers.IntegerField(
+    equipo_ferroviario = serializers.PrimaryKeyRelatedField(
+        queryset=nom_equipo_ferroviario.objects.all(), 
         write_only=True,
         required=False,
         allow_null=True,
@@ -66,45 +68,7 @@ class vagones_dias_serializer(serializers.ModelSerializer):
         model = vagones_dias
         fields = '__all__'
     
-    def to_internal_value(self, data):
-        """
-        Transforma los datos entrantes al formato interno
-        """
-        # Si recibimos un diccionario con la estructura {cant_dias, equipo_ferroviario}
-        if isinstance(data, dict):
-            internal_data = {
-                'cant_dias': data.get('cant_dias'),
-                'equipo_ferroviario': data.get('equipo_ferroviario'),
-            }
-            return super().to_internal_value(internal_data)
-        return super().to_internal_value(data)
     
-    def create(self, validated_data):
-        """
-        Crea una nueva instancia de vagones_dias con los datos validados
-        """
-        equipo_ferroviario_id = validated_data.pop('equipo_ferroviario', None)
-        
-        instance = vagones_dias.objects.create(
-            **validated_data,
-            equipo_ferroviario_id=equipo_ferroviario_id
-        )
-        return instance
-    
-    def update(self, instance, validated_data):
-        """
-        Actualiza una instancia existente de vagones_dias
-        """
-        equipo_ferroviario_id = validated_data.pop('equipo_ferroviario', None)
-        
-        if equipo_ferroviario_id is not None:
-            instance.equipo_ferroviario_id = equipo_ferroviario_id
-        
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        
-        instance.save()
-        return instance
 
 
 #serializador para el modelo vagones y productos
@@ -979,10 +943,10 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         queryset=producto_UFC.objects.all(),
         required=False
     )
-    equipo_vagon = serializers.ListField(
-        child=vagones_dias_serializer(),
+    equipo_vagon = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=vagones_dias.objects.all(),
         required=False,
-        write_only=True
     )
     equipo_vagon_detalle=vagones_dias_serializer(many=True,source='equipo_vagon', read_only=True)
     
@@ -1009,18 +973,8 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         productos_data = validated_data.pop('producto', [])
-        instance = por_situar.objects.create(**validated_data)
-        instance.producto.set(productos_data)
-        vagones_data = validated_data.pop('equipo_vagon', [])
-        instance = super().create(validated_data)
-        
-        # Crear los registros de vagones_dias
-        for vagon_data in vagones_data:
-            vagones_dias.objects.create(
-                equipo_ferroviario_id=vagon_data['equipo_ferroviario'],
-                cant_dias=vagon_data['cant_dias'],
-                modelo_principal=instance  # Asume que tienes esta FK en vagones_dias
-            )
+        instance = por_situar.objects.get(**validated_data)
+        instance.producto.get(productos_data)
         return instance
 
     def update(self, instance, validated_data):

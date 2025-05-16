@@ -756,10 +756,10 @@ export default {
           producto: this.formData.productos,
           por_situar: this.formData.por_situar,
           observaciones: this.formData.observaciones,
-          equipo_vagon: this.vagonesAgregados.map((v) => ({
+          /*  equipo_vagon: this.vagonesAgregados.map((v) => ({
             cant_dias: v.cant_dias,
             equipo_ferroviario: v.equipo_ferroviario.id,
-          })),
+          })), */
 
           informe_operativo: this.informeOperativoId, // Incluir el ID del informe
         };

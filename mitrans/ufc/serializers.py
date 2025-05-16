@@ -461,7 +461,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
             p.producto.nombre_producto 
             for p in obj.producto.all() 
             if hasattr(p, 'producto')
-        ])   
+        ])  
 
 #serializador para el historial de vagon_cargado_descargado**************************************************
 
@@ -477,52 +477,92 @@ class HistorialVagonCargadoDescargadoSerializer(serializers.ModelSerializer):
     class Meta:
         model = HistorialVagonCargadoDescargado
         fields = '__all__'
-    
+
     def get_datos_vagon(self, obj):
+        """
+        Método para procesar y enriquecer los datos del vagón almacenados en formato JSON.
+        Recibe el objeto serializado (obj) y devuelve un diccionario con los datos procesados.
+        """
         try:
+            # 1. Obtener los datos del vagón desde el objeto
             data = obj.datos_vagon
+            
+            # 2. Verificar si los datos están en formato string (JSON serializado)
             if isinstance(data, str):
+                # 3. Si es string, convertirlo a diccionario Python
                 data = json.loads(data)
             
+            # 4. Verificar si los datos son un diccionario
             if isinstance(data, dict):
-                # Convertir campos de fecha si existen
+                # 5. Procesamiento de fecha (si existe en los datos)
                 if 'fecha' in data and isinstance(data['fecha'], str):
                     try:
-                        data['fecha'] = timezone.datetime.strptime(data['fecha'], '%Y-%m-%d %H:%M:%S.%f').date()
+                        # 6. Convertir string de fecha a objeto date
+                        data['fecha'] = timezone.datetime.strptime(
+                            data['fecha'], 
+                            '%Y-%m-%d %H:%M:%S.%f'
+                        ).date()
                     except ValueError:
+                        # 7. Si falla la conversión, continuar sin modificar la fecha
                         pass
-                if 'plan_diario_carga_descarga' not in data:
-                    data['plan_diario_carga_descarga'] = 0
-                if 'real_carga_descarga' not in data:
-                    data['real_carga_descarga'] = 0
-                if 'causas_incumplimiento' not in data:
-                    data['causas_incumplimiento'] = ''
                 
-                # Agregar nombres descriptivos
-                data['tipo_origen_name'] = dict(vagon_cargado_descargado.TIPO_ORIGEN_DESTINO_CHOICES).get(
-                    data.get('tipo_origen'), '')
-                data['estado_name'] = dict(vagon_cargado_descargado.ESTADO_CHOICES).get(
-                    data.get('estado'), '')
-                data['operacion_name'] = dict(vagon_cargado_descargado.OPERACION_CHOICES).get(
-                    data.get('operacion'), '')
-                data['tipo_destino_name'] = dict(vagon_cargado_descargado.TIPO_DESTINO_CHOICES).get(
-                    data.get('tipo_destino'), '')
+                # 8. Establecer valores por defecto para campos numéricos si no existen
+                data.setdefault('plan_diario_carga_descarga', 0)
+                data.setdefault('real_carga_descarga', 0)
+                data.setdefault('causas_incumplimiento', '')
                 
+                # 9. Agregar nombres descriptivos para campos con choices
+                
+                # 9.1. Nombre descriptivo para tipo_origen
+                data['tipo_origen_name'] = dict(
+                    vagon_cargado_descargado.TIPO_ORIGEN_DESTINO_CHOICES
+                ).get(data.get('tipo_origen'), '')
+                
+                # 9.2. Nombre descriptivo para estado
+                data['estado_name'] = dict(
+                    vagon_cargado_descargado.ESTADO_CHOICES
+                ).get(data.get('estado'), '')
+                
+                # 9.3. Nombre descriptivo para operación
+                data['operacion_name'] = dict(
+                    vagon_cargado_descargado.OPERACION_CHOICES
+                ).get(data.get('operacion'), '')
+                
+                # 9.4. Nombre descriptivo para tipo_destino
+                data['tipo_destino_name'] = dict(
+                    vagon_cargado_descargado.TIPO_DESTINO_CHOICES
+                ).get(data.get('tipo_destino'), '')
+                
+                # 10. Procesamiento especial para el tipo de equipo ferroviario
                 if 'tipo_equipo_ferroviario_id' in data:
                     try:
-                        equipo = nom_equipo_ferroviario.objects.get(pk=data['tipo_equipo_ferroviario_id'])
-                        data['tipo_equipo_ferroviario_name'] = "Auxiliar"
+                        # 10.1. Obtener el equipo ferroviario completo desde la base de datos
+                        equipo = nom_equipo_ferroviario.objects.get(
+                            pk=data['tipo_equipo_ferroviario_id']
+                        )
+                        
+                        # 10.2. Obtener el nombre legible del tipo de equipo
+                        # usando get_tipo_equipo_display() que es generado automáticamente
+                        # por Django para campos con choices
+                        data['tipo_equipo_ferroviario_name'] = equipo.tipo_equipo.get_tipo_equipo_display()
+                        
                     except nom_equipo_ferroviario.DoesNotExist:
+                        # 10.3. Si no existe el equipo, establecer nombre vacío
                         data['tipo_equipo_ferroviario_name'] = ''
             
+            # 11. Devolver los datos procesados
             return data
+        
         except (json.JSONDecodeError, TypeError, KeyError):
+            # 12. Manejo de errores: si hay problemas al procesar los datos,
+            # devolver un diccionario con valores por defecto
             return {
                 'plan_diario_carga_descarga': 0,
                 'real_carga_descarga': 0,
                 'causas_incumplimiento': ''
             }
     
+
     def get_datos_productos(self, obj):
         try:
             data = obj.datos_productos
@@ -766,23 +806,11 @@ class producto_vagon_serializer(serializers.ModelSerializer):
     producto_codigo = serializers.ReadOnlyField(source='producto.codigo_producto')
     tipo_embalaje_name=serializers.ReadOnlyField(source='tipo_embalaje.nombre_tipo_embalaje')
     unidad_medida_name=serializers.ReadOnlyField(source='unidad_medida.unidad_medida')
+    estado_name=serializers.ReadOnlyField(source='get_estado_display')
     
     class Meta:
         model = producto_UFC
-        fields = (
-            'id', 
-           'producto',
-           'producto_name',
-           'producto_codigo',
-           'tipo_embalaje',
-           'tipo_embalaje_name',
-           'unidad_medida',
-           'unidad_medida_name',
-           'producto',
-           'cantidad',
-           'contiene',
-           'estado'
-        )
+        fields = '__all__'
         filterset_class=en_trenes_filter
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)

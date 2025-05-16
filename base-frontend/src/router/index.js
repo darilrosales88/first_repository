@@ -706,8 +706,8 @@ const routes = [
     props: true, // Pasar los parámetros como props
   },
   {
-    path: "/HistorialCargadoGescargado",
-    name: "HistorialCargadoGescargado",
+    path: "/HistorialCargadoDescargado",
+    name: "HistorialCargadoDescargado",
     component: () => import("../components/Historial_vagones_cargados.vue"),
     meta: {
       requireLogin: true,

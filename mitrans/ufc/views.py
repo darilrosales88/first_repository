@@ -43,6 +43,12 @@ from datetime import datetime
 from django.db.models.functions import Cast
 from django.db import transaction
 
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+import json
+from datetime import date
+
 
 
 # Verifica si el usuario tiene el rol "ufc"
@@ -151,6 +157,44 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
         )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    #funcion añadida para la actualizacion del campo estado_parte***
+    def partial_update(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        instance = self.get_object()
+        
+        # Solo permitir actualizar el estado_parte
+        if 'estado_parte' not in request.data:
+            return Response(
+                {"detail": "Se requiere el campo 'estado_parte'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        serializer = self.get_serializer(
+            instance, 
+            data={'estado_parte': request.data['estado_parte']}, 
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        # Auditoría
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user,
+            accion=f"Actualizar estado del Informe operativo a {serializer.data['estado_parte']}",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return Response(serializer.data)
+ 
 
     def update(self, request, *args, **kwargs):
         
@@ -425,6 +469,7 @@ class HistorialVagonesProductosViewSet(viewsets.ReadOnlyModelViewSet):
 
 #/*********************************************************************************************************************************************
 #para el estado de vagones cargados/descargados
+#para el estado de vagones cargados/descargados
 class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
     queryset = vagon_cargado_descargado.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = vagon_cargado_descargado_serializer
@@ -439,6 +484,14 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
             return self.filter_class({'tef_prod_estado': search}, queryset=queryset).qs
         
         return queryset
+    def perform_destroy(self, instance):
+        registros_asociados = instance.registros_vagones.all()
+        
+        for registro in registros_asociados:
+            self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
+        
+        registros_asociados.delete()
+        instance.delete()
 
     def create(self, request, *args, **kwargs):
         print("Datos recibidos en create:", request.data)  # Verificar datos entrantes
@@ -523,6 +576,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
     
     def list(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
@@ -561,7 +615,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
             total += registro.registros_vagones.count()
             
         return Response({'total': total})
-    # En el vagon_cargado_descargado_view_set, agrega este nuevo método:
+   
     @action(detail=True, methods=['get'], url_path='registros-vagones')
     def obtener_registros_vagones(self, request, pk=None):
         """
@@ -609,7 +663,6 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
                 {"error": f"No se pudieron obtener los registros completos: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
 class vagon_cargado_descargado_hoy_view_set(viewsets.ModelViewSet):
     queryset = vagon_cargado_descargado.objects.all()
     serializer_class = vagon_cargado_descargado_serializer

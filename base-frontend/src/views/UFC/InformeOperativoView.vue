@@ -11,7 +11,7 @@
   </div>Historial de cargados/descargados
   <button class="btn btn-link p-0">
           <router-link
-            to="HistorialCargadoGescargado"
+            to="HistorialCargadoDescargado"
             title="Ver historial de vagones cargados descargados"
           >
             <i class="bi bi-plus-circle fs-3"></i>
@@ -87,22 +87,86 @@
     <!-- Componente de Rotacion de vagones -->
     <ConsultaRotacionVagones />
     <div class="action-buttons">
-      <button class="action-btn reject" @click="rechazar">Rechazar</button>
-      <button class="action-btn approve" @click="aprobar">Aprobar</button>
-      <button class="action-btn ready" @click="listo">Listo</button>
+      <button class="action-btn reject" @click="rechazar">
+        <i class="bi bi-x-circle"></i> Rechazar
+      </button>
+      <button class="action-btn ready" @click="listo">
+        <i class="bi bi-check-circle"></i> Listo
+      </button>
+      <button class="action-btn approve" @click="aprobar">
+        <i class="bi bi-check2-circle"></i> Aprobar
+      </button>
     </div>
   </div>
   
 </template>
 
 <style scoped>
-/* Estilos para los botones de acción */
+/* Estilos mejorados para los botones de acción */
 .action-buttons {
   display: flex;
   gap: 15px;
-  margin-top: 20px;
-  justify-content: flex-end;
-  padding: 10px 0;
+  margin: 30px auto; /* Centrado vertical y horizontal */
+  justify-content: center; /* Centra los botones horizontalmente */
+  padding: 20px 0;
+  width: 100%;
+}
+
+.action-btn {
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+}
+
+.action-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.action-btn:active {
+  transform: translateY(1px);
+}
+
+/* Estilos específicos para cada botón */
+.approve {
+  background-color: #28a745;
+  color: white;
+}
+
+.approve:hover {
+  background-color: #218838;
+}
+
+.reject {
+  background-color: #dc3545;
+  color: white;
+}
+
+.reject:hover {
+  background-color: #c82333;
+}
+
+.ready {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.ready:hover {
+  background-color: #138496;
+}
+
+.action-btn i {
+  margin-right: 8px;
+  font-size: 18px;
 }
 
 /* Estilos generales del navbar */
@@ -218,7 +282,7 @@ export default {
 
   methods: {
     async rechazar() {      
-      if (!this.hasPermission('puede_rechazar_informe')) {
+      if (!this.hasGroup('RevisorUFC')) {
         await Swal.fire({
           icon: 'error',
           title: 'Acceso denegado',
@@ -227,11 +291,25 @@ export default {
         });
         return;
       }      
-      await this.CambiarEstado("Rechazado");
+      const result = await Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Está seguro que desea rechazar este informe operativo?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#002a68',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, rechazar',
+        cancelButtonText: 'Cancelar'
+      });
+
+      // Si el usuario confirma, proceder con la aprobación
+      if (result.isConfirmed) {
+        await this.CambiarEstado("Rechazado");
+      }
     },
 
     async aprobar() {      
-      if (!this.hasPermission('puede_aprobar_informe')) {
+      if (!this.hasGroup('RevisorUFC')) {
         await Swal.fire({
           icon: 'error',
           title: 'Acceso denegado',
@@ -239,12 +317,27 @@ export default {
           confirmButtonColor: '#002a68',
         });
         return;
-      }      
-      await this.CambiarEstado("Aprobado");
-    },
+      }
 
+      // Mostrar confirmación antes de aprobar
+      const result = await Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Está seguro que desea aprobar este informe operativo?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#002a68',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, aprobar',
+        cancelButtonText: 'Cancelar'
+      });
+
+      // Si el usuario confirma, proceder con la aprobación
+      if (result.isConfirmed) {
+        await this.CambiarEstado("Aprobado");
+      }
+    },
     async listo() {      
-      if (!this.hasPermission('puede_cambiar_a_listo')) {
+      if (!this.hasGroup('AdminUFC')) {
         await Swal.fire({
           icon: 'error',
           title: 'Acceso denegado',
@@ -253,7 +346,21 @@ export default {
         });
         return;
       }      
-      await this.CambiarEstado("Listo");
+      const result = await Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Está seguro que desea poner a 'Listo' este informe operativo?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#002a68',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, poner a listo',
+        cancelButtonText: 'Cancelar'
+      });
+
+      // Si el usuario confirma, proceder con la aprobación
+      if (result.isConfirmed) {
+        await this.CambiarEstado("Listo");
+      }
     },
 
     hasPermission(permission) {

@@ -411,16 +411,15 @@ export default {
   data() {
     return {
       formData: {
-        id: null,
-        tipo_origen: "",
-        origen: "",
-        tipo_equipo: "",
-        estado: "cargado",
-        operacion: "",
-        productos: [],
-        por_situar: 1,
-        observaciones: "",
-      },
+      id: null,
+      tipo_origen: "",
+      origen: "",
+      tipo_equipo: "",
+      estado: "cargado",
+      operacion: "",
+      productos: [],
+      observaciones: "",
+    },
       entidades: [],
       puertos: [],
       productos: [],
@@ -435,9 +434,21 @@ export default {
         { id: "puerto", text: "Puerto" },
       ],
       tipo_equipo_options: [
-        { id: "casilla", text: "Casilla" },
-        { id: "caj_gon", text: "Cajon o Gondola" },
-      ],
+  { id: "casilla", text: "Casilla" },
+  { id: "caj_gon", text: "Cajones o Góndola" },
+  { id: "planc_plat", text: "Plancha o Plataforma" },
+  { id: "Plan_porta_cont", text: "Plancha porta contenedores" },
+  { id: "cist_liquidos", text: "Cisterna para líquidos" },
+  { id: "cist_solidos", text: "Cisterna para sólidos" },
+  { id: "tolva_g_mineral", text: "Tolva granelera(mineral)" },
+  { id: "tolva_g_agric", text: "Tolva granelera(agrícola)" },
+  { id: "tolva_g_cemento", text: "Tolva para cemento" },
+  { id: "volqueta", text: "Volqueta" },
+  { id: "Vagon_ref", text: "Vagón refrigerado" },
+  { id: "jaula", text: "Jaula" },
+  { id: "locomotora", text: "Locomotora" },
+  { id: "tren", text: "Tren" }
+],
       t_operacion_options: [
         { id: "carga", text: "Carga" },
         { id: "descarga", text: "Descarga" },
@@ -462,9 +473,7 @@ export default {
         !this.formData.tipo_equipo ||
         !this.formData.estado ||
         !this.formData.operacion ||
-        (this.formData.estado === 'cargado' && this.formData.productos.length === 0) ||
-        !this.formData.por_situar || 
-        this.formData.por_situar < 1
+        (this.formData.estado === 'cargado' && this.formData.productos.length === 0)
       );
     }
   },
@@ -483,44 +492,39 @@ export default {
   },
   methods: {
     async cargarRegistro() {
-      this.loading = true;
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/ufc/por-situar/${this.registroId}/`
-        );
-        const registro = response.data;
+  this.loading = true;
+  try {
+    const response = await axios.get(`/ufc/por-situar/${this.registroId}/`);
+    const registro = response.data;
 
-        this.formData = {
-          id: registro.id,
-          tipo_origen: registro.tipo_origen,
-          origen: registro.origen,
-          tipo_equipo: registro.tipo_equipo,
-          estado: registro.estado,
-          operacion: registro.operacion,
-          productos: registro.productos_info?.map((p) => p.id) || [],
-          por_situar: registro.por_situar,
-          observaciones: registro.observaciones || "",
-        };
-        
-        if (registro.vagones_asociados) {
-          this.vagonesAsociados = registro.vagones_asociados.map(v => ({
-            ...v,
-            equipo_ferroviario_nombre: v.equipo_ferroviario_nombre || 'Equipo no encontrado'
-          }));
-        }
-      } catch (error) {
-        console.error("Error al cargar el registro:", error);
-        Swal.fire({
-          title: "Error",
-          text: "No se pudo cargar el registro. Por favor intente nuevamente.",
-          icon: "error"
-        }).then(() => {
-          this.$router.push({ name: "InfoOperativo" });
-        });
-      } finally {
-        this.loading = false;
-      }
-    },
+    this.formData = {
+      id: registro.id,
+      tipo_origen: registro.tipo_origen,
+      origen: registro.origen,
+      tipo_equipo: registro.tipo_equipo,
+      estado: registro.estado,
+      operacion: registro.operacion,
+      productos: registro.productos_info?.map((p) => p.id) || [],
+      por_situar: registro.por_situar,
+      observaciones: registro.observaciones || "",
+    };
+    
+    if (registro.vagones) {
+      this.vagonesAsociados = registro.vagones.map(v => ({
+        id: v.id,
+        equipo_ferroviario: v.equipo_ferroviario,
+        equipo_ferroviario_nombre: v.equipo_ferroviario_numero_identificacion,
+        dias: v.dias
+      }));
+    }
+  } catch (error) {
+    console.error("Error al cargar el registro:", error);
+    Swal.fire("Error", "No se pudo cargar el registro", "error");
+    this.$router.push({ name: "InfoOperativo" });
+  } finally {
+    this.loading = false;
+  }
+},
     async getEntidades() {
       try {
         const response = await axios.get("/api/entidades/");
@@ -560,31 +564,27 @@ export default {
       }
     },
     async abrirModalAgregarVagon() {
-      try {
-        const response = await axios.get('/api/equipos-ferroviarios/', {
-          params: {
-            exclude_tipo: 'locomotora'
-          }
-        });
-        this.equiposFerroviarios = response.data.results;
-        
-        // Excluir equipos ya asociados
-        const equiposAsociados = this.vagonesAsociados.map(v => v.equipo_ferroviario);
-        this.equiposFerroviarios = this.equiposFerroviarios.filter(
-          e => !equiposAsociados.includes(e.id)
-        );
-        
-        this.modoEdicionVagon = false;
-        this.vagonForm = {
-          equipo_ferroviario: '',
-          dias: 1
-        };
-        this.mostrarModalVagon = true;
-      } catch (error) {
-        console.error("Error al cargar equipos:", error);
-        Swal.fire("Error", "No se pudieron cargar los equipos ferroviarios", "error");
-      }
-    },
+    try {
+      const response = await axios.get('/api/equipos-ferroviarios/');
+      this.equiposFerroviarios = response.data.results;
+      
+      // Excluir equipos ya asociados
+      const equiposAsociados = this.vagonesAsociados.map(v => v.equipo_ferroviario);
+      this.equiposFerroviarios = this.equiposFerroviarios.filter(
+        e => !equiposAsociados.includes(e.id)
+      );
+      
+      this.modoEdicionVagon = false;
+      this.vagonForm = {
+        equipo_ferroviario: '',
+        dias: 1
+      };
+      this.mostrarModalVagon = true;
+    } catch (error) {
+      console.error("Error al cargar equipos:", error);
+      Swal.fire("Error", "No se pudieron cargar los equipos ferroviarios", "error");
+    }
+  },
     editarVagon(index) {
       this.vagonEditIndex = index;
       this.modoEdicionVagon = true;
@@ -597,53 +597,38 @@ export default {
       
       this.mostrarModalVagon = true;
     },
-    eliminarVagon(index) {
-      Swal.fire({
-        title: '¿Eliminar vagón?',
-        text: "Esta acción no se puede deshacer",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#002a68',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.vagonesAsociados.splice(index, 1);
-          Swal.fire(
-            'Eliminado',
-            'El vagón ha sido eliminado',
-            'success'
-          );
-        }
+    async eliminarVagon(index) {
+    const vagon = this.vagonesAsociados[index];
+    try {
+      await axios.delete(`/ufc/vagones-asociados/${vagon.id}/`);
+      this.vagonesAsociados.splice(index, 1);
+      Swal.fire("Éxito", "Vagón eliminado correctamente", "success");
+    } catch (error) {
+      console.error("Error al eliminar el vagón:", error);
+      Swal.fire("Error", "No se pudo eliminar el vagón", "error");
+    }
+  },
+
+    async guardarVagon() {
+    try {
+      // Crear el vagón en el backend
+      const response = await axios.post('/ufc/vagones-asociados/', this.vagonForm);
+      const nuevoVagon = response.data;
+      
+      // Agregar a la lista local
+      this.vagonesAsociados.push({
+        id: nuevoVagon.id,
+        equipo_ferroviario: nuevoVagon.equipo_ferroviario,
+        equipo_ferroviario_nombre: nuevoVagon.equipo_ferroviario_numero_identificacion,
+        dias: nuevoVagon.dias
       });
-    },
-    guardarVagon() {
-      if (!this.vagonForm.equipo_ferroviario || !this.vagonForm.dias || this.vagonForm.dias < 1) {
-        Swal.fire('Error', 'Complete todos los campos correctamente', 'error');
-        return;
-      }
-      
-      const equipoSeleccionado = this.equiposFerroviarios.find(
-        e => e.id === this.vagonForm.equipo_ferroviario
-      );
-      
-      const vagonData = {
-        equipo_ferroviario: this.vagonForm.equipo_ferroviario,
-        equipo_ferroviario_nombre: equipoSeleccionado 
-          ? `${equipoSeleccionado.numero_identificacion} - ${equipoSeleccionado.tipo_equipo.tipo_equipo}`
-          : 'Equipo no encontrado',
-        dias: this.vagonForm.dias
-      };
-      
-      if (this.modoEdicionVagon) {
-        this.vagonesAsociados[this.vagonEditIndex] = vagonData;
-      } else {
-        this.vagonesAsociados.push(vagonData);
-      }
       
       this.cerrarModalVagon();
-    },
+    } catch (error) {
+      console.error("Error al guardar el vagón:", error);
+      Swal.fire("Error", "No se pudo guardar el vagón", "error");
+    }
+  },
     cerrarModalVagon() {
       this.mostrarModalVagon = false;
       this.vagonEditIndex = null;
@@ -727,68 +712,64 @@ export default {
       });
     },
     async submitForm() {
-      if (this.loading) return;
-      
-      this.loading = true;
-      try {
-        // Validación adicional
-        if (this.formData.estado === 'cargado' && this.formData.productos.length === 0) {
-          throw new Error("Debe seleccionar al menos un producto cuando el estado es Cargado");
-        }
+  if (this.loading) return;
+  
+  this.loading = true;
+  try {
+    // Validación adicional
+    if (this.formData.estado === 'cargado' && this.formData.productos.length === 0) {
+      throw new Error("Debe seleccionar al menos un producto cuando el estado es Cargado");
+    }
 
-        const payload = {
-          tipo_origen: this.formData.tipo_origen,
-          origen: this.formData.origen,
-          tipo_equipo: this.formData.tipo_equipo,
-          estado: this.formData.estado,
-          operacion: this.formData.operacion,
-          productos: this.formData.productos,
-          por_situar: this.formData.por_situar,
-          observaciones: this.formData.observaciones,
-          vagones_asociados: this.vagonesAsociados.map(v => ({
-            equipo_ferroviario: v.equipo_ferroviario,
-            dias: v.dias
-          }))
-        };
+    const payload = {
+      tipo_origen: this.formData.tipo_origen,
+      origen: this.formData.origen,
+      tipo_equipo: this.formData.tipo_equipo,
+      estado: this.formData.estado,
+      operacion: this.formData.operacion,
+      producto: this.formData.productos, // Nota: el backend espera 'producto' no 'productos'
+      observaciones: this.formData.observaciones,
+      vagones_ids: this.vagonesAsociados.map(v => v.id) // Enviar IDs de vagones asociados
+    };
 
-        const response = await axios.put(
-          `http://127.0.0.1:8000/ufc/por-situar/${this.registroId}/`,
-          payload
-        );
+    const response = await axios.put(
+      `/ufc/por-situar/${this.registroId}/`,
+      payload
+    );
 
-        await Swal.fire({
-          title: "Éxito",
-          text: "Registro actualizado correctamente",
-          icon: "success",
-          confirmButtonColor: "#002a68"
-        });
-        
-        this.$router.push({ name: "InfoOperativo" });
-      } catch (error) {
-        let errorMessage = "Error al actualizar el registro";
-        
-        if (error.response) {
-          if (error.response.status === 400) {
-            // Manejar errores de validación del backend
-            const errors = error.response.data;
-            errorMessage = Object.values(errors).flat().join("\n");
-          } else if (error.response.status === 404) {
-            errorMessage = "El registro no fue encontrado";
-          }
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-
-        Swal.fire({
-          title: "Error",
-          text: errorMessage,
-          icon: "error",
-          confirmButtonColor: "#002a68"
-        });
-      } finally {
-        this.loading = false;
+    await Swal.fire({
+      title: "Éxito",
+      text: "Registro actualizado correctamente",
+      icon: "success",
+      confirmButtonColor: "#002a68"
+    });
+    
+    this.$router.push({ name: "InfoOperativo" });
+  } catch (error) {
+    let errorMessage = "Error al actualizar el registro";
+    
+    if (error.response) {
+      if (error.response.status === 400) {
+        // Manejar errores de validación del backend
+        const errors = error.response.data;
+        errorMessage = Object.values(errors).flat().join("\n");
+      } else if (error.response.status === 404) {
+        errorMessage = "El registro no fue encontrado";
       }
-    },
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    Swal.fire({
+      title: "Error",
+      text: errorMessage,
+      icon: "error",
+      confirmButtonColor: "#002a68"
+    });
+  } finally {
+    this.loading = false;
+  }
+},
     confirmCancel() {
       Swal.fire({
         title: "¿Cancelar cambios?",

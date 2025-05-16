@@ -299,7 +299,6 @@
           <td>{{ vagon.equipo_ferroviario_nombre }}</td>
           <td>{{ vagon.dias }}</td>
           <td class="ufc-actions-cell">
-            
             <button 
               class="ufc-icon-button danger"
               @click="eliminarVagon(index)"
@@ -424,17 +423,15 @@ export default {
     return {
       registroId: null,
       formData: {
-        tipo_origen: "",
-        origen: "",
-        tipo_destino: "",
-        destino: "",
-        tipo_equipo: "",
-        operacion: "",
-        estado: "cargado",
-        productos: [], 
-        cantidad_vagones: 1,
-        observaciones: "",
-      },
+      tipo_origen: "",
+      origen: "",
+      tipo_destino: "",
+      destino: "",
+      tipo_equipo: "",
+      estado: "cargado",
+      productos: [], 
+      observaciones: "",
+    },
       productoSearch: '',
       filteredProductos: [],
       showProductosDropdown: false,
@@ -453,18 +450,32 @@ export default {
       ],
       tipo_equipo_options: [
         { id: "casilla", text: "Casilla" },
-        { id: "caj_gon", text: "Cajon o Gondola" },
+        { id: "caj_gon", text: "Cajones o Góndola" },
+        { id: "planc_plat", text: "Plancha o Plataforma" },
+        { id: "Plan_porta_cont", text: "Plancha porta contenedores" },
+        { id: "cist_liquidos", text: "Cisterna para líquidos" },
+        { id: "cist_solidos", text: "Cisterna para sólidos" },
+        { id: "tolva_g_mineral", text: "Tolva granelera(mineral)" },
+        { id: "tolva_g_agric", text: "Tolva granelera(agrícola)" },
+        { id: "tolva_g_cemento", text: "Tolva para cemento" },
+        { id: "volqueta", text: "Volqueta" },
+        { id: "Vagon_ref", text: "Vagón refrigerado" },
+        { id: "jaula", text: "Jaula" },
+        { id: "locomotora", text: "Locomotora" },
+        { id: "tren", text: "Tren" },
       ],
-      t_operacion_options: [
-        { id: "carga", text: "Carga" },
-        { id: "descarga", text: "Descarga" },
-      ],
+      
     };
   },
-  created() {
-    this.registroId = this.$route.params.id;
-    this.cargarRegistro();
-  },
+  async created() {
+  this.registroId = this.$route.params.id;
+  await this.getEquiposFerroviarios();
+  await this.cargarRegistro();
+  await this.getProductos();
+  await this.getEntidades();
+  await this.getPuertos();
+  this.closeDropdownsOnClickOutside();
+},
   mounted() {
     this.getProductos();
     this.getEntidades();
@@ -472,41 +483,93 @@ export default {
     this.closeDropdownsOnClickOutside();
   },
   methods: {
-    async cargarRegistro() {
-      try {
-        const response = await axios.get(`/ufc/pendiente-arrastre/${this.registroId}/`);
-        const registro = response.data;
-        
-        // Mapear los datos del registro al formulario
-        this.formData = {
-          tipo_origen: registro.tipo_origen,
-          origen: registro.origen,
-          tipo_destino: registro.tipo_destino,
-          destino: registro.destino,
-          tipo_equipo: registro.tipo_equipo,
-          operacion: registro.operacion,
-          estado: registro.estado,
-          productos: registro.producto || [],
-          cantidad_vagones: registro.cantidad_vagones,
-          observaciones: registro.observaciones || "",
-        };
-        
-        // Actualizar productos filtrados después de cargar
-        this.filteredProductos = this.productos;
-      } catch (error) {
-        console.error("Error al cargar el registro:", error);
-        Swal.fire("Error", "No se pudo cargar el registro", "error");
-        this.$router.push({ name: "InfoOperativo" });
-      }
+    async getEquiposFerroviarios() {
+    try {
+      const response = await axios.get('/api/equipos-ferroviarios/');
+      this.equiposFerroviarios = response.data.results;
+    } catch (error) {
+      console.error("Error al obtener equipos ferroviarios:", error);
+      Swal.fire("Error", "No se pudieron obtener los equipos ferroviarios", "error");
+    }
+  },
 
-      if (registro.vagones_asociados) {
-        this.vagonesAsociados = registro.vagones_asociados.map(v => ({
-          ...v,
-          equipo_ferroviario_nombre: v.equipo_ferroviario_nombre || 'Equipo no encontrado'
+    async cargarRegistro() {
+    try {
+      const response = await axios.get(`/ufc/pendiente-arrastre/${this.registroId}/`);
+      const registro = response.data;
+      
+      // Mapear los datos del registro al formulario
+      this.formData = {
+        tipo_origen: registro.tipo_origen,
+        origen: registro.origen,
+        tipo_destino: registro.tipo_destino,
+        destino: registro.destino,
+        tipo_equipo: registro.tipo_equipo,
+        estado: registro.estado,
+        productos: registro.producto || [], // Notar que es 'producto' no 'productos'
+        observaciones: registro.observaciones || "",
+      };
+      
+      // Cargar vagones asociados
+      if (registro.vagones) {
+        this.vagonesAsociados = registro.vagones.map(v => ({
+          id: v.id,
+          equipo_ferroviario: v.equipo_ferroviario.id,
+          equipo_ferroviario_nombre: v.equipo_ferroviario.numero_identificacion,
+          dias: v.dias
         }));
       }
-    
-    },
+      
+      // Actualizar productos filtrados después de cargar
+      this.filteredProductos = this.productos;
+    } catch (error) {
+      console.error("Error al cargar el registro:", error);
+      Swal.fire("Error", "No se pudo cargar el registro", "error");
+      this.$router.push({ name: "InfoOperativo" });
+    }
+  },
+
+  // Métodos para manejar vagones asociados
+  abrirModalAgregarVagon() {
+    this.vagonForm = {
+      equipo_ferroviario: "",
+      dias: 1
+    };
+    this.modoEdicionVagon = false;
+    this.mostrarModalVagon = true;
+  },
+
+  async guardarVagon() {
+    try {
+      // Crear o actualizar el vagón en el backend
+      const response = await axios.post('/ufc/vagones-asociados/', this.vagonForm);
+      const nuevoVagon = response.data;
+      
+      // Agregar a la lista local
+      this.vagonesAsociados.push({
+        id: nuevoVagon.id,
+        equipo_ferroviario: nuevoVagon.equipo_ferroviario,
+        equipo_ferroviario_nombre: nuevoVagon.equipo_ferroviario_numero,
+        dias: nuevoVagon.dias
+      });
+      
+      this.cerrarModalVagon();
+    } catch (error) {
+      console.error("Error al guardar el vagón:", error);
+      Swal.fire("Error", "No se pudo guardar el vagón", "error");
+    }
+  },
+
+  async eliminarVagon(index) {
+    const vagon = this.vagonesAsociados[index];
+    try {
+      await axios.delete(`/ufc/vagones-asociados/${vagon.id}/`);
+      this.vagonesAsociados.splice(index, 1);
+    } catch (error) {
+      console.error("Error al eliminar el vagón:", error);
+      Swal.fire("Error", "No se pudo eliminar el vagón", "error");
+    }
+  },
 
     async getEntidades() {
       try {
@@ -579,91 +642,78 @@ export default {
     },
 
     async submitForm() {
-      try {
-        // Validación de campos requeridos (igual que en el formulario de creación)
-        if (!this.formData.tipo_origen) {
-          throw new Error("El campo Tipo de Origen es requerido");
-        }
-        
-        if (!this.formData.origen) {
-          throw new Error("El campo Origen es requerido");
-        }
-        
-        if (!this.formData.tipo_destino) {
-          throw new Error("El campo Tipo de Destino es requerido");
-        }
-        
-        if (!this.formData.destino) {
-          throw new Error("El campo Destino es requerido");
-        }
-        
-        if (!this.formData.tipo_equipo) {
-          throw new Error("El campo Tipo de Equipo es requerido");
-        }
-        
-        if (!this.formData.operacion) {
-          throw new Error("El campo Operación es requerido");
-        }
-        
-        if (this.formData.estado === 'cargado' && this.formData.productos.length === 0) {
-          throw new Error("Debe seleccionar al menos un producto cuando el estado es Cargado");
-        }
-        
-        if (!this.formData.cantidad_vagones || this.formData.cantidad_vagones < 1) {
-          throw new Error("La cantidad de vagones debe ser al menos 1");
-        }
+  try {
+    // Validación de campos requeridos
+    if (!this.formData.tipo_origen) {
+      throw new Error("El campo Tipo de Origen es requerido");
+    }
+    
+    if (!this.formData.origen) {
+      throw new Error("El campo Origen es requerido");
+    }
+    
+    if (!this.formData.tipo_destino) {
+      throw new Error("El campo Tipo de Destino es requerido");
+    }
+    
+    if (!this.formData.destino) {
+      throw new Error("El campo Destino es requerido");
+    }
+    
+    if (!this.formData.tipo_equipo) {
+      throw new Error("El campo Tipo de Equipo es requerido");
+    }
+    
+    if (this.formData.estado === 'cargado' && this.formData.productos.length === 0) {
+      throw new Error("Debe seleccionar al menos un producto cuando el estado es Cargado");
+    }
 
-        // Preparar los datos para enviar
-        const payload = {
-          tipo_origen: this.formData.tipo_origen,
-          origen: this.formData.origen,
-          tipo_destino: this.formData.tipo_destino,
-          destino: this.formData.destino,
-          tipo_equipo: this.formData.tipo_equipo,
-          operacion: this.formData.operacion,
-          estado: this.formData.estado,
-          producto: this.formData.productos,
-          cantidad_vagones: this.formData.cantidad_vagones,
-          observaciones: this.formData.observaciones,
-          vagones_asociados: this.vagonesAsociados.map(v => ({
-          equipo_ferroviario: v.equipo_ferroviario,
-          dias: v.dias
-        }))
-        };
+    // Preparar los datos para enviar
+    const payload = {
+      tipo_origen: this.formData.tipo_origen,
+      origen: this.formData.origen,
+      tipo_destino: this.formData.tipo_destino,
+      destino: this.formData.destino,
+      tipo_equipo: this.formData.tipo_equipo,
+      estado: this.formData.estado,
+      producto: this.formData.productos, // Nota: el backend espera 'producto' no 'productos'
+      cantidad_vagones: this.vagonesAsociados.length, // El backend calcula esto automáticamente
+      vagones_ids: this.vagonesAsociados.map(v => v.id) // Enviar IDs de vagones asociados
+    };
 
-        // Enviar los datos actualizados al backend
-        const response = await axios.put(`/ufc/pendiente-arrastre/${this.registroId}/`, payload);
-        
-        // Mostrar mensaje de éxito
-        Swal.fire({
-          title: "¡Éxito!",
-          text: "El registro ha sido actualizado correctamente",
-          icon: "success",
-          confirmButtonText: "Aceptar"
-        }).then(() => {
-          this.$router.push({ name: "InfoOperativo" });
-        });
+    // Enviar los datos actualizados al backend
+    const response = await axios.put(`/ufc/pendiente-arrastre/${this.registroId}/`, payload);
+    
+    // Mostrar mensaje de éxito
+    Swal.fire({
+      title: "¡Éxito!",
+      text: "El registro ha sido actualizado correctamente",
+      icon: "success",
+      confirmButtonText: "Aceptar"
+    }).then(() => {
+      this.$router.push({ name: "InfoOperativo" });
+    });
 
-      } catch (error) {
-        console.error("Error al enviar el formulario:", error);
-        
-        let errorMessage = "Hubo un error al actualizar el registro";
-        if (error.response) {
-          if (error.response.data) {
-            errorMessage = Object.values(error.response.data).join('\n');
-          }
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-        
-        Swal.fire({
-          title: "Error",
-          text: errorMessage,
-          icon: "error",
-          confirmButtonText: "Entendido"
-        });
+  } catch (error) {
+    console.error("Error al enviar el formulario:", error);
+    
+    let errorMessage = "Hubo un error al actualizar el registro";
+    if (error.response) {
+      if (error.response.data) {
+        errorMessage = Object.values(error.response.data).join('\n');
       }
-    },
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    Swal.fire({
+      title: "Error",
+      text: errorMessage,
+      icon: "error",
+      confirmButtonText: "Entendido"
+    });
+  }
+},
 
     confirmCancel() {
       Swal.fire({

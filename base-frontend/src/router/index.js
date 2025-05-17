@@ -787,6 +787,14 @@ const routes = [
       requireLogin: true,
     },
   },
+  {
+    path: "/VisualizarInfoOperative", // Cambié a formato kebab-case
+    name: "VisualizarInfoOperative",
+    component: () => import("../views/UFC/InformeOperativoVisual.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
 ];
 
 const router = createRouter({

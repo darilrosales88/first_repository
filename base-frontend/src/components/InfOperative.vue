@@ -157,6 +157,16 @@
 
           <!-- Botones -->
           <div class="d-flex justify-content-end gap-2 mt-4">
+            
+            <button
+              v-if="isExistingRecord"
+              type="button"
+              class="btn btn-sm btn-info"
+              @click="visualizarInforme"
+            >
+              <i class="bi bi-eye me-1"></i>Visualizar
+            </button>
+
             <button
               type="submit"
               class="btn btn-sm btn-primary"
@@ -217,6 +227,10 @@ export default {
     }
   },
   methods: {
+    visualizarInforme() {
+    this.$router.push(`/VisualizarInfoOperative/${this.informeOperativoId}`);
+  },
+
     async checkExistingRecord() {
       try {
         // Enviar la fecha ya ajustada a la vista para ver si existe el parte

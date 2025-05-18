@@ -788,13 +788,12 @@ const routes = [
     },
   },
   {
-    path: "/VisualizarInfoOperative", // Cambié a formato kebab-case
-    name: "VisualizarInfoOperative",
-    component: () => import("../views/UFC/InformeOperativoVisual.vue"),
-    meta: {
-      requireLogin: true,
-    },
-  },
+  path: '/VisualizarInfoOperative/:id',
+  name: 'VisualizarInfoOperative', // Este nombre debe coincidir con el usado en el router-link
+  component: () => import('@/views/UFC/VisualizarInfoOperativo.vue'),
+  props: true
+}
+  
 ];
 
 const router = createRouter({

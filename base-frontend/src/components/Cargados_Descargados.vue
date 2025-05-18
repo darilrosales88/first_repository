@@ -335,6 +335,13 @@ export default {
     };
   },
 
+  props: {
+    informeId: {
+      type: [String, Number],
+      required: true
+    }
+  },
+
   async mounted() {
     await this.getVagonesCargadosDescargados();
     await this.fetchUserPermissionsAndGroups();
@@ -377,6 +384,7 @@ export default {
           params: {
             page: this.currentPage,
             page_size: this.itemsPerPage,
+            informe_operativo: this.informeId
           },
         });
 

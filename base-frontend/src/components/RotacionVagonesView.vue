@@ -272,6 +272,14 @@ export default {
       indiceEdicion: null, // Guarda el índice del registro que se está editando
     };
   },
+
+  props: {
+    informeId: {
+      type: [String, Number],
+      required: true
+    }
+  },
+
   mounted() {
     this.get_rotaciones();
     this.getEquipos();
@@ -285,7 +293,11 @@ export default {
 
         // Bucle para manejar paginación (si aplica)
         while (nextPage) {
-          const response = await axios.get(nextPage);
+          const response = await axios.get(nextPage, {
+          params: { 
+            informe_operativo: this.informeId 
+          }
+        });
           allRotaciones = [...allRotaciones, ...response.data.results]; // Agrega los resultados
           nextPage = response.data.next; // Actualiza la URL de la siguiente página
         }

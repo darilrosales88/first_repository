@@ -159,7 +159,7 @@
           <div class="d-flex justify-content-end gap-2 mt-4">
             
             <button
-              v-if="isExistingRecord"
+              
               type="button"
               class="btn btn-sm btn-info"
               @click="visualizarInforme"
@@ -228,8 +228,14 @@ export default {
   },
   methods: {
     visualizarInforme() {
-    this.$router.push(`/VisualizarInfoOperative/${this.informeOperativoId}`);
-  },
+  if (this.informeOperativoId) {
+    // Abre en una nueva pestaña
+    const route = this.$router.resolve({
+      path: `/VisualizarInfoOperative/${this.informeOperativoId}`
+    });
+    window.open(route.href, '_blank');
+  }
+},
 
     async checkExistingRecord() {
       try {

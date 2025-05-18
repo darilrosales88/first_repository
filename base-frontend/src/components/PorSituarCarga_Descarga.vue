@@ -371,6 +371,13 @@ export default {
     };
   },
 
+  props: {
+    informeId: {
+      type: [String, Number],
+      required: true
+    }
+  },
+
   computed: {
     filteredRecords() {
       if (!this.searchQuery) return this.registrosPorSituar;
@@ -420,24 +427,23 @@ export default {
       }
     },
 
-    getPorSituar() {
+    async getPorSituar() {
       this.loading = true;
-      axios
-        .get("http://127.0.0.1:8000/ufc/por-situar/")
-        .then((response) => {
-          this.registrosPorSituar = response.data.results;
-          this.totalItems = response.data.count;
-          this.loading = false;
-        })
-
-        .catch((error) => {
-          console.error("Error al obtener datos:", error);
-          this.errorLoading = true;
-          this.loading = false;
-          this.showErrorToast("No se pudieron cargar los registros");
+      try {
+        const response = await axios.get("/ufc/por-situar/", {
+          params: { 
+            informe_operativo: this.informeId 
+          }
         });
-      console.log("que lasodsjkbvbksdjfksd: ", this.registrosPorSituar);
+        this.registrosPorSituar = response.data.results;
+        this.totalItems = response.data.count;
+      } catch (error) {
+        console.error("Error al obtener datos:", error);
+      } finally {
+        this.loading = false;
+      }
     },
+  
 
     getNombresProductos(productos) {
       if (!productos || !Array.isArray(productos)) return "-";

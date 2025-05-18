@@ -1086,7 +1086,7 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
     plan_carga = serializers.IntegerField(read_only=True)
     real_carga = serializers.IntegerField(read_only=True)
     plan_rotacion = serializers.FloatField(read_only=True)
-    real_rotacion = serializers.FloatField(read_only=True)
+    real_rotacion = serializers.FloatField(read_only=True,)
     tipo_carga_name= serializers.ReadOnlyField(source='tipo_equipo_ferroviario.get_tipo_carga_display')
     class Meta:
         model = rotacion_vagones
@@ -1149,13 +1149,13 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
         """Calcula el plan de rotación."""
         if en_servicio == 0:
             return 0
-        return plan_carga / en_servicio
+        return round(plan_carga / en_servicio,2)
 
     def calculate_real_rotacion(self, real_carga, en_servicio):
         """Calcula el real de rotación."""
         if en_servicio == 0:
             return 0
-        return real_carga / en_servicio
+        return round(real_carga / en_servicio,2)
 
     def create(self, validated_data):
         """Crea una nueva instancia de rotación de vagones."""

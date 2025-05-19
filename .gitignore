@@ -33,7 +33,7 @@ pnpm-debug.log*
 .extras
 .~lock*
 *.7z
-
+*.rar
 # Vue project specific
 base-frontend/node_modules
 base-frontend/dist/

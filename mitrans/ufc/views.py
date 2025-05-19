@@ -216,7 +216,6 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
 
         return Response(serializer.data)
  
-
     def update(self, request, *args, **kwargs):
         
         if not request.user.groups.filter(name='AdminUFC').exists():
@@ -308,6 +307,48 @@ def verificar_informe_existente(request):
         return Response({"existe": False})
     except ValueError:
         return Response({"error": "Formato de fecha inválido"}, status=400)
+    
+#vista para cambiar estado_parte en ufc_informe_operativo
+# En tu archivo views.py de la app ufc
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from .models import ufc_informe_operativo
+from django.utils import timezone
+import json
+
+@require_http_methods(["POST"])
+def actualizar_estado_parte(request):
+    try:
+        data = json.loads(request.body)
+        nuevo_estado = data.get('nuevo_estado')
+        
+        if not nuevo_estado:
+            return JsonResponse({'error': 'Estado no proporcionado'}, status=400)
+        
+        # Obtener la fecha actual
+        hoy = timezone.now().date()
+        
+        # Buscar el informe del día actual
+        informe = ufc_informe_operativo.objects.filter(
+            fecha_operacion__date=hoy
+        ).first()
+        
+        if not informe:
+            return JsonResponse({'error': 'No existe un informe operativo para la fecha actual'}, status=404)
+        
+        informe.estado_parte = nuevo_estado
+        informe.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Estado actualizado a {nuevo_estado} correctamente',
+            'nuevo_estado': nuevo_estado,
+            'informe_id': informe.id
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+#****************************************************************************************************************************
 
 #para vagones y productos
 class vagones_productos_view_set(viewsets.ModelViewSet):
@@ -597,7 +638,6 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
                 {"error": f"No se pudo eliminar el registro: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
 
     
     def list(self, request, *args, **kwargs):
@@ -1170,7 +1210,7 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
 
 #Voy a agregar los modulos de auditoria a los que hizo Karmal
 class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
-    queryset = por_situar.objects.all().order_by("-id").prefetch_related('equipo_vagon')
+    queryset = por_situar.objects.all().order_by("-id")
     serializer_class = PorSituarCargaDescargaSerializer
     filter_backends = [DjangoFilterBackend]
     
@@ -1315,7 +1355,7 @@ class PorSituarCargaDescarga_hoy_ViewSet(viewsets.ModelViewSet):
     #**********************************************************************************************
 
 class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
-    queryset = Situado_Carga_Descarga.objects.all().order_by("-id").prefetch_related('equipo_vagon')
+    queryset = Situado_Carga_Descarga.objects.all().order_by("-id")
     serializer_class = SituadoCargaDescargaSerializers
     filter_backends = [DjangoFilterBackend]
     permission_classes = [IsUFCPermission] 
@@ -1458,7 +1498,7 @@ class SituadoCargaDescarga_hoy_Viewset(viewsets.ModelViewSet):
  #***********************************************************************************************************************   
     
 class PendienteArrastreViewset(viewsets.ModelViewSet):
-    queryset = arrastres.objects.all().prefetch_related('equipo_vagon')
+    queryset = arrastres.objects.all()
     a=arrastres.objects.create
     serializer_class = PendienteArrastreSerializer
     permission_classes = [IsUFCPermission] 
@@ -1695,41 +1735,4 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
 
         return super().list(request, *args, **kwargs)
     
-""" class RotacionVagones_hoy_ViewSet(viewsets.ModelViewSet):
-    queryset = rotacion_vagones.objects.all()
-    serializer_class = RotacionVagonesSerializer
-    
-    def get_queryset(self):
-        # Obtener la fecha actual (sin la hora)
-        hoy = timezone.now().date()
-        
-        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
-        return self.queryset.annotate(
-            fecha_dia=TruncDate('creado_el', output_field=DateField())
-        ).filter(fecha_dia=hoy).order_by('-creado_el')
-    
-    def list(self, request, *args, **kwargs):
-        # Verificar permisos como en la vista original
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de vagones en rotación hoy",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        
-        return super().list(request, *args, **kwargs) """
-
-
 #*************Termina View Rotacion de Vagones **********************
-
-

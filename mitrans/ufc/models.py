@@ -244,17 +244,22 @@ class HistorialVagonCargadoDescargado(models.Model):
     def __str__(self):
         return f"Historial para informe {self.informe_operativo.id} - {self.fecha_creacion}"
 
-#funcion que se encarga de almacenar el historial de vagon_cargado_descargado, la activa la creacion del modelo padre
+#funcion que se encarga de almacenar el historial de vagon_cargado_descargado, la activa la creacion 
+# o modificacion del modelo padre
 @receiver(post_save, sender=ufc_informe_operativo)
 def crear_historial_vagones_al_aprobar(sender, instance, created, **kwargs):
     """
-    Crea historial de todos los vagones cargados/descargados cuando se aprueba el informe operativo
+    Crea historial de TODOS los vagones cargados/descargados cuando se aprueba el informe operativo.
+    Un registro de historial por cada vagon_cargado_descargado existente.
     """
     if instance.estado_parte == "Aprobado":
         # Obtener la fecha del informe operativo (sin hora)
         fecha_informe = instance.fecha_operacion.date()
         
-        # Obtener todos los vagones cargados/descargados de esta fecha
+        # Eliminar historiales antiguos para este informe (para evitar duplicados)
+        HistorialVagonCargadoDescargado.objects.filter(informe_operativo=instance).delete()
+        
+        # Obtener TODOS los vagones cargados/descargados de esta fecha
         vagones = vagon_cargado_descargado.objects.filter(
             fecha__date=fecha_informe
         ).select_related(
@@ -266,7 +271,7 @@ def crear_historial_vagones_al_aprobar(sender, instance, created, **kwargs):
             'registros_vagones'
         )
         
-        # Crear historial para cada vagon
+        # Crear un registro de historial para CADA vagon
         for vagon in vagones:
             # Serializar datos del vagon
             datos_vagon = {
@@ -275,7 +280,7 @@ def crear_historial_vagones_al_aprobar(sender, instance, created, **kwargs):
                 'origen': vagon.origen,
                 'tipo_equipo_ferroviario_id': vagon.tipo_equipo_ferroviario.id if vagon.tipo_equipo_ferroviario else None,
                 'tipo_equipo_ferroviario_name': vagon.tipo_equipo_ferroviario.get_tipo_equipo_display() if vagon.tipo_equipo_ferroviario else None,
-                'estado': vagon.get_estado_display(),
+                'estado': vagon.estado,
                 'operacion': vagon.operacion,
                 'plan_diario_carga_descarga': vagon.plan_diario_carga_descarga,
                 'real_carga_descarga': vagon.real_carga_descarga,
@@ -294,7 +299,7 @@ def crear_historial_vagones_al_aprobar(sender, instance, created, **kwargs):
                     'tipo_embalaje_name': producto.tipo_embalaje.nombre_tipo_embalaje if producto.tipo_embalaje else None,
                     'unidad_medida_simbolo': producto.unidad_medida.simbolo if producto.unidad_medida else None,
                     'cantidad': producto.cantidad,
-                    'estado': producto.get_estado_display(),
+                    'estado': producto.estado,
                     'contiene': producto.contiene
                 })
             
@@ -311,15 +316,14 @@ def crear_historial_vagones_al_aprobar(sender, instance, created, **kwargs):
                     'observaciones': registro.observaciones
                 })
             
-            # Crear o actualizar registro de historial
-            HistorialVagonCargadoDescargado.objects.update_or_create(
+            # Crear un NUEVO registro de historial (sin update_or_create)
+            HistorialVagonCargadoDescargado.objects.create(
                 informe_operativo=instance,
-                defaults={
-                    'datos_vagon': datos_vagon,
-                    'datos_productos': productos,
-                    'datos_registros_vagones': registros
-                }
+                datos_vagon=datos_vagon,
+                datos_productos=productos,
+                datos_registros_vagones=registros
             )
+
 #Elimina el registro del historial asociado al vagon que se esta eliminando
 @receiver(post_delete, sender=vagon_cargado_descargado)
 def eliminar_historial_vagon_cargado_descargado(sender, instance, **kwargs):
@@ -333,11 +337,10 @@ def eliminar_historial_vagon_cargado_descargado(sender, instance, **kwargs):
             datos_vagon__id=instance.id  # Sintaxis correcta para buscar en JSON
         )
         
-        # Eliminar todos los registros de historial encontrados
         historiales.delete()
         
     except Exception as e:
-        print(f"Error al eliminar historial del vagon {instance.id}: {str(e)}")
+        print(f"Error al eliminar historial del vagón {instance.id}: {str(e)}")
 
 
 #************************************************************************************************************************
@@ -457,8 +460,63 @@ class HistorialSituadoCargaDescarga(models.Model):
         return f"Historial de situado para informe {self.informe_operativo.id} - {self.fecha_creacion}"
 
 # Señal para crear el historial cuando se crea un Situado_Carga_Descarga
-@receiver(post_save, sender=Situado_Carga_Descarga)
+@receiver(post_save, sender=ufc_informe_operativo)
 def crear_historial_situado(sender, instance, created, **kwargs):
+    """
+    Crea historial de TODOS los situados cuando se aprueba el informe operativo.
+    Un registro de historial por cada Situado_Carga_Descarga existente.
+    """
+    if instance.estado_parte == "Aprobado":
+        # Obtener la fecha del informe operativo (sin hora)
+        fecha_informe = instance.fecha_operacion.date()
+        
+        # Eliminar historiales antiguos para este informe (evitar duplicados)
+        HistorialSituadoCargaDescarga.objects.filter(informe_operativo=instance).delete()
+        
+        # Obtener TODOS los situados de esta fecha
+        situados = Situado_Carga_Descarga.objects.filter(
+            fecha__date=fecha_informe
+        ).prefetch_related(
+            Prefetch('producto', queryset=producto_UFC.objects.select_related(
+                'producto', 'tipo_embalaje', 'unidad_medida'
+            ))
+        )
+        
+        # Crear un registro de historial para CADA situado
+        for situado in situados:
+            # Serializar datos principales del situado
+            datos_situado = {
+                'id': situado.id,
+                'tipo_origen': situado.tipo_origen,
+                'origen': situado.origen,
+                'tipo_equipo': situado.tipo_equipo,
+                'estado': situado.estado,
+                'operacion': situado.operacion,
+                'fecha': str(situado.fecha),
+                'situados': situado.situados,
+                'pendiente_proximo_dia': situado.pendiente_proximo_dia,
+                'observaciones': situado.observaciones
+            }
+            
+            # Serializar productos relacionados
+            productos = []
+            for producto in situado.producto.all():
+                productos.append({
+                    'id': producto.id,
+                    'producto_name': producto.producto.nombre_producto,
+                    'tipo_embalaje_name': producto.tipo_embalaje.nombre_tipo_embalaje if producto.tipo_embalaje else None,
+                    'unidad_medida_simbolo': producto.unidad_medida.simbolo if producto.unidad_medida else None,
+                    'cantidad': producto.cantidad,
+                    'estado': producto.estado,
+                    'contiene': producto.contiene
+                })
+            
+            # Crear un NUEVO registro de historial
+            HistorialSituadoCargaDescarga.objects.create(
+                informe_operativo=instance,
+                datos_situado=datos_situado,
+                datos_productos=productos
+            )
     if not created:
         return
 
@@ -748,74 +806,78 @@ class HistorialVagonesProductos(models.Model):
     def __str__(self):
         return f"Historial vagon-producto para informe {self.informe_operativo.id}"
 
-# Señal para crear el historial al guardar
-@receiver(post_save, sender=vagones_productos)
+# Señal para crear el historial al guardar(CUANDO EL PARTE PASA A APROBADO)
+@receiver(post_save, sender=ufc_informe_operativo)
 def crear_historial_vagones_productos(sender, instance, created, **kwargs):
-    if not created:
-        return
-
-    def _crear_historial_vagones_productos():
-        fecha_registro = instance.fecha.date()
+    """
+    Crea historial de TODOS los vagones_productos cuando se aprueba el informe operativo.
+    Un registro de historial por cada vagon_producto existente.
+    """
+    if instance.estado_parte == "Aprobado":
+        # Obtener la fecha del informe operativo (sin hora)
+        fecha_informe = instance.fecha_operacion.date()
         
-        informe = ufc_informe_operativo.objects.annotate(
-            fecha_op=TruncDate('fecha_operacion')
-        ).filter(fecha_op=fecha_registro).first()
+        # Eliminar historiales antiguos para este informe (evitar duplicados)
+        HistorialVagonesProductos.objects.filter(informe_operativo=instance).delete()
         
-        if not informe:
-            return
-
-        # Obtener los productos directamente desde la instancia
-        productos = instance.producto.all()
-        
-        # Serializar datos principales
-        datos_principales = {
-            'id': instance.id,
-            'fecha': str(instance.fecha),
-            'tipo_origen': instance.tipo_origen,
-            'origen': instance.origen,
-            'tipo_producto': instance.tipo_producto,
-            'tipo_combustible': instance.tipo_combustible,
-            'tipo_equipo': instance.tipo_equipo_ferroviario.get_tipo_equipo_display() if instance.tipo_equipo_ferroviario else None,
-            'plan_mensual': instance.plan_mensual,
-            'plan_dia': instance.plan_dia,
-            'vagones_situados': instance.vagones_situados,
-            'vagones_cargados': instance.vagones_cargados,
-            'plan_anual': instance.plan_anual,
-            'plan_acumulado_actual': instance.plan_acumulado_actual,
-            'real_acumulado_actual': instance.real_acumulado_actual,
-            'plan_acumulado_anual': instance.plan_acumulado_anual,
-            'real_acumulado_anual': instance.real_acumulado_anual,
-            'plan_aseguramiento_proximos_dias': instance.plan_aseguramiento_proximos_dias,
-            'plan_acumulado': instance.plan_acumulado_dia_anterior,
-            'real_acumulado': instance.real_acumulado_dia_anterior,
-            'observaciones': instance.observaciones
-        }
-
-        # Serializar productos - versión mejorada
-        productos_serializados = []
-        if productos.exists():  # Verificar si hay productos
-            for prod in productos:
-                producto_data = {
-                    'id': prod.id,
-                    'producto': prod.producto.nombre_producto if prod.producto else None,
-                    'tipo_embalaje': prod.tipo_embalaje.nombre_tipo_embalaje if prod.tipo_embalaje else None,
-                    'unidad_medida': prod.unidad_medida.simbolo if prod.unidad_medida else None,
-                    'cantidad': prod.cantidad,
-                    'estado': prod.estado,
-                    'contiene': prod.contiene
-                }
-                productos_serializados.append(producto_data)
-
-        # Debug: Verificar datos antes de guardar
-        print("Productos a serializar:", productos_serializados)
-
-        HistorialVagonesProductos.objects.create(
-            informe_operativo=informe,
-            datos_vagon_producto=datos_principales,
-            datos_productos=productos_serializados
+        # Obtener TODOS los vagones_productos de esta fecha
+        vagones_prods = vagones_productos.objects.filter(
+            fecha__date=fecha_informe
+        ).select_related(
+            'tipo_equipo_ferroviario'
+        ).prefetch_related(
+            'producto__producto',
+            'producto__tipo_embalaje',
+            'producto__unidad_medida'
         )
+        
+        # Crear un registro de historial para CADA vagon_producto
+        for vagon_prod in vagones_prods:
+            # Serializar datos principales del vagon_producto
+            datos_principales = {
+                'id': vagon_prod.id,
+                'fecha': str(vagon_prod.fecha),
+                'tipo_origen': vagon_prod.tipo_origen,
+                'origen': vagon_prod.origen,
+                'tipo_producto': vagon_prod.tipo_producto,
+                'tipo_combustible': vagon_prod.tipo_combustible,
+                'tipo_equipo_ferroviario_id': vagon_prod.tipo_equipo_ferroviario.id if vagon_prod.tipo_equipo_ferroviario else None,
+                'tipo_equipo_ferroviario_name': vagon_prod.tipo_equipo_ferroviario.get_tipo_equipo_display() if vagon_prod.tipo_equipo_ferroviario else None,
+                'plan_mensual': vagon_prod.plan_mensual,
+                'plan_dia': vagon_prod.plan_dia,
+                'vagones_situados': vagon_prod.vagones_situados,
+                'vagones_cargados': vagon_prod.vagones_cargados,
+                'plan_anual': vagon_prod.plan_anual,
+                'plan_acumulado_actual': vagon_prod.plan_acumulado_actual,
+                'real_acumulado_actual': vagon_prod.real_acumulado_actual,
+                'plan_acumulado_anual': vagon_prod.plan_acumulado_anual,
+                'real_acumulado_anual': vagon_prod.real_acumulado_anual,
+                'plan_aseguramiento_proximos_dias': vagon_prod.plan_aseguramiento_proximos_dias,
+                'plan_acumulado_dia_anterior': vagon_prod.plan_acumulado_dia_anterior,
+                'real_acumulado_dia_anterior': vagon_prod.real_acumulado_dia_anterior,
+                'observaciones': vagon_prod.observaciones
+            }
 
-    transaction.on_commit(_crear_historial_vagones_productos)
+            # Serializar productos relacionados
+            productos_serializados = []
+            for producto in vagon_prod.producto.all():
+                productos_serializados.append({
+                    'id': producto.id,
+                    'producto_name': producto.producto.nombre_producto,
+                    'tipo_embalaje_name': producto.tipo_embalaje.nombre_tipo_embalaje if producto.tipo_embalaje else None,
+                    'unidad_medida_simbolo': producto.unidad_medida.simbolo if producto.unidad_medida else None,
+                    'cantidad': producto.cantidad,
+                    'estado': producto.estado,
+                    'contiene': producto.contiene
+                })
+
+            # Crear un NUEVO registro de historial (sin update_or_create)
+            HistorialVagonesProductos.objects.create(
+                informe_operativo=instance,
+                datos_vagon_producto=datos_principales,
+                datos_productos=productos_serializados
+            )
+
 # Señal para eliminar el historial de HistorialVagonesProductos asociado al id de vagones_productos
 @receiver(post_delete, sender=vagones_productos)
 def eliminar_historial_vagones_productos(sender, instance, **kwargs):
@@ -928,90 +990,85 @@ class HistorialEnTrenes(models.Model):
     def __str__(self):
         return f"Historial de tren para informe {self.informe_operativo.id} - {self.fecha_creacion}"
 
-# Señal para crear el historial cuando se crea un en_trenes
-@receiver(post_save, sender=en_trenes)
+# Señal para crear el historial cuando se aprueba el parte
+@receiver(post_save, sender=ufc_informe_operativo)
 def crear_historial_en_trenes(sender, instance, created, **kwargs):
     """
-    Crea un historial de en_trenes asociado al informe operativo de su fecha
+    Crea historial de TODOS los trenes cuando se aprueba el informe operativo.
+    Un registro de historial por cada tren existente en la fecha del informe.
     """
-    if not created:  # Solo nos interesan las creaciones nuevas
-        return
-    
-    def _crear_historial_en_trenes_despues_de_guardar():
-        # Obtener solo la fecha (sin hora) del tren
-        fecha_tren = instance.fecha.date()
+    if instance.estado_parte == "Aprobado":
+        # Obtener la fecha del informe operativo (sin hora)
+        fecha_informe = instance.fecha_operacion.date()
         
-        # Buscar si existe un informe operativo para esta fecha
-        informe = ufc_informe_operativo.objects.annotate(
-            fecha_op=TruncDate('fecha_operacion')
-        ).filter(fecha_op=fecha_tren).first()
+        # Eliminar historiales antiguos para este informe (evitar duplicados)
+        HistorialEnTrenes.objects.filter(informe_operativo=instance).delete()
         
-        if not informe:
-            return  # No hacer nada si no hay informe para esta fecha
-        
-        # Obtener el tren con todas sus relaciones
-        tren_completo = en_trenes.objects.select_related(
+        # Obtener TODOS los trenes de esta fecha con relaciones optimizadas
+        trenes = en_trenes.objects.filter(
+            fecha__date=fecha_informe
+        ).select_related(
             'locomotora',
             'tipo_equipo'
         ).prefetch_related(
-            'producto__producto',
-            'producto__tipo_embalaje',
-            'producto__unidad_medida',
-            'equipo_vagon'
-        ).get(pk=instance.pk)
-        
-        # Serializar datos del tren
-        datos_tren = {
-            'id': tren_completo.id,
-            'locomotora_id': tren_completo.locomotora.id if tren_completo.locomotora else None,
-            'locomotora_numero': tren_completo.locomotora.numero_identificacion if tren_completo.locomotora else None,
-            'fecha': str(tren_completo.fecha),
-            'numero_identificacion_locomotora': tren_completo.numero_identificacion_locomotora,
-            'tipo_equipo_id': tren_completo.tipo_equipo.id if tren_completo.tipo_equipo else None,
-            'tipo_equipo_name': tren_completo.tipo_equipo.get_tipo_equipo_display() if tren_completo.tipo_equipo else None,
-            'estado': tren_completo.estado,
-            'tipo_origen': tren_completo.tipo_origen,
-            'origen': tren_completo.origen,
-            'tipo_destino': tren_completo.tipo_destino,
-            'destino': tren_completo.destino,
-            'cantidad_vagones': tren_completo.cantidad_vagones,
-            'observaciones': tren_completo.observaciones
-        }
-        
-        # Serializar productos relacionados
-        productos = []
-        for producto in tren_completo.producto.all():
-            productos.append({
-                'id': producto.id,
-                'producto_name': producto.producto.nombre_producto,
-                'tipo_embalaje_name': producto.tipo_embalaje.nombre_tipo_embalaje if producto.tipo_embalaje else None,
-                'unidad_medida_simbolo': producto.unidad_medida.simbolo if producto.unidad_medida else None,
-                'cantidad': producto.cantidad,
-                'estado': producto.estado,
-                'contiene': producto.contiene
-            })
-        
-        # Serializar vagones relacionados
-        vagones = []
-        for vagon in tren_completo.equipo_vagon.all():
-            vagones.append({
-                'id': vagon.id,
-                'numero_identificacion': vagon.numero_identificacion,
-                'tipo_equipo': vagon.tipo_equipo.tipo_equipo if vagon.tipo_equipo else None,
-                'estado_actual': vagon.estado_actual
-            })
-        
-        # Crear registro de historial
-        HistorialEnTrenes.objects.create(
-            informe_operativo=informe,
-            datos_tren=datos_tren,
-            datos_productos=productos,
-            datos_vagones=vagones
+            Prefetch('producto', queryset=producto_UFC.objects.select_related(
+                'producto', 'tipo_embalaje', 'unidad_medida'
+            )),
+            Prefetch('equipo_vagon', queryset=nom_equipo_ferroviario.objects.select_related(
+                'tipo_equipo'
+            ))
         )
-
-    # Usamos transaction.on_commit para ejecutar después de que la transacción se complete
-    transaction.on_commit(_crear_historial_en_trenes_despues_de_guardar)
-
+        
+        # Crear un registro de historial para CADA tren
+        for tren in trenes:
+            # Serializar datos principales del tren
+            datos_tren = {
+                'id': tren.id,
+                'locomotora_id': tren.locomotora.id if tren.locomotora else None,
+                'locomotora_numero': tren.locomotora.numero_identificacion if tren.locomotora else None,
+                'fecha': str(tren.fecha),
+                'numero_identificacion_locomotora': tren.numero_identificacion_locomotora,
+                'tipo_equipo_id': tren.tipo_equipo.id if tren.tipo_equipo else None,
+                'tipo_equipo_name': tren.tipo_equipo.get_tipo_equipo_display() if tren.tipo_equipo else None,
+                'estado': tren.estado,
+                'tipo_origen': tren.tipo_origen,
+                'origen': tren.origen,
+                'tipo_destino': tren.tipo_destino,
+                'destino': tren.destino,
+                'cantidad_vagones': tren.cantidad_vagones,
+                'observaciones': tren.observaciones
+            }
+            
+            # Serializar productos relacionados
+            productos = []
+            for producto in tren.producto.all():
+                productos.append({
+                    'id': producto.id,
+                    'producto_name': producto.producto.nombre_producto,
+                    'tipo_embalaje_name': producto.tipo_embalaje.nombre_tipo_embalaje if producto.tipo_embalaje else None,
+                    'unidad_medida_simbolo': producto.unidad_medida.simbolo if producto.unidad_medida else None,
+                    'cantidad': producto.cantidad,
+                    'estado': producto.estado,
+                    'contiene': producto.contiene
+                })
+            
+            # Serializar vagones relacionados
+            vagones = []
+            for vagon in tren.equipo_vagon.all():
+                vagones.append({
+                    'id': vagon.id,
+                    'numero_identificacion': vagon.numero_identificacion,
+                    'tipo_equipo': vagon.tipo_equipo.tipo_equipo if vagon.tipo_equipo else None,
+                    'estado_actual': vagon.estado_actual
+                })
+            
+            # Crear un NUEVO registro de historial
+            HistorialEnTrenes.objects.create(
+                informe_operativo=instance,
+                datos_tren=datos_tren,
+                datos_productos=productos,
+                datos_vagones=vagones
+            )
 # Señal para eliminar el historial cuando se elimina un en_trenes
 @receiver(post_delete, sender=en_trenes)
 def eliminar_historial_en_trenes(sender, instance, **kwargs):
@@ -1129,76 +1186,63 @@ class HistorialVagonPorSituar(models.Model):
     def __str__(self):
         return f"Historial por situar para informe {self.informe_operativo.id} - {self.fecha_creacion}"
 
-# Señal para crear el historial cuando se crea un por_situar
-@receiver(post_save, sender=por_situar)
+# Señal para crear el historial cuando se pone a Aprobado el parte
+@receiver(post_save, sender=ufc_informe_operativo)
 def crear_historial_por_situar(sender, instance, created, **kwargs):
     """
-    Versión mejorada que garantiza el correcto guardado de productos relacionados
+    Crea historial de TODOS los registros por_situar cuando se aprueba el informe operativo.
+    Un registro de historial por cada entrada en por_situar existente.
     """
-    if not created:
-        return
-    
-    def _crear_historial_por_situar_despues_de_guardar():
-        try:
-            # Obtener fecha sin hora
-            fecha_vagon = instance.fecha.date()
-            
-            # Buscar informe operativo correspondiente
-            informe = ufc_informe_operativo.objects.annotate(
-                fecha_op=TruncDate('fecha_operacion')
-            ).filter(fecha_op=fecha_vagon).first()
-            
-            if not informe:
-                print(f"No se encontró informe operativo para la fecha {fecha_vagon}")
-                return
-
-            # Obtener productos directamente desde la instancia
-            productos = instance.producto.all()
-            
-            # Serializar datos principales del por_situar
+    if instance.estado_parte == "Aprobado":
+        # Obtener la fecha del informe operativo (sin hora)
+        fecha_informe = instance.fecha_operacion.date()
+        
+        # Eliminar historiales antiguos para este informe (evitar duplicados)
+        HistorialVagonPorSituar.objects.filter(informe_operativo=instance).delete()
+        
+        # Obtener TODOS los registros por_situar de esta fecha
+        por_situar_list = por_situar.objects.filter(
+            fecha__date=fecha_informe
+        ).prefetch_related(
+            Prefetch('producto', queryset=producto_UFC.objects.select_related(
+                'producto', 'tipo_embalaje', 'unidad_medida'
+            ))
+        )
+        
+        # Crear un registro de historial para CADA entrada por_situar
+        for registro in por_situar_list:
+            # Serializar datos principales
             datos_vagon = {
-                'id': instance.id,
-                'tipo_origen': instance.tipo_origen,
-                'origen': instance.origen,
-                'tipo_equipo': instance.tipo_equipo,
-                'estado': instance.estado,
-                'operacion': instance.operacion,
-                'por_situar': instance.por_situar,
-                'fecha': str(instance.fecha),
-                'observaciones': instance.observaciones
+                'id': registro.id,
+                'tipo_origen': registro.tipo_origen,
+                'origen': registro.origen,
+                'tipo_equipo': registro.tipo_equipo,
+                'estado': registro.estado,
+                'operacion': registro.operacion,
+                'por_situar': registro.por_situar,
+                'fecha': str(registro.fecha),
+                'observaciones': registro.observaciones
             }
             
-            # Serializar productos - versión robusta
+            # Serializar productos relacionados
             productos_serializados = []
-            if productos.exists():  # Verificar si hay productos
-                for producto in productos:
-                    producto_data = {
-                        'id': producto.id,
-                        'producto_name': producto.producto.nombre_producto if producto.producto else None,
-                        'tipo_embalaje_name': producto.tipo_embalaje.nombre_tipo_embalaje if producto.tipo_embalaje else None,
-                        'unidad_medida_simbolo': producto.unidad_medida.simbolo if producto.unidad_medida else None,
-                        'cantidad': producto.cantidad,
-                        'estado': producto.estado,
-                        'contiene': producto.contiene
-                    }
-                    productos_serializados.append(producto_data)
+            for producto in registro.producto.all():
+                productos_serializados.append({
+                    'id': producto.id,
+                    'producto_name': producto.producto.nombre_producto,
+                    'tipo_embalaje_name': producto.tipo_embalaje.nombre_tipo_embalaje if producto.tipo_embalaje else None,
+                    'unidad_medida_simbolo': producto.unidad_medida.simbolo if producto.unidad_medida else None,
+                    'cantidad': producto.cantidad,
+                    'estado': producto.estado,
+                    'contiene': producto.contiene
+                })
             
-            # Debug: Verificar datos antes de guardar
-            print(f"Datos a serializar - Productos: {len(productos_serializados)}")
-            
-            # Crear registro de historial
+            # Crear un NUEVO registro de historial
             HistorialVagonPorSituar.objects.create(
-                informe_operativo=informe,
+                informe_operativo=instance,
                 datos_vagon=datos_vagon,
                 datos_productos=productos_serializados
             )
-            
-        except Exception as e:
-            print(f"Error al crear historial por_situar: {str(e)}")
-            # Puedes agregar aquí notificaciones adicionales o logging
-
-    # Ejecutar después de commit
-    transaction.on_commit(_crear_historial_por_situar_despues_de_guardar)
 # Señal para eliminar el historial cuando se elimina un por_situar
 @receiver(post_delete, sender=por_situar)
 def eliminar_historial_por_situar(sender, instance, **kwargs):
@@ -1300,6 +1344,13 @@ class arrastres(models.Model):
         max_length=40,
         verbose_name="Destino"
     )
+
+    observaciones = models.CharField(
+        default='',
+        max_length=200,
+        verbose_name="observaciones"
+    )
+
     fecha = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de registro", editable=False)
     class Meta:
         verbose_name = "arrastre"
@@ -1329,70 +1380,64 @@ class HistorialArrastres(models.Model):
     def __str__(self):
         return f"Historial de arrastre para informe {self.informe_operativo.id} - {self.fecha_creacion}"
 
-# Señal para crear el historial cuando se crea un arrastre
-@receiver(post_save, sender=arrastres)
+# Señal para crear el historial de arrastre cuando se aprueba el parte
+@receiver(post_save, sender=ufc_informe_operativo)
 def crear_historial_arrastre(sender, instance, created, **kwargs):
     """
-    Crea un historial de arrastre asociado al informe operativo de su fecha
+    Crea historial de TODOS los arrastres cuando se aprueba el informe operativo.
+    Un registro de historial por cada arrastre existente en la fecha del informe.
     """
-    if not created:  # Solo nos interesan las creaciones nuevas
-        return
-    
-    def _crear_historial_arrastre_despues_de_guardar():
-        # Obtener solo la fecha (sin hora) del arrastre
-        fecha_arrastre = instance.fecha.date()
+    if instance.estado_parte == "Aprobado":
+        # Obtener la fecha del informe operativo (sin hora)
+        fecha_informe = instance.fecha_operacion.date()
         
-        # Buscar si existe un informe operativo para esta fecha
-        informe = ufc_informe_operativo.objects.annotate(
-            fecha_op=TruncDate('fecha_operacion')
-        ).filter(fecha_op=fecha_arrastre).first()
+        # Eliminar historiales antiguos para este informe (evitar duplicados)
+        HistorialArrastres.objects.filter(informe_operativo=instance).delete()
         
-        if not informe:
-            return  # No hacer nada si no hay informe para esta fecha
-        
-        # Obtener el arrastre con todas sus relaciones
-        arrastre_completo = arrastres.objects.prefetch_related(
-            'producto__producto',
-            'producto__tipo_embalaje',
-            'producto__unidad_medida'
-        ).get(pk=instance.pk)
-        
-        # Serializar datos del arrastre
-        datos_arrastre = {
-            'id': arrastre_completo.id,
-            'tipo_origen': arrastre_completo.tipo_origen,
-            'origen': arrastre_completo.origen,
-            'tipo_equipo': arrastre_completo.tipo_equipo,
-            'estado': arrastre_completo.estado,
-            'cantidad_vagones': arrastre_completo.cantidad_vagones,
-            'tipo_destino': arrastre_completo.tipo_destino,
-            'destino': arrastre_completo.destino,
-            'fecha': str(arrastre_completo.fecha)
-        }
-        
-        # Serializar productos relacionados
-        productos = []
-        for producto in arrastre_completo.producto.all():
-            productos.append({
-                'id': producto.id,
-                'producto_name': producto.producto.nombre_producto,
-                'tipo_embalaje_name': producto.tipo_embalaje.nombre_tipo_embalaje if producto.tipo_embalaje else None,
-                'unidad_medida_simbolo': producto.unidad_medida.simbolo if producto.unidad_medida else None,
-                'cantidad': producto.cantidad,
-                'estado': producto.estado,
-                'contiene': producto.contiene
-            })
-        
-        # Crear registro de historial
-        HistorialArrastres.objects.create(
-            informe_operativo=informe,
-            datos_arrastre=datos_arrastre,
-            datos_productos=productos
+        # Obtener TODOS los arrastres de esta fecha con relaciones optimizadas
+        arrastres_list = arrastres.objects.filter(
+            fecha__date=fecha_informe
+        ).prefetch_related(
+            Prefetch('producto', queryset=producto_UFC.objects.select_related(
+                'producto', 'tipo_embalaje', 'unidad_medida'
+            ))
         )
-
-    # Usamos transaction.on_commit para ejecutar después de que la transacción se complete
-    transaction.on_commit(_crear_historial_arrastre_despues_de_guardar)
-
+        
+        # Crear un registro de historial para CADA arrastre
+        for arrastre in arrastres_list:
+            # Serializar datos principales del arrastre
+            datos_arrastre = {
+                'id': arrastre.id,
+                'tipo_origen': arrastre.tipo_origen,
+                'origen': arrastre.origen,
+                'tipo_equipo': arrastre.tipo_equipo,
+                'estado': arrastre.estado,
+                'cantidad_vagones': arrastre.cantidad_vagones,
+                'tipo_destino': arrastre.tipo_destino,
+                'observaciones': arrastre.observaciones,
+                'destino': arrastre.destino,
+                'fecha': str(arrastre.fecha)
+            }
+            
+            # Serializar productos relacionados
+            productos = []
+            for producto in arrastre.producto.all():
+                productos.append({
+                    'id': producto.id,
+                    'producto_name': producto.producto.nombre_producto,
+                    'tipo_embalaje_name': producto.tipo_embalaje.nombre_tipo_embalaje if producto.tipo_embalaje else None,
+                    'unidad_medida_simbolo': producto.unidad_medida.simbolo if producto.unidad_medida else None,
+                    'cantidad': producto.cantidad,
+                    'estado': producto.estado,
+                    'contiene': producto.contiene
+                })
+            
+            # Crear un NUEVO registro de historial
+            HistorialArrastres.objects.create(
+                informe_operativo=instance,
+                datos_arrastre=datos_arrastre,
+                datos_productos=productos
+            )
 # Señal para eliminar el historial cuando se elimina un arrastre
 @receiver(post_delete, sender=arrastres)
 def eliminar_historial_arrastre(sender, instance, **kwargs):

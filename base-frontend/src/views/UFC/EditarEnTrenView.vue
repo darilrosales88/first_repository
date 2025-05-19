@@ -249,6 +249,19 @@
                     </button>
                   </div>
                 </div>
+                <!-- Campo: cantidad_vagones -->
+                <div class="ufc-input-group">
+                  <label for="cantidad_vagones"
+                    >Cantidad de Vagones <span class="required">*</span></label
+                  >
+                  <input
+                    type="number"
+                    class="ufc-input"
+                    v-model="formData.cantidad_vagones"
+                    min="0"
+                    required
+                  />
+                </div>
 
                 <!-- Campo: Vagon No ID -->
                 <div class="ufc-input-group">
@@ -1189,6 +1202,7 @@ export default {
         producto: [],
         observaciones: "",
         equipo_vagon: [],
+        cantidad_vagones: 0,
       },
       productoSearch: "",
       filteredProductos: [],
@@ -1223,7 +1237,7 @@ export default {
     this.closeDropdownsOnClickOutside();
     this.getEquipos();
     await this.getTren();
-    this.buscarEquipos();
+    await this.buscarEquipos();
   },
 
   methods: {
@@ -1283,8 +1297,8 @@ export default {
         const vagones = JSON.parse(vagonesJson);
         const vagon_id = this.$route.params.id;
         this.formData.equipo_vagon = vagones.map((vagon) => vagon.vagon_id);
+        console.log("Este es el Form", this.formData);
         await axios.patch(`/ufc/en-trenes/${vagon_id}/`, this.formData);
-
         Swal.fire({
           title: "¡Éxito!",
           text: "El formulario ha sido actualizado correctamente",
@@ -1342,14 +1356,10 @@ export default {
     async buscarEquipos() {
       const tipo_equipo_buscar = this.formData.tipo_equipo;
       try {
-        let peticion = `/api/equipos_ferroviarios/?id_tipo_equipo_territorio=${tipo_equipo_buscar}`;
-        let allEquipos = [];
-        while (peticion) {
-          const response = await axios.get(peticion);
-          allEquipos = [...allEquipos, ...response.data.results];
-          peticion = response.data.next;
-        }
-        this.equipos_vagones = allEquipos;
+        let peticion = await axios.get(
+          `/api/e-f-no-locomotora/?tipo_equipo=${tipo_equipo_buscar}`
+        );
+        this.equipos_vagones = peticion.data;
       } catch (error) {
         console.error("Error al obtener los equipos:", error);
         Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");

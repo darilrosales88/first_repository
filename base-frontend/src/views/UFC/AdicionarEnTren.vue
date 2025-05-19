@@ -644,13 +644,14 @@ export default {
 
         // 5. Preparar datos para enviar
         const vagones = JSON.parse(vagonesJson);
+        console.log("Vagones", vagones);
         this.formData.equipo_vagon = vagones.map((vagon) => vagon.vagon_id);
         this.formData.informe_operativo = informeResponse.data.id; // Añadir el ID del informe operativo
 
         console.log("Datos del formulario:", this.formData);
 
         // 6. Enviar datos al backend
-        await axios.post("/ufc/en-trenes-hoy/", this.formData);
+        await axios.post("/ufc/en-trenes/", this.formData);
 
         // 7. Mostrar éxito y resetear formulario
         Swal.fire({
@@ -682,7 +683,6 @@ export default {
           confirmButtonText: "Entendido",
         });
       }
-      this.$router.push({ name: "InfoOperativo" });
     },
 
     onVagonChange(event) {

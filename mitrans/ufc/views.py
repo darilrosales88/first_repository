@@ -42,14 +42,11 @@ from django.db.models.functions import TruncDate
 from django.db.models import DateField
 from datetime import datetime
 from django.db.models.functions import Cast
-from django.db import transaction
+
 
 from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
-import json
-from datetime import date
 
+import json
 
 
 # Verifica si el usuario tiene el rol "ufc"
@@ -69,7 +66,30 @@ class IsUFCPermission(permissions.BasePermission):
             permission_classes = [IsAdminUFCPermission | IsVisualizadorUFCPermission]
         return [permission() for permission in permission_classes]
 
-
+#Funcion para actualizar el estado de los vagones deberia estar global
+def actualizar_estado_equipo_ferroviario( equipo_o_id, nuevo_estado, id=None):
+        """
+        Método auxiliar para actualizar el estado de un equipo ferroviario
+        """
+        try:
+            from nomencladores.models import nom_equipo_ferroviario
+            if (id) is not None:
+                equipo = nom_equipo_ferroviario.objects.get(id=id)
+                equipo.estado_actual=nuevo_estado
+                equipo.save()
+                return True
+            if isinstance(equipo_o_id, nom_equipo_ferroviario):
+                equipo = equipo_o_id
+            else:
+                equipo = nom_equipo_ferroviario.objects.filter(numero_identificacion=equipo_o_id).first()
+            if equipo:
+                equipo.estado_actual = nuevo_estado
+                equipo.save()
+        except Exception as e:
+            # No romper el flujo principal si hay error al actualizar el estado
+            print(f"Error al actualizar estado del equipo: {str(e)}")    
+             
+        
 #**********************************************************************************************************************************
 
 #Para Informe operativo
@@ -490,7 +510,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
         registros_asociados = instance.registros_vagones.all()
         
         for registro in registros_asociados:
-            self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
+            actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
         
         registros_asociados.delete()
         instance.delete()
@@ -677,6 +697,24 @@ class vagon_cargado_descargado_hoy_view_set(viewsets.ModelViewSet):
         return self.queryset.annotate(
             fecha_dia=TruncDate('fecha', output_field=DateField())
         ).filter(fecha_dia=hoy).order_by('-fecha')
+        
+        
+    def perform_destroy(self, instance):
+        registros_asociados = instance.registros_vagones.all()
+        
+        for registro in registros_asociados:
+            actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
+        
+        registros_asociados.delete()
+        instance.delete()
+
+    def actualizar_estado_equipo_ferroviario(self, no_id, nuevo_estado):
+        from nomencladores.models import nom_equipo_ferroviario
+        if no_id:
+            equipo = nom_equipo_ferroviario.objects.filter(numero_identificacion=no_id).first()
+            if equipo:
+                equipo.estado_actual = nuevo_estado
+                equipo.save()
     
     def list(self, request, *args, **kwargs):
         # Verificar permisos como en la vista original
@@ -926,6 +964,7 @@ class en_trenes_view_set(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
+    # En views.py (en_trenes_view_set)
     def destroy(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
@@ -935,8 +974,20 @@ class en_trenes_view_set(viewsets.ModelViewSet):
 
         instance = self.get_object()
         id_objeto_en_trenes = instance.id
-
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
+        
+        # 1. Primero obtener todos los equipos asociados
+        equipos_asociados = instance.equipo_vagon.all()
+        
+        # 2. Actualizar estado de cada equipo
+        for equipo in equipos_asociados:
+            try:
+                # Pasar el objeto completo en lugar de solo el número
+                actualizar_estado_equipo_ferroviario(equipo, "Disponible")
+            except Exception as e:
+                print(f"Error al actualizar equipo {equipo.id}: {str(e)}")
+                continue
+        
+        # 3. Registrar auditoría
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
         Auditoria.objects.create(
@@ -946,9 +997,9 @@ class en_trenes_view_set(viewsets.ModelViewSet):
             navegador=navegador,
         )
 
+        # 4. Finalmente eliminar la instancia
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
     def list(self, request, *args, **kwargs):
         #si no pertenece a VisualizadorUFC o AdminUFC no puede realizar la accion
         if not request.user.groups.filter(name='AdminUFC').exists() and not request.user.groups.filter(name='VisualizadorUFC').exists():
@@ -1097,7 +1148,6 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
-        print("mayeya")
         if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
                 {"detail": "No tiene permiso para realizar esta acción."},

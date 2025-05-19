@@ -1503,50 +1503,51 @@ class HistorialRotacionVagones(models.Model):
     def __str__(self):
         return f"Historial rotación vagones para informe {self.informe_operativo.id}"
 
-# Señal para crear el historial al guardar
-@receiver(post_save, sender=rotacion_vagones)
+# Señal para crear el historial de rotacion al ser aprobado el parte
+@receiver(post_save, sender=ufc_informe_operativo)
 def crear_historial_rotacion_vagones(sender, instance, created, **kwargs):
-    if not created:
-        return
-
-    def _crear_historial():
-        fecha_registro = instance.creado_el.date()
+    """
+    Crea historial de TODAS las rotaciones de vagones cuando se aprueba el informe operativo.
+    Un registro de historial por cada entrada en rotacion_vagones existente.
+    """
+    if instance.estado_parte == "Aprobado":
+        # Obtener la fecha del informe operativo (sin hora)
+        fecha_informe = instance.fecha_operacion.date()
         
-        informe = ufc_informe_operativo.objects.annotate(
-            fecha_op=TruncDate('fecha_operacion')
-        ).filter(fecha_op=fecha_registro).first()
+        # Eliminar historiales antiguos para este informe (evitar duplicados)
+        HistorialRotacionVagones.objects.filter(informe_operativo=instance).delete()
         
-        if not informe:
-            return
-
-        # Obtener el registro completo con relaciones
-        registro_completo = rotacion_vagones.objects.select_related(
+        # Obtener TODAS las rotaciones de esta fecha con relaciones optimizadas
+        rotaciones = rotacion_vagones.objects.filter(
+            creado_el__date=fecha_informe
+        ).select_related(
             'tipo_equipo_ferroviario'
-        ).get(pk=instance.pk)
-
-        # Serializar datos principales
-        datos_rotacion = {
-            'id': registro_completo.id,
-            'tipo_equipo': {
-                'id': registro_completo.tipo_equipo_ferroviario.id,
-                'nombre': registro_completo.tipo_equipo_ferroviario.get_tipo_equipo_display(),
-            },
-            'en_servicio': registro_completo.en_servicio,
-            'plan_carga': registro_completo.plan_carga,
-            'real_carga': registro_completo.real_carga,
-            'plan_rotacion': registro_completo.plan_rotacion,
-            'real_rotacion': registro_completo.real_rotacion,
-            'creado_el': str(registro_completo.creado_el),
-            'actualizado_el': str(registro_completo.actualizado_el)
-        }
-
-        HistorialRotacionVagones.objects.create(
-            informe_operativo=informe,
-            datos_rotacion=datos_rotacion
         )
-
-    transaction.on_commit(_crear_historial)
-
+        
+        # Crear un registro de historial para CADA rotación
+        for rotacion in rotaciones:
+            # Serializar datos principales
+            datos_rotacion = {
+                'id': rotacion.id,
+                'tipo_equipo_ferroviario': {
+                    'id': rotacion.tipo_equipo_ferroviario.id,
+                    'tipo_equipo': rotacion.tipo_equipo_ferroviario.tipo_equipo,
+                    'nombre': rotacion.tipo_equipo_ferroviario.get_tipo_equipo_display()
+                },
+                'en_servicio': rotacion.en_servicio,
+                'plan_carga': rotacion.plan_carga,
+                'real_carga': rotacion.real_carga,
+                'plan_rotacion': rotacion.plan_rotacion,
+                'real_rotacion': rotacion.real_rotacion,
+                'creado_el': str(rotacion.creado_el),
+                'actualizado_el': str(rotacion.actualizado_el)
+            }
+            
+            # Crear un NUEVO registro de historial
+            HistorialRotacionVagones.objects.create(
+                informe_operativo=instance,
+                datos_rotacion=datos_rotacion
+            )
 # Señal para eliminar el historial
 @receiver(post_delete, sender=rotacion_vagones)
 def eliminar_historial_rotacion_vagones(sender, instance, **kwargs):

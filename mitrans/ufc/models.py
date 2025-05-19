@@ -920,6 +920,13 @@ class arrastres(models.Model):
         verbose_name="Destino"
     )
     fecha = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de registro", editable=False)
+
+    observaciones = models.TextField(
+        verbose_name="Observaciones",
+        help_text="Ingrese observaciones adicionales. Admite letras, números y caracteres especiales.",
+        blank=True,
+        null=True,
+    )
     
     informe_operativo = models.ForeignKey(
         ufc_informe_operativo,

@@ -28,7 +28,6 @@
                   v-model="formData.tipo_origen"
                   :disabled="loading"
                   required
-                  @change="handleTipoOrigenChange"
                 >
                   <option value="" disabled>Seleccione un tipo</option>
                   <option
@@ -52,7 +51,7 @@
                   "
                   class="ufc-select"
                   v-model="formData.origen"
-                  :disabled="loading || !formData.tipo_origen"
+                  :disabled="loading"
                   required
                 >
                   <option value="" disabled>Seleccione un origen</option>
@@ -69,7 +68,7 @@
                   v-else-if="formData.tipo_origen === 'puerto'"
                   class="ufc-select"
                   v-model="formData.origen"
-                  :disabled="loading || !formData.tipo_origen"
+                  :disabled="loading"
                   required
                 >
                   <option value="" disabled>Seleccione un puerto</option>
@@ -237,67 +236,8 @@
                   min="1"
                   :disabled="loading"
                   required
-                  @input="validatePorSituar"
                 />
                 <span class="ufc-por-situar-suffix">unidades</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Vagones asociados -->
-          <div class="ufc-vagones-container">
-            <div class="ufc-vagones-header">
-              <h3>
-                <i class="bi bi-train-freight-front"></i> Vagones Asociados
-              </h3>
-              <button
-                class="ufc-button small primary"
-                @click.prevent="abrirModalAgregarVagon"
-                :disabled="loading"
-              >
-                <i class="bi bi-plus"></i> Agregar Vagón
-              </button>
-            </div>
-
-            <div
-              v-if="vagonesAsociados.length > 0"
-              class="ufc-vagones-table-container"
-            >
-              <table class="ufc-vagones-table">
-                <thead>
-                  <tr>
-                    <th>Equipo Ferroviario</th>
-                    <th>Días</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(vagon, index) in vagonesAsociados" :key="index">
-                    <td>{{ vagon.equipo_ferroviario_nombre }}</td>
-                    <td>{{ vagon.dias }}</td>
-                    <td class="ufc-actions-cell">
-                      <button
-                        class="ufc-icon-button warning"
-                        @click.prevent="editarVagon(index)"
-                      >
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button
-                        class="ufc-icon-button danger"
-                        @click.prevent="eliminarVagon(index)"
-                      >
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div v-else class="ufc-vagones-empty">
-              <div class="ufc-empty-state">
-                <i class="bi bi-train"></i>
-                <p>No hay vagones asociados a este registro</p>
               </div>
             </div>
           </div>
@@ -310,12 +250,7 @@
               v-model="formData.observaciones"
               :disabled="loading"
               rows="2"
-              maxlength="500"
-              placeholder="Máximo 500 caracteres"
             ></textarea>
-            <div class="ufc-char-counter">
-              {{ formData.observaciones.length }}/500
-            </div>
           </div>
 
           <!-- Botones de acción -->
@@ -331,7 +266,7 @@
             <button
               type="submit"
               class="ufc-button primary"
-              :disabled="loading || isFormInvalid"
+              :disabled="loading"
             >
               <i class="bi bi-check-circle"></i>
               <span v-if="loading">Guardando...</span>
@@ -499,71 +434,7 @@
           <ModalAgregarProducto
             :visible="mostrarModal"
             @cerrar-modal="cerrarModal"
-            @producto-agregado="handleProductoAgregado"
           />
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal para agregar/editar vagón -->
-    <div v-if="mostrarModalVagon" class="ufc-modal-overlay">
-      <div class="ufc-modal-container">
-        <div class="ufc-modal-header">
-          <h3>
-            <i class="bi bi-train-freight-front"></i>
-            {{ modoEdicionVagon ? "Editar Vagón" : "Agregar Vagón" }}
-          </h3>
-          <button @click="cerrarModalVagon" class="ufc-modal-close">
-            <i class="bi bi-x"></i>
-          </button>
-        </div>
-        <div class="ufc-modal-body">
-          <form @submit.prevent="guardarVagon" class="ufc-modal-form">
-            <div class="ufc-input-group">
-              <label for="equipo_ferroviario"
-                >Equipo Ferroviario <span class="required">*</span></label
-              >
-              <select
-                class="ufc-select"
-                v-model="vagonForm.equipo_ferroviario"
-                required
-              >
-                <option value="" disabled>Seleccione un equipo</option>
-                <option
-                  v-for="equipo in equiposFerroviarios"
-                  :key="equipo.id"
-                  :value="equipo.id"
-                >
-                  {{ equipo.numero_identificacion }} -
-                  {{ equipo.tipo_equipo.tipo_equipo }}
-                </option>
-              </select>
-            </div>
-
-            <div class="ufc-input-group">
-              <label for="dias">Días <span class="required">*</span></label>
-              <input
-                type="number"
-                class="ufc-input"
-                v-model.number="vagonForm.dias"
-                min="1"
-                required
-              />
-            </div>
-
-            <div class="ufc-modal-actions">
-              <button
-                type="button"
-                class="ufc-button secondary"
-                @click="cerrarModalVagon"
-              >
-                Cancelar
-              </button>
-              <button type="submit" class="ufc-button primary">
-                {{ modoEdicionVagon ? "Guardar Cambios" : "Agregar" }}
-              </button>
-            </div>
-          </form>
         </div>
       </div>
     </div>
@@ -622,30 +493,7 @@ export default {
         { id: "carga", text: "Carga" },
         { id: "descarga", text: "Descarga" },
       ],
-      vagonesAsociados: [],
-      mostrarModalVagon: false,
-      modoEdicionVagon: false,
-      vagonEditIndex: null,
-      vagonForm: {
-        equipo_ferroviario: "",
-        dias: 1,
-      },
-      equiposFerroviarios: [],
-      formErrors: {},
     };
-  },
-  computed: {
-    isFormInvalid() {
-      return (
-        !this.formData.tipo_origen ||
-        !this.formData.origen ||
-        !this.formData.tipo_equipo ||
-        !this.formData.estado ||
-        !this.formData.operacion ||
-        (this.formData.estado === "cargado" &&
-          this.formData.productos.length === 0)
-      );
-    },
   },
   created() {
     this.registroId = this.$route.params.id;
@@ -657,6 +505,7 @@ export default {
     this.getProductos();
     this.getEquipos();
   },
+
   mounted() {
     this.filteredProductos = this.productos;
     this.closeDropdownsOnClickOutside();
@@ -666,8 +515,12 @@ export default {
     async cargarRegistro() {
       this.loading = true;
       try {
-        const response = await axios.get(`/ufc/por-situar/${this.registroId}/`);
+        const response = await axios.get(
+          `http://127.0.0.1:8000/ufc/por-situar/${this.registroId}/`
+        );
         const registro = response.data;
+
+        await this.getProductos();
 
         this.formData = {
           id: registro.id,
@@ -676,28 +529,17 @@ export default {
           tipo_equipo: registro.tipo_equipo,
           estado: registro.estado,
           operacion: registro.operacion,
-          productos: registro.productos_info?.map((p) => p.id) || [],
+          productos: registro.productos_info.map((p) => p.id), // Array de IDs de productos
           por_situar: registro.por_situar,
-          observaciones: registro.observaciones || "",
+          observaciones: registro.observaciones,
         };
-
-        if (registro.vagones) {
-          this.vagonesAsociados = registro.vagones.map((v) => ({
-            id: v.id,
-            equipo_ferroviario: v.equipo_ferroviario,
-            equipo_ferroviario_nombre:
-              v.equipo_ferroviario_numero_identificacion,
-            dias: v.dias,
-          }));
-        }
       } catch (error) {
-        console.error("Error al cargar el registro:", error);
-        Swal.fire("Error", "No se pudo cargar el registro", "error");
-        this.$router.push({ name: "InfoOperativo" });
+        // ... manejo de errores ...
       } finally {
         this.loading = false;
       }
     },
+
     async getEntidades() {
       try {
         const response = await axios.get("/api/entidades/");
@@ -792,6 +634,7 @@ export default {
 
     async getProductos() {
       try {
+        this.loading = true;
         const response = await axios.get("/ufc/producto-vagon/", {
           params: {
             include_details: true,
@@ -804,16 +647,26 @@ export default {
           producto_codigo: p.producto_codigo || "N/A",
           tipo_embalaje: p.tipo_embalaje_name || "N/A",
         }));
-        this.filteredProductos = [...this.productos];
       } catch (error) {
         console.error("Error al obtener productos:", error);
         Swal.fire("Error", "No se pudieron cargar los productos", "error");
+      } finally {
+        this.loading = false;
       }
     },
+
     async getPuertos() {
       try {
-        const response = await axios.get("/api/puertos/");
-        this.puertos = response.data.results;
+        let allPuertos = [];
+        let nextPage = "/api/puertos/";
+
+        while (nextPage) {
+          const response = await axios.get(nextPage);
+          allPuertos = [...allPuertos, ...response.data.results];
+          nextPage = response.data.next;
+        }
+
+        this.puertos = allPuertos;
       } catch (error) {
         console.error("Error al obtener los puertos:", error);
         Swal.fire("Error", "Hubo un error al obtener los puertos.", "error");
@@ -930,19 +783,22 @@ export default {
         .map((p) => p.nombre_producto)
         .join(", ");
     },
-    handleTipoOrigenChange() {
-      this.formData.origen = ""; // Resetear origen cuando cambia el tipo
+
+    confirmCancel() {
+      Swal.fire({
+        title: "¿Cancelar cambios?",
+        text: "Los cambios no guardados se perderán",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, cancelar",
+        cancelButtonText: "No, continuar",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.$router.push({ name: "InfoOperativo" });
+        }
+      });
     },
-    handleEstadoChange() {
-      if (this.formData.estado !== "cargado") {
-        this.formData.productos = [];
-      }
-    },
-    validatePorSituar() {
-      if (this.formData.por_situar < 1) {
-        this.formData.por_situar = 1;
-      }
-    },
+
     toggleProductosDropdown() {
       this.showProductosDropdown = !this.showProductosDropdown;
       if (this.showProductosDropdown) {
@@ -1171,13 +1027,11 @@ export default {
 </style>
 
 <style scoped>
-/* Estilos base */
+/* Estilos idénticos al formulario anterior */
 .ufc-form-container {
   font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
   color: #333;
   padding-bottom: 20px;
-  background-color: #f5f7fa;
-  min-height: 100vh;
 }
 
 .ufc-header {
@@ -1195,7 +1049,7 @@ export default {
 }
 
 .ufc-form-wrapper {
-  max-width: 1000px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 0 15px;
 }
@@ -1204,20 +1058,18 @@ export default {
   background: white;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 25px;
+  padding: 20px;
   margin-bottom: 20px;
 }
 
 .ufc-form-title {
   color: #002a68;
   font-size: 1.3rem;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
   gap: 10px;
   font-weight: 600;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
 }
 
 .ufc-form-title i {
@@ -1227,7 +1079,7 @@ export default {
 .ufc-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 15px;
 }
 
 @media (max-width: 768px) {
@@ -1237,14 +1089,13 @@ export default {
 }
 
 .ufc-input-group {
-  margin-bottom: 20px;
-  position: relative;
+  margin-bottom: 15px;
 }
 
 .ufc-input-group label {
   display: block;
-  margin-bottom: 8px;
-  font-size: 0.9rem;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
   font-weight: 500;
   color: #444;
 }
@@ -1256,10 +1107,10 @@ export default {
 .ufc-select,
 .ufc-input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 6px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   transition: all 0.2s;
   background-color: white;
 }
@@ -1273,13 +1124,13 @@ export default {
 
 .ufc-textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 6px;
   resize: vertical;
-  min-height: 80px;
+  min-height: 70px;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .ufc-textarea:focus {
@@ -1288,30 +1139,22 @@ export default {
   outline: none;
 }
 
-.ufc-char-counter {
-  text-align: right;
-  font-size: 0.75rem;
-  color: #666;
-  margin-top: 5px;
-}
-
 .ufc-input-with-action {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .ufc-add-button {
   background: #f8f9fa;
   border: 1px solid #ddd;
   border-radius: 6px;
-  width: 42px;
+  width: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: #002a68;
   transition: all 0.2s;
-  flex-shrink: 0;
 }
 
 .ufc-add-button:hover {
@@ -1320,7 +1163,7 @@ export default {
 }
 
 .ufc-add-button i {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 }
 
 .ufc-loading,
@@ -1344,7 +1187,7 @@ export default {
   }
 }
 
-/* Estilo para el campo por situar */
+/* Estilo especial para el campo por situar */
 .ufc-por-situar-container {
   display: flex;
   align-items: center;
@@ -1356,15 +1199,15 @@ export default {
 .ufc-por-situar-input {
   flex: 1;
   border: none;
-  padding: 10px 12px;
-  font-size: 0.9rem;
+  padding: 8px 12px;
+  font-size: 0.85rem;
   min-width: 0;
 }
 
 .ufc-por-situar-suffix {
   background: #f8f9fa;
-  padding: 10px 12px;
-  font-size: 0.85rem;
+  padding: 8px 12px;
+  font-size: 0.8rem;
   color: #666;
   border-left: 1px solid #ddd;
 }
@@ -1373,23 +1216,23 @@ export default {
 .ufc-form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 15px;
-  margin-top: 25px;
-  padding-top: 20px;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 15px;
   border-top: 1px solid #eee;
 }
 
 .ufc-button {
-  padding: 10px 20px;
+  padding: 8px 16px;
   border-radius: 6px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
   border: none;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .ufc-button.primary {
@@ -1397,7 +1240,7 @@ export default {
   color: white;
 }
 
-.ufc-button.primary:hover:not(:disabled) {
+.ufc-button.primary:hover {
   background: #003d8f;
   transform: translateY(-1px);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -1409,20 +1252,14 @@ export default {
   border: 1px solid #ddd;
 }
 
-.ufc-button.secondary:hover:not(:disabled) {
+.ufc-button.secondary:hover {
   background: #f8f9fa;
   border-color: #ccc;
-}
-
-.ufc-button.small {
-  padding: 8px 12px;
-  font-size: 0.85rem;
 }
 
 .ufc-button[disabled] {
   opacity: 0.7;
   cursor: not-allowed;
-  transform: none !important;
 }
 
 /* Estilos para selects */
@@ -1430,231 +1267,8 @@ export default {
   appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 14px;
-}
-
-/* Estilos para el select personalizado de productos */
-.ufc-custom-select {
-  position: relative;
-  width: 100%;
-  cursor: pointer;
-  flex: 1;
-}
-
-.ufc-select-display {
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  background-color: white;
-  min-height: 42px;
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ufc-select-arrow {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  transition: transform 0.2s;
-  pointer-events: none;
-}
-
-.ufc-productos-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  max-height: 300px;
-  overflow-y: auto;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 0 0 6px 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 100;
-  margin-top: 2px;
-}
-
-.ufc-productos-search-container {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  background: #f8f9fa;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.ufc-productos-search {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.9rem;
-}
-
-.ufc-productos-search:focus {
-  outline: none;
-  border-color: #002a68;
-}
-
-.ufc-productos-options {
-  max-height: 250px;
-  overflow-y: auto;
-}
-
-.ufc-producto-option {
-  padding: 10px 12px;
-  font-size: 0.9rem;
-  border-bottom: 1px solid #f0f0f0;
-  transition: all 0.1s;
-}
-
-.ufc-producto-option:hover {
-  background-color: #f5f5f5;
-}
-
-.ufc-producto-option.selected {
-  background-color: #002a68;
-  color: white;
-}
-
-.ufc-no-results {
-  padding: 15px;
-  text-align: center;
-  color: #666;
-  font-size: 0.9rem;
-}
-
-.ufc-selected-count {
-  font-size: 0.8rem;
-  color: #666;
-  margin-top: 5px;
-  text-align: right;
-}
-
-/* Estilos para la sección de vagones */
-.ufc-vagones-container {
-  margin-top: 30px;
-  border-top: 1px solid #eee;
-  padding-top: 20px;
-}
-
-.ufc-vagones-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.ufc-vagones-header h3 {
-  color: #002a68;
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
-}
-
-.ufc-vagones-table-container {
-  overflow-x: auto;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.ufc-vagones-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-}
-
-.ufc-vagones-table th {
-  background-color: #002a68;
-  color: white;
-  padding: 12px 15px;
-  text-align: left;
-  font-weight: 500;
-}
-
-.ufc-vagones-table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #eee;
-}
-
-.ufc-vagones-table tr:last-child td {
-  border-bottom: none;
-}
-
-.ufc-vagones-table tr:hover {
-  background-color: #f8f9fa;
-}
-
-.ufc-actions-cell {
-  display: flex;
-  gap: 10px;
-}
-
-.ufc-icon-button {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.ufc-icon-button i {
-  font-size: 0.9rem;
-}
-
-.ufc-icon-button.warning {
-  background-color: rgba(255, 193, 7, 0.1);
-  color: #ffc107;
-}
-
-.ufc-icon-button.warning:hover {
-  background-color: rgba(255, 193, 7, 0.2);
-}
-
-.ufc-icon-button.danger {
-  background-color: rgba(220, 53, 69, 0.1);
-  color: #dc3545;
-}
-
-.ufc-icon-button.danger:hover {
-  background-color: rgba(220, 53, 69, 0.2);
-}
-
-.ufc-vagones-empty {
-  margin-top: 20px;
-  text-align: center;
-  padding: 30px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border: 1px dashed #ddd;
-}
-
-.ufc-empty-state {
-  color: #6c757d;
-}
-
-.ufc-empty-state i {
-  font-size: 2rem;
-  margin-bottom: 10px;
-  color: #adb5bd;
-}
-
-.ufc-empty-state p {
-  margin: 10px 0 0;
-  font-size: 0.95rem;
+  background-position: right 10px center;
+  background-size: 12px;
 }
 
 /* Estilos para el modal */
@@ -1669,7 +1283,6 @@ export default {
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(2px);
 }
 
 .ufc-modal-container {
@@ -1679,12 +1292,12 @@ export default {
   max-width: 500px;
   max-height: 90vh;
   overflow: auto;
-  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
   animation: modalFadeIn 0.3s ease-out;
 }
 
 .ufc-modal-header {
-  padding: 18px 20px;
+  padding: 15px 20px;
   border-bottom: 1px solid #eee;
   display: flex;
   justify-content: space-between;
@@ -1692,9 +1305,6 @@ export default {
   background: #002a68;
   color: white;
   border-radius: 10px 10px 0 0;
-  position: sticky;
-  top: 0;
-  z-index: 10;
 }
 
 .ufc-modal-header h3 {
@@ -1709,11 +1319,10 @@ export default {
   background: transparent;
   border: none;
   color: white;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   cursor: pointer;
   padding: 5px;
   transition: all 0.2s;
-  line-height: 1;
 }
 
 .ufc-modal-close:hover {
@@ -1722,44 +1331,6 @@ export default {
 
 .ufc-modal-body {
   padding: 20px;
-}
-
-.ufc-modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.ufc-modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 25px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .ufc-form-card {
-    padding: 15px;
-  }
-
-  .ufc-vagones-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .ufc-form-actions {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .ufc-button {
-    width: 100%;
-    justify-content: center;
-  }
 }
 
 @keyframes modalFadeIn {
@@ -1771,18 +1342,5 @@ export default {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-/* Clase full-width para elementos que deben ocupar todo el ancho */
-.full-width {
-  grid-column: 1 / -1;
-}
-
-/* Estilos para la cuadrícula de cantidades */
-.ufc-quantity-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 20px;
 }
 </style>

@@ -267,6 +267,7 @@ export default {
         tipoEquipo: "",
         vagonesEnServicio: 0,
       },
+      informeOperativoId: null,
       tiposEquiposFerroviarios: [],
       modoEdicion: false, // Indica si estamos editando o agregando un registro
       indiceEdicion: null, // Guarda el índice del registro que se está editando
@@ -348,20 +349,22 @@ export default {
       this.indiceEdicion = null;
     },
 
-    /*  async verificarInformeOperativo() {
+    async verificarInformeOperativo() {
       try {
-        this.formData.fecha = new Date().toISOString();
         const today = new Date();
         const fechaFormateada = `${today.getFullYear()}-${String(
           today.getMonth() + 1
         ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-        const response = await axios.get("/ufc/verificar-informe-existente/", {
-          params: { fecha_operacion: fechaFormateada },
-        });
+        const informeResponse = await axios.get(
+          "/ufc/verificar-informe-existente/",
+          {
+            params: { fecha_operacion: fechaFormateada },
+          }
+        );
 
-        if (response.data.existe) {
-          this.informeOperativoId = response.data.id;
+        if (informeResponse.data.existe) {
+          this.informeOperativoId = informeResponse.data.id;
           return true;
         }
         return false;
@@ -369,11 +372,11 @@ export default {
         console.error("Error al verificar informe:", error);
         return false;
       }
-    }, */
+    },
 
     async guardarRotacion() {
       // 1. Verificar si existe informe operativo para la fecha actual
-      /* const existeInforme = await this.verificarInformeOperativo(); */
+      const existeInforme = await this.verificarInformeOperativo();
       if (0) {
         Swal.fire(
           "Error",
@@ -402,6 +405,12 @@ export default {
         const response = await axios.post("/ufc/rotaciones/", {
           tipo_equipo_ferroviario: this.nuevaRotacion.tipoEquipo,
           en_servicio: this.nuevaRotacion.vagonesEnServicio,
+          informe_operativo: this.informeOperativoId,
+        });
+        console.log("Esto es lo que se envia", {
+          tipo_equipo_ferroviario: this.nuevaRotacion.tipoEquipo,
+          en_servicio: this.nuevaRotacion.vagonesEnServicio,
+          informe_operativo: this.informeOperativoId,
         });
         await this.get_rotaciones();
         // 4. Actualizar la tabla local con el nuevo registro desde la respuesta del backend

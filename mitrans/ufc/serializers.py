@@ -801,7 +801,7 @@ class en_trenes_serializer(serializers.ModelSerializer):
             ids_nuevos = [equipo_id.id for equipo_id in equipo_vagon_data if equipo_id.id]
             print("###**Log: ",ids_nuevos)
             # Primero, liberar equipos ferroviarios de registros que se eliminarán
-            registros_a_eliminar = validated_data
+            registros_a_eliminar = instance.equipo_vagon.all()
             print("###**Log: ",registros_a_eliminar)
             for registro in registros_a_eliminar:
                 actualizar_estado_equipo_ferroviario(registro, 'Disponible')

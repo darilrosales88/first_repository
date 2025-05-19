@@ -14,11 +14,6 @@ from django.db import transaction
 
 
 #Modelo para el informe operativo
-
-
-
-
-
 class ufc_informe_operativo(models.Model):    
 
     fecha_operacion = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de operación", unique=True)
@@ -41,6 +36,11 @@ class ufc_informe_operativo(models.Model):
         verbose_name="Entidad de donde proviene el parte"
     )
     class Meta:
+        permissions = [
+            ("puede_rechazar_informe", "Puede rechazar informes operativos"),
+            ("puede_aprobar_informe", "Puede aprobar informes operativos"),
+            ("puede_cambiar_a_listo", "Puede cambiar el estado del informe a listo"),
+        ]
         verbose_name = "Parte informe operativo"
         verbose_name_plural = "Parte informe operativo"
         ordering = ["-fecha_operacion"]
@@ -57,7 +57,7 @@ class ufc_informe_operativo(models.Model):
 #*************************************************************************************************************************
 
 class vagones_dias(models.Model):
-    equipo_ferroviario=models.ForeignKey(nom_equipo_ferroviario,on_delete=models.SET_NULL,related_name="registro_por_dias",verbose_name="Vagones por Dias", null=True,blank=True)
+    equipo_ferroviario=models.ForeignKey(nom_equipo_ferroviario,on_delete=models.CASCADE,related_name="registro_por_dias",verbose_name="Vagones por Dias", null=True,blank=True)
     cant_dias=models.PositiveSmallIntegerField(verbose_name="Cantidad de Dias")
 
 
@@ -274,7 +274,6 @@ class HistorialVagonCargadoDescargado(models.Model):
 #Modelo Situado
 class Situado_Carga_Descarga(models.Model):
     
-    
     TIPO_ORIGEN_DESTINO_CHOICES = [
         ('puerto', 'Puerto'),
         ('ac_ccd', 'Acceso comercial/CCD'),
@@ -356,7 +355,6 @@ class Situado_Carga_Descarga(models.Model):
         blank=True,  # Permite que el campo esté vacío
         null=True,   # Permite valores nulos en la base de datos
     )
-
 
     class Meta:
         verbose_name = "Situado "
@@ -443,9 +441,9 @@ class vagones_productos(models.Model):
         ('combustible', 'Combustible'),
     ]
     TIPO_COMBUSTIBLE_CHOICES = [
-        ('combust_blanco', 'Combustible blanco'),
-        ('combust_negro', 'Combustible negro'),
-        ('combust_turbo', 'Combustible turbo'),
+        ('combustible_blanco', 'Combustible blanco'),
+        ('combustible_negro', 'Combustible negro'),
+        ('combustible_turbo', 'Combustible turbo'),
         ('-', '-'),
     ]
 
@@ -643,7 +641,6 @@ class HistorialEnTrenes(models.Model):
 
 class por_situar(models.Model):
     
-    
     t_origen = (
         ('puerto', 'Puerto'),
         ('ac_ccd', 'Acceso Comercial')
@@ -798,7 +795,6 @@ class HistorialVagonPorSituar(models.Model):
     
 #**********************************************************************************************************************
 class arrastres(models.Model):
-    
     
     TIPO_ORIGEN_DESTINO_CHOICES = [
         ('puerto', 'Puerto'),

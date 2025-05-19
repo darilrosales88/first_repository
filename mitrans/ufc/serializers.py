@@ -19,14 +19,8 @@ from rest_framework import status
 from django.db import transaction 
 import json
 from django.utils import timezone
-from .models import HistorialVagonCargadoDescargado, vagon_cargado_descargado, registro_vagones_cargados,vagones_dias
-from nomencladores.models import nom_equipo_ferroviario,nom_tipo_equipo_ferroviario,nom_provincia
-from Administracion.models import CustomUser
-
-#######Importamos serializadores externos para poder tener una lectura mas detallada
-from nomencladores.serializers import nom_equipo_ferroviario_serializer
-from Administracion.serializers import UserPermissionSerializer
-
+from .models import HistorialVagonCargadoDescargado, vagon_cargado_descargado, registro_vagones_cargados
+from nomencladores.models import nom_equipo_ferroviario,nom_tipo_equipo_ferroviario
 
 #para cada modelo del que deseemos realizar el filtrado debemos hacer un filtrado
 #nom_pais_filter es una clase que se implementa para definir sobre qué campos quiero filtrar los registros de mi API, 
@@ -35,7 +29,19 @@ from Administracion.serializers import UserPermissionSerializer
 
 
 #****************-------------------------********************--------------------***************-----------------********************************
-
+class ufc_informe_operativo_filter(filters.FilterSet):
+    fecha_operacion = filters.CharFilter(field_name='fecha_operacion',lookup_expr = 'exact')  
+    
+    class Meta:
+        model = ufc_informe_operativo
+        fields = '__all__' 
+        
+class ufc_informe_operativo_serializer(serializers.ModelSerializer):                      
+    
+    class Meta:
+        model = ufc_informe_operativo       
+        fields = '__all__'
+        filterset_class: ufc_informe_operativo_filter
         
 #****************-------------------------********************--------------------***************-----------------****
 class DateTimeToDateField(serializers.ReadOnlyField):
@@ -46,31 +52,6 @@ class DateTimeToDateField(serializers.ReadOnlyField):
         return None
 
 #****************-------------------------********************--------------------***************-----------------********************************
-
-#Serializador para Modelo dVagones por dias de situados, por situar, Arrastres
-class vagones_dias_serializer(serializers.ModelSerializer):
-    # Mantenemos los campos existentes para lectura
-    equipo_ferroviario_detalle = nom_equipo_ferroviario_serializer(
-        many=True,
-        source="equipo_ferroviario", 
-        read_only=True
-    )
-    
-    # Cambiamos el campo equipo_ferroviario para manejar la estructura deseada
-    equipo_ferroviario = serializers.PrimaryKeyRelatedField(
-        queryset=nom_equipo_ferroviario.objects.all(), 
-        write_only=True,
-        required=False,
-        allow_null=True,
-    )
-    
-    class Meta:
-        model = vagones_dias
-        fields = '__all__'
-    
-    
-
-
 #serializador para el modelo vagones y productos
 class vagones_productos_filter(filters.FilterSet):
     origen_tipo_prod_tef = filters.CharFilter(method='filtrado_por_origen_tipo_prod_tef', lookup_expr='icontains')
@@ -725,7 +706,7 @@ class en_trenes_serializer(serializers.ModelSerializer):
 
     equipo_vagon = serializers.PrimaryKeyRelatedField(
         many=True,
-        queryset=vagones_dias.objects.all(),
+        queryset=nom_equipo_ferroviario.objects.all(),
         required=False
     )
    
@@ -845,24 +826,18 @@ class SituadoCargaDescargaFilter(filters.FilterSet):
 class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
     productos_info = serializers.SerializerMethodField()
     tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
-    tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
+    tipo_equipo_name=serializers.ReadOnlyField(source='get_tipo_equipo_display')
     producto = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=producto_UFC.objects.all(),
         required=False
     )
-    equipo_vagon = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=vagones_dias.objects.all(),
-        required=False
-    )
-    equipo_vagon_detalle=vagones_dias_serializer(many=True, source='equipo_vagon', read_only=True)
     situados = serializers.IntegerField()
     pendiente_proximo_dia = serializers.IntegerField()
     
     class Meta:
         model = Situado_Carga_Descarga
-        fields = ('id', 'tipo_origen' , 'tipo_origen_name', 'origen', 'tipo_equipo' , 'tipo_equipo_name','equipo_vagon','equipo_vagon_detalle', 'estado', 
+        fields = ('id', 'tipo_origen' , 'tipo_origen_name', 'origen', 'tipo_equipo' , 'tipo_equipo_name', 'estado', 
                  'operacion', 'producto', 'productos_info', 'situados', 
                  'pendiente_proximo_dia', 'observaciones')
         extra_kwargs = {
@@ -943,12 +918,6 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         queryset=producto_UFC.objects.all(),
         required=False
     )
-    equipo_vagon = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=vagones_dias.objects.all(),
-        required=False,
-    )
-    equipo_vagon_detalle=vagones_dias_serializer(many=True,source='equipo_vagon', read_only=True)
     
     class Meta:
         model = por_situar
@@ -973,8 +942,8 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         productos_data = validated_data.pop('producto', [])
-        instance = por_situar.objects.get(**validated_data)
-        instance.producto.get(productos_data)
+        instance = por_situar.objects.create(**validated_data)
+        instance.producto.set(productos_data)
         return instance
 
     def update(self, instance, validated_data):
@@ -999,20 +968,13 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
         read_only=True,  # Solo lectura, no necesita write_only
         help_text="Fecha y hora en que se creó el registro (automático)"
     )
-    tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
     productos_info = serializers.SerializerMethodField()
     producto = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=producto_UFC.objects.all(),
         required=False
     )
-    equipo_vagon = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=vagones_dias.objects.all(),
-        required=False,
-        write_only=True
-    )
-    equipo_vagon_detalle=vagones_dias_serializer(many=True, source='equipo_vagon', read_only=True)
+    
     class Meta:
         model = arrastres
         fields = '__all__'
@@ -1173,94 +1135,3 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
         return instance
     
 
-class ufc_informe_operativo_filter(filters.FilterSet):
-    fecha_operacion = filters.CharFilter(field_name='fecha_operacion',lookup_expr = 'exact')  
-    
-    class Meta:
-        model = ufc_informe_operativo
-        fields = '__all__' 
-        
-class ufc_informe_operativo_serializer(serializers.ModelSerializer):                      
-    arrastres_list = serializers.SerializerMethodField()
-    en_trenes_list = serializers.SerializerMethodField()
-    vagones_cargados_descargados_list = serializers.SerializerMethodField()
-    situados_carga_descarga_list = serializers.SerializerMethodField()
-    por_situar_list = serializers.SerializerMethodField()
-    vagones_productos_list = serializers.SerializerMethodField()
-    rotacion_vagones_list = serializers.SerializerMethodField()
-    
-    creado_por = serializers.PrimaryKeyRelatedField(
-        queryset=CustomUser.objects.all(), 
-        write_only=True,
-        required=False,
-        allow_null=True,
-    )
-    
-    aprobado_por = serializers.PrimaryKeyRelatedField(
-        queryset=CustomUser.objects.all(), 
-        write_only=True,
-        required=False,
-        allow_null=True,
-    )
-    
-    
-    creado_por_detalle=UserPermissionSerializer(source='creado_por', read_only=True)
-    aprobado_por_detalle=UserPermissionSerializer(source='aprobado_por', read_only=True)
-    class Meta:
-        model = ufc_informe_operativo       
-        fields = [
-            'id',
-            'fecha_operacion',
-            'plan_mensual_total',
-            'plan_diario_total_vagones_cargados',
-            'real_total_vagones_cargados',
-            'total_vagones_situados',
-            'estado_parte',
-            'creado_por',
-            'creado_por_detalle',
-            'aprobado_por',
-            'aprobado_por_detalle',
-            'arrastres_list',
-            'en_trenes_list',
-            'vagones_cargados_descargados_list',
-            'situados_carga_descarga_list',
-            'por_situar_list',
-            'vagones_productos_list',
-            'rotacion_vagones_list',
-        ]
-        filterset_class: ufc_informe_operativo_filter
-        
-    def get_arrastres_list(self, obj):
-        """Obtiene todos los arrastres asociados al informe operativo."""
-        arrastres_queryset = obj.arrastres.all()
-        return PendienteArrastreSerializer(arrastres_queryset, many=True).data
-
-    def get_en_trenes_list(self, obj):
-        """Obtiene todos los trenes asociados al informe operativo."""
-        en_trenes_queryset = obj.en_trenes.all()
-        return en_trenes_serializer(en_trenes_queryset, many=True).data
-
-    def get_vagones_cargados_descargados_list(self, obj):
-        """Obtiene todos los vagones cargados/descargados asociados al informe operativo."""
-        vagones_cargados_descargados_queryset = obj.vagones_cargados_descargados.all()
-        return vagon_cargado_descargado_serializer(vagones_cargados_descargados_queryset, many=True).data
-
-    def get_situados_carga_descarga_list(self, obj):
-        """Obtiene todos los situados de carga/descarga asociados al informe operativo."""
-        situados_carga_descarga_queryset = obj.situados.all()
-        return SituadoCargaDescargaSerializers(situados_carga_descarga_queryset, many=True).data
-
-    def get_por_situar_list(self, obj):
-        """Obtiene todos los registros por situar asociados al informe operativo."""
-        por_situar_queryset = obj.por_situar.all()
-        return PorSituarCargaDescargaSerializer(por_situar_queryset, many=True).data
-
-    def get_vagones_productos_list(self, obj):
-        """Obtiene todos los productos de vagones asociados al informe operativo."""
-        vagones_productos_queryset = obj.vagones_productos.all()
-        return vagones_productos_serializer(vagones_productos_queryset, many=True).data
-
-    def get_rotacion_vagones_list(self, obj):
-        """Obtiene todas las rotaciones de vagones asociadas al informe operativo."""
-        rotacion_vagones_queryset = obj.rotacion.all()
-        return RotacionVagonesSerializer(rotacion_vagones_queryset, many=True).data

@@ -269,7 +269,7 @@
   </div>
 
   <!-- Modal para agregar producto -->
-  <ModalAgregarProductoVagonesProductos
+  <ModalAgregarProducto
     v-if="mostrarModalProducto"
     :visible="mostrarModalProducto"
     @cerrar-modal="cerrarModalAddProducto"
@@ -280,13 +280,13 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 import NavbarComponent from "@/components/NavbarComponent.vue";
-import ModalAgregarProductoVagonesProductos from "@/components/ModalAgregarProductoVagonesyProductos.vue";
+import ModalAgregarProducto from "@/components/ModalAgregarProducto.vue";
 
 export default {
   name: "AdicionarVagonProducto",
   components: {
     NavbarComponent,
-    ModalAgregarProductoVagonesProductos,
+    ModalAgregarProducto,
   },
 
   data() {

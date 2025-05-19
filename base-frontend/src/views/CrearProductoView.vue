@@ -141,8 +141,8 @@ export default {
       t_producto_options: [
         { value: 'alimento', text: 'Alimento' },
         { value: 'combustible', text: 'Combustible' },
-        { value: 'otros', text: 'Otros' },
         { value: 'contenedor', text: 'Contenedor' },
+        { value: 'otros', text: 'Otros' },
       ],
     };
   },

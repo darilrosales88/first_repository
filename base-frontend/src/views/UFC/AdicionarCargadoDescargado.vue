@@ -569,6 +569,12 @@ export default {
       return;
     }
 
+    //validando que origen y destino no sean iguales
+    if (this.formData.origen === this.formData.destino) {
+      Swal.fire("Error", "El origen y el destino no deben coincidir.", "error");
+      return;
+    }
+
     // Preparar datos para enviar
     const datosEnvio = {
       tipo_equipo_ferroviario: this.formData.tipo_equipo_ferroviario,
@@ -601,19 +607,56 @@ export default {
     Swal.fire("Éxito", "Registro creado correctamente", "success");
     this.$router.push({ name: "InfoOperativo" });
     
-  } catch (error) {
+      } catch (error) {
     console.error("Error detallado:", error.response?.data);
-    let errorMsg = "Error al guardar el registro";
     
-    if (error.response?.data) {
-      if (typeof error.response.data === 'object') {
-        errorMsg += ": " + JSON.stringify(error.response.data);
-      } else {
-        errorMsg += ": " + error.response.data;
+    // Manejar específicamente el error de unique_together
+    if (error.response?.status === 400 && error.response?.data) {
+      const errorData = error.response.data;
+      
+      // Verificar si es un error de unique_together (dos posibles formatos: único o único conjunto que vienen del backend)
+      const isUniqueTogetherError = 
+        (errorData.non_field_errors && 
+         errorData.non_field_errors.some(e => e.includes('único') || e.includes('único conjunto'))) ||
+        (typeof errorData === 'string' && errorData.includes('único'));
+      
+      if (isUniqueTogetherError) {
+        await Swal.fire({
+          title: "Registro duplicado",
+          html: `El conjunto de datos que intentas guardar ya existe en el sistema.<br><br>
+                <strong>Detalles:</strong><br>
+                - Origen: ${this.formData.origen}<br>
+                - Tipo de equipo: ${this.tipos_equipos_ferroviarios.find(t => t.id == this.formData.tipo_equipo_ferroviario)?.tipo_equipo_name || 'Desconocido'}<br>
+                - Estado: ${this.formData.estado === 'cargado' ? 'Cargado' : 'Vacío'}<br>
+                - Destino: ${this.formData.destino}`,
+          icon: "error",
+          confirmButtonText: "Entendido"
+        });
+        return;
       }
+      
+      // Manejar otros errores 400
+      let errorMsg = "Error al guardar el registro";
+      if (typeof errorData === 'object') {
+        errorMsg += ": " + JSON.stringify(errorData);
+      } else {
+        errorMsg += ": " + errorData;
+      }
+      await Swal.fire("Error", errorMsg, "error");
+    } else {
+      // Manejar otros errores genéricos
+      let errorMsg = "Error al guardar el registro";
+      if (error.response?.data) {
+        if (typeof error.response.data === 'object') {
+          errorMsg += ": " + JSON.stringify(error.response.data);
+        } else {
+          errorMsg += ": " + error.response.data;
+        }
+      }
+      await Swal.fire("Error", errorMsg, "error");
     }
-    
-    Swal.fire("Error", errorMsg, "error");
+  } finally {
+    this.loading = false;
   }
 },
 async calcularRealCargaDescarga() {

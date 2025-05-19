@@ -445,8 +445,8 @@ export default {
       const tipos_productos = {
         alimento: "Alimento",
         combustible: "Combustible",
-        otros: "Otros",
         contenedor: "Contenedor",
+        otros: "Otros",
       };
       return tipos_productos[value] || "Desconocido";
     },

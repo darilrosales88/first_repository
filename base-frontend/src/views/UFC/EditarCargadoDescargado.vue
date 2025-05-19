@@ -389,14 +389,12 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 import NavbarComponent from "@/components/NavbarComponent.vue";
-import ModalAgregarProductoCargadoDescargado from "@/components/ModaAgregarProductoCargadoDescargado.vue";
 import ModalAgregarVagonCargado from "@/components/ModaAgregarVagonCargado.vue";
 import ModalAgregarProducto from "@/components/ModalAgregarProducto.vue";
 export default {
   name: "EditarCargadoDescargado",
   components: {
     NavbarComponent,
-    ModalAgregarProductoCargadoDescargado,
     ModalAgregarProducto,
     ModalAgregarVagonCargado,
   },
@@ -606,75 +604,116 @@ export default {
 
     // Métodos para CRUD
     async submitForm() {
-      if (!this.registros_vagones_cargados) {
-        console.error("registros_vagones_cargados es undefined!");
-        this.registros_vagones_cargados = [];
-      }
-
-      this.loading = true;
-      try {
-        const payload = {
-          tipo_equipo_ferroviario: this.formData.tipo_equipo_ferroviario,
-          tipo_origen: this.formData.tipo_origen,
-          origen: this.formData.origen,
-          tipo_destino: this.formData.tipo_destino,
-          destino: this.formData.destino,
-          estado: this.formData.estado,
-          producto_ids: Array.isArray(this.formData.lista_productos)
-            ? this.formData.lista_productos
-            : [this.formData.lista_productos],
-          plan_diario_carga_descarga: this.formData.plan_diario_carga_descarga,
-          real_carga_descarga: this.formData.real_carga_descarga,
-          operacion: this.formData.operacion,
-          causas_incumplimiento: this.formData.causas_incumplimiento,
-          registros_vagones_data: this.registros_vagones_cargados.map((v) => ({
-            id: v.id || null, // Incluir el ID si existe para actualización
-            no_id: v.no_id,
-            fecha_despacho: v.fecha_despacho,
-            tipo_origen: v.tipo_origen || "ac_ccd",
-            origen: v.origen,
-            fecha_llegada: v.fecha_llegada || null,
-            observaciones: v.observaciones || "",
-          })),
-        };
-
-        console.log("Payload a enviar:", payload); // Para depuración
-
-        const response = await axios.put(
-          `/ufc/vagones-cargados-descargados/${this.id}/`,
-          payload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              "X-CSRFToken": this.getCookie("csrftoken"),
-            },
-          }
-        );
-
-        await Swal.fire({
-          title: "Éxito",
-          text: "Vagón actualizado correctamente",
-          icon: "success",
-        });
-
-        this.$router.push({ name: "InfoOperativo" });
-      } catch (error) {
-        console.error("Error al actualizar:", error);
-
-        let errorMsg = "Error al actualizar el vagón";
-        if (error.response?.data) {
-          errorMsg += `: ${JSON.stringify(error.response.data)}`;
+        if (!this.registros_vagones_cargados) {
+          console.error("registros_vagones_cargados es undefined!");
+          this.registros_vagones_cargados = [];
         }
 
-        Swal.fire({
-          title: "Error",
-          text: errorMsg,
+        // Validando que origen y destino no sean iguales
+        if (this.formData.origen === this.formData.destino) {
+          Swal.fire("Error", "El origen y el destino no deben coincidir.", "error");
+          return;
+        }
+
+        this.loading = true;
+        try {
+          const payload = {
+            tipo_equipo_ferroviario: this.formData.tipo_equipo_ferroviario,
+            tipo_origen: this.formData.tipo_origen,
+            origen: this.formData.origen,
+            tipo_destino: this.formData.tipo_destino,
+            destino: this.formData.destino,
+            estado: this.formData.estado,
+            producto_ids: Array.isArray(this.formData.lista_productos)
+              ? this.formData.lista_productos
+              : [this.formData.lista_productos],
+            plan_diario_carga_descarga: this.formData.plan_diario_carga_descarga,
+            real_carga_descarga: this.formData.real_carga_descarga,
+            operacion: this.formData.operacion,
+            causas_incumplimiento: this.formData.causas_incumplimiento,
+            registros_vagones_data: this.registros_vagones_cargados.map((v) => ({
+              id: v.id || null,
+              no_id: v.no_id,
+              fecha_despacho: v.fecha_despacho,
+              tipo_origen: v.tipo_origen || "ac_ccd",
+              origen: v.origen,
+              fecha_llegada: v.fecha_llegada || null,
+              observaciones: v.observaciones || "",
+            })),
+          };
+
+          console.log("Payload a enviar:", payload);
+
+          const response = await axios.put(
+            `/ufc/vagones-cargados-descargados/${this.id}/`,
+            payload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": this.getCookie("csrftoken"),
+              },
+            }
+          );
+
+          await Swal.fire({
+            title: "Éxito",
+            text: "Vagón actualizado correctamente",
+            icon: "success",
+          });
+
+          this.$router.push({ name: "InfoOperativo" });
+        } catch (error) {
+    console.error("Error detallado:", error.response?.data);
+    
+    // Manejar específicamente el error de unique_together
+    if (error.response?.status === 400 && error.response?.data) {
+      const errorData = error.response.data;
+      
+      // Verificar si es un error de unique_together (dos posibles formatos)
+      const isUniqueTogetherError = 
+        (errorData.non_field_errors && 
+         errorData.non_field_errors.some(e => e.includes('único') || e.includes('único conjunto'))) ||
+        (typeof errorData === 'string' && errorData.includes('único'));
+      
+      if (isUniqueTogetherError) {
+        await Swal.fire({
+          title: "Registro duplicado",
+          html: `El conjunto de datos que intentas guardar ya existe en el sistema.<br><br>
+                <strong>Detalles:</strong><br>
+                - Origen: ${this.formData.origen}<br>
+                - Tipo de equipo: ${this.tipos_equipos_ferroviarios.find(t => t.id == this.formData.tipo_equipo_ferroviario)?.tipo_equipo_name || 'Desconocido'}<br>
+                - Estado: ${this.formData.estado === 'cargado' ? 'Cargado' : 'Vacío'}<br>
+                - Destino: ${this.formData.destino}`,
           icon: "error",
+          confirmButtonText: "Entendido"
         });
-      } finally {
-        this.loading = false;
+        return;
       }
-    },
+      
+      // Manejar otros errores 400
+      let errorMsg = "Error al guardar el registro";
+      if (typeof errorData === 'object') {
+        errorMsg += ": " + JSON.stringify(errorData);
+      } else {
+        errorMsg += ": " + errorData;
+      }
+      await Swal.fire("Error", errorMsg, "error");
+    } else {
+      // Manejar otros errores genéricos
+      let errorMsg = "Error al guardar el registro";
+      if (error.response?.data) {
+        if (typeof error.response.data === 'object') {
+          errorMsg += ": " + JSON.stringify(error.response.data);
+        } else {
+          errorMsg += ": " + error.response.data;
+        }
+      }
+      await Swal.fire("Error", errorMsg, "error");
+    }
+  } finally {
+    this.loading = false;
+  }
+},
 
     // Método auxiliar para obtener cookies
     getCookie(name) {

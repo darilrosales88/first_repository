@@ -744,9 +744,7 @@ class por_situar(models.Model):
                 try:
                     with transaction.atomic():
                         # Actualizar estado del equipo
-                        equipo = nom_equipo_ferroviario.objects.filter(
-                            numero_identificacion=registro.no_id
-                        ).first()
+                        equipo =registro.equipo_ferroviario
                         
                         if equipo:
                             equipo.estado_actual = 'Disponible'
@@ -755,7 +753,7 @@ class por_situar(models.Model):
                         # Eliminar el registro asociado
                         registro.delete()
                 except Exception as e:
-                    print(f"Error al procesar registro {registro.no_id}: {str(e)}")
+                    print(f"Error al procesar registro {registro.id}: {str(e)}")
                     continue
             
             # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)

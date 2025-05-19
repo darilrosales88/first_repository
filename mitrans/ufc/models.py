@@ -591,30 +591,6 @@ class en_trenes(models.Model):
          
     def delete(self, *args, **kwargs):
         try:
-            from nomencladores.models import nom_equipo_ferroviario
-            
-            # Obtener todos los registros asociados antes de eliminarlos
-            registros_asociados = list(self.equipo_vagon.all())
-            
-            # Actualizar estado de equipos y eliminar registros asociados
-            for registro in registros_asociados:
-                try:
-                    with transaction.atomic():
-                        # Actualizar estado del equipo
-                        equipo = nom_equipo_ferroviario.objects.filter(
-                            numero_identificacion=registro.no_id
-                        ).first()
-                        
-                        if equipo:
-                            equipo.estado_actual = 'Disponible'
-                            equipo.save()
-                        
-                        # Eliminar el registro asociado
-                        registro.delete()
-                except Exception as e:
-                    print(f"Error al procesar registro {registro.no_id}: {str(e)}")
-                    continue
-            
             # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
             self.equipo_vagon.clear()
             self.producto.clear()

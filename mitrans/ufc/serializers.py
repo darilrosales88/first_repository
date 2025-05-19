@@ -36,21 +36,23 @@ from Administracion.serializers import UserPermissionSerializer
 
 #****************-------------------------********************--------------------***************-----------------********************************
 #Funcion para actualizar el estado de los vagones deberia estar global
-def actualizar_estado_equipo_ferroviario( no_id, nuevo_estado):
+def actualizar_estado_equipo_ferroviario( equipo_o_id, nuevo_estado):
         """
         Método auxiliar para actualizar el estado de un equipo ferroviario
         """
         try:
             from nomencladores.models import nom_equipo_ferroviario
             
-            equipo = nom_equipo_ferroviario.objects.filter(numero_identificacion=no_id).first()
+            if isinstance(equipo_o_id, nom_equipo_ferroviario):
+                equipo = equipo_o_id
+            else:
+                equipo = nom_equipo_ferroviario.objects.filter(numero_identificacion=equipo_o_id).first()
             if equipo:
                 equipo.estado_actual = nuevo_estado
                 equipo.save()
         except Exception as e:
             # No romper el flujo principal si hay error al actualizar el estado
-            print(f"Error al actualizar estado del equipo {no_id}: {str(e)}")        
-
+            print(f"Error al actualizar estado del equipo: {str(e)}")    
         
 #****************-------------------------********************--------------------***************-----------------****
 class DateTimeToDateField(serializers.ReadOnlyField):
@@ -392,7 +394,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                     # Primero, liberar equipos ferroviarios de registros que se eliminarán
                     registros_a_eliminar = instance.registros_vagones.exclude(id__in=ids_nuevos)
                     for registro in registros_a_eliminar:
-                        self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
+                        actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
                     registros_a_eliminar.delete()
                     
                     # Actualizar o crear registros
@@ -410,7 +412,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                             instance.registros_vagones.add(registro)
                         
                         # Actualizar estado del equipo ferroviario
-                        self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Asignado al estado Cargado/Descargado')
+                        actualizar_estado_equipo_ferroviario(registro.no_id, 'Asignado al estado Cargado/Descargado')
                 
                 return instance
                 
@@ -721,7 +723,7 @@ class en_trenes_serializer(serializers.ModelSerializer):
 
     equipo_vagon = serializers.PrimaryKeyRelatedField(
         many=True,
-        queryset=vagones_dias.objects.all(),
+        queryset=nom_equipo_ferroviario.objects.all(),
         required=False
     )
    
@@ -778,22 +780,47 @@ class en_trenes_serializer(serializers.ModelSerializer):
         instance.producto.set(productos_data)
         instance.equipo_vagon.set(equipo_vagon_data)
         
-        for registro_data in equipo_vagon_data:
-            registro = registro_vagones_cargados.objects.create(**registro_data)
-            instance.registros_vagones.add(registro)
-                    
-                    # Actualizar estado del equipo ferroviario
-            actualizar_estado_equipo_ferroviario(registro.no_id, 'Asignado al estado En Trenes')
+        for equipo in equipo_vagon_data:    
+        # Actualizar estado del equipo ferroviario
+            print("Este es el id a cambiar", equipo)
+            actualizar_estado_equipo_ferroviario(equipo.numero_identificacion, 'Asignado al estado En Trenes')
         
         return instance
 
     def update(self, instance, validated_data):
         productos_data = validated_data.pop('producto', None)
         equipo_vagon_data=validated_data.pop('equipo_vagon',None)
-        instance = super().update(instance, validated_data)
-        instance.equipo_vagon.set(equipo_vagon_data)
+        print("###**Log: ",equipo_vagon_data)
+        #instance = super().update(instance, validated_data)
+        print("###**Log: ",productos_data)
         if productos_data is not None:
             instance.producto.set(productos_data)
+            
+        if equipo_vagon_data:
+# Eliminar registros antiguos no incluidos
+            ids_nuevos = [equipo_id.id for equipo_id in equipo_vagon_data if equipo_id.id]
+            print("###**Log: ",ids_nuevos)
+            # Primero, liberar equipos ferroviarios de registros que se eliminarán
+            registros_a_eliminar = validated_data
+            print("###**Log: ",registros_a_eliminar)
+            for registro in registros_a_eliminar:
+                actualizar_estado_equipo_ferroviario(registro, 'Disponible')
+            
+            
+            # Actualizar o crear registros
+            for registro_id in equipo_vagon_data:
+                
+                if registro_id:
+                    # Actualizar registro existente
+                    registro = nom_equipo_ferroviario.objects.get(id=registro_id.id)
+                    instance.equipo_vagon.add(registro)
+                
+                # Actualizar estado del equipo ferroviario
+                actualizar_estado_equipo_ferroviario(registro_id, 'Asignado al estado En Trenes')
+        
+        instance.equipo_vagon.set(equipo_vagon_data)
+        
+        
         return instance
 
         
@@ -987,9 +1014,10 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         # Crear registros de vagones_dias y asociarlos
         for vagon_data in vagones_data:
             vagon = vagones_dias.objects.create(
-                equipo_ferroviario_id=vagon_data['equipo_ferroviario'],
+                equipo_ferroviario=vagon_data['equipo_ferroviario'],
                 cant_dias=vagon_data['cant_dias']
             )
+            actualizar_estado_equipo_ferroviario(vagon_data['equipo_ferroviario'],"Asignado al estado Por Situar")
             instance.equipo_vagon.add(vagon)
         
         # Asociar productos

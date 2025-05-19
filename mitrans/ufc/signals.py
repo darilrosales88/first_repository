@@ -25,31 +25,39 @@ from .models import (
     HistorialRotacionVagones,
     HistorialSituadoCargaDescarga,
 )
+from ufc.serializers import actualizar_estado_equipo_ferroviario
+
+# @receiver(pre_save, sender=ufc_informe_operativo)
+# def resetear_estados(sender, instance, **kwargs):
+#     """
+#     Borra los registros con fecha diferente al día actual de los modelos cuando se crea un nuevo informe
+#     operativo .
+#     """
+#     if instance.pk is None:  # Solo para nuevos registros
+#         hoy = timezone.now().date()
+
+#         # Verificar si ya existe un informe con la fecha de hoy
+#         existe_informe_hoy = sender.objects.filter(fecha_operacion__date=hoy).exists()
+
+#         if not existe_informe_hoy:
+#             # Borrar todos los registros de ambos modelos
+#             equipos=[]
+#             registros_cargados=vagon_cargado_descargado.objects.all()
+#             for registro in registros_cargados:
+#                 equipos.append()
+#             vagones_productos.objects.all()
+#             Situado_Carga_Descarga.objects.all()
+#             por_situar.objects.all()
+#             registro_vagones_cargados.objects.all()
+#             en_trenes.objects.all()
+#             arrastres.objects.all()
+
 
 
 @receiver(pre_save, sender=ufc_informe_operativo)
-def borrar_registros_antiguos(sender, instance, **kwargs):
-    """
-    Borra los registros con fecha diferente al día actual de los modelos cuando se crea un nuevo informe
-    operativo .
-    """
-    if instance.pk is None:  # Solo para nuevos registros
-        hoy = timezone.now().date()
-
-        # Verificar si ya existe un informe con la fecha de hoy
-        existe_informe_hoy = sender.objects.filter(fecha_operacion__date=hoy).exists()
-
-        if not existe_informe_hoy:
-            # Borrar todos los registros de ambos modelos
-            with transaction.atomic():
-                vagon_cargado_descargado.objects.all().delete()
-                vagones_productos.objects.all().delete()
-                Situado_Carga_Descarga.objects.all().delete()
-                por_situar.objects.all().delete()
-                registro_vagones_cargados.objects.all().delete()
-                en_trenes.objects.all().delete()
-                arrastres.objects.all().delete()
-                rotacion_vagones.objects.all().delete()
+def set_entidad_from_creator(sender, instance, **kwargs):
+    if not instance.entidad and instance.creado_por:
+        instance.entidad = instance.creado_por.entidad
 
 
 @receiver(post_delete, sender=vagon_cargado_descargado)
@@ -111,7 +119,7 @@ def crear_historial_rotacion_vagones(sender, instance, created, **kwargs):
         return
 
     def _crear_historial():
-        fecha_registro = instance.creado_el.date()
+        fecha_registro = instance.fecha.date()
 
         informe = (
             ufc_informe_operativo.objects.annotate(
@@ -141,7 +149,7 @@ def crear_historial_rotacion_vagones(sender, instance, created, **kwargs):
             "real_carga": registro_completo.real_carga,
             "plan_rotacion": registro_completo.plan_rotacion,
             "real_rotacion": registro_completo.real_rotacion,
-            "creado_el": str(registro_completo.creado_el),
+            "fecha": str(registro_completo.fecha),
             "actualizado_el": str(registro_completo.actualizado_el),
         }
 

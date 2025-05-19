@@ -65,7 +65,7 @@
             >
               <td class="ps-td">{{ getTipoOrigenText(item.tipo_origen) }}</td>
               <td class="ps-td">{{ item.origen }}</td>
-              <td class="ps-td">{{ item.tipo_equipo }}</td>
+              <td class="ps-td">{{ item.tipo_equipo_name }}</td>
               <td class="ps-td">
                 <span
                   :class="`ps-status ps-status-${getStatusClass(item.estado)}`"
@@ -334,6 +334,13 @@ export default {
     };
   },
 
+  props: {
+    informeId: {
+      type: [String, Number],
+      required: true
+    }
+  },
+
   computed: {
     filteredRecords() {
       if (!this.searchQuery) return this.registrosArrastre;
@@ -383,21 +390,23 @@ export default {
       }
     },
 
-    getArrastres() {
-      this.loading = true;
-      axios
-        .get("http://127.0.0.1:8000/ufc/pendiente-arrastre-hoy/")
-        .then((response) => {
-          this.registrosArrastre = response.data.results;
-          this.loading = false;
-        })
-        .catch((error) => {
-          console.error("Error al obtener datos:", error);
-          this.errorLoading = true;
-          this.loading = false;
-          this.showErrorToast("No se pudieron cargar los registros");
-        });
-    },
+    async getArrastres() {
+  this.loading = true;
+  try {
+    const response = await axios.get("http://127.0.0.1:8000/ufc/pendiente-arrastre-hoy/", {
+      params: { 
+        informe_operativo: this.informeId 
+      }
+    });
+    this.registrosArrastre = response.data.results;
+  } catch (error) {
+    console.error("Error al obtener datos:", error);
+    this.errorLoading = true;
+    this.showErrorToast("No se pudieron cargar los registros");
+  } finally {
+    this.loading = false;
+  }
+},
 
     getTipoOrigenText(id) {
       const option = this.tipo_origen_options.find((o) => o.id === id);

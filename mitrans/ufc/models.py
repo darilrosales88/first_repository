@@ -1,17 +1,20 @@
-from django.core.validators import RegexValidator
 from django.db import models
+from nomencladores.models import( nom_tipo_equipo_ferroviario,nom_producto,
+                                 nom_tipo_embalaje,nom_unidad_medida,
+                                 nom_equipo_ferroviario,nom_provincia,
+                                 nom_entidades   
+                                 )
+from Administracion.models import CustomUser
+from django.core.validators import RegexValidator
+# Usamos un delay para asegurar que las relaciones ManyToMany estén establecidas 
 from django.db import transaction
 
-from nomencladores.models import (
-    nom_tipo_equipo_ferroviario,
-    nom_producto,
-    nom_tipo_embalaje,
-    nom_unidad_medida,
-    nom_equipo_ferroviario,
-)
 
-# Modelo para el informe operativo
-class ufc_informe_operativo(models.Model):
+
+
+
+#Modelo para el informe operativo
+class ufc_informe_operativo(models.Model):    
 
     fecha_operacion = models.DateTimeField(
         auto_now_add=True, verbose_name="Fecha de operación", unique=True
@@ -25,8 +28,17 @@ class ufc_informe_operativo(models.Model):
     total_vagones_situados = models.IntegerField(default=0)
     plan_total_acumulado_actual = models.IntegerField(default=0)
     real_total_acumulado_actual = models.IntegerField(default=0)
-    estado_parte = models.CharField(default="Creado", max_length=14)
-
+    estado_parte = models.CharField(default="Creado",max_length=14)
+    provincia=models.ForeignKey(nom_provincia,on_delete=models.CASCADE,blank=True, null=True, verbose_name="Provincia")
+    creado_por=models.ForeignKey(CustomUser,on_delete=models.CASCADE, blank=True, null=True, verbose_name="Creado por: ", related_name="informe_creador" )
+    aprobado_por=models.ForeignKey(CustomUser,on_delete=models.CASCADE, blank=True,null=True, verbose_name="Aprobado por: ", related_name="informe_aprobador")
+    entidad = models.ForeignKey(
+        nom_entidades,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Entidad de donde proviene el parte"
+    )
     class Meta:
         permissions = [
             ("puede_rechazar_informe", "Puede rechazar informes operativos"),
@@ -36,14 +48,24 @@ class ufc_informe_operativo(models.Model):
         verbose_name = "Parte informe operativo"
         verbose_name_plural = "Parte informe operativo"
         ordering = ["-fecha_operacion"]
-
+    
+    def save(self, *args, **kwargs):
+        # Asignar entidad del creador si no está establecida
+        if not self.entidad and self.creado_por:
+            self.entidad = self.creado_por.entidad
+        super().save(*args, **kwargs)
+    
     def __str__(self):
         return f"Fecha de operación {self.fecha_operacion} - fecha actual: {self.fecha_actual}"
 
+#*************************************************************************************************************************
 
-# *************************************************************************************************************************
+class vagones_dias(models.Model):
+    equipo_ferroviario=models.ForeignKey(nom_equipo_ferroviario,on_delete=models.CASCADE,related_name="registro_por_dias",verbose_name="Vagones por Dias", null=True,blank=True)
+    cant_dias=models.PositiveSmallIntegerField(verbose_name="Cantidad de Dias")
 
-# productos asociados a vagones en trenes
+
+#productos asociados a vagones en trenes
 class producto_UFC(models.Model):
 
     ESTADO_CHOICES = [
@@ -187,8 +209,15 @@ class vagon_cargado_descargado(models.Model):
     registros_vagones = models.ManyToManyField(
         registro_vagones_cargados,
         blank=True,
-        related_name="registro_vagones_cargados",
-        verbose_name="Registros de vagones asociados",
+        related_name='registro_vagones_cargados',
+        verbose_name="Registros de vagones asociados"
+    )
+
+    informe_operativo = models.ForeignKey(
+        ufc_informe_operativo,
+        on_delete=models.CASCADE,
+        related_name='vagones_cargados_descargados',
+        null=True, blank=True
     )
 
     class Meta:
@@ -260,58 +289,45 @@ class HistorialVagonCargadoDescargado(models.Model):
         return f"Historial para informe {self.informe_operativo.id} - {self.fecha_creacion}"
 
 
-# ************************************************************************************************************************
-# Modelo Situado
+
+#************************************************************************************************************************
+#Modelo Situado
 class Situado_Carga_Descarga(models.Model):
-
-    t_origen = (("puerto", "Puerto"), ("ac_ccd", "Acceso Comercial"))
-
-    tipo_origen = models.CharField(
-        max_length=100,
-        choices=t_origen,
-        verbose_name="Tipo de origen",
-        blank=True,
-        null=True,
-    )
+    
+    TIPO_ORIGEN_DESTINO_CHOICES = [
+        ('puerto', 'Puerto'),
+        ('ac_ccd', 'Acceso comercial/CCD'),
+    ]
+    
+    tipo_origen = models.CharField(max_length=100, choices=TIPO_ORIGEN_DESTINO_CHOICES, verbose_name="Tipo de origen", blank=True, null=True)
     origen = models.CharField(max_length=200, verbose_name="Origen")
-
-    t_equipo = (
-        ("casilla", "Casilla"),
-        ("caj_gon", "Cajones o Góndola"),
-        ("planc_plat", "Plancha o Plataforma"),
-        ("Plan_porta_cont", "Plancha porta contenedores"),
-        ("cist_liquidos", "Cisterna para líquidos"),
-        ("cist_solidos", "Cisterna para sólidos"),
-        ("tolva_g_mineral", "Tolva granelera(mineral)"),
-        ("tolva_g_agric", "Tolva granelera(agrícola)"),
-        ("tolva_g_cemento", "Tolva para cemento"),
-        ("volqueta", "Volqueta"),
-        ("Vagon_ref", "Vagón refrigerado"),
-        ("jaula", "Jaula"),
-        ("locomotora", "Locomotora"),
-        ("tren", "Tren"),
-    )
-
-    tipo_equipo = models.CharField(
-        max_length=200,
-        choices=t_equipo,
-        verbose_name="Tipo de equipo",
+    
+    
+    
+    tipo_equipo=models.ForeignKey(nom_tipo_equipo_ferroviario, on_delete=models.SET_NULL,null=True, blank=True,default="", max_length=50)
+    #tipo_equipo=models.CharField(max_length=100)
+    equipo_vagon=models.ManyToManyField(
+        vagones_dias,
         blank=True,
-        null=True,
+        related_name="situados_vagones_dias",
+        verbose_name="Equipos Situados"
     )
-
-    status = (("vacio", "Vacio"), ("cargado", "Cargado"))
-
-    estado = models.CharField(
-        max_length=200, choices=status, verbose_name="Estado", blank=True, null=True
+    status =(
+        ('vacio', 'Vacio'),
+        ('cargado', 'Cargado')
     )
-
-    t_operacion = (("carga", "Carga"), ("descarga", "Descarga"))
-
-    operacion = models.CharField(
-        max_length=200,
-        choices=t_operacion,
-        verbose_name="Operacion",
+    
+    estado = models.CharField(max_length=200, choices=status, verbose_name="Estado", blank=True, null=True)
+    
+    t_operacion = (
+        ('carga', 'Carga'),
+        ('descarga', 'Descarga')
+    )
+    
+    operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion", blank=True, null=True)
+    fecha = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de registro", editable=False)
+    producto = models.ManyToManyField(
+        producto_UFC,
         blank=True,
         null=True,
     )
@@ -347,7 +363,17 @@ class Situado_Carga_Descarga(models.Model):
             )
         ],
     )
+    
+    
+    
+    informe_operativo = models.ForeignKey(
+        ufc_informe_operativo,
+        on_delete=models.CASCADE,
+        related_name='situados',
+        null=True, blank=True
+    )
 
+    
     observaciones = models.TextField(
         verbose_name="Observaciones",
         help_text="Ingrese observaciones adicionales. Admite letras, números y caracteres especiales.",
@@ -358,7 +384,44 @@ class Situado_Carga_Descarga(models.Model):
     class Meta:
         verbose_name = "Situado "
         verbose_name_plural = "Situados"
-        ordering = ["tipo_origen", "origen"]
+        ordering = ['tipo_origen', 'origen']
+        
+    def delete(self, *args, **kwargs):
+        try:
+            from nomencladores.models import nom_equipo_ferroviario
+            
+            # Obtener todos los registros asociados antes de eliminarlos
+            registros_asociados = list(self.equipo_vagon.all())
+            
+            # Actualizar estado de equipos y eliminar registros asociados
+            for registro in registros_asociados:
+                try:
+                    with transaction.atomic():
+                        # Actualizar estado del equipo
+                        equipo = nom_equipo_ferroviario.objects.filter(
+                            numero_identificacion=registro.no_id
+                        ).first()
+                        
+                        if equipo:
+                            equipo.estado_actual = 'Disponible'
+                            equipo.save()
+                        
+                        # Eliminar el registro asociado
+                        registro.delete()
+                except Exception as e:
+                    print(f"Error al procesar registro {registro.no_id}: {str(e)}")
+                    continue
+            
+            # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
+            self.equipo_vagon.clear()
+            self.producto.clear()
+            
+            # Finalmente eliminar el registro principal
+            super().delete(*args, **kwargs)
+            
+        except Exception as e:
+            print(f"Error crítico al eliminar vagon_cargado_descargado {self.id}: {str(e)}")
+            raise
 
     def __str__(self):
         return f"{self.tipo_origen} - {self.origen} - {self.tipo_equipo}"
@@ -388,8 +451,10 @@ class HistorialSituadoCargaDescarga(models.Model):
         return f"Historial de situado para informe {self.informe_operativo.id} - {self.fecha_creacion}"
 
 
-# **************************************************************************************************
-# Modelo destinado a vagones y productos
+
+
+#**************************************************************************************************
+#Modelo destinado a vagones y productos
 class vagones_productos(models.Model):
     TIPO_ORIGEN_CHOICES = [
         ("puerto", "Puerto"),
@@ -447,6 +512,14 @@ class vagones_productos(models.Model):
     plan_anual = models.IntegerField(default=0)
     plan_acumulado_dia_anterior = models.IntegerField()
     real_acumulado_dia_anterior = models.IntegerField()
+    
+    informe_operativo = models.ForeignKey(
+        ufc_informe_operativo,
+        on_delete=models.CASCADE,
+        related_name='vagones_productos',
+        null=True, blank=True
+    )
+
 
     class Meta:
         verbose_name_plural = "Vagones y productos"
@@ -469,7 +542,6 @@ class vagones_productos(models.Model):
         return f"Vagones y productos: {productos_str}"
 
 
-# Modelo para el historial de vagones_productos
 class HistorialVagonesProductos(models.Model):
     informe_operativo = models.ForeignKey(
         ufc_informe_operativo,
@@ -489,17 +561,17 @@ class HistorialVagonesProductos(models.Model):
         return f"Historial vagon-producto para informe {self.informe_operativo.id}"
 
 
-# ************************************************************************************************************************************
-# Modelo para representar en_trenes
+#************************************************************************************************************************************
+#Modelo para representar en_trenes
 class en_trenes(models.Model):
 
     TIPO_ORIGEN_DESTINO_CHOICES = [
         ("puerto", "Puerto"),
         ("ac_ccd", "Acceso comercial/CCD"),
     ]
-
-    TIPO_EQUIPO_CHOICES = nom_tipo_equipo_ferroviario.t_equipo
-
+    
+    #TIPO_EQUIPO_CHOICES=nom_tipo_equipo_ferroviario.t_equipo
+    
     ESTADO_CHOICES = [
         ("vacio", "Vacío"),
         ("cargado", "Cargado"),
@@ -547,7 +619,7 @@ class en_trenes(models.Model):
         nom_equipo_ferroviario,
         blank=True,
         related_name="en_trenes_vagones",
-        verbose_name="Productos",
+        verbose_name="Vagones en Trenes"
     )
     observaciones = models.TextField(
         verbose_name="Observaciones",
@@ -555,7 +627,15 @@ class en_trenes(models.Model):
         blank=True,  # Permite que el campo esté vacío
         null=True,  # Permite valores nulos en la base de datos
     )
+    
+    informe_operativo = models.ForeignKey(
+        ufc_informe_operativo,
+        on_delete=models.CASCADE,
+        related_name='en_trenes',
+        null=True, blank=True
+    )
 
+    
     def save(self, *args, **kwargs):
         # Llenar el campo numero_identificacion_locomotora con el valor de la locomotora relacionada
         if self.locomotora:
@@ -566,8 +646,20 @@ class en_trenes(models.Model):
 
     class Meta:
         verbose_name = "Tren"
-        verbose_name_plural = "Trenes"
-
+        verbose_name_plural="Trenes"
+         
+    def delete(self, *args, **kwargs):
+        try:
+            # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
+            self.equipo_vagon.clear()
+            self.producto.clear()
+            
+            # Finalmente eliminar el registro principal
+            super().delete(*args, **kwargs)
+            
+        except Exception as e:
+            print(f"Error crítico al eliminar vagon_cargado_descargado {self.id}: {str(e)}")
+    
     def __str__(self):
         return f"En trenes {self.id} -{self.numero_identificacion_locomotora}- {self.get_estado_display()}"
 
@@ -592,9 +684,7 @@ class HistorialEnTrenes(models.Model):
     def __str__(self):
         return f"Historial de tren para informe {self.informe_operativo.id} - {self.fecha_creacion}"
 
-
-# ***********************************************************************************************************************
-
+#***********************************************************************************************************************
 
 class por_situar(models.Model):
 
@@ -621,13 +711,26 @@ class por_situar(models.Model):
         ("locomotora", "Locomotora"),
         ("tren", "Tren"),
     )
-
-    tipo_equipo = models.CharField(
-        max_length=200, choices=t_equipo, verbose_name="Tipo de equipo"
+    
+    tipo_equipo = models.ForeignKey(
+        nom_tipo_equipo_ferroviario,
+        on_delete=models.SET_NULL,
+        verbose_name="Tipo de equipo", 
+        blank=True, 
+        null=True
     )
-
-    status = (("vacio", "Vacio"), ("cargado", "Cargado"))
-
+    
+    equipo_vagon=models.ManyToManyField(
+        vagones_dias,
+        blank=True,
+        related_name="por_situar_vagones_dias",
+        verbose_name="Equipos por Situar"
+    )
+    status =(
+        ('vacio', 'Vacio'),
+        ('cargado', 'Cargado')
+    )
+    
     estado = models.CharField(max_length=200, choices=status, verbose_name="Estado")
 
     t_operacion = (("carga", "Carga"), ("descarga", "Descarga"))
@@ -660,12 +763,53 @@ class por_situar(models.Model):
         blank=True,
         null=True,
     )
+    informe_operativo = models.ForeignKey(
+        ufc_informe_operativo,
+        on_delete=models.CASCADE,
+        related_name='por_situar',
+        null=True, blank=True
+    )
+
 
     class Meta:
         verbose_name = "Por situar"
         verbose_name_plural = "Por situar"
-        ordering = ["tipo_origen", "origen"]
+        ordering = ['tipo_origen', 'origen']
 
+    def delete(self, *args, **kwargs):
+        try:
+            from nomencladores.models import nom_equipo_ferroviario
+            
+            # Obtener todos los registros asociados antes de eliminarlos
+            registros_asociados = list(self.equipo_vagon.all())
+            
+            # Actualizar estado de equipos y eliminar registros asociados
+            for registro in registros_asociados:
+                try:
+                    with transaction.atomic():
+                        # Actualizar estado del equipo
+                        equipo =registro.equipo_ferroviario
+                        
+                        if equipo:
+                            equipo.estado_actual = 'Disponible'
+                            equipo.save()
+                        
+                        # Eliminar el registro asociado
+                        registro.delete()
+                except Exception as e:
+                    print(f"Error al procesar registro {registro.id}: {str(e)}")
+                    continue
+            
+            # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
+            self.equipo_vagon.clear()
+            self.producto.clear()
+            
+            # Finalmente eliminar el registro principal
+            super().delete(*args, **kwargs)
+            
+        except Exception as e:
+            print(f"Error crítico al eliminar vagon_cargado_descargado {self.id}: {str(e)}")
+    
     def __str__(self):
         return f"{self.tipo_origen} - {self.origen} - {self.tipo_equipo}"
 
@@ -692,7 +836,8 @@ class HistorialVagonPorSituar(models.Model):
         return f"Historial por situar para informe {self.informe_operativo.id} - {self.fecha_creacion}"
 
 
-# **********************************************************************************************************************
+    
+#**********************************************************************************************************************
 class arrastres(models.Model):
 
     TIPO_ORIGEN_DESTINO_CHOICES = [
@@ -725,17 +870,27 @@ class arrastres(models.Model):
         ("locomotora", "Locomotora"),
         ("tren", "Tren"),
     )
-
-    tipo_equipo = models.CharField(
-        max_length=200,
-        choices=TIPO_EQUIPO_CHOICES,
-        verbose_name="Tipo de equipo",
-        blank=True,
-        null=True,
+    
+    tipo_equipo = models.ForeignKey(
+        nom_tipo_equipo_ferroviario,
+        on_delete=models.SET_NULL,
+        verbose_name="Tipo de equipo", 
+        blank=True, 
+        null=True
     )
-
-    ESTADO_CHOICES = (("vacio", "Vacio"), ("cargado", "Cargado"))
-
+    
+    equipo_vagon=models.ManyToManyField(
+        vagones_dias,
+        blank=True,
+        related_name="arrastre_vagones_dias",
+        verbose_name="Equipos en Arrastre"
+    )
+    
+    ESTADO_CHOICES = (
+        ('vacio', 'Vacio'),
+        ('cargado', 'Cargado')
+    )
+    
     estado = models.CharField(
         max_length=200,
         choices=ESTADO_CHOICES,
@@ -758,19 +913,64 @@ class arrastres(models.Model):
         max_length=50,
         verbose_name="Tipo de destino",
     )
-
-    destino = models.CharField(default="", max_length=40, verbose_name="Destino")
-    fecha = models.DateTimeField(
-        auto_now_add=True, verbose_name="Fecha de registro", editable=False
+    
+    destino = models.CharField(
+        default='',
+        max_length=40,
+        verbose_name="Destino"
+    )
+    fecha = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de registro", editable=False)
+    
+    informe_operativo = models.ForeignKey(
+        ufc_informe_operativo,
+        on_delete=models.CASCADE,
+        related_name='arrastres',
+        null=True, blank=True
     )
 
     class Meta:
         verbose_name = "arrastre"
         verbose_name_plural = "Arrastres"
-
-    #   db_table = "arrastres"  # Esto asegura que la tabla se llame exactamente "arrastres"
-    # no quiero que la tabla se llame arrastres, quiero que se llame ufc_arrastre
-
+     #   db_table = "arrastres"  # Esto asegura que la tabla se llame exactamente "arrastres"
+     #no quiero que la tabla se llame arrastres, quiero que se llame ufc_arrastre
+    
+    
+    def delete(self, *args, **kwargs):
+        try:
+            from nomencladores.models import nom_equipo_ferroviario
+            
+            # Obtener todos los registros asociados antes de eliminarlos
+            registros_asociados = list(self.equipo_vagon.all())
+            
+            # Actualizar estado de equipos y eliminar registros asociados
+            for registro in registros_asociados:
+                try:
+                    with transaction.atomic():
+                        # Actualizar estado del equipo
+                        equipo = nom_equipo_ferroviario.objects.filter(
+                            numero_identificacion=registro.no_id
+                        ).first()
+                        
+                        if equipo:
+                            equipo.estado_actual = 'Disponible'
+                            equipo.save()
+                        
+                        # Eliminar el registro asociado
+                        registro.delete()
+                except Exception as e:
+                    print(f"Error al procesar registro {registro.no_id}: {str(e)}")
+                    continue
+            
+            # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
+            self.equipo_vagon.clear()
+            self.producto.clear()
+            
+            # Finalmente eliminar el registro principal
+            super().delete(*args, **kwargs)
+            
+        except Exception as e:
+            print(f"Error crítico al eliminar vagon_cargado_descargado {self.id}: {str(e)}")
+    
     def __str__(self):
         return f"Arrastre Pendiente{self.id} - {self.origen}"
 
@@ -795,9 +995,9 @@ class HistorialArrastres(models.Model):
         return f"Historial de arrastre para informe {self.informe_operativo.id} - {self.fecha_creacion}"
 
 
-# ************************************************************************************************************************
-
-
+#************************************************************************************************************************
+    
+    
 class rotacion_vagones(models.Model):
     tipo_equipo_ferroviario = models.ForeignKey(
         nom_tipo_equipo_ferroviario,
@@ -810,16 +1010,24 @@ class rotacion_vagones(models.Model):
     en_servicio = models.PositiveIntegerField(verbose_name="En servicio")
     plan_carga = models.PositiveIntegerField(verbose_name="Plan carga")
     real_carga = models.PositiveIntegerField(verbose_name="Real carga")
-    plan_rotacion = models.PositiveIntegerField(verbose_name="Plan rotación")
-    real_rotacion = models.PositiveIntegerField(verbose_name="Real rotación")
+    plan_rotacion = models.FloatField(verbose_name="Plan rotación")
+    real_rotacion = models.FloatField(verbose_name="Real rotación")
 
-    creado_el = models.DateTimeField(auto_now_add=True, verbose_name="Creado el")
+    fecha = models.DateTimeField(auto_now_add=True,  verbose_name="Fecha de registro")
     actualizado_el = models.DateTimeField(auto_now=True, verbose_name="Actualizado el")
+    
+    informe_operativo = models.ForeignKey(
+        ufc_informe_operativo,
+        on_delete=models.CASCADE,
+        related_name='rotacion',
+        null=True, blank=True
+    )
+
 
     class Meta:
         verbose_name = "Registro de rotación"
         verbose_name_plural = "Registros de rotación"
-        ordering = ["-creado_el"]
+        ordering = ["-fecha"]
 
     def __str__(self):
         return (

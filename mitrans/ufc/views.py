@@ -5,7 +5,7 @@ from rest_framework.pagination import PageNumberPagination
 #importacion de modelos
 from .models import vagon_cargado_descargado,producto_UFC,en_trenes
 from .models import registro_vagones_cargados,vagones_productos,HistorialVagonesProductos
-from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones,ufc_informe_operativo
+from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones,ufc_informe_operativo,vagones_dias
 #importacion de serializadores asociados a los modelos
 from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descargado_serializer, 
                         producto_vagon_serializer, en_trenes_serializer,PorSituarCargaDescargaSerializer, SituadoCargaDescargaSerializers, 
@@ -14,8 +14,9 @@ from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descarg
                         vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer,
                         ufc_informe_operativo_serializer,ufc_informe_operativo_filter,
                         HistorialVagonCargadoDescargado,HistorialVagonCargadoDescargadoSerializer,
-                        HistorialVagonesProductosSerializer)
-
+                        HistorialVagonesProductosSerializer,vagones_dias_serializer
+                        )
+from django.core.cache import cache
 from Administracion.models import Auditoria
 
 from rest_framework.response import Response
@@ -41,13 +42,12 @@ from django.db.models.functions import TruncDate
 from django.db.models import DateField
 from datetime import datetime
 from django.db.models.functions import Cast
-from django.db import transaction
+
 
 from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
+
 import json
-from datetime import date
+
 
 # Verifica si el usuario tiene el rol "ufc"
 class IsUFCPermission(permissions.BasePermission):
@@ -66,7 +66,30 @@ class IsUFCPermission(permissions.BasePermission):
             permission_classes = [IsAdminUFCPermission | IsVisualizadorUFCPermission]
         return [permission() for permission in permission_classes]
 
-
+#Funcion para actualizar el estado de los vagones deberia estar global
+def actualizar_estado_equipo_ferroviario( equipo_o_id, nuevo_estado, id=None):
+        """
+        Método auxiliar para actualizar el estado de un equipo ferroviario
+        """
+        try:
+            from nomencladores.models import nom_equipo_ferroviario
+            if (id) is not None:
+                equipo = nom_equipo_ferroviario.objects.get(id=id)
+                equipo.estado_actual=nuevo_estado
+                equipo.save()
+                return True
+            if isinstance(equipo_o_id, nom_equipo_ferroviario):
+                equipo = equipo_o_id
+            else:
+                equipo = nom_equipo_ferroviario.objects.filter(numero_identificacion=equipo_o_id).first()
+            if equipo:
+                equipo.estado_actual = nuevo_estado
+                equipo.save()
+        except Exception as e:
+            # No romper el flujo principal si hay error al actualizar el estado
+            print(f"Error al actualizar estado del equipo: {str(e)}")    
+             
+        
 #**********************************************************************************************************************************
 
 #Para Informe operativo
@@ -261,6 +284,7 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
 #Verificando que exista el informe creado antes de insertar
 @api_view(['GET'])
 def verificar_informe_existente(request):
+    print(request)
     fecha_operacion = request.query_params.get('fecha_operacion')
     if not fecha_operacion:
         return Response({"error": "Parámetro fecha_operacion requerido"}, status=400)
@@ -527,7 +551,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
         registros_asociados = instance.registros_vagones.all()
         
         for registro in registros_asociados:
-            self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
+            actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
         
         registros_asociados.delete()
         instance.delete()
@@ -719,7 +743,7 @@ class vagon_cargado_descargado_hoy_view_set(viewsets.ModelViewSet):
         registros_asociados = instance.registros_vagones.all()
         
         for registro in registros_asociados:
-            self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
+            actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
         
         registros_asociados.delete()
         instance.delete()
@@ -980,6 +1004,7 @@ class en_trenes_view_set(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
+    # En views.py (en_trenes_view_set)
     def destroy(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
@@ -989,8 +1014,20 @@ class en_trenes_view_set(viewsets.ModelViewSet):
 
         instance = self.get_object()
         id_objeto_en_trenes = instance.id
-
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
+        
+        # 1. Primero obtener todos los equipos asociados
+        equipos_asociados = instance.equipo_vagon.all()
+        
+        # 2. Actualizar estado de cada equipo
+        for equipo in equipos_asociados:
+            try:
+                # Pasar el objeto completo en lugar de solo el número
+                actualizar_estado_equipo_ferroviario(equipo, "Disponible")
+            except Exception as e:
+                print(f"Error al actualizar equipo {equipo.id}: {str(e)}")
+                continue
+        
+        # 3. Registrar auditoría
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
         Auditoria.objects.create(
@@ -1000,9 +1037,9 @@ class en_trenes_view_set(viewsets.ModelViewSet):
             navegador=navegador,
         )
 
+        # 4. Finalmente eliminar la instancia
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
     def list(self, request, *args, **kwargs):
         #si no pertenece a VisualizadorUFC o AdminUFC no puede realizar la accion
         if not request.user.groups.filter(name='AdminUFC').exists() and not request.user.groups.filter(name='VisualizadorUFC').exists():
@@ -1590,6 +1627,15 @@ class PendienteArrastre_hoy_Viewset(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
     
     
+    
+    
+    
+#*************Registro de vagones Dia*******************
+class VagonesDiasViewSet(viewsets.ModelViewSet):
+    queryset=vagones_dias.objects.all()
+    serializer_class=vagones_dias_serializer    
+    
+    
 #*************Empieza View Rotacion de Vagones **********************
 class RotacionVagonesViewSet(viewsets.ModelViewSet):
     """
@@ -1671,7 +1717,7 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+        if not request.user.groups.filter(name='Admin').exists() and not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
                 {"detail": "No tiene permiso para realizar esta acción."},
                 status=status.HTTP_403_FORBIDDEN

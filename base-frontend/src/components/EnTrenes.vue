@@ -392,6 +392,13 @@ export default {
     };
   },
 
+  props: {
+    informeId: {
+      type: [String, Number],
+      required: true
+    }
+  },
+
   computed: {
     filteredRecords() {
       if (!this.searchQuery) return this.en_trenes;
@@ -482,6 +489,7 @@ export default {
           params: {
             page: this.currentPage,
             page_size: this.itemsPerPage,
+            informe_operativo: this.informeId
           },
         });
         this.en_trenes = response.data.results;

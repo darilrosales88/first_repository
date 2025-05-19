@@ -390,6 +390,13 @@ export default {
     };
   },
 
+  props: {
+    informeId: {
+      type: [String, Number],
+      required: true
+    }
+  },
+
   computed: {
     filteredRecords() {
       if (!this.searchQuery) return this.registrosPorSituar;
@@ -422,7 +429,11 @@ export default {
     async getSituado() {
       this.loading = true;
       try {
-        const response = await axios.get("/ufc/situados-hoy/");
+        const response = await axios.get("/ufc/situados-hoy/", {
+          params: { 
+            informe_operativo: this.informeId 
+          }
+        });
         this.totalItems = response.data.count;
 
         if (

@@ -339,10 +339,10 @@ export default {
     esPlanAnualEditable() {
       // Casos 3 y 4: Editable cuando es único informe en el año
       // Cuando no es editable, forzar el valor a 0
-    if (!this.esUnicoInformeAnual) {
-      this.formData.plan_anual = 0;
-    }
-    return this.esUnicoInformeAnual;
+      if (!this.esUnicoInformeAnual) {
+        this.formData.plan_anual = 0;
+      }
+      return this.esUnicoInformeAnual;
     },
   },
 
@@ -411,11 +411,20 @@ export default {
           );
           this.$router.push({ name: "InfoOperativo" });
           return;
-          
         }
-        // 2. Verificar que el informe no esté en estado "Aprobado"
-        const informeResponse = await axios.get(`/ufc/informe-operativo/${this.informeOperativoId}/`);
-        
+
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(
+          today.getMonth() + 1
+        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+        const informeResponse = await axios.get(
+          "/ufc/verificar-informe-existente/",
+          {
+            params: { fecha_operacion: fechaFormateada },
+          }
+        );
+
         if (informeResponse.data.estado_parte === "Aprobado") {
           Swal.fire(
             "Error",
@@ -459,10 +468,12 @@ export default {
           );
           return;
         }
+        this.formData.informe_operativo = informeResponse.data.id;
 
         const datosEnvio = {
           ...this.formData,
           producto_ids: productosParaEnviar,
+          informe_operativo: informeResponse.data.id,
         };
 
         const response = await axios.post(
@@ -521,10 +532,12 @@ export default {
       try {
         this.formData.fecha = new Date().toISOString();
         const today = new Date();
-        const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        const fechaFormateada = `${today.getFullYear()}-${String(
+          today.getMonth() + 1
+        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-        const response = await axios.get('/ufc/verificar-informe-existente/', {
-          params: { fecha_operacion: fechaFormateada }
+        const response = await axios.get("/ufc/verificar-informe-existente/", {
+          params: { fecha_operacion: fechaFormateada },
         });
 
         if (response.data.existe) {

@@ -661,7 +661,7 @@ export default {
           confirmButtonText: "Aceptar",
         });
 
-        // this.resetForm();
+        this.resetForm();
       } catch (error) {
         console.error("Error al enviar el formulario:", error);
 

@@ -67,13 +67,17 @@ class IsUFCPermission(permissions.BasePermission):
         return [permission() for permission in permission_classes]
 
 #Funcion para actualizar el estado de los vagones deberia estar global
-def actualizar_estado_equipo_ferroviario( equipo_o_id, nuevo_estado):
+def actualizar_estado_equipo_ferroviario( equipo_o_id, nuevo_estado, id=None):
         """
         Método auxiliar para actualizar el estado de un equipo ferroviario
         """
         try:
             from nomencladores.models import nom_equipo_ferroviario
-            
+            if (id) is not None:
+                equipo = nom_equipo_ferroviario.objects.get(id=id)
+                equipo.estado_actual=nuevo_estado
+                equipo.save()
+                return True
             if isinstance(equipo_o_id, nom_equipo_ferroviario):
                 equipo = equipo_o_id
             else:
@@ -83,7 +87,8 @@ def actualizar_estado_equipo_ferroviario( equipo_o_id, nuevo_estado):
                 equipo.save()
         except Exception as e:
             # No romper el flujo principal si hay error al actualizar el estado
-            print(f"Error al actualizar estado del equipo: {str(e)}")        
+            print(f"Error al actualizar estado del equipo: {str(e)}")    
+             
         
 #**********************************************************************************************************************************
 
@@ -1183,7 +1188,6 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
-        print("mayeya")
         if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
                 {"detail": "No tiene permiso para realizar esta acción."},

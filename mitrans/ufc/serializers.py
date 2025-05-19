@@ -36,13 +36,17 @@ from Administracion.serializers import UserPermissionSerializer
 
 #****************-------------------------********************--------------------***************-----------------********************************
 #Funcion para actualizar el estado de los vagones deberia estar global
-def actualizar_estado_equipo_ferroviario( equipo_o_id, nuevo_estado):
+def actualizar_estado_equipo_ferroviario( equipo_o_id, nuevo_estado, id=None):
         """
         Método auxiliar para actualizar el estado de un equipo ferroviario
         """
         try:
             from nomencladores.models import nom_equipo_ferroviario
-            
+            if (id) is not None:
+                equipo = nom_equipo_ferroviario.objects.get(id=id)
+                equipo.estado_actual=nuevo_estado
+                equipo.save()
+                return True
             if isinstance(equipo_o_id, nom_equipo_ferroviario):
                 equipo = equipo_o_id
             else:
@@ -1013,11 +1017,13 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         
         # Crear registros de vagones_dias y asociarlos
         for vagon_data in vagones_data:
+            equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
             vagon = vagones_dias.objects.create(
-                equipo_ferroviario=vagon_data['equipo_ferroviario'],
+                equipo_ferroviario=equipo,
                 cant_dias=vagon_data['cant_dias']
             )
-            actualizar_estado_equipo_ferroviario(vagon_data['equipo_ferroviario'],"Asignado al estado Por Situar")
+            
+            actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Por Situar")
             instance.equipo_vagon.add(vagon)
         
         # Asociar productos
@@ -1025,18 +1031,23 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         
         return instance
 
-    def update(self, instance, validated_data):
+###Tanke
+
+    def update(self, instance:por_situar, validated_data):
         vagones_data = validated_data.pop('equipo_vagon', None)
         productos_data = validated_data.pop('producto', None)
         
-        instance = super().update(instance, validated_data)
-        
+        for equipo in instance.equipo_vagon.all():
+            equipo_id=equipo.equipo_ferroviario
+            actualizar_estado_equipo_ferroviario(equipo_id,"Disponible")
         # Actualizar vagones si se proporcionan
         if vagones_data is not None:
             instance.equipo_vagon.clear()
             for vagon_data in vagones_data:
+                equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+                actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Por Situar")
                 vagon = vagones_dias.objects.create(
-                    equipo_ferroviario_id=vagon_data['equipo_ferroviario'],
+                    equipo_ferroviario=equipo,
                     cant_dias=vagon_data['cant_dias']
                 )
                 instance.equipo_vagon.add(vagon)
@@ -1251,7 +1262,7 @@ class ufc_informe_operativo_serializer(serializers.ModelSerializer):
     por_situar_list = serializers.SerializerMethodField()
     vagones_productos_list = serializers.SerializerMethodField()
     rotacion_vagones_list = serializers.SerializerMethodField()
-    
+    entidad_detalle=serializers.ReadOnlyField(source = 'entidad.nombre') 
     creado_por = serializers.PrimaryKeyRelatedField(
         queryset=CustomUser.objects.all(), 
         write_only=True,
@@ -1279,6 +1290,8 @@ class ufc_informe_operativo_serializer(serializers.ModelSerializer):
             'real_total_vagones_cargados',
             'total_vagones_situados',
             'estado_parte',
+            'entidad',
+            'entidad_detalle',
             'creado_por',
             'creado_por_detalle',
             'aprobado_por',

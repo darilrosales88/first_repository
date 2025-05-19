@@ -1,7 +1,8 @@
 from django.db import models
 from nomencladores.models import( nom_tipo_equipo_ferroviario,nom_producto,
                                  nom_tipo_embalaje,nom_unidad_medida,
-                                 nom_equipo_ferroviario,nom_provincia   
+                                 nom_equipo_ferroviario,nom_provincia,
+                                 nom_entidades   
                                  )
 from Administracion.models import CustomUser
 from django.core.validators import RegexValidator
@@ -27,7 +28,13 @@ class ufc_informe_operativo(models.Model):
     provincia=models.ForeignKey(nom_provincia,on_delete=models.CASCADE,blank=True, null=True, verbose_name="Provincia")
     creado_por=models.ForeignKey(CustomUser,on_delete=models.CASCADE, blank=True, null=True, verbose_name="Creado por: ", related_name="informe_creador" )
     aprobado_por=models.ForeignKey(CustomUser,on_delete=models.CASCADE, blank=True,null=True, verbose_name="Aprobado por: ", related_name="informe_aprobador")
-
+    entidad = models.ForeignKey(
+        nom_entidades,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Entidad de donde proviene el parte"
+    )
     class Meta:
         permissions = [
             ("puede_rechazar_informe", "Puede rechazar informes operativos"),
@@ -37,7 +44,13 @@ class ufc_informe_operativo(models.Model):
         verbose_name = "Parte informe operativo"
         verbose_name_plural = "Parte informe operativo"
         ordering = ["-fecha_operacion"]
-
+    
+    def save(self, *args, **kwargs):
+        # Asignar entidad del creador si no está establecida
+        if not self.entidad and self.creado_por:
+            self.entidad = self.creado_por.entidad
+        super().save(*args, **kwargs)
+    
     def __str__(self):
         return f"Fecha de operación {self.fecha_operacion} - fecha actual: {self.fecha_actual}" 
 

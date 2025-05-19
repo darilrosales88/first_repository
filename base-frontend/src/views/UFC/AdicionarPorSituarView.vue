@@ -191,7 +191,10 @@
                           @click.stop
                         />
                       </div>
-                      <div class="ufc-productos-options">
+                      <div
+                        class="ufc-productos-options"
+                        v-if="hasGroup('AdminUFC')"
+                      >
                         <div
                           v-for="producto in filteredProductos"
                           :key="producto.id"
@@ -242,7 +245,6 @@
                     v-model.number="formData.por_situar"
                     min="1"
                     required
-                    readonly
                   />
                   <span class="ufc-por-situar-suffix">unidades</span>
                 </div>
@@ -441,69 +443,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Modal para agregar/editar vagón -->
-    <div v-if="mostrarModalVagon" class="ufc-modal-overlay">
-      <div class="ufc-modal-container">
-        <div class="ufc-modal-header">
-          <h3>
-            <i class="bi bi-train-freight-front"></i>
-            {{ modoEdicionVagon ? "Editar Vagón" : "Agregar Vagón" }}
-          </h3>
-          <button @click="cerrarModal" class="ufc-modal-close">
-            <i class="bi bi-x"></i>
-          </button>
-        </div>
-        <div class="ufc-modal-body">
-          <form @submit.prevent="guardarVagon" class="ufc-modal-form">
-            <div class="ufc-input-group">
-              <label for="equipo_ferroviario"
-                >Equipo Ferroviario <span class="required">*</span></label
-              >
-              <select
-                class="ufc-select"
-                v-model="vagonForm.equipo_ferroviario"
-                required
-              >
-                <option value="" disabled>Seleccione un equipo</option>
-                <option
-                  v-for="equipo in equiposFerroviarios"
-                  :key="equipo.id"
-                  :value="equipo.id"
-                >
-                  {{ equipo.numero_identificacion }} -
-                  {{ equipo.tipo_equipo.tipo_equipo }}
-                </option>
-              </select>
-            </div>
-
-            <div class="ufc-input-group">
-              <label for="dias">Días <span class="required">*</span></label>
-              <input
-                type="number"
-                class="ufc-input"
-                v-model.number="vagonForm.dias"
-                min="1"
-                required
-              />
-            </div>
-
-            <div class="ufc-modal-actions">
-              <button
-                type="button"
-                class="ufc-button secondary"
-                @click="cerrarModal"
-              >
-                Cancelar
-              </button>
-              <button type="submit" class="ufc-button primary">
-                {{ modoEdicionVagon ? "Guardar Cambios" : "Agregar" }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -559,15 +498,6 @@ export default {
         { id: "carga", text: "Carga" },
         { id: "descarga", text: "Descarga" },
       ],
-      vagonesAsociados: [], // Aquí se almacenarán los vagones antes de enviar
-      equiposFerroviarios: [], // Lista de equipos disponibles
-      mostrarModalVagon: false,
-      vagonForm: {
-        equipo_ferroviario: "",
-        dias: 1,
-      },
-      vagonEditIndex: null,
-      modoEdicionVagon: false,
     };
   },
   mounted() {
@@ -580,116 +510,42 @@ export default {
   },
   computed: {
     formattedFechaRegistro() {
-      return new Date().toLocaleString("es-ES", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      if (this.formData.fecha) {
+        return new Date(this.formData.fecha).toLocaleString();
+      }
+      return new Date().toLocaleString();
     },
   },
+  async created() {
+    await this.fetchUserPermissionsAndGroups(); // Espera a que se carguen los permisos
+    //await this.GetRegistroVagonesCargadosDescargados(); // Luego carga los registros
+  },
   methods: {
-    async abrirModalAgregarVagon() {
+    // Verifica si el usuario pertenece a un grupo específico
+    hasGroup(group) {
+      return this.userGroups.some((g) => g.name === group);
+    },
+    // Obtiene los permisos y grupos del usuario
+    async fetchUserPermissionsAndGroups() {
       try {
-        // Cargar equipos ferroviarios disponibles
-        const response = await axios.get("/api/e-f-no-locomotora/");
-
-        // Filtrar equipos que no estén ya en la lista de vagones asociados
-        const equiposDisponibles = response.data;
-
-        this.equiposFerroviarios = equiposDisponibles;
-
-        if (this.equiposFerroviarios.length === 0) {
-          Swal.fire({
-            title: "No hay equipos disponibles",
-            text: "Todos los equipos ferroviarios ya están asociados o no hay equipos activos",
-            icon: "info",
-          });
-          return;
+        const userId = localStorage.getItem("userid");
+        if (userId) {
+          const response = await axios.get(
+            `/apiAdmin/user/${userId}/permissions-and-groups/`
+          );
+          this.userPermissions = response.data.permissions;
+          this.userGroups = response.data.groups;
         }
-
-        this.modoEdicionVagon = false;
-        this.vagonForm = {
-          equipo_ferroviario: this.equiposFerroviarios[0]?.id || "",
-          dias: 1,
-        };
-        this.mostrarModalVagon = true;
+        console.log("Permisos: ", this.userPermissions);
+        console.log("Grupos: ", this.userGroups);
       } catch (error) {
-        console.error("Error al cargar equipos:", error);
-        Swal.fire(
-          "Error",
-          "No se pudieron cargar los equipos ferroviarios",
-          "error"
-        );
+        console.error("Error al obtener permisos y grupos:", error);
       }
-    },
-
-    guardarVagon() {
-      // Validación
-      if (
-        !this.vagonForm.equipo_ferroviario ||
-        !this.vagonForm.dias ||
-        this.vagonForm.dias < 1
-      ) {
-        Swal.fire("Error", "Complete todos los campos correctamente", "error");
-        return;
-      }
-
-      // Buscar el equipo seleccionado para obtener su nombre
-      const equipoSeleccionado = this.equiposFerroviarios.find(
-        (e) => e.id === this.vagonForm.equipo_ferroviario
-      );
-
-      if (!equipoSeleccionado) {
-        Swal.fire("Error", "No se encontró el equipo seleccionado", "error");
-        return;
-      }
-
-      const vagonData = {
-        equipo_ferroviario: this.vagonForm.equipo_ferroviario,
-        equipo_ferroviario_nombre: `${equipoSeleccionado.numero_identificacion} - ${equipoSeleccionado.tipo_equipo.tipo_equipo}`,
-        dias: this.vagonForm.dias,
-      };
-
-      if (this.modoEdicionVagon) {
-        // Editar existente
-        this.vagonesAsociados[this.vagonEditIndex] = vagonData;
-        Swal.fire("Actualizado", "El vagón ha sido actualizado", "success");
-      } else {
-        // Agregar nuevo
-        this.vagonesAsociados.push(vagonData);
-        Swal.fire("Agregado", "El vagón ha sido agregado", "success");
-      }
-
-      // Actualizar el campo por_situar automáticamente
-      this.formData.por_situar = this.vagonesAsociados.length;
-
-      this.cerrarModal();
-    },
-
-    eliminarVagon(index) {
-      Swal.fire({
-        title: "¿Eliminar vagón?",
-        text: "Esta acción no se puede deshacer",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#002a68",
-        cancelButtonColor: "#6c757d",
-        confirmButtonText: "Sí, eliminar",
-        cancelButtonText: "Cancelar",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.vagonesAsociados.splice(index, 1);
-          // Actualizar el campo por_situar automáticamente
-          this.formData.por_situar = this.vagonesAsociados.length;
-          Swal.fire("Eliminado", "El vagón ha sido eliminado", "success");
-        }
-      });
     },
 
     async verificarInformeOperativo() {
       try {
+        this.formData.fecha = new Date().toISOString();
         const today = new Date();
         const fechaFormateada = `${today.getFullYear()}-${String(
           today.getMonth() + 1
@@ -708,6 +564,20 @@ export default {
         console.error("Error al verificar informe:", error);
         return false;
       }
+    },
+    async abrirModalVagon() {
+      this.mostrarModalVagon = true;
+      console.log(this.vagonesAgregados);
+      if (this.equiposFerroviarios.length === 0) {
+        await this.buscarEquipos();
+      }
+    },
+    cerrarModalVagon() {
+      this.mostrarModalVagon = false;
+      this.nuevoVagon = {
+        equipo_ferroviario: "",
+        cant_dias: 1,
+      };
     },
 
     async getEntidades() {
@@ -795,12 +665,12 @@ export default {
       try {
         const response = await axios.get("/ufc/producto-vagon/", {
           params: {
-            include_details: true,
-            estado: "activo", // Solo productos activos
+            include_details: true, // Asegúrate que tu backend incluya los datos relacionados
           },
         });
 
         this.productos = response.data.results.map((p) => {
+          // Asegurar que tipo_embalaje esté definido
           const tipoEmbalaje = p.tipo_embalaje || {};
           return {
             ...p,
@@ -812,7 +682,6 @@ export default {
             },
           };
         });
-        this.filteredProductos = this.productos;
       } catch (error) {
         console.error("Error al obtener productos:", error);
         Swal.fire("Error", "No se pudieron cargar los productos", "error");
@@ -823,12 +692,16 @@ export default {
 
     async getPuertos() {
       try {
-        const response = await axios.get("/api/puertos/", {
-          params: {
-            estado: "activo", // Solo puertos activos
-          },
-        });
-        this.puertos = response.data.results;
+        let allPuertos = [];
+        let nextPage = "/api/puertos/";
+
+        while (nextPage) {
+          const response = await axios.get(nextPage);
+          allPuertos = [...allPuertos, ...response.data.results];
+          nextPage = response.data.next;
+        }
+
+        this.puertos = allPuertos;
       } catch (error) {
         console.error("Error al obtener los puertos:", error);
         Swal.fire("Error", "Hubo un error al obtener los puertos.", "error");
@@ -840,89 +713,70 @@ export default {
     },
 
     cerrarModal() {
-      this.mostrarModalVagon = false;
-      this.getProductos(); // Refrescar la lista de productos
+      this.mostrarModal = false;
+      this.getProductos();
     },
 
     handleEstadoChange() {
-      // Si el estado cambia a vacío, limpiar los productos seleccionados
-      if (this.formData.estado === "vacio") {
-        this.formData.productos = [];
-      }
+      // Eliminamos la lógica que vaciaba los productos
+      // Ahora este método no hace nada con los productos
     },
 
     async submitForm() {
-      // Validación básica del formulario
-      if (!this.formData.tipo_origen) {
-        Swal.fire("Error", "El campo Tipo de Origen es requerido", "error");
-        return;
-      }
-
-      if (!this.formData.origen) {
-        Swal.fire("Error", "El campo Origen es requerido", "error");
-        return;
-      }
-
-      if (!this.formData.tipo_equipo) {
-        Swal.fire("Error", "El campo Tipo de Equipo es requerido", "error");
-        return;
-      }
-
-      if (!this.formData.operacion) {
-        Swal.fire("Error", "El campo Operación es requerido", "error");
-        return;
-      }
-
-      if (
-        this.formData.estado === "cargado" &&
-        this.formData.productos.length === 0
-      ) {
-        Swal.fire(
-          "Error",
-          "Debe seleccionar al menos un producto cuando el estado es Cargado",
-          "error"
-        );
-        return;
-      }
-
-      if (!this.formData.por_situar || this.formData.por_situar < 1) {
-        Swal.fire(
-          "Error",
-          "La cantidad por situar debe ser al menos 1",
-          "error"
-        );
-        return;
-      }
-
-      // Verificar informe operativo
-      const existeInforme = await this.verificarInformeOperativo();
-      if (!existeInforme) {
-        Swal.fire(
-          "Error",
-          "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
-          "error"
-        );
-        this.$router.push({ name: "InfoOperativo" });
-        return;
-      }
-
-      if (this.vagonesAsociados.length !== this.formData.por_situar) {
-        Swal.fire({
-          title: "Advertencia",
-          text: `El número de vagones asociados (${this.vagonesAsociados.length}) no coincide con la cantidad "Por Situar" (${this.formData.por_situar}). ¿Desea actualizar el campo "Por Situar" para que coincida?`,
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonText: "Sí, actualizar",
-          cancelButtonText: "No, corregir manualmente",
-        }).then((result) => {
-          if (result.isConfirmed) {
-            this.formData.por_situar = this.vagonesAsociados.length;
-          }
-        });
-        return;
-      }
-
       try {
+        // 1. Verificar que exista un informe operativo
+        const existeInforme = await this.verificarInformeOperativo();
+        if (!existeInforme) {
+          Swal.fire(
+            "Error",
+            "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+            "error"
+          );
+          this.$router.push({ name: "InfoOperativo" });
+          return;
+        }
+
+        // 2. Verificar que el informe no esté aprobado
+        const informeNoAprobado = await this.verificarEstadoInforme();
+        if (!informeNoAprobado) {
+          Swal.fire(
+            "Error",
+            "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
+            "error"
+          );
+          return;
+        }
+
+        // Validación de campos requeridos
+        if (!this.formData.tipo_origen) {
+          throw new Error("El campo Tipo de Origen es requerido");
+        }
+
+        if (!this.formData.origen) {
+          throw new Error("El campo Origen es requerido");
+        }
+
+        if (!this.formData.tipo_equipo) {
+          throw new Error("El campo Tipo de Equipo es requerido");
+        }
+
+        if (!this.formData.operacion) {
+          throw new Error("El campo Operación es requerido");
+        }
+
+        if (
+          this.formData.estado === "cargado" &&
+          this.formData.productos.length === 0
+        ) {
+          throw new Error(
+            "Debe seleccionar al menos un producto cuando el estado es Cargado"
+          );
+        }
+
+        if (!this.formData.por_situar || this.formData.por_situar < 1) {
+          throw new Error("La cantidad por situar debe ser al menos 1");
+        }
+
         // Preparar los datos para enviar
         const payload = {
           tipo_origen: this.formData.tipo_origen,
@@ -947,16 +801,15 @@ export default {
         const response = await axios.post("/ufc/por-situar/", payload);
 
         // Mostrar mensaje de éxito
-        await Swal.fire({
+        Swal.fire({
           title: "¡Éxito!",
           text: "El registro ha sido creado correctamente",
           icon: "success",
           confirmButtonText: "Aceptar",
+        }).then(() => {
+          // Resetear el formulario después de enviar
+          this.resetForm();
         });
-
-        // Resetear el formulario después de enviar
-        this.resetForm();
-        this.$router.push({ name: "InfoOperativo" });
       } catch (error) {
         console.error("Error al enviar el formulario:", error);
 
@@ -964,11 +817,7 @@ export default {
         if (error.response) {
           // Error de respuesta del servidor
           if (error.response.data) {
-            if (typeof error.response.data === "object") {
-              errorMessage = Object.values(error.response.data).join("\n");
-            } else {
-              errorMessage = error.response.data;
-            }
+            errorMessage = Object.values(error.response.data).join("\n");
           }
         } else if (error.message) {
           // Error de validación
@@ -1004,11 +853,10 @@ export default {
         tipo_equipo: "",
         operacion: "",
         estado: "cargado",
-        productos: [],
+        productos: [], // Cambiado a array vacío
         por_situar: 1,
         observaciones: "",
       };
-      this.vagonesAsociados = [];
     },
 
     confirmCancel() {
@@ -1019,8 +867,6 @@ export default {
         showCancelButton: true,
         confirmButtonText: "Sí, cancelar",
         cancelButtonText: "No, continuar",
-        confirmButtonColor: "#002a68",
-        cancelButtonColor: "#6c757d",
       }).then((result) => {
         if (result.isConfirmed) {
           this.resetForm();
@@ -1062,15 +908,14 @@ export default {
 
     getSelectedProductosText() {
       if (this.formData.productos.length === 0) return "";
-
-      const selectedProducts = this.productos.filter((p) =>
-        this.formData.productos.includes(p.id)
-      );
-
-      if (selectedProducts.length === 1) {
-        return `${selectedProducts[0].id}-${selectedProducts[0].producto_name}`;
+      if (this.formData.productos.length === 1) {
+        const producto = this.productos.find(
+          (p) => p.id === this.formData.productos[0]
+        );
+        return producto
+          ? `${producto.id}-${producto.producto_name}`
+          : "1 producto seleccionado";
       }
-
       return `${this.formData.productos.length} productos seleccionados`;
     },
 
@@ -1304,8 +1149,6 @@ input[list] {
   font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
   color: #333;
   padding-bottom: 20px;
-  background-color: #f5f7fa;
-  min-height: 100vh;
 }
 
 .ufc-header {
@@ -1323,7 +1166,7 @@ input[list] {
 }
 
 .ufc-form-wrapper {
-  max-width: 1000px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 0 15px;
 }
@@ -1332,28 +1175,18 @@ input[list] {
   background: white;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 25px;
+  padding: 20px;
   margin-bottom: 20px;
-}
-
-.ufc-vagones-card {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 25px;
-  margin-bottom: 30px;
 }
 
 .ufc-form-title {
   color: #002a68;
   font-size: 1.3rem;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
   gap: 10px;
   font-weight: 600;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
 }
 
 .ufc-form-title i {
@@ -1363,7 +1196,7 @@ input[list] {
 .ufc-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 15px;
 }
 
 @media (max-width: 768px) {
@@ -1373,13 +1206,13 @@ input[list] {
 }
 
 .ufc-input-group {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .ufc-input-group label {
   display: block;
-  margin-bottom: 8px;
-  font-size: 0.9rem;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
   font-weight: 500;
   color: #444;
 }
@@ -1391,10 +1224,10 @@ input[list] {
 .ufc-select,
 .ufc-input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 6px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   transition: all 0.2s;
   background-color: white;
 }
@@ -1408,13 +1241,13 @@ input[list] {
 
 .ufc-textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 6px;
   resize: vertical;
-  min-height: 80px;
+  min-height: 70px;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .ufc-textarea:focus {
@@ -1425,14 +1258,14 @@ input[list] {
 
 .ufc-input-with-action {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .ufc-add-button {
   background: #f8f9fa;
   border: 1px solid #ddd;
   border-radius: 6px;
-  width: 42px;
+  width: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1447,7 +1280,13 @@ input[list] {
 }
 
 .ufc-add-button i {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+}
+
+.ufc-disabled {
+  font-size: 0.8rem;
+  color: #777;
+  padding: 8px 0;
 }
 
 /* Estilo especial para el campo por situar */
@@ -1462,15 +1301,15 @@ input[list] {
 .ufc-por-situar-input {
   flex: 1;
   border: none;
-  padding: 10px 12px;
-  font-size: 0.9rem;
+  padding: 8px 12px;
+  font-size: 0.85rem;
   min-width: 0;
 }
 
 .ufc-por-situar-suffix {
   background: #f8f9fa;
-  padding: 10px 12px;
-  font-size: 0.85rem;
+  padding: 8px 12px;
+  font-size: 0.8rem;
   color: #666;
   border-left: 1px solid #ddd;
 }
@@ -1479,23 +1318,23 @@ input[list] {
 .ufc-form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 15px;
-  margin-top: 30px;
-  padding-top: 20px;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 15px;
   border-top: 1px solid #eee;
 }
 
 .ufc-button {
-  padding: 10px 20px;
+  padding: 8px 16px;
   border-radius: 6px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
   border: none;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .ufc-button.primary {
@@ -1520,204 +1359,13 @@ input[list] {
   border-color: #ccc;
 }
 
-.ufc-button.small {
-  padding: 8px 15px;
-  font-size: 0.85rem;
-}
-
-/* Estilos para el select con búsqueda */
-.ufc-custom-select {
-  position: relative;
-  width: 100%;
-  cursor: pointer;
-}
-
-.ufc-select-display {
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  background-color: white;
-  min-height: 42px;
-  display: flex;
-  align-items: center;
-}
-
-.ufc-select-arrow {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  transition: transform 0.2s;
-  color: #666;
-}
-
-.ufc-custom-select.open .ufc-select-arrow {
-  transform: translateY(-50%) rotate(180deg);
-}
-
-.ufc-productos-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  max-height: 300px;
-  overflow-y: auto;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 0 0 6px 6px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-  margin-top: 2px;
-}
-
-.ufc-productos-search-container {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  background: #f8f9fa;
-}
-
-.ufc-productos-search {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.9rem;
-}
-
-.ufc-productos-search:focus {
-  outline: none;
-  border-color: #002a68;
-}
-
-.ufc-productos-options {
-  max-height: 250px;
-  overflow-y: auto;
-}
-
-.ufc-producto-option {
-  padding: 10px 12px;
-  font-size: 0.9rem;
-  border-bottom: 1px solid #f0f0f0;
-  transition: all 0.1s;
-}
-
-.ufc-producto-option:hover {
-  background-color: #f5f5f5;
-}
-
-.ufc-producto-option.selected {
-  background-color: #002a68;
-  color: white;
-}
-
-/* Estilos para la sección de vagones asociados */
-.ufc-vagones-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.ufc-vagones-header h3 {
-  color: #002a68;
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
-}
-
-.ufc-vagones-table-container {
-  overflow-x: auto;
-  margin-bottom: 20px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-}
-
-.ufc-vagones-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-.ufc-vagones-table th {
-  background-color: #002a68;
-  color: white;
-  padding: 12px 15px;
-  text-align: left;
-  font-weight: 500;
-  font-size: 0.9rem;
-}
-
-.ufc-vagones-table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #eee;
-  font-size: 0.9rem;
-}
-
-.ufc-vagones-table tr:last-child td {
-  border-bottom: none;
-}
-
-.ufc-vagones-table tr:hover {
-  background-color: #f8f9fa;
-}
-
-.ufc-actions-cell {
-  display: flex;
-  gap: 10px;
-}
-
-.ufc-icon-button {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.ufc-icon-button i {
-  font-size: 1rem;
-}
-
-.ufc-icon-button.danger {
-  background-color: #dc3545;
-  color: white;
-}
-
-.ufc-icon-button.danger:hover {
-  background-color: #c82333;
-}
-
-/* Estilo para estado vacío */
-.ufc-vagones-empty {
-  margin-top: 20px;
-  text-align: center;
-  padding: 40px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border: 1px dashed #ddd;
-}
-
-.ufc-empty-state {
-  color: #6c757d;
-}
-
-.ufc-empty-state i {
-  font-size: 2.5rem;
-  margin-bottom: 15px;
-  color: #adb5bd;
-}
-
-.ufc-empty-state p {
-  margin: 0;
-  font-size: 1rem;
-  color: #6c757d;
+/* Estilos para selects */
+.ufc-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
 }
 
 /* Estilos para el modal */
@@ -1768,7 +1416,7 @@ input[list] {
   background: transparent;
   border: none;
   color: white;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   cursor: pointer;
   padding: 5px;
   transition: all 0.2s;
@@ -1782,22 +1430,6 @@ input[list] {
   padding: 20px;
 }
 
-.ufc-modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.ufc-modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 25px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
-}
-
-/* Animaciones */
 @keyframes modalFadeIn {
   from {
     opacity: 0;
@@ -1806,33 +1438,6 @@ input[list] {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-/* Estilos responsivos */
-@media (max-width: 576px) {
-  .ufc-form-card,
-  .ufc-vagones-card {
-    padding: 15px;
-  }
-
-  .ufc-form-actions {
-    flex-direction: column;
-  }
-
-  .ufc-button {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .ufc-vagones-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .ufc-vagones-header h3 {
-    margin-bottom: 10px;
   }
 }
 </style>

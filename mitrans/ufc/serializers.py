@@ -752,6 +752,7 @@ class en_trenes_serializer(serializers.ModelSerializer):
             'producto_name',
             'cantidad_vagones',
             'observaciones',
+            'informe_operativo',
         )
         
     def get_productos_info(self, obj):
@@ -1139,12 +1140,13 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
             "tipo_equipo_ferroviario",
             "tipo_equipo_ferroviario_nombre",
             "tipo_carga_name",
+            "fecha_registro",
             "en_servicio",
             "plan_carga",
             "real_carga",
             "plan_rotacion",
             "real_rotacion",
-            "fecha_registro",
+            "informe_operativo",
         ]
         extra_kwargs = {
             "tipo_equipo_ferroviario": {"required": True},

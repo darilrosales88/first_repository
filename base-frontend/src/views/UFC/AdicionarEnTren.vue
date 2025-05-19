@@ -621,6 +621,19 @@ export default {
         if (!this.formData.origen) {
           throw new Error("El campo Origen es requerido");
         }
+        if (this.formData.origen === this.formData.destino) {
+          throw new Error("No puede tener el mismo Origen y Destino");
+        }
+        if (!this.formData.tipo_destino) {
+          throw new Error("El campo Tipo de Destino es requerido");
+        }
+
+        if (!this.formData.origen) {
+          throw new Error("El campo Destino es requerido");
+        }
+        if (this.formData.origen === this.formData.destino) {
+          throw new Error("No puede tener el mismo Origen y Destino");
+        }
 
         if (!this.formData.tipo_equipo) {
           throw new Error("El campo Tipo de Equipo es requerido");

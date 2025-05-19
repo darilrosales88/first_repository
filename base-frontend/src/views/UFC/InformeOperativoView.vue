@@ -4,7 +4,7 @@
       background-color: #002a68;
       color: white;
       text-align: right;
-      padding: 10px;
+      padding: 20px;
     "
   >
     <h6>Informe Operativo</h6>
@@ -24,7 +24,7 @@
     <Inf-Operative />
   </div>
 
-  <div style="margin-left: 12em">
+  <div style="margin-left: 15em">
     <h4>Transportación de las cargas</h4>
     <!-- Se centro este componente para una mejor visualizacion -->
     <div>

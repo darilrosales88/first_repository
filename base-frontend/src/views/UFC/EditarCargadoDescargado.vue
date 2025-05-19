@@ -39,7 +39,7 @@
                     tipo_equipo_ferroviario.tipo_equipo_name
                   }}
                   -
-                  {{ tipo_equipo_ferroviario.descripcion }}
+                  {{ tipo_equipo_ferroviario.tipo_carga_name }}
                 </option>
               </select>
             </div>
@@ -676,7 +676,7 @@ export default {
       }
     },
 
-    // Método auxiliar para obtener cookies
+    // Método auxiliar para obtener cookies Esto que co;o es
     getCookie(name) {
       let cookieValue = null;
       if (document.cookie && document.cookie !== "") {

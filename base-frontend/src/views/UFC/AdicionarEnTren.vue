@@ -621,6 +621,19 @@ export default {
         if (!this.formData.origen) {
           throw new Error("El campo Origen es requerido");
         }
+        if (this.formData.origen === this.formData.destino) {
+          throw new Error("No puede tener el mismo Origen y Destino");
+        }
+        if (!this.formData.tipo_destino) {
+          throw new Error("El campo Tipo de Destino es requerido");
+        }
+
+        if (!this.formData.origen) {
+          throw new Error("El campo Destino es requerido");
+        }
+        if (this.formData.origen === this.formData.destino) {
+          throw new Error("No puede tener el mismo Origen y Destino");
+        }
 
         if (!this.formData.tipo_equipo) {
           throw new Error("El campo Tipo de Equipo es requerido");
@@ -644,13 +657,14 @@ export default {
 
         // 5. Preparar datos para enviar
         const vagones = JSON.parse(vagonesJson);
+        console.log("Vagones", vagones);
         this.formData.equipo_vagon = vagones.map((vagon) => vagon.vagon_id);
         this.formData.informe_operativo = informeResponse.data.id; // Añadir el ID del informe operativo
 
         console.log("Datos del formulario:", this.formData);
 
         // 6. Enviar datos al backend
-        await axios.post("/ufc/en-trenes-hoy/", this.formData);
+        await axios.post("/ufc/en-trenes/", this.formData);
 
         // 7. Mostrar éxito y resetear formulario
         Swal.fire({
@@ -682,7 +696,6 @@ export default {
           confirmButtonText: "Entendido",
         });
       }
-      this.$router.push({ name: "InfoOperativo" });
     },
 
     onVagonChange(event) {

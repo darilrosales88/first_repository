@@ -157,16 +157,6 @@
 
           <!-- Botones -->
           <div class="d-flex justify-content-end gap-2 mt-4">
-            
-            <button
-              
-              type="button"
-              class="btn btn-sm btn-info"
-              @click="visualizarInforme"
-            >
-              <i class="bi bi-eye me-1"></i>Visualizar
-            </button>
-
             <button
               type="submit"
               class="btn btn-sm btn-primary"
@@ -228,14 +218,14 @@ export default {
   },
   methods: {
     visualizarInforme() {
-  if (this.informeOperativoId) {
-    // Abre en una nueva pestaña
-    const route = this.$router.resolve({
-      path: `/VisualizarInfoOperative/${this.informeOperativoId}`
-    });
-    window.open(route.href, '_blank');
-  }
-},
+      if (this.informeOperativoId) {
+        // Abre en una nueva pestaña
+        const route = this.$router.resolve({
+          path: `/VisualizarInfoOperative/${this.informeOperativoId}`,
+        });
+        window.open(route.href, "_blank");
+      }
+    },
 
     async checkExistingRecord() {
       try {

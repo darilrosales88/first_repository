@@ -1860,13 +1860,11 @@ class equipo_ferroviario_no_locomotora(APIView):
             tipos_no_locomotoras = tipos_no_locomotoras.filter(id=tipo_equipo)
 
         # Usamos subquery para mejor rendimiento
-        vagones_registrados = registro_vagones_cargados.objects.exclude(
-            Q(no_id__isnull=True) | Q(no_id__exact='')
-        ).values('no_id')
-        
+    
         equipos_no_locomotoras = nom_equipo_ferroviario.objects.filter(
-            tipo_equipo__in=tipos_no_locomotoras
-        ).exclude(   numero_identificacion__in=vagones_registrados) #Esto lo tuve que comentar para poder hacer que me salieran los equipos *******
+            tipo_equipo__in=tipos_no_locomotoras,
+            estado_actual="Disponible" 
+        )#Esto lo tuve que comentar para poder hacer que me salieran los equipos *******
         
         serializer = nom_equipo_ferroviario_serializer(equipos_no_locomotoras, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

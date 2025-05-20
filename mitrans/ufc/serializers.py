@@ -1106,16 +1106,52 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
         } for p in productos]
 
     def create(self, validated_data):
+        # Extraer datos de vagones
+        vagones_data = validated_data.pop('equipo_vagon', [])
         productos_data = validated_data.pop('producto', [])
-        instance = arrastres.objects.create(**validated_data)
+        
+        # Crear instancia principal
+        instance = super().create(validated_data)
+        
+        # Crear registros de vagones_dias y asociarlos
+        for vagon_data in vagones_data:
+            equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+            vagon = vagones_dias.objects.create(
+                equipo_ferroviario=equipo,
+                cant_dias=vagon_data['cant_dias']
+            )
+            
+            actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Pendiente a Arrastre")
+            instance.equipo_vagon.add(vagon)
+        
+        # Asociar productos
         instance.producto.set(productos_data)
+        
         return instance
 
-    def update(self, instance, validated_data):
+    def update(self, instance:arrastres, validated_data):
+        vagones_data = validated_data.pop('equipo_vagon', None)
         productos_data = validated_data.pop('producto', None)
-        instance = super().update(instance, validated_data)
+        
+        for equipo in instance.equipo_vagon.all():
+            equipo_id=equipo.equipo_ferroviario
+            actualizar_estado_equipo_ferroviario(equipo_id,"Disponible")
+        # Actualizar vagones si se proporcionan
+        if vagones_data is not None:
+            instance.equipo_vagon.clear()
+            for vagon_data in vagones_data:
+                equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+                actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Pendiente a Arrastre")
+                vagon = vagones_dias.objects.create(
+                    equipo_ferroviario=equipo,
+                    cant_dias=vagon_data['cant_dias']
+                )
+                instance.equipo_vagon.add(vagon)
+        
+        # Actualizar productos si se proporcionan
         if productos_data is not None:
             instance.producto.set(productos_data)
+        
         return instance
 
 

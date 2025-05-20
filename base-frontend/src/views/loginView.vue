@@ -5,7 +5,7 @@
       <div class="loading-spinner"></div>
       <p>Iniciando sesión...</p>
     </div>
-    
+
     <!-- Fondo animado (original) -->
     <svg
       version="1.1"
@@ -20,9 +20,15 @@
     >
       <defs>
         <linearGradient id="bg">
-          <stop offset="0%" style="stop-color: rgba(130, 158, 249, 0.06)"></stop>
+          <stop
+            offset="0%"
+            style="stop-color: rgba(130, 158, 249, 0.06)"
+          ></stop>
           <stop offset="50%" style="stop-color: rgba(76, 190, 255, 0.6)"></stop>
-          <stop offset="100%" style="stop-color: rgba(115, 209, 72, 0.2)"></stop>
+          <stop
+            offset="100%"
+            style="stop-color: rgba(115, 209, 72, 0.2)"
+          ></stop>
         </linearGradient>
         <path
           id="wave"
@@ -76,7 +82,11 @@
 
     <!-- Logo fuera del formulario -->
     <div class="logo-container">
-      <img src="../assets/Imagenes/logo.png" alt="Logo de la empresa" class="logo">
+      <img
+        src="../assets/Imagenes/logo.png"
+        alt="Logo de la empresa"
+        class="logo"
+      />
     </div>
 
     <!-- Formulario profesional -->
@@ -85,7 +95,7 @@
         <h2>Bienvenido</h2>
         <p>Ingrese sus credenciales para continuar</p>
       </div>
-      
+
       <form @submit.prevent="submitForm" class="login-form">
         <div class="form-group">
           <label for="username" class="form-label">
@@ -100,11 +110,11 @@
               v-model="username"
               required
               :disabled="isLoading"
-            >
+            />
             <div class="input-border"></div>
           </div>
         </div>
-        
+
         <div class="form-group">
           <label for="password" class="form-label">
             <i class="bi bi-shield-lock"></i> Contraseña
@@ -118,11 +128,11 @@
               v-model="password"
               required
               :disabled="isLoading"
-            >
+            />
             <div class="input-border"></div>
           </div>
         </div>
-        
+
         <button type="submit" class="login-btn" :disabled="isLoading">
           <span v-if="!isLoading">
             <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
@@ -135,9 +145,10 @@
       </form>
 
       <div class="card-footer">
-        <p>¿Olvidaste la contraseña? 
-          <router-link 
-            :to="{ name: 'RecuperarContrasena' }" 
+        <p>
+          ¿Olvidaste la contraseña?
+          <router-link
+            :to="{ name: 'RecuperarContrasena' }"
             class="help-link"
             @click.native="testLink"
           >
@@ -151,7 +162,7 @@
 
 <script>
 import axios from "axios";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 
 export default {
   name: "LoginView",
@@ -164,16 +175,14 @@ export default {
     };
   },
   methods: {
-
     testLink() {
-    console.log('Router link clicked');
-    console.log('Current route:', this.$route);
-    console.log('Router instance:', this.$router);
-    this.$router.push({ name: 'RecuperarContrasena' }).catch(err => {
-      console.error('Navigation error:', err);
-    });
-  },
-
+      console.log("Router link clicked");
+      console.log("Current route:", this.$route);
+      console.log("Router instance:", this.$router);
+      this.$router.push({ name: "RecuperarContrasena" }).catch((err) => {
+        console.error("Navigation error:", err);
+      });
+    },
 
     async submitForm() {
       this.isLoading = true;
@@ -193,7 +202,7 @@ export default {
         localStorage.setItem("token", token);
         localStorage.setItem("username", username);
         axios.defaults.headers.common["Authorization"] = "Token " + token;
-
+        this.$store.commit("setAuthentication", true);
         const userResponse = await axios.get("/api/v1/users/me/");
         localStorage.setItem("userid", userResponse.data.id);
 
@@ -201,24 +210,24 @@ export default {
       } catch (error) {
         if (error.response && error.response.status === 400) {
           Swal.fire({
-            title: 'Acceso denegado',
-            text: 'Usuario o contraseña incorrectos',
-            icon: 'error',
-            confirmButtonColor: '#4e73df',
-            background: '#fff',
+            title: "Acceso denegado",
+            text: "Usuario o contraseña incorrectos",
+            icon: "error",
+            confirmButtonColor: "#4e73df",
+            background: "#fff",
             backdrop: `
               rgba(0,0,123,0.4)
               url("/images/nyan-cat.gif")
               left top
               no-repeat
-            `
+            `,
           });
         } else {
           Swal.fire({
-            title: 'Error de conexión',
-            text: 'No se pudo conectar al servidor. Intente nuevamente.',
-            icon: 'error',
-            confirmButtonColor: '#4e73df'
+            title: "Error de conexión",
+            text: "No se pudo conectar al servidor. Intente nuevamente.",
+            icon: "error",
+            confirmButtonColor: "#4e73df",
           });
         }
       } finally {
@@ -230,7 +239,6 @@ export default {
 </script>
 
 <style scoped>
-
 /* Variables */
 :root {
   --primary-color: #002a68;
@@ -239,7 +247,8 @@ export default {
   --text-color: #2d3748;
   --light-text: #718096;
   --border-color: #e2e8f0;
-  --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 /* Estructura principal */
@@ -411,7 +420,7 @@ svg {
 }
 
 .login-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -474,10 +483,13 @@ svg {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
-
 
 /* Footer de la tarjeta */
 .card-footer {
@@ -537,12 +549,14 @@ svg {
     width: 90%;
     max-width: 380px;
   }
-  
+
   .logo {
     height: 70px;
   }
-  
-  .card-header, .login-form, .card-footer {
+
+  .card-header,
+  .login-form,
+  .card-footer {
     padding-left: 20px;
     padding-right: 20px;
   }

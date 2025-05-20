@@ -8,13 +8,13 @@
       <div class="bubble bubble-4"></div>
       <div class="bubble bubble-5"></div>
     </div>
-    
+
     <!-- Logo/Texto de la empresa -->
     <div class="logo-container">
       <h1 class="company-name">MITRANS</h1>
       <p class="company-slogan">Transporte y Logística</p>
     </div>
-    
+
     <!-- Lista de elementos del menú -->
     <ul class="navbar-nav">
       <li class="nav-item home-item">
@@ -23,7 +23,7 @@
           <span>Inicio</span>
         </router-link>
       </li>
-      
+
       <!-- Elemento Seguridad -->
       <li class="nav-item dropdown" v-if="hasGroup('Admin')">
         <div class="nav-link" @click="toggleDropdown('Seguridad')">
@@ -35,18 +35,24 @@
           <h3 class="submenu-title">Seguridad</h3>
           <ul class="submenu-items">
             <li>
-              <router-link to="/Usuarios" class="submenu-link">Usuarios</router-link>
+              <router-link to="/Usuarios" class="submenu-link"
+                >Usuarios</router-link
+              >
             </li>
             <li>
-              <router-link to="/groups" class="submenu-link">Grupos</router-link>
+              <router-link to="/groups" class="submenu-link"
+                >Grupos</router-link
+              >
             </li>
             <li>
-              <router-link to="/Trazas" class="submenu-link">Trazas</router-link>
+              <router-link to="/Trazas" class="submenu-link"
+                >Trazas</router-link
+              >
             </li>
           </ul>
         </div>
       </li>
-      
+
       <!-- Elemento Nomencladores -->
       <li class="nav-item dropdown">
         <div class="nav-link" @click="toggleDropdown('Nomencladores')">
@@ -58,75 +64,119 @@
           <h3 class="submenu-title">Nomencladores</h3>
           <ul class="submenu-items scrollable-menu">
             <li>
-              <router-link to="/Atraques" class="submenu-link">Atraques</router-link>
+              <router-link to="/Atraques" class="submenu-link"
+                >Atraques</router-link
+              >
             </li>
             <li>
-              <router-link to="/Cargos" class="submenu-link">Cargos</router-link>
+              <router-link to="/Cargos" class="submenu-link"
+                >Cargos</router-link
+              >
             </li>
             <li>
-              <router-link to="/contenedor" class="submenu-link">Contenedores</router-link>
+              <router-link to="/contenedor" class="submenu-link"
+                >Contenedores</router-link
+              >
             </li>
             <li>
-              <router-link to="/Destino" class="submenu-link">Destinos</router-link>
+              <router-link to="/Destino" class="submenu-link"
+                >Destinos</router-link
+              >
             </li>
             <li>
-              <router-link to="/Embarcaciones" class="submenu-link">Embarcaciones</router-link>
+              <router-link to="/Embarcaciones" class="submenu-link"
+                >Embarcaciones</router-link
+              >
             </li>
             <li>
-              <router-link to="/Entidades" class="submenu-link">Entidades</router-link>
+              <router-link to="/Entidades" class="submenu-link"
+                >Entidades</router-link
+              >
             </li>
             <li>
-              <router-link to="/EquipoFerro" class="submenu-link">Equipos ferroviarios</router-link>
+              <router-link to="/EquipoFerro" class="submenu-link"
+                >Equipos ferroviarios</router-link
+              >
             </li>
             <li>
-              <router-link to="/EstadoTecnico" class="submenu-link">Estados técnicos</router-link>
+              <router-link to="/EstadoTecnico" class="submenu-link"
+                >Estados técnicos</router-link
+              >
             </li>
             <li>
-              <router-link to="/EstructuraUbicacion" class="submenu-link">Estructuras de ubicación</router-link>
+              <router-link to="/EstructuraUbicacion" class="submenu-link"
+                >Estructuras de ubicación</router-link
+              >
             </li>
             <li>
-              <router-link to="/Incidencias" class="submenu-link">Incidencias</router-link>
+              <router-link to="/Incidencias" class="submenu-link"
+                >Incidencias</router-link
+              >
             </li>
             <li>
-              <router-link to="/Organismos" class="submenu-link">OSDE/OACE u organismo</router-link>
+              <router-link to="/Organismos" class="submenu-link"
+                >OSDE/OACE u organismo</router-link
+              >
             </li>
             <li>
-              <router-link to="/Paises" class="submenu-link">Países</router-link>
+              <router-link to="/Paises" class="submenu-link"
+                >Países</router-link
+              >
             </li>
             <li>
-              <router-link to="/Producto" class="submenu-link">Productos</router-link>
+              <router-link to="/Producto" class="submenu-link"
+                >Productos</router-link
+              >
             </li>
             <li>
-              <router-link to="/Provincia" class="submenu-link">Provincias</router-link>
+              <router-link to="/Provincia" class="submenu-link"
+                >Provincias</router-link
+              >
             </li>
             <li>
-              <router-link to="/Puertos" class="submenu-link">Puertos</router-link>
+              <router-link to="/Puertos" class="submenu-link"
+                >Puertos</router-link
+              >
             </li>
             <li>
-              <router-link to="/Terminal" class="submenu-link">Terminales</router-link>
+              <router-link to="/Terminal" class="submenu-link"
+                >Terminales</router-link
+              >
             </li>
             <li>
-              <router-link to="/Territorio" class="submenu-link">Territorios</router-link>
+              <router-link to="/Territorio" class="submenu-link"
+                >Territorios</router-link
+              >
             </li>
             <li>
-              <router-link to="/TipoEmbalaje" class="submenu-link">Tipos de embalajes</router-link>
+              <router-link to="/TipoEmbalaje" class="submenu-link"
+                >Tipos de embalajes</router-link
+              >
             </li>
             <li>
-              <router-link to="/TipoEquipoFerro" class="submenu-link">Tipos de equipos ferroviarios</router-link>
+              <router-link to="/TipoEquipoFerro" class="submenu-link"
+                >Tipos de equipos ferroviarios</router-link
+              >
             </li>
             <li>
-              <router-link to="/TipoEstructuraUbicacion" class="submenu-link">Tipos de estructuras de ubicacion</router-link>
+              <router-link to="/TipoEstructuraUbicacion" class="submenu-link"
+                >Tipos de estructuras de ubicacion</router-link
+              >
             </li>
             <li>
-              <router-link to="/TipoManiobra" class="submenu-link">Tipos de maniobras</router-link>
+              <router-link to="/TipoManiobra" class="submenu-link"
+                >Tipos de maniobras</router-link
+              >
             </li>
             <li>
-              <router-link to="/UM" class="submenu-link">Unidades de medida</router-link>
+              <router-link to="/UM" class="submenu-link"
+                >Unidades de medida</router-link
+              >
             </li>
           </ul>
         </div>
       </li>
-      
+
       <!-- Elemento Partes -->
       <li class="nav-item dropdown">
         <div class="nav-link" @click="toggleDropdown('Partes')">
@@ -141,7 +191,9 @@
             <li><a class="submenu-link" href="#">EMCARGA</a></li>
             <li><a class="submenu-link" href="#">ETAG</a></li>
             <li><a class="submenu-link" href="#">ENOC</a></li>
-            <li><router-link to="/ufc" class="submenu-link">UFC</router-link></li>
+            <li>
+              <router-link to="/ufc" class="submenu-link">UFC</router-link>
+            </li>
             <li><a class="submenu-link" href="#">GEA</a></li>
             <li><a class="submenu-link" href="#">MINCIN</a></li>
             <li><a class="submenu-link" href="#">GEIA</a></li>
@@ -150,7 +202,7 @@
           </ul>
         </div>
       </li>
-      
+
       <!-- Elemento Reportes -->
       <li class="nav-item">
         <a class="nav-link">
@@ -159,14 +211,13 @@
         </a>
       </li>
     </ul>
-    
+
     <!-- Botón de cerrar sesión -->
     <div class="logout-container" @click="logout">
       <div class="logout-content">
         <i class="bi bi-box-arrow-right"></i>
         <span class="logout-text">Cerrar sesión</span>
       </div>
-      
     </div>
   </nav>
 </template>
@@ -181,7 +232,7 @@ export default {
       userPermissions: [],
       userGroups: [],
       activeDropdown: null,
-      username: localStorage.getItem("username") || "Usuario"
+      username: localStorage.getItem("username") || "Usuario",
     };
   },
   async created() {
@@ -220,6 +271,7 @@ export default {
         localStorage.removeItem("username");
         localStorage.removeItem("userid");
         this.$store.commit("removeToken");
+        this.$store.commit("setAuthentication", false);
         this.$router.push("/");
       } catch (error) {
         console.log(JSON.stringify(error));
@@ -232,13 +284,13 @@ export default {
 <style scoped>
 /* Estilos base */
 :root {
-  --primary-color: #002a69;       /* Azul oscuro principal */
-  --primary-light: #003580;       /* Azul un poco más claro para hover */
-  --primary-dark: #001f54;        /* Azul más oscuro para submenús */
-  --accent-color: #ff8c42;        /* Naranja para acentos */
-  --text-color: #ffffff;          /* Texto blanco */
-  --text-secondary: #eeeeee;      /* Texto secundario gris claro */
-  --hover-color: #ff6b1a;         /* Naranja más intenso para hover */
+  --primary-color: #002a69; /* Azul oscuro principal */
+  --primary-light: #003580; /* Azul un poco más claro para hover */
+  --primary-dark: #001f54; /* Azul más oscuro para submenús */
+  --accent-color: #ff8c42; /* Naranja para acentos */
+  --text-color: #ffffff; /* Texto blanco */
+  --text-secondary: #eeeeee; /* Texto secundario gris claro */
+  --hover-color: #ff6b1a; /* Naranja más intenso para hover */
 }
 
 * {
@@ -517,25 +569,29 @@ export default {
   .navbar {
     width: 70px;
   }
-  
-  .company-name, .company-slogan, .nav-link span, .logout-text, .logout-user {
+
+  .company-name,
+  .company-slogan,
+  .nav-link span,
+  .logout-text,
+  .logout-user {
     display: none;
   }
-  
+
   .nav-link {
     justify-content: center;
     padding: 15px 0;
   }
-  
+
   .nav-link i {
     margin-right: 0;
     font-size: 1.3rem;
   }
-  
+
   .submenu {
     left: 70px;
   }
-  
+
   .logo-container {
     padding: 15px 0;
   }

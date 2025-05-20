@@ -22,8 +22,9 @@
 ## Tareas Pendientes
 
 - Modal de producto vagon se desaparece en Arrastre
-- Modificar los editar y los adicionar de los 3 estados Por Situar Situado Pendiente
-- Solucionar problemas del serializer
+- Implementar el editar de arrastres que no funciona como deberia
+- Implementar que se pueda crear un informe operativo solamente por entidad
+- Se necesita hacer que cuando se cree el informe operativo solo se vean los registros asociados a ese informe de esa entidad,
 
 ## ISSUES Para crear
 

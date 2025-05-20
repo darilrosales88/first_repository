@@ -284,7 +284,7 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
 #Verificando que exista el informe creado antes de insertar
 @api_view(['GET'])
 def verificar_informe_existente(request):
-    print(request)
+    entidad=request.user.entidad
     fecha_operacion = request.query_params.get('fecha_operacion')
     if not fecha_operacion:
         return Response({"error": "Parámetro fecha_operacion requerido"}, status=400)
@@ -292,9 +292,10 @@ def verificar_informe_existente(request):
     try:
         fecha_obj = datetime.strptime(fecha_operacion, '%Y-%m-%d').date()
         existe = ufc_informe_operativo.objects.filter(
-            fecha_operacion__date=fecha_obj
+            fecha_operacion__date=fecha_obj,
+            entidad=entidad
         ).exists()
-        
+        print(existe)
         if existe:
             informe = ufc_informe_operativo.objects.filter(
                 fecha_operacion__date=fecha_obj

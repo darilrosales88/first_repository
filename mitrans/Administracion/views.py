@@ -18,7 +18,7 @@ User = get_user_model()
 
 # Vista para gestionar grupos
 class GroupViewSet(viewsets.ModelViewSet):
-    queryset = Group.objects.all()
+    queryset = Group.objects.all().order_by("-id")
     serializer_class = GroupSerializer
     permission_classes = [IsAuthenticated]  # Asegura que solo usuarios autenticados puedan acceder
 
@@ -65,7 +65,7 @@ class GroupViewSet(viewsets.ModelViewSet):
 def obtener_grupo(request, grupo_id):
     try:
         grupo = Group.objects.get(id=grupo_id)
-        permisos = grupo.permissions.all()
+        permisos = grupo.permissions.all().order_by("-id")
         data = {
             'id': grupo.id,
             'name': grupo.name,
@@ -79,7 +79,7 @@ def obtener_grupo(request, grupo_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def obtener_permisos(request):
-    permisos = Permission.objects.all()
+    permisos = Permission.objects.all().order_by("-id")
     data = [{'id': p.id, 'name': p.name} for p in permisos]
     return Response(data)
 
@@ -93,8 +93,55 @@ def editar_grupo(request, grupo_id):
     return Response({'status': 'success'})
 
 # Vista para obtener permisos y grupos de un usuario
+
 @api_view(['GET'])
 def get_user_permissions_and_groups(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        
+        # Datos básicos del usuario
+        first_name = user.first_name
+        last_name = user.last_name
+        entidad = {
+            'id': user.entidad.id,
+            'nombre': user.entidad.nombre,
+        }
+        cargo = {
+            'id': user.cargo.id,
+            'nombre_cargo': user.cargo.nombre_cargo,
+        }
+
+        # Obtener todos los grupos del usuario
+        groups = user.groups.all().order_by("-id")
+        grupos_formateados = [{'id': g.id, 'name': g.name} for g in groups]
+
+        # Obtener TODOS los permisos del usuario (directos + de grupos)
+        from django.contrib.auth.models import Permission
+        from django.db.models import Q
+        
+        # Filtrar solo los permisos del modelo ufc_informe_operativo
+        permissions = Permission.objects.filter(
+            (Q(user=user) | Q(group__user=user)) &
+            Q(content_type__model='ufc_informe_operativo')
+        ).distinct().order_by("-id")
+
+        permisos_formateados = [{
+            'id': p.id,
+            'codename': p.codename,  # Esto es lo que necesitas en el frontend
+            'name': p.name
+        } for p in permissions]
+
+        return Response({
+            'first_name': first_name,
+            'last_name': last_name,
+            'entidad': entidad,
+            'cargo': cargo,
+            'groups': grupos_formateados,
+            'permissions': permisos_formateados,  # Cambiado de user_permissions a permissions
+        })
+    except User.DoesNotExist:
+        return Response({'error': 'Usuario no encontrado'}, status=404)
+""" def get_user_permissions_and_groups(request, user_id):
     try:
         user = User.objects.get(id=user_id)
         first_name = user.first_name
@@ -109,8 +156,8 @@ def get_user_permissions_and_groups(request, user_id):
         }
 
         # Obtener permisos y grupos
-        groups = user.groups.all()
-        permissions = user.user_permissions.all()
+        groups = user.groups.all().order_by("-id")
+        permissions = user.user_permissions.all().order_by("-id")
 
         # Formatear grupos y permisos
         grupos_formateados = [{'id': g.id, 'name': g.name} for g in groups]
@@ -125,14 +172,14 @@ def get_user_permissions_and_groups(request, user_id):
             'user_permissions': permisos_formateados,
         })
     except User.DoesNotExist:
-        return Response({'error': 'Usuario no encontrado'}, status=404)
+        return Response({'error': 'Usuario no encontrado'}, status=404) """
 
 # Usa get_user_model() para obtener el modelo de usuario activo
 User = get_user_model()
 
 # Vista para gestionar usuarios
 class nom_user_view_set(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.all()
+    queryset = CustomUser.objects.all().order_by("-id")
     serializer_class = UserPermissionSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = user_filter  # Asegúrate de que esté correctamente referenciado
@@ -191,8 +238,8 @@ class UserCreateView(APIView):
 def obtener_usuario(request, user_id):
     try:
         user = CustomUser.objects.get(id=user_id)
-        grupos = user.groups.all()
-        permisos = user.user_permissions.all()
+        grupos = user.groups.all().order_by("-id")
+        permisos = user.user_permissions.all().order_by("-id")
         data = {
             'id': user.id,
             'username': user.username,

@@ -705,9 +705,17 @@ const routes = [
     },
     props: true, // Pasar los parámetros como props
   },
+  {
+    path: "/HistorialCargadoDescargado",
+    name: "HistorialCargadoDescargado",
+    component: () => import("../components/Historial_vagones_cargados.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
   /* Vagones y productos */
   {
-    path: "/AdicionarVagon_producto",
+    path: "/AdicionarVagonProducto",
     name: "AdicionarVagonProducto",
     component: AdicionarVagonesProductos,
     meta: {

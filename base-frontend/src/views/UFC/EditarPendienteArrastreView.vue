@@ -1,297 +1,277 @@
 <template>
-    <div class="ufc-form-container">
-      <!-- Encabezado corporativo -->
-      <div class="ufc-header">
-        <h6>Partes UFC</h6>
-      </div>
-      
-      <Navbar-Component />
-      <Producto-Vagones />
-      
-      <div class="ufc-form-wrapper">
-        <div class="ufc-form-card">
-          <h2 class="ufc-form-title">
-            <i class="bi bi-pencil-square"></i> Editar registro pendiente a arrastre
-          </h2>
-  
-          <form @submit.prevent="submitForm" class="ufc-form">
-            <!-- Primera fila - Origen y Destino -->
-            <div class="ufc-form-grid">
-              <!-- Grupo Origen -->
-              <div class="ufc-form-group">
-                <div class="ufc-form-row">
-                  <!-- Campo: tipo_origen -->
-                  <div class="ufc-input-group paired">
-                    <label for="tipo_origen">Tipo de Origen <span class="required">*</span></label>
-                    <select
-                      class="ufc-select"
-                      v-model="formData.tipo_origen"
-                      required>
-                      <option value="" disabled>Seleccione un tipo</option>
-                      <option v-for="item in tipo_origen_options" 
-                              :key="item.id" 
-                              :value="item.id">
-                        {{ item.text }}
-                      </option>
-                    </select>
-                  </div>
-  
-                  <!-- Campo: origen -->
-                  <div class="ufc-input-group paired">
-                    <label for="origen">Origen <span class="required">*</span></label>
-                    <select
-                      v-if="formData.tipo_origen && formData.tipo_origen !== 'puerto'"
-                      class="ufc-select"
-                      v-model="formData.origen"
-                      required>
-                      <option value="" disabled>Seleccione un origen</option>
-                      <option
-                        v-for="entidad in entidades"
-                        :key="entidad.id"
-                        :value="entidad.nombre">
-                        {{ entidad.id }}-{{ entidad.nombre }}
-                      </option>
-                    </select>
-  
-                    <select
-                      v-else-if="formData.tipo_origen === 'puerto'"
-                      class="ufc-select"
-                      v-model="formData.origen"
-                      required>
-                      <option value="" disabled>Seleccione un puerto</option>
-                      <option
-                        v-for="puerto in puertos"
-                        :key="puerto.id"
-                        :value="puerto.nombre_puerto">
-                        {{ puerto.id }}- {{ puerto.nombre_puerto }}
-                      </option>
-                    </select>
-                    
-                    <select
-                      v-else
-                      class="ufc-select"
-                      disabled>
-                      <option value="">Seleccione primero el tipo de origen</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-  
-              <!-- Grupo Destino -->
-              <div class="ufc-form-group">
-                <div class="ufc-form-row">
-                  <!-- Campo: tipo_destino -->
-                  <div class="ufc-input-group paired">
-                    <label for="tipo_destino">Tipo de Destino <span class="required">*</span></label>
-                    <select
-                      class="ufc-select"
-                      v-model="formData.tipo_destino"
-                      required>
-                      <option value="" disabled>Seleccione un tipo</option>
-                      <option v-for="item in tipo_destino_options" 
-                              :key="item.id" 
-                              :value="item.id">
-                        {{ item.text }}
-                      </option>
-                    </select>
-                  </div>
-  
-                  <!-- Campo: destino -->
-                  <div class="ufc-input-group paired">
-                    <label for="destino">Destino <span class="required">*</span></label>
-                    <select
-                      v-if="formData.tipo_destino && formData.tipo_destino !== 'puerto'"
-                      class="ufc-select"
-                      v-model="formData.destino"
-                      required>
-                      <option value="" disabled>Seleccione un destino</option>
-                      <option
-                        v-for="entidad in entidades"
-                        :key="entidad.id"
-                        :value="entidad.nombre">
-                        {{ entidad.id }}-{{ entidad.nombre }}
-                      </option>
-                    </select>
-  
-                    <select
-                      v-else-if="formData.tipo_destino === 'puerto'"
-                      class="ufc-select"
-                      v-model="formData.destino"
-                      required>
-                      <option value="" disabled>Seleccione un puerto</option>
-                      <option
-                        v-for="puerto in puertos"
-                        :key="puerto.id"
-                        :value="puerto.nombre_puerto">
-                        {{ puerto.id }}- {{ puerto.nombre_puerto }}
-                      </option>
-                    </select>
-                    
-                    <select
-                      v-else
-                      class="ufc-select"
-                      disabled>
-                      <option value="">Seleccione primero el tipo de destino</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-  
-            <!-- Segunda fila - Otros campos -->
-            <div class="ufc-form-grid">
-              <!-- Columna Izquierda -->
-              <div class="ufc-form-column">
-                <!-- Campo: tipo_equipo -->
-                <div class="ufc-input-group">
-                  <label for="tipo_equipo">Tipo de Equipo <span class="required">*</span></label>
-                  <select
-                    class="ufc-select"
-                    v-model="formData.tipo_equipo"
-                    required>
-                    <option value="" disabled>Seleccione un tipo</option>
-                    <option
-                      v-for="option in tipo_equipo_options"
-                      :key="option.id"
-                      :value="option.id">
-                      {{ option.text }}
-                    </option>
-                  </select>
-                </div>
-  
-                <!-- Campo: estado -->
-                <div class="ufc-input-group">
-                  <label for="estado">Estado <span class="required">*</span></label>
-                  <select
-                    class="ufc-select"
-                    v-model="formData.estado"
-                    @change="handleEstadoChange"
-                    required>
-                    <option value="cargado">Cargado</option>
-                    <option value="vacio">Vacío</option>
-                  </select>
-                </div>
-              </div>
-  
-              <!-- Columna Derecha -->
-              <div class="ufc-form-column">
-                <!-- Campo: operacion -->
-                <div class="ufc-input-group">
-                  <label for="operacion">Operación <span class="required">*</span></label>
-                  <select
-                    class="ufc-select"
-                    v-model="formData.operacion"
-                    required>
-                    <option value="" disabled>Seleccione una operación</option>
-                    <option
-                      v-for="option in t_operacion_options"
-                      :key="option.id"
-                      :value="option.id">
-                      {{ option.text }}
-                    </option>
-                  </select>
-                </div>
-  
-                <!-- Campo: cantidad_vagones -->
-                <div class="ufc-input-group">
-                  <label for="cantidad_vagones">Cantidad de Vagones <span class="required">*</span></label>
-                  <div class="ufc-por-situar-container">
-                    <input
-                      type="number"
-                      class="ufc-por-situar-input"
-                      v-model.number="formData.cantidad_vagones"
-                      min="1"
-                      required>
-                    <span class="ufc-por-situar-suffix">unidades</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-  
-            <!-- Tercera fila - Productos -->
-            <div class="ufc-input-group full-width">
-              <label for="producto">Productos <span v-if="formData.estado === 'cargado'" class="required">*</span></label>
-              <div class="ufc-input-with-action">
-                <div class="ufc-custom-select" @click="toggleProductosDropdown">
-                  <div class="ufc-select-display">
-                    {{ getSelectedProductosText() || 'Seleccione productos...' }}
-                  </div>
-                  <i class="bi bi-chevron-down ufc-select-arrow"></i>
-                  
-                  <div class="ufc-productos-dropdown" v-if="showProductosDropdown">
-                    <div class="ufc-productos-search-container">
-                      <input
-                        type="text"
-                        class="ufc-productos-search"
-                        placeholder="Buscar productos..."
-                        v-model="productoSearch"
-                        @input="filterProductos"
-                        @click.stop>
+    <div class="ufc-header">
+      <h6>Partes UFC</h6>
+    </div>
+    <Navbar-Component />
+    <Producto-Vagones />
+    <div class="container py-3" style="margin-left: 20em; width: 70%">
+      <div class="card border">
+        <div class="card-header bg-light border-bottom">
+          <h5 class="mb-0 text-dark fw-semibold">
+            <i class="bi bi-file-earmark-plus"></i> Editar registro pendiente a arrastre</h5>
+        </div>
+          <div class="card-body p-3">
+            <form @submit.prevent="submitForm" class="ufc-form">
+              <!-- Primera fila - Origen y Destino -->
+              <div class="ufc-form-grid">
+                <!-- Grupo Origen -->
+                <div class="ufc-form-group">
+                  <div class="ufc-form-row">
+                    <!-- Campo: tipo_origen -->
+                    <div class="ufc-input-group paired">
+                      <label for="tipo_origen" class="form-label small fw-semibold text-secondary">Tipo de Origen</label>
+                      <select
+                        class="form-select form-select-sm border-secondary"
+                        v-model="formData.tipo_origen"
+                        required>
+                        <option value="" disabled>Seleccione un tipo</option>
+                        <option v-for="item in tipo_origen_options" 
+                                :key="item.id" 
+                                :value="item.id">
+                          {{ item.text }}
+                        </option>
+                      </select>
                     </div>
-                    <div class="ufc-productos-options">
-                      <div
-                        v-for="producto in filteredProductos"
-                        :key="producto.id"
-                        class="ufc-producto-option"
-                        :class="{ 'selected': formData.productos.includes(producto.id) }"
-                        @click.stop="toggleProductoSelection(producto.id)">
-                        {{ producto.id }}-{{ producto.producto_name }} - {{ producto.producto_codigo }}
-                        <template v-if="producto.tipo_embalaje">
-                          (Embalaje: {{ producto.tipo_embalaje.nombre || producto.tipo_embalaje.nombre_embalaje || 'N/A' }})
-                        </template>
+    
+                    <!-- Campo: origen -->
+                    <div class="ufc-input-group paired">
+                      <label for="origen" class="form-label small fw-semibold text-secondary">Origen </label>
+                      <select
+                        v-if="formData.tipo_origen && formData.tipo_origen !== 'puerto'"
+                        class="form-select form-select-sm border-secondary"
+                        v-model="formData.origen"
+                        required>
+                        <option value="" disabled>Seleccione un origen</option>
+                        <option
+                          v-for="entidad in entidades"
+                          :key="entidad.id"
+                          :value="entidad.nombre">
+                          {{ entidad.id }}-{{ entidad.nombre }}
+                        </option>
+                      </select>
+    
+                      <select
+                        v-else-if="formData.tipo_origen === 'puerto'"
+                        class="form-select form-select-sm border-secondary"
+                        v-model="formData.origen"
+                        required>
+                        <option value="" disabled>Seleccione un puerto</option>
+                        <option
+                          v-for="puerto in puertos"
+                          :key="puerto.id"
+                          :value="puerto.nombre_puerto">
+                          {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                        </option>
+                      </select>
+                      
+                      <select
+                        v-else
+                        class="form-select form-select-sm border-secondary"
+                        disabled>
+                        <option value="">Seleccione primero el tipo de origen</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+    
+                <!-- Grupo Destino -->
+                <div class="ufc-form-group">
+                  <div class="ufc-form-row">
+                    <!-- Campo: tipo_destino -->
+                    <div class="ufc-input-group paired">
+                      <label for="tipo_destino" class="form-label small fw-semibold text-secondary">Tipo de Destino</label>
+                      <select
+                        class="form-select form-select-sm border-secondary"
+                        v-model="formData.tipo_destino"
+                        required>
+                        <option value="" disabled>Seleccione un tipo</option>
+                        <option v-for="item in tipo_destino_options" 
+                                :key="item.id" 
+                                :value="item.id">
+                          {{ item.text }}
+                        </option>
+                      </select>
+                    </div>
+    
+                    <!-- Campo: destino -->
+                    <div class="ufc-input-group paired">
+                      <label for="destino" class="form-label small fw-semibold text-secondary">Destino</label>
+                      <select
+                        v-if="formData.tipo_destino && formData.tipo_destino !== 'puerto'"
+                        class="form-select form-select-sm border-secondary"
+                        v-model="formData.destino"
+                        required>
+                        <option value="" disabled>Seleccione un destino</option>
+                        <option
+                          v-for="entidad in entidades"
+                          :key="entidad.id"
+                          :value="entidad.nombre">
+                          {{ entidad.id }}-{{ entidad.nombre }}
+                        </option>
+                      </select>
+    
+                      <select
+                        v-else-if="formData.tipo_destino === 'puerto'"
+                        class="form-select form-select-sm border-secondary"
+                        v-model="formData.destino"
+                        required>
+                        <option value="" disabled>Seleccione un puerto</option>
+                        <option
+                          v-for="puerto in puertos"
+                          :key="puerto.id"
+                          :value="puerto.nombre_puerto">
+                          {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                        </option>
+                      </select>
+                      
+                      <select
+                        v-else
+                        class="form-select form-select-sm border-secondary"
+                        disabled>
+                        <option value="">Seleccione primero el tipo de destino</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <!-- Segunda fila - Otros campos -->
+              <div class="ufc-form-grid">
+                <!-- Columna Izquierda -->
+                <div class="ufc-form-column">
+                  <!-- Campo: tipo_equipo -->
+                  <div class="ufc-input-group">
+                    <label for="tipo_equipo" class="form-label small fw-semibold text-secondary">Tipo de Equipo</label>
+                    <select
+                      class="form-select form-select-sm border-secondary"
+                      v-model="formData.tipo_equipo"
+                      required>
+                      <option value="" disabled>Seleccione un tipo</option>
+                      <option
+                        v-for="option in tipo_equipo_options"
+                        :key="option.id"
+                        :value="option.id">
+                        {{ option.text }}
+                      </option>
+                    </select>
+                  </div>
+    
+                  <!-- Campo: estado -->
+                  <div class="ufc-input-group">
+                    <label for="estado" class="form-label small fw-semibold text-secondary">Estado</label>
+                    <select
+                      class="form-select form-select-sm border-secondary"
+                      v-model="formData.estado"
+                      @change="handleEstadoChange"
+                      required>
+                      <option value="cargado">Cargado</option>
+                      <option value="vacio">Vacío</option>
+                    </select>
+                  </div>
+                </div>
+    
+                <!-- Columna Derecha -->
+                <div class="ufc-form-column">
+                  <!-- Campo: operacion -->
+                  <div class="ufc-input-group">
+                    <label for="operacion" class="form-label small fw-semibold text-secondary">Operación</label>
+                    <select
+                      class="form-select form-select-sm border-secondary"
+                      v-model="formData.operacion"
+                      required>
+                      <option value="" disabled>Seleccione una operación</option>
+                      <option
+                        v-for="option in t_operacion_options"
+                        :key="option.id"
+                        :value="option.id">
+                        {{ option.text }}
+                      </option>
+                    </select>
+                  </div>
+    
+                  <!-- Campo: cantidad_vagones -->
+                  <div class="ufc-input-group">
+                    <label for="cantidad_vagones" class="form-label small fw-semibold text-secondary">Cantidad de Vagones</label>
+                    <div class="ufc-por-situar-container">
+                      <input
+                        type="number"
+                        class="ufc-por-situar-input"
+                        v-model.number="formData.cantidad_vagones"
+                        min="1"
+                        required>
+                      <span class="ufc-por-situar-suffix">unidades</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <!-- Tercera fila - Productos -->
+              <div class="ufc-input-group full-width">
+                <label for="producto" class="form-label small fw-semibold text-secondary">Productos <span v-if="formData.estado === 'cargado'" class="required"></span></label>
+                <div class="ufc-input-with-action">
+                  <div class="ufc-custom-select" @click="toggleProductosDropdown">
+                    <div class="ufc-select-display">
+                      {{ getSelectedProductosText() || 'Seleccione productos...' }}
+                    </div>
+                    <i class="bi bi-chevron-down ufc-select-arrow"></i>
+                    
+                    <div class="ufc-productos-dropdown" v-if="showProductosDropdown">
+                      <div class="ufc-productos-search-container">
+                        <input
+                          type="text"
+                          class="ufc-productos-search"
+                          placeholder="Buscar productos..."
+                          v-model="productoSearch"
+                          @input="filterProductos"
+                          @click.stop>
+                      </div>
+                      <div class="ufc-productos-options">
+                        <div
+                          v-for="producto in filteredProductos"
+                          :key="producto.id"
+                          class="ufc-producto-option"
+                          :class="{ 'selected': formData.productos.includes(producto.id) }"
+                          @click.stop="toggleProductoSelection(producto.id)">
+                          {{ producto.id }}-{{ producto.producto_name }} - {{ producto.producto_codigo }}
+                          <template v-if="producto.tipo_embalaje">
+                            (Embalaje: {{ producto.tipo_embalaje.nombre || producto.tipo_embalaje.nombre_embalaje || 'N/A' }})
+                          </template>
+                        </div>
                       </div>
                     </div>
                   </div>
+                  <button class="create-button ms-2" @click.stop.prevent="abrirModalAgregarProducto">
+                    <i class="bi bi-plus-circle large-icon"></i>
+                  </button>
                 </div>
-                <button 
-                  class="ufc-add-button"
-                  @click.prevent="abrirModalAgregarProducto">
-                  <i class="bi bi-plus-circle"></i>
-                </button>
               </div>
-            </div>
-  
-            <!-- Observaciones (full width) -->
-            <div class="ufc-input-group full-width">
-              <label for="observaciones">Observaciones</label>
-              <textarea
-                class="ufc-textarea"
-                v-model="formData.observaciones"
-                rows="2"></textarea>
-            </div>
-  
-            <!-- Botones de acción -->
-            <div class="ufc-form-actions">
-              <button type="button" class="ufc-button secondary" @click="confirmCancel">
-                <i class="bi bi-x-circle"></i> Cancelar
-              </button>
-              <button type="submit" class="ufc-button primary">
-                <i class="bi bi-check-circle"></i> Actualizar
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-      
-      <!-- Modal para agregar producto -->
-      <div v-if="mostrarModal" class="ufc-modal-overlay">
-        <div class="ufc-modal-container">
-          <div class="ufc-modal-header">
-            <h3><i class="bi bi-box-seam"></i> Nuevo Producto</h3>
-            <button @click="cerrarModal" class="ufc-modal-close">
-              <i class="bi bi-x"></i>
-            </button>
-          </div>
-          <div class="ufc-modal-body">
-            <ModalAgregarProducto
-              :visible="mostrarModal"
-              @cerrar-modal="cerrarModal"
-            />
+    
+              <!-- Observaciones (full width) -->
+              <div class="ufc-input-group full-width">
+                <label for="observaciones" class="form-label small fw-semibold text-secondary">Observaciones</label>
+                <textarea
+                  class="form-control form-control-sm border-secondary"
+                  v-model="formData.observaciones"
+                  rows="2"></textarea>
+              </div>
+    
+              <!-- Botones de acción -->
+              <div class="modal-footer">
+                <div class=" d-flex justify-content-between align-items-center mb-4">
+                  <button class="ufc-button secondary" @click="volver_principal">
+                    <i class="bi bi-x-circle" me-1></i>Cancelar
+                  </button>
+                  <button type="submit" class=" ufc-button primary" >
+                    <i class="bi bi-check-circle" me-1></i>Actualizar
+                  </button>
+                </div>
+              </div>
+            </form>          
           </div>
         </div>
       </div>
-    </div>
-  </template>
+      <ModalAgregarProducto v-if="mostrarModal" :visible="mostrarModal" @cerrar-modal="cerrarModal"/>
+</template>
 
   <script>
 import axios from "axios";
@@ -651,6 +631,7 @@ export default {
   min-height: 36px;
   display: flex;
   align-items: center;
+  border-color: rgba(var(--bs-secondary-rgb),var(--bs-border-opacity)) !important;
 }
 
 .ufc-select-arrow {
@@ -855,6 +836,7 @@ export default {
   border: 1px solid #ddd;
   border-radius: 6px;
   overflow: hidden;
+  border-color: rgba(var(--bs-secondary-rgb),var(--bs-border-opacity)) !important;
 }
 
 .ufc-por-situar-input {
@@ -886,7 +868,7 @@ export default {
 .ufc-button {
   padding: 8px 16px;
   border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: 1 rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -896,26 +878,43 @@ export default {
   gap: 6px;
 }
 
-.ufc-button.primary {
-  background: #002a68;
-  color: white;
-}
-
 .ufc-button.primary:hover {
   background: #003d8f;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .ufc-button.secondary {
-  background: white;
-  color: #555;
-  border: 1px solid #ddd;
+    background:rgb(241, 81, 63);
+    color: white;
 }
 
 .ufc-button.secondary:hover {
-  background: #f8f9fa;
-  border-color: #ccc;
+    background:rgb(228, 56, 37);
+}
+
+.create-button {
+  text-decoration: none;
+  color: green;
+  margin-left: 940px;
+}
+
+button {
+  margin-left: 10px;
+  padding: 5px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button[type="button"] {
+  background-color: #007bff;
+  color: white;
+}
+
+button[type="submit"] {
+  margin-left: 15px;
+  background-color: #007bff;
+  color: white;
 }
 
 /* Estilos para selects */

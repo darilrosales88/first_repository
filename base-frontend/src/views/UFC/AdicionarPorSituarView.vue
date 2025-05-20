@@ -1,30 +1,39 @@
 <template>
-  <div class="ufc-form-container">
-    <!-- Encabezado corporativo -->
-    <div class="ufc-header">
-      <h6>Partes UFC</h6>
-    </div>
-
-    <Navbar-Component />
-    <Producto-Vagones />
-
-    <div class="ufc-form-wrapper">
-      <div class="ufc-form-card">
-        <h2 class="ufc-form-title">
-          <i class="bi bi-file-earmark-plus"></i> Nuevo registro por situar
-        </h2>
-
-        <form @submit.prevent="submitForm" class="ufc-form">
-          <div class="ufc-form-grid">
+  <div class="ufc-header">
+    <h6>Partes UFC</h6>
+  </div>
+  <Navbar-Component />
+  <Producto-Vagones />
+  <div class="container py-3" style="margin-left: 20em; width: 70%">
+    <div class="card border">
+      <div class="card-header bg-light border-bottom">
+        <h5 class="mb-0 text-dark fw-semibold">
+          <i class="bi bi-file-earmark-plus me-2"></i> Nuevo registro por situar        </h5>
+      </div>
+      <div class="card-body p-3">
+        <form @submit.prevent="submitForm">
+          <div class="row">
             <!-- Columna Izquierda -->
-            <div class="ufc-form-column">
+            <div class="col-md-6">
+              <!-- Campo:Fecha de registro -->
+              <div class="mb-3">
+                <label for="fecha_registro" class="form-label small fw-semibold text-secondary">Fecha de registro</label>
+                <input
+                  type="text"
+                  class="form-control form-control-sm border-secondary"
+                  :value="formattedFechaRegistro"
+                  id="fecha_registro"
+                  name="fecha_registro"
+                  readonly
+                />
+              </div>
               <!-- Campo: tipo_origen -->
-              <div class="ufc-input-group">
-                <label for="tipo_origen"
-                  >Tipo de Origen <span class="required">*</span></label
+              <div class="mb-3">
+                <label for="tipo_origen" class="form-label small fw-semibold text-secondary"
+                  >Tipo de Origen</label
                 >
                 <select
-                  class="ufc-select"
+                  class="form-select form-select-sm border-secondary"
                   v-model="formData.tipo_origen"
                   required
                 >
@@ -40,15 +49,15 @@
               </div>
 
               <!-- Campo: origen -->
-              <div class="ufc-input-group">
-                <label for="origen"
-                  >Origen <span class="required">*</span></label
+              <div class="mb-3">
+                <label for="origen" class="form-label small fw-semibold text-secondary"
+                  >Origen </label
                 >
                 <select
                   v-if="
                     formData.tipo_origen && formData.tipo_origen !== 'puerto'
                   "
-                  class="ufc-select"
+                  class="form-select form-select-sm border-secondary"
                   v-model="formData.origen"
                   required
                 >
@@ -64,7 +73,7 @@
 
                 <select
                   v-else-if="formData.tipo_origen === 'puerto'"
-                  class="ufc-select"
+                  class="form-select form-select-sm border-secondary"
                   v-model="formData.origen"
                   required
                 >
@@ -78,18 +87,18 @@
                   </option>
                 </select>
 
-                <select v-else class="ufc-select" disabled>
+                <select v-else class="form-select form-select-sm border-secondary" disabled>
                   <option value="">Seleccione primero el tipo de origen</option>
                 </select>
               </div>
 
               <!-- Campo: tipo_equipo -->
-              <div class="ufc-input-group">
-                <label for="tipo_equipo"
-                  >Tipo de Equipo <span class="required">*</span></label
+              <div class="mb-3">
+                <label for="tipo_equipo" class="form-label small fw-semibold text-secondary"
+                  >Tipo de Equipo</label
                 >
                 <select
-                  class="ufc-select"
+                  class="form-select form-select-sm border-secondary"
                   v-model="formData.tipo_equipo"
                   required
                 >
@@ -103,17 +112,25 @@
                   </option>
                 </select>
               </div>
+              <!-- Campo: por_situar -->
+	            <div class="mb-3">
+                <label for="por_situar" class="form-label small fw-semibold text-secondary">Por Situar en Cantidad Unidades</label>
+                <div class="ufc-por-situar-container">
+                  <input type="number" class="ufc-por-situar-input" v-model.number="formData.por_situar" min="1" required/>
+				          <span class="ufc-por-situar-suffix">unidades</span>
+                </div>
+              </div>
             </div>
 
             <!-- Columna Derecha -->
-            <div class="ufc-form-column">
+            <div class="col-md-6">
               <!-- Campo: estado -->
-              <div class="ufc-input-group">
-                <label for="estado"
-                  >Estado <span class="required">*</span></label
+              <div class="mb-3">
+                <label for="estado" class="form-label small fw-semibold text-secondary"
+                  >Estado</label
                 >
                 <select
-                  class="ufc-select"
+                  class="form-select form-select-sm border-secondary"
                   v-model="formData.estado"
                   @change="handleEstadoChange"
                   required
@@ -124,12 +141,12 @@
               </div>
 
               <!-- Campo: operacion -->
-              <div class="ufc-input-group">
-                <label for="operacion"
-                  >Operación <span class="required">*</span></label
+              <div class="mb-3">
+                <label for="operacion" class="form-label small fw-semibold text-secondary"
+                  >Operación</label
                 >
                 <select
-                  class="ufc-select"
+                  class="form-select form-select-sm border-secondary"
                   v-model="formData.operacion"
                   required
                 >
@@ -144,26 +161,16 @@
                 </select>
               </div>
 
-              <div class="ufc-input-group">
-                <label for="producto"
-                  >Productos <span class="required">*</span></label
-                >
+              <div class="mb-3">
+                <label for="producto" class="form-label small fw-semibold text-secondary">Productos <span v-if="formData.estado === 'cargado'" class="required"></span></label>
                 <div class="ufc-input-with-action">
-                  <div
-                    class="ufc-custom-select"
-                    @click="toggleProductosDropdown"
-                  >
+                  <div class="ufc-custom-select" @click="toggleProductosDropdown">
                     <div class="ufc-select-display">
-                      {{
-                        getSelectedProductosText() || "Seleccione productos..."
-                      }}
+                      {{ getSelectedProductosText() || 'Seleccione productos...' }}
                     </div>
                     <i class="bi bi-chevron-down ufc-select-arrow"></i>
-
-                    <div
-                      class="ufc-productos-dropdown"
-                      v-if="showProductosDropdown"
-                    >
+                    
+                    <div class="ufc-productos-dropdown" v-if="showProductosDropdown">
                       <div class="ufc-productos-search-container">
                         <input
                           type="text"
@@ -171,109 +178,50 @@
                           placeholder="Buscar productos..."
                           v-model="productoSearch"
                           @input="filterProductos"
-                          @click.stop
-                        />
+                          @click.stop>
                       </div>
                       <div class="ufc-productos-options">
                         <div
                           v-for="producto in filteredProductos"
                           :key="producto.id"
                           class="ufc-producto-option"
-                          :class="{
-                            selected: formData.productos.includes(producto.id),
-                          }"
-                          @click.stop="toggleProductoSelection(producto.id)"
-                        >
-                          {{ producto.id }}-{{ producto.producto_name }} -
-                          {{ producto.producto_codigo }}
+                          :class="{ 'selected': formData.productos.includes(producto.id) }"
+                          @click.stop="toggleProductoSelection(producto.id)">
+                          {{ producto.id }}-{{ producto.producto_name }} - {{ producto.producto_codigo }}
                           <template v-if="producto.tipo_embalaje">
-                            (Embalaje:
-                            {{
-                              producto.tipo_embalaje_name ||
-                              producto.tipo_embalaje.nombre_embalaje ||
-                              "N/A"
-                            }})
+                            (Embalaje: {{ producto.tipo_embalaje.nombre || producto.tipo_embalaje.nombre_embalaje || 'N/A' }})
                           </template>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <button
-                    class="ufc-add-button"
-                    @click.prevent="abrirModalAgregarProducto"
-                  >
-                    <i class="bi bi-plus-circle"></i>
+                  <button class="create-button ms-2" @click.stop.prevent="abrirModalAgregarProducto">
+                    <i class="bi bi-plus-circle large-icon"></i>
                   </button>
                 </div>
               </div>
 
-              <ModalAgregarProducto
-                v-if="mostrarModal"
-                :visible="mostrarModal"
-                @cerrar-modal="cerrarModal"
-              />
+              <ModalAgregarProducto v-if="mostrarModal" :visible="mostrarModal" @cerrar-modal="cerrarModal"/>
 
-              <!-- Campo: por_situar -->
-              <div class="ufc-input-group">
-                <label for="por_situar"
-                  >Por Situar <span class="required">*</span></label
-                >
-                <div class="ufc-por-situar-container">
-                  <input
-                    type="number"
-                    class="ufc-por-situar-input"
-                    v-model.number="formData.por_situar"
-                    min="1"
-                    required
-                  />
-                  <span class="ufc-por-situar-suffix">unidades</span>
-                </div>
+              <!-- Observaciones (full width) -->
+              <div class="mb-3">
+                <label for="observaciones" class="form-label small fw-semibold text-secondary">Observaciones</label>
+                  <textarea class="form-control form-control-sm border-secondary" v-model="formData.observaciones" rows="3"
+                ></textarea>
               </div>
             </div>
           </div>
-
-          <!-- Observaciones (full width) -->
-          <div class="ufc-input-group full-width">
-            <label for="observaciones">Observaciones</label>
-            <textarea
-              class="ufc-textarea"
-              v-model="formData.observaciones"
-              rows="2"
-            ></textarea>
-          </div>
-
-          <!-- Botones de acción -->
-          <div class="ufc-form-actions">
-            <button
-              type="button"
-              class="ufc-button secondary"
-              @click="confirmCancel"
-            >
-              <i class="bi bi-x-circle"></i> Cancelar
-            </button>
-            <button type="submit" class="ufc-button primary">
-              <i class="bi bi-check-circle"></i> Agregar
-            </button>
+          <div class="modal-footer">
+            <div class=" d-flex justify-content-between align-items-center mb-4">
+              <button class="ufc-button secondary" @click="volver_principal">
+                <i class="bi bi-x-circle" me-1></i>Cancelar
+              </button>
+              <button type="submit" class=" ufc-button primary" >
+                <i class="bi bi-check-circle" me-1></i>Agregar
+              </button>
+            </div>
           </div>
         </form>
-      </div>
-    </div>
-
-    <!-- Modal para agregar producto -->
-    <div v-if="mostrarModal" class="ufc-modal-overlay">
-      <div class="ufc-modal-container">
-        <div class="ufc-modal-header">
-          <h3><i class="bi bi-box-seam"></i> Nuevo Producto</h3>
-          <button @click="cerrarModal" class="ufc-modal-close">
-            <i class="bi bi-x"></i>
-          </button>
-        </div>
-        <div class="ufc-modal-body">
-          <ModalAgregarProducto
-            :visible="mostrarModal"
-            @cerrar-modal="cerrarModal"
-          />
-        </div>
       </div>
     </div>
   </div>
@@ -332,7 +280,35 @@ export default {
     this.filteredProductos = this.productos;
     this.closeDropdownsOnClickOutside();
   },
+  computed:{
+    formattedFechaRegistro() {
+      if (this.formData.fecha) {
+        return new Date(this.formData.fecha).toLocaleString();
+      }
+      return new Date().toLocaleString();
+    }
+  },
   methods: {
+    async verificarInformeOperativo() {
+        try {
+          this.formData.fecha = new Date().toISOString();
+          const today = new Date();
+          const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+          const response = await axios.get('/ufc/verificar-informe-existente/', {
+            params: { fecha_operacion: fechaFormateada }
+          });
+
+          if (response.data.existe) {
+            this.informeOperativoId = response.data.id;
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error("Error al verificar informe:", error);
+          return false;
+        }
+      },
     async getEntidades() {
       try {
         const response = await axios.get("/api/entidades/");
@@ -373,6 +349,24 @@ export default {
       }
     },
 
+    volver_principal() {
+      event.preventDefault();
+      event.stopPropagation();
+      Swal.fire({
+        title: "¿Cancelar operación?",
+        text: "Los datos no guardados se perderán",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, cancelar",
+        cancelButtonText: "No, continuar",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.resetForm();
+          this.$router.push({ name: "InfoOperativo" });
+        }
+      });
+    },
+
     async getPuertos() {
       try {
         let allPuertos = [];
@@ -407,6 +401,29 @@ export default {
 
     async submitForm() {
       try {
+        // 1. Verificar que exista un informe operativo
+        const existeInforme = await this.verificarInformeOperativo();
+        if (!existeInforme) {
+          Swal.fire(
+            "Error",
+            "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+            "error"
+          );
+          this.$router.push({ name: "InfoOperativo" });
+          return;
+        }
+
+        // 2. Verificar que el informe no esté aprobado
+        const informeNoAprobado = await this.verificarEstadoInforme();
+        if (!informeNoAprobado) {
+          Swal.fire(
+            "Error",
+            "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
+            "error"
+          );
+          return;
+        }
+
         // Validación de campos requeridos
         if (!this.formData.tipo_origen) {
           throw new Error("El campo Tipo de Origen es requerido");
@@ -444,10 +461,12 @@ export default {
           tipo_equipo: this.formData.tipo_equipo,
           operacion: this.formData.operacion,
           estado: this.formData.estado,
-          producto: this.formData.productos, // Array de IDs de productos
+          producto: this.formData.productos,
           por_situar: this.formData.por_situar,
           observaciones: this.formData.observaciones,
+          informe_operativo: this.informeOperativoId // Incluir el ID del informe
         };
+
         // Enviar los datos al backend
         const response = await axios.post("/ufc/por-situar/", payload);
 
@@ -481,6 +500,17 @@ export default {
           icon: "error",
           confirmButtonText: "Entendido",
         });
+      }
+    },
+    async verificarEstadoInforme() {
+      try {
+        if (!this.informeOperativoId) return false;
+        
+        const response = await axios.get(`/ufc/informe-operativo/${this.informeOperativoId}/`);
+        return response.data.estado_parte !== "Aprobado";
+      } catch (error) {
+        console.error("Error al verificar estado del informe:", error);
+        return false;
       }
     },
 
@@ -569,7 +599,7 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos para el select con búsqueda */
+/* Estilos para el select personalizado de productos */
 .ufc-custom-select {
   position: relative;
   width: 100%;
@@ -585,6 +615,7 @@ export default {
   min-height: 36px;
   display: flex;
   align-items: center;
+  border-color: rgba(var(--bs-secondary-rgb),var(--bs-border-opacity)) !important;
 }
 
 .ufc-select-arrow {
@@ -658,15 +689,6 @@ export default {
   margin-left: 8px;
 }
 
-/* Para navegadores que soportan datalist */
-input[list] {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.85rem;
-}
-
 .ufc-select[multiple] {
   height: auto;
   min-height: 100px;
@@ -682,6 +704,12 @@ input[list] {
 .ufc-select[multiple] option:checked {
   background-color: #002a68;
   color: white;
+}
+
+.ufc-selected-products {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 5px;
 }
 
 .ufc-form-container {
@@ -835,6 +863,7 @@ input[list] {
   border: 1px solid #ddd;
   border-radius: 6px;
   overflow: hidden;
+  border-color: rgba(var(--bs-secondary-rgb),var(--bs-border-opacity)) !important;
 }
 
 .ufc-por-situar-input {
@@ -866,7 +895,7 @@ input[list] {
 .ufc-button {
   padding: 8px 16px;
   border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: 1 rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -876,26 +905,43 @@ input[list] {
   gap: 6px;
 }
 
-.ufc-button.primary {
-  background: #002a68;
-  color: white;
-}
-
 .ufc-button.primary:hover {
   background: #003d8f;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .ufc-button.secondary {
-  background: white;
-  color: #555;
-  border: 1px solid #ddd;
+    background:rgb(241, 81, 63);
+    color: white;
 }
 
 .ufc-button.secondary:hover {
-  background: #f8f9fa;
-  border-color: #ccc;
+    background:rgb(228, 56, 37);
+}
+
+.create-button {
+  text-decoration: none;
+  color: green;
+  margin-left: 940px;
+}
+
+button {
+  margin-left: 10px;
+  padding: 5px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button[type="button"] {
+  background-color: #007bff;
+  color: white;
+}
+
+button[type="submit"] {
+  margin-left: 15px;
+  background-color: #007bff;
+  color: white;
 }
 
 /* Estilos para selects */

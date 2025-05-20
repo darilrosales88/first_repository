@@ -10,6 +10,18 @@
     <div class="card">
       <div class="card-body">
         <form @submit.prevent="submitForm">
+          <!-- Campo:Fecha de registro -->
+          <div class="mb-3">
+              <label for="fecha_registro" class="form-label">Fecha de registro</label>
+              <input
+                type="text"
+                class="form-control"
+                :value="formattedFechaRegistro"
+                id="fecha_registro"
+                name="fecha_registro"
+                readonly
+              />
+            </div>
           <div class="mb-3">
             <label class="form-label">Origen</label>
             <input
@@ -141,6 +153,7 @@ export default {
   name: 'AgregarArrastre',
   data() {
     return {
+      informeOperativoId: null,
       loading: false,
       tren: {
         origen: "",
@@ -170,8 +183,60 @@ export default {
       ],
     }
   },
+  computed:{
+    formattedFechaRegistro() {
+      if (this.formData.fecha) {
+        return new Date(this.formData.fecha).toLocaleString();
+      }
+      return new Date().toLocaleString();
+    }
+  },
   methods: {
+    async verificarInformeOperativo() {
+      try {
+        this.formData.fecha = new Date().toISOString();
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+        const response = await axios.get('/ufc/verificar-informe-existente/', {
+          params: { fecha_operacion: fechaFormateada }
+        });
+
+        if (response.data.existe) {
+          this.informeOperativoId = response.data.id;
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error("Error al verificar informe:", error);
+        return false;
+      }
+    },
     async submitForm() {
+      // 1. Verifificar que el informe operativo existe ya para la fecha creada
+        const existeInforme = await this.verificarInformeOperativo();
+        if (!existeInforme) {
+          Swal.fire(
+            "Error",
+            "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+            "error"
+          );
+          this.$router.push({ name: "InfoOperativo" });
+          return;
+          
+        }
+        // 2. Verificar que el informe no esté en estado "Aprobado"
+        const informeResponse = await axios.get(`/ufc/informe-operativo/${this.informeOperativoId}/`);
+        console.log("anijijijijiji",informeResponse.data.estado_parte);
+        if (informeResponse.data.estado_parte === "Aprobado") {
+          Swal.fire(
+            "Error",
+            "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
+            "error"
+          );
+          return;
+        }
+
       this.loading = true
       try {
         const response = await axios.post('/ufc/pendiente-arrastre/', this.tren)

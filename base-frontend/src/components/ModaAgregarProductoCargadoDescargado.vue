@@ -191,7 +191,7 @@
     methods: {
       async submitForm() {
         try {
-          await axios.post("/ufc/productos-vagones-cargados-descargados/", this.formData);
+          await axios.post("/ufc/producto-vagon/", this.formData);
           Swal.fire(
             "Agregado!",
             "El formulario ha sido añadido exitosamente.",

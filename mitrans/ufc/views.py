@@ -4,14 +4,17 @@ from rest_framework import viewsets,generics,permissions
 from rest_framework.pagination import PageNumberPagination
 #importacion de modelos
 from .models import vagon_cargado_descargado,producto_UFC,en_trenes
-from .models import registro_vagones_cargados,vagones_productos
-from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones
+from .models import registro_vagones_cargados,vagones_productos,HistorialVagonesProductos
+from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones,ufc_informe_operativo
 #importacion de serializadores asociados a los modelos
 from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descargado_serializer, 
                         producto_vagon_serializer, en_trenes_serializer,PorSituarCargaDescargaSerializer, SituadoCargaDescargaSerializers, 
                         PendienteArrastreSerializer, registro_vagones_cargados_serializer,
                         registro_vagones_cargados_filter, vagones_productos_filter, 
-                        vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer)
+                        vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer,
+                        ufc_informe_operativo_serializer,ufc_informe_operativo_filter,
+                        HistorialVagonCargadoDescargado,HistorialVagonCargadoDescargadoSerializer,
+                        HistorialVagonesProductosSerializer)
 
 from Administracion.models import Auditoria
 
@@ -22,7 +25,7 @@ from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
 
 #para usar el or
-from django.db.models import Q
+from django.db.models import Q,Prefetch
 
 
 from django.utils import timezone
@@ -33,7 +36,18 @@ from .permissions import IsAdminUFCPermission,IsVisualizadorUFCPermission
 
 from rest_framework.decorators import action,api_view  # Importa el decorador action
 
+#Para las validaciones de las fechas en el informe operativo
+from django.db.models.functions import TruncDate
+from django.db.models import DateField
+from datetime import datetime
+from django.db.models.functions import Cast
+from django.db import transaction
 
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+import json
+from datetime import date
 
 # Verifica si el usuario tiene el rol "ufc"
 class IsUFCPermission(permissions.BasePermission):
@@ -54,6 +68,264 @@ class IsUFCPermission(permissions.BasePermission):
 
 
 #**********************************************************************************************************************************
+
+#Para Informe operativo
+class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
+    queryset = ufc_informe_operativo.objects.all().order_by('-id')
+    serializer_class = ufc_informe_operativo_serializer
+
+    
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Filtrado por fecha de operación
+        fecha_operacion = self.request.query_params.get('fecha_operacion')
+        if fecha_operacion:
+            try:
+                # Parsear la fecha ignorando la hora si está presente
+                fecha_operacion = datetime.strptime(fecha_operacion.split('T')[0], '%Y-%m-%d').date()
+                queryset = queryset.annotate(
+                    fecha_op_date=Cast('fecha_operacion', DateField())
+                ).filter(fecha_op_date=fecha_operacion)
+            except (ValueError, AttributeError):
+                pass  # O manejar el error adecuadamente
+        
+        return queryset  # ¡No olvidar retornar el queryset!       
+        
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Verificar si ya existe un informe para esta fecha (solo día, mes y año)
+        fecha_operacion_str = request.data.get('fecha_operacion')
+        if fecha_operacion_str:
+            try:
+                # Parsear la fecha ignorando la hora si está presente
+                fecha_operacion = datetime.strptime(fecha_operacion_str.split('T')[0], '%Y-%m-%d').date()
+                
+                # Solución para SQLite - Dos alternativas:
+
+                # Opción 1: Usando TruncDate (requiere Django 1.10+)
+                """ if ufc_informe_operativo.objects.annotate(
+                    fecha_op_date=TruncDate('fecha_operacion')
+                ).filter(fecha_op_date=fecha_operacion).exists():
+                    return Response(
+                        {"detail": "Ya existe un informe operativo para esta fecha."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    ) """
+
+                # Opción 2: Usando Cast (alternativa más universal)
+                if ufc_informe_operativo.objects.annotate(
+                     fecha_op_date=Cast('fecha_operacion', DateField())
+                 ).filter(fecha_op_date=fecha_operacion).exists():
+                     return Response(
+                         {"detail": "Ya existe un informe operativo para esta fecha."},
+                         status=status.HTTP_400_BAD_REQUEST
+                 )
+
+            except (ValueError, AttributeError):
+                # Manejar error si el formato de fecha no es válido
+                return Response(
+                    {"detail": "Formato de fecha inválido."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        informe = serializer.save()
+        
+        # Auditoría
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion=f"Insertar Informe operativo: {informe.fecha_operacion}",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    #funcion añadida para la actualizacion del campo estado_parte***
+    def partial_update(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        instance = self.get_object()
+        
+        # Solo permitir actualizar el estado_parte
+        if 'estado_parte' not in request.data:
+            return Response(
+                {"detail": "Se requiere el campo 'estado_parte'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        serializer = self.get_serializer(
+            instance, 
+            data={'estado_parte': request.data['estado_parte']}, 
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        # Auditoría
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user,
+            accion=f"Actualizar estado del Informe operativo a {serializer.data['estado_parte']}",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return Response(serializer.data)
+ 
+    def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        informe = serializer.save()
+
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion=f"Modificar Informe operativo: {informe.fecha_operacion}",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        instance = self.get_object()
+        fecha_oper = instance.fecha_operacion
+
+        # Registrar la acción en el modelo de Auditoria antes de eliminar
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion=f"Eliminar Informe operativo: {fecha_oper}",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de Partes informe operativo",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return super().list(request, *args, **kwargs)  
+
+#Verificando que exista el informe creado antes de insertar
+@api_view(['GET'])
+def verificar_informe_existente(request):
+    fecha_operacion = request.query_params.get('fecha_operacion')
+    if not fecha_operacion:
+        return Response({"error": "Parámetro fecha_operacion requerido"}, status=400)
+    
+    try:
+        fecha_obj = datetime.strptime(fecha_operacion, '%Y-%m-%d').date()
+        existe = ufc_informe_operativo.objects.filter(
+            fecha_operacion__date=fecha_obj
+        ).exists()
+        
+        if existe:
+            informe = ufc_informe_operativo.objects.filter(
+                fecha_operacion__date=fecha_obj
+            ).first()
+            return Response({
+                "existe": True,
+                "id": informe.id,
+                "fecha_operacion": informe.fecha_operacion
+            })
+        return Response({"existe": False})
+    except ValueError:
+        return Response({"error": "Formato de fecha inválido"}, status=400)
+    
+#vista para cambiar estado_parte en ufc_informe_operativo
+# En tu archivo views.py de la app ufc
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from .models import ufc_informe_operativo
+from django.utils import timezone
+import json
+
+@require_http_methods(["POST"])
+def actualizar_estado_parte(request):
+    try:
+        data = json.loads(request.body)
+        nuevo_estado = data.get('nuevo_estado')
+        
+        if not nuevo_estado:
+            return JsonResponse({'error': 'Estado no proporcionado'}, status=400)
+        
+        # Obtener la fecha actual
+        hoy = timezone.now().date()
+        
+        # Buscar el informe del día actual
+        informe = ufc_informe_operativo.objects.filter(
+            fecha_operacion__date=hoy
+        ).first()
+        
+        if not informe:
+            return JsonResponse({'error': 'No existe un informe operativo para la fecha actual'}, status=404)
+        
+        informe.estado_parte = nuevo_estado
+        informe.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Estado actualizado a {nuevo_estado} correctamente',
+            'nuevo_estado': nuevo_estado,
+            'informe_id': informe.id
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+#****************************************************************************************************************************
+
 #para vagones y productos
 class vagones_productos_view_set(viewsets.ModelViewSet):
     queryset = vagones_productos.objects.all().order_by('-id')  # Definir el queryset
@@ -163,9 +435,79 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
             navegador=navegador,
         )
 
-        return super().list(request, *args, **kwargs)    
+        return super().list(request, *args, **kwargs) 
+
+class vagones_productos_hoy_viewset(viewsets.ModelViewSet):
+    queryset = vagones_productos.objects.all()
+    serializer_class = vagones_productos_serializer
+    
+    def get_queryset(self):
+        # Obtener la fecha actual (sin la hora)
+        hoy = timezone.now().date()
+        
+        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
+        return self.queryset.annotate(
+            fecha_dia=TruncDate('fecha', output_field=DateField())
+        ).filter(fecha_dia=hoy).order_by('-fecha')
+    
+    def list(self, request, *args, **kwargs):
+        # Verificar permisos como en la vista original
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de vagones cargados/descargados hoy",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+        
+        return super().list(request, *args, **kwargs)  
+
+class HistorialVagonesProductosViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = HistorialVagonesProductos.objects.all().order_by('-fecha_creacion')
+    serializer_class = HistorialVagonesProductosSerializer
+    permission_classes = [IsUFCPermission]
+    pagination_class = PageNumberPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        informe_id = self.request.query_params.get('informe_id')
+
+        if informe_id:
+            queryset = queryset.filter(informe_operativo_id=informe_id)
+
+        return queryset.select_related('informe_operativo')
+
+    def list(self, request, *args, **kwargs):
+        # Verificar permisos del grupo
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Auditoría
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar historial de vagones y productos",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return super().list(request, *args, **kwargs) 
 
 #/*********************************************************************************************************************************************
+#para el estado de vagones cargados/descargados
 #para el estado de vagones cargados/descargados
 class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
     queryset = vagon_cargado_descargado.objects.all().order_by('-id')  # Definir el queryset
@@ -181,8 +523,17 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
             return self.filter_class({'tef_prod_estado': search}, queryset=queryset).qs
         
         return queryset
+    def perform_destroy(self, instance):
+        registros_asociados = instance.registros_vagones.all()
+        
+        for registro in registros_asociados:
+            self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
+        
+        registros_asociados.delete()
+        instance.delete()
 
     def create(self, request, *args, **kwargs):
+        print("Datos recibidos en create:", request.data)  # Verificar datos entrantes
         #permisos de acceso a la operacion
         if not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
@@ -231,33 +582,40 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
         )
 
         return Response(serializer.data)
-
     def destroy(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
         if not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
                 {"detail": "No tiene permiso para realizar esta acción."},
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        instance = self.get_object()
-        id_objeto_vagon_cargado_descargado = instance.id
-        
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Eliminar vagón cargado/descargado y sus registros asociados: {id_objeto_vagon_cargado_descargado}",
-            navegador=navegador,
-        )
-        
-        # Esto activará el método delete() del modelo que maneja la eliminación en cascada
-        instance.delete()
-        
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        try:
+            instance = self.get_object()
+            id_objeto_vagon_cargado_descargado = instance.id
+            
+            # Registrar la acción en el modelo de Auditoria antes de eliminar
+            navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+            direccion_ip = request.META.get('REMOTE_ADDR')
+            
+            Auditoria.objects.create(
+                usuario=request.user if request.user.is_authenticated else None,
+                direccion_ip=direccion_ip,
+                accion=f"Eliminar vagón cargado/descargado y sus registros asociados: {id_objeto_vagon_cargado_descargado}",
+                navegador=navegador,
+            )
+            
+            # Eliminar la instancia (esto activará el método delete() del modelo)
+            instance.delete()
+            
+            return Response(status=status.HTTP_204_NO_CONTENT)
+            
+        except Exception as e:
+            return Response(
+                {"error": f"No se pudo eliminar el registro: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
+    
     def list(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
@@ -295,7 +653,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
             total += registro.registros_vagones.count()
             
         return Response({'total': total})
-    # En el vagon_cargado_descargado_view_set, agrega este nuevo método:
+   
     @action(detail=True, methods=['get'], url_path='registros-vagones')
     def obtener_registros_vagones(self, request, pk=None):
         """
@@ -335,9 +693,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
                 'origen',
                 'fecha_llegada',
                 'observaciones'
-            )
-            #lalalalal
-            
+            )            
             return Response(list(registros_vagones))
         
         except Exception as e:
@@ -345,8 +701,92 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
                 {"error": f"No se pudieron obtener los registros completos: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+class vagon_cargado_descargado_hoy_view_set(viewsets.ModelViewSet):
+    queryset = vagon_cargado_descargado.objects.all()
+    serializer_class = vagon_cargado_descargado_serializer
     
-#para productos de vagones cargados/descargados
+    def get_queryset(self):
+        # Obtener la fecha actual (sin la hora)
+        hoy = timezone.now().date()
+        
+        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
+        return self.queryset.annotate(
+            fecha_dia=TruncDate('fecha', output_field=DateField())
+        ).filter(fecha_dia=hoy).order_by('-fecha')
+        
+        
+    def perform_destroy(self, instance):
+        registros_asociados = instance.registros_vagones.all()
+        
+        for registro in registros_asociados:
+            self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
+        
+        registros_asociados.delete()
+        instance.delete()
+
+    def actualizar_estado_equipo_ferroviario(self, no_id, nuevo_estado):
+        from nomencladores.models import nom_equipo_ferroviario
+        if no_id:
+            equipo = nom_equipo_ferroviario.objects.filter(numero_identificacion=no_id).first()
+            if equipo:
+                equipo.estado_actual = nuevo_estado
+                equipo.save()
+    
+    def list(self, request, *args, **kwargs):
+        # Verificar permisos como en la vista original
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de vagones cargados/descargados hoy",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+        
+        return super().list(request, *args, **kwargs)
+    
+#vista para el historial de vagon_cargado_descargado
+class HistorialVagonCargadoDescargadoViewSet(viewsets.ModelViewSet):
+    queryset = HistorialVagonCargadoDescargado.objects.all().order_by('-fecha_creacion')
+    serializer_class = HistorialVagonCargadoDescargadoSerializer
+    permission_classes = [IsUFCPermission]
+    pagination_class = PageNumberPagination
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        informe_id = self.request.query_params.get('informe_id')
+        
+        if informe_id:
+            queryset = queryset.filter(informe_operativo_id=informe_id)
+            
+        return queryset.select_related('informe_operativo')
+    
+    def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Auditoría
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar historial de vagones cargados/descargados",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+        
+        return super().list(request, *args, **kwargs)
 #para productos de vagones y productos
 
 @api_view(['POST'])
@@ -582,8 +1022,43 @@ class en_trenes_view_set(viewsets.ModelViewSet):
         )
 
         return super().list(request, *args, **kwargs)
+    
+class en_trenes_hoy_viewset(viewsets.ModelViewSet):
+    queryset = en_trenes.objects.all()
+    serializer_class = en_trenes_serializer
+    
+    def get_queryset(self):
+        # Obtener la fecha actual (sin la hora)
+        hoy = timezone.now().date()
+        
+        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
+        return self.queryset.annotate(
+            fecha_dia=TruncDate('fecha', output_field=DateField())
+        ).filter(fecha_dia=hoy).order_by('-fecha')
+    
+    def list(self, request, *args, **kwargs):
+        # Verificar permisos como en la vista original
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de vagones pendientes de arrastre hoy",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+        
+        return super().list(request, *args, **kwargs)
 
 
+#***********************************************************************************************************
 
 class producto_vagon_view_set(viewsets.ModelViewSet):
     queryset = producto_UFC.objects.all().order_by('-id') # Definir el queryset
@@ -693,7 +1168,7 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
         )
 
         return super().list(request, *args, **kwargs)
-
+#*******************************************************************************************************
 
 
 #Voy a agregar los modulos de auditoria a los que hizo Karmal
@@ -806,12 +1281,41 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
         )
 
         return super().list(request, *args, **kwargs)
-
     
+class PorSituarCargaDescarga_hoy_ViewSet(viewsets.ModelViewSet):
+    queryset = por_situar.objects.all()
+    serializer_class = PorSituarCargaDescargaSerializer
     
+    def get_queryset(self):
+        # Obtener la fecha actual (sin la hora)
+        hoy = timezone.now().date()
+        
+        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
+        return self.queryset.annotate(
+            fecha_dia=TruncDate('fecha', output_field=DateField())
+        ).filter(fecha_dia=hoy).order_by('-fecha')
     
-    
-
+    def list(self, request, *args, **kwargs):
+        # Verificar permisos como en la vista original
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de vagones por situar hoy",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+        
+        return super().list(request, *args, **kwargs)
+    #**********************************************************************************************
 
 class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
     queryset = Situado_Carga_Descarga.objects.all().order_by("-id")
@@ -919,8 +1423,42 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
         )
 
         return super().list(request, *args, **kwargs)
-
+class SituadoCargaDescarga_hoy_Viewset(viewsets.ModelViewSet):
+    queryset = Situado_Carga_Descarga.objects.all()
+    serializer_class = SituadoCargaDescargaSerializers
     
+    def get_queryset(self):
+        # Obtener la fecha actual (sin la hora)
+        hoy = timezone.now().date()
+        
+        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
+        return self.queryset.annotate(
+            fecha_dia=TruncDate('fecha', output_field=DateField())
+        ).filter(fecha_dia=hoy).order_by('-fecha')
+    
+    def list(self, request, *args, **kwargs):
+        # Verificar permisos como en la vista original
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de vagones situados hoy",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+        
+        return super().list(request, *args, **kwargs)
+    
+
+ #***********************************************************************************************************************   
     
 class PendienteArrastreViewset(viewsets.ModelViewSet):
     queryset = arrastres.objects.all()
@@ -1015,6 +1553,40 @@ class PendienteArrastreViewset(viewsets.ModelViewSet):
             navegador=navegador,
         )
 
+        return super().list(request, *args, **kwargs)
+    
+class PendienteArrastre_hoy_Viewset(viewsets.ModelViewSet):
+    queryset = arrastres.objects.all()
+    serializer_class = PendienteArrastreSerializer
+    
+    def get_queryset(self):
+        # Obtener la fecha actual (sin la hora)
+        hoy = timezone.now().date()
+        
+        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
+        return self.queryset.annotate(
+            fecha_dia=TruncDate('fecha', output_field=DateField())
+        ).filter(fecha_dia=hoy).order_by('-fecha')
+    
+    def list(self, request, *args, **kwargs):
+        # Verificar permisos como en la vista original
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion="Visualizar lista de vagones pendientes de arrastre hoy",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+        
         return super().list(request, *args, **kwargs)
     
     
@@ -1116,6 +1688,5 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
         )
 
         return super().list(request, *args, **kwargs)
-
-
+    
 #*************Termina View Rotacion de Vagones **********************

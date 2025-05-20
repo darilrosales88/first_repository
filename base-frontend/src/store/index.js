@@ -31,6 +31,9 @@ export default createStore({
 
       }
     },
+    setAuthentication(state, value) {
+      state.isAuthenticated = value;
+    },
     setIsLoading(state, status) {/*cambiando el estado de carga */
       state.isLoading = status
     },

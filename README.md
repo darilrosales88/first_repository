@@ -21,6 +21,20 @@
 
 ## Tareas Pendientes
 
--Modal de producto vagon se desaparece en Arrastre
--Modificar los editar y los adicionar de los 3 estados Por Situar Situado Pendiente
--Solucionar problemas del serializer
+- Modal de producto vagon se desaparece en Arrastre
+- Modificar los editar y los adicionar de los 3 estados Por Situar Situado Pendiente
+- Solucionar problemas del serializer
+
+## ISSUES Para crear
+
+- Implementar Validaciones
+
+### Registro de En Trenes
+
+- La combinación de los campos Tipo equipo ferroviario, Estado, Producto, Origen, Destino, deben ser únicos, el valor especificado ya se encuentra en uso.
+
+### Rotacion de vagones
+
+- El campo Tipo equipo ferroviario debe ser único. Si hay una rotacion que use ese tipo equipo debe arrojar un error desde el serializer con su debido mensaje.
+
+### Tiempo Estimado 3 dias.

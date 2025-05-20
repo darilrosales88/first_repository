@@ -511,9 +511,9 @@ export default {
   computed: {
     formattedFechaRegistro() {
       if (this.formData.fecha) {
-        return new Date(this.formData.fecha).toLocaleString();
+        return new Date(this.formData.fecha).toLocaleString("es-ES");
       }
-      return new Date().toLocaleString();
+      return new Date().toLocaleString("es-ES");
     },
   },
   async created() {

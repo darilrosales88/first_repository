@@ -274,7 +274,7 @@ def recalcular_informe_operativo_al_eliminar(sender, instance, **kwargs):
 
 
 # Señal para crear el historial cuando se crea un arrastre
-@receiver(post_save, sender=arrastres)
+#@receiver(post_save, sender=arrastres)
 def crear_historial_arrastre(sender, instance, created, **kwargs):
     """
     Crea un historial de arrastre asociado al informe operativo de su fecha

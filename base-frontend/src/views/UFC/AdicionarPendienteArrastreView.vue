@@ -11,7 +11,8 @@
     <div class="ufc-form-wrapper">
       <div class="ufc-form-card">
         <h2 class="ufc-form-title">
-          <i class="bi bi-file-earmark-plus"></i> Nuevo registro pendiente a arrastre
+          <i class="bi bi-file-earmark-plus"></i> Nuevo registro pendiente a
+          arrastre
         </h2>
 
         <form @submit.prevent="submitForm" class="ufc-form">
@@ -20,7 +21,9 @@
             <div class="ufc-form-column">
               <!-- Campo:Fecha de registro -->
               <div class="mb-3">
-                <label for="fecha_registro" class="form-label">Fecha de registro</label>
+                <label for="fecha_registro" class="form-label"
+                  >Fecha de registro</label
+                >
                 <input
                   type="text"
                   class="form-control"
@@ -30,10 +33,12 @@
                   readonly
                 />
               </div>
-              
+
               <!-- Campo: tipo_origen -->
               <div class="ufc-input-group">
-                <label for="tipo_origen">Tipo de Origen <span class="required">*</span></label>
+                <label for="tipo_origen"
+                  >Tipo de Origen <span class="required">*</span></label
+                >
                 <select
                   class="ufc-select"
                   v-model="formData.tipo_origen"
@@ -52,9 +57,13 @@
 
               <!-- Campo: origen -->
               <div class="ufc-input-group">
-                <label for="origen">Origen <span class="required">*</span></label>
+                <label for="origen"
+                  >Origen <span class="required">*</span></label
+                >
                 <select
-                  v-if="formData.tipo_origen && formData.tipo_origen !== 'puerto'"
+                  v-if="
+                    formData.tipo_origen && formData.tipo_origen !== 'puerto'
+                  "
                   class="ufc-select"
                   v-model="formData.origen"
                   required
@@ -92,7 +101,9 @@
 
               <!-- Campo: tipo_destino -->
               <div class="ufc-input-group">
-                <label for="tipo_destino">Tipo de Destino <span class="required">*</span></label>
+                <label for="tipo_destino"
+                  >Tipo de Destino <span class="required">*</span></label
+                >
                 <select
                   class="ufc-select"
                   v-model="formData.tipo_destino"
@@ -111,9 +122,13 @@
 
               <!-- Campo: destino -->
               <div class="ufc-input-group">
-                <label for="destino">Destino <span class="required">*</span></label>
+                <label for="destino"
+                  >Destino <span class="required">*</span></label
+                >
                 <select
-                  v-if="formData.tipo_destino && formData.tipo_destino !== 'puerto'"
+                  v-if="
+                    formData.tipo_destino && formData.tipo_destino !== 'puerto'
+                  "
                   class="ufc-select"
                   v-model="formData.destino"
                   required
@@ -145,7 +160,9 @@
                 </select>
 
                 <select v-else class="ufc-select" disabled>
-                  <option value="">Seleccione primero el tipo de destino</option>
+                  <option value="">
+                    Seleccione primero el tipo de destino
+                  </option>
                 </select>
               </div>
             </div>
@@ -154,7 +171,9 @@
             <div class="ufc-form-column">
               <!-- Campo: tipo_equipo -->
               <div class="ufc-input-group">
-                <label for="tipo_equipo">Tipo de Equipo <span class="required">*</span></label>
+                <label for="tipo_equipo"
+                  >Tipo de Equipo <span class="required">*</span></label
+                >
                 <select
                   class="ufc-select"
                   v-model="formData.tipo_equipo"
@@ -176,7 +195,9 @@
 
               <!-- Campo: estado -->
               <div class="ufc-input-group">
-                <label for="estado">Estado <span class="required">*</span></label>
+                <label for="estado"
+                  >Estado <span class="required">*</span></label
+                >
                 <select
                   class="ufc-select"
                   v-model="formData.estado"
@@ -190,7 +211,9 @@
 
               <!-- Campo: operacion -->
               <div class="ufc-input-group">
-                <label for="operacion">Operación <span class="required">*</span></label>
+                <label for="operacion"
+                  >Operación <span class="required">*</span></label
+                >
                 <select
                   class="ufc-select"
                   v-model="formData.operacion"
@@ -208,7 +231,9 @@
               </div>
 
               <div class="ufc-input-group">
-                <label for="producto">Productos <span class="required">*</span></label>
+                <label for="producto"
+                  >Productos <span class="required">*</span></label
+                >
                 <div class="ufc-input-with-action">
                   <div
                     class="ufc-custom-select"
@@ -279,7 +304,9 @@
 
               <!-- Campo: cantidad_vagones -->
               <div class="ufc-input-group">
-                <label for="cantidad_vagones">Cantidad de Vagones <span class="required">*</span></label>
+                <label for="cantidad_vagones"
+                  >Cantidad de Vagones <span class="required">*</span></label
+                >
                 <div class="ufc-por-situar-container">
                   <input
                     type="number"
@@ -343,7 +370,9 @@
               <div class="ufc-form-grid">
                 <!-- Campo: Equipo Ferroviario -->
                 <div class="ufc-input-group">
-                  <label for="equipo_ferroviario">Equipo Ferroviario <span class="required">*</span></label>
+                  <label for="equipo_ferroviario"
+                    >Equipo Ferroviario <span class="required">*</span></label
+                  >
                   <select
                     class="ufc-select"
                     v-model="nuevoVagon.equipo_ferroviario"
@@ -363,7 +392,9 @@
 
                 <!-- Campo: Cantidad de días -->
                 <div class="ufc-input-group">
-                  <label for="cant_dias">Cantidad de días <span class="required">*</span></label>
+                  <label for="cant_dias"
+                    >Cantidad de días <span class="required">*</span></label
+                  >
                   <input
                     type="number"
                     class="ufc-input"
@@ -387,7 +418,9 @@
                   type="button"
                   class="ufc-button primary"
                   @click="agregarNuevoVagon"
-                  :disabled="!nuevoVagon.equipo_ferroviario || !nuevoVagon.cant_dias"
+                  :disabled="
+                    !nuevoVagon.equipo_ferroviario || !nuevoVagon.cant_dias
+                  "
                 >
                   <i class="bi bi-check-circle"></i> Agregar
                 </button>
@@ -451,7 +484,9 @@
               {{ formData.cantidad_vagones - vagonesAgregados.length }}
               vagones por agregar.
             </p>
-            <p v-else-if="vagonesAgregados.length === formData.cantidad_vagones">
+            <p
+              v-else-if="vagonesAgregados.length === formData.cantidad_vagones"
+            >
               Todos los vagones han sido agregados.
             </p>
             <p v-else>
@@ -484,7 +519,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import axios, { formToJSON } from "axios";
 import Swal from "sweetalert2";
 import NavbarComponent from "@/components/NavbarComponent.vue";
 import ModalAgregarProducto from "@/components/ModalAgregarProducto.vue";
@@ -555,9 +590,9 @@ export default {
   computed: {
     formattedFechaRegistro() {
       if (this.formData.fecha) {
-        return new Date(this.formData.fecha).toLocaleString();
+        return new Date(this.formData.fecha).toLocaleString("es-ES");
       }
-      return new Date().toLocaleString();
+      return new Date().toLocaleString("es-ES");
     },
   },
   async created() {
@@ -608,7 +643,7 @@ export default {
         return false;
       }
     },
-    
+
     async verificarEstadoInforme() {
       try {
         if (!this.informeOperativoId) return false;

@@ -778,7 +778,6 @@ class por_situar(models.Model):
 
     def delete(self, *args, **kwargs):
         try:
-            from nomencladores.models import nom_equipo_ferroviario
             
             # Obtener todos los registros asociados antes de eliminarlos
             registros_asociados = list(self.equipo_vagon.all())
@@ -944,7 +943,6 @@ class arrastres(models.Model):
     
     def delete(self, *args, **kwargs):
         try:
-            from nomencladores.models import nom_equipo_ferroviario
             
             # Obtener todos los registros asociados antes de eliminarlos
             registros_asociados = list(self.equipo_vagon.all())
@@ -954,9 +952,7 @@ class arrastres(models.Model):
                 try:
                     with transaction.atomic():
                         # Actualizar estado del equipo
-                        equipo = nom_equipo_ferroviario.objects.filter(
-                            numero_identificacion=registro.no_id
-                        ).first()
+                        equipo =registro.equipo_ferroviario
                         
                         if equipo:
                             equipo.estado_actual = 'Disponible'
@@ -965,7 +961,7 @@ class arrastres(models.Model):
                         # Eliminar el registro asociado
                         registro.delete()
                 except Exception as e:
-                    print(f"Error al procesar registro {registro.no_id}: {str(e)}")
+                    print(f"Error al procesar registro {registro.id}: {str(e)}")
                     continue
             
             # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
@@ -979,7 +975,8 @@ class arrastres(models.Model):
             print(f"Error crítico al eliminar vagon_cargado_descargado {self.id}: {str(e)}")
     
     def __str__(self):
-        return f"Arrastre Pendiente{self.id} - {self.origen}"
+        return f"{self.tipo_origen} - {self.origen} - {self.tipo_equipo}"
+
 
 
 # Modelo para el historial de arrastres

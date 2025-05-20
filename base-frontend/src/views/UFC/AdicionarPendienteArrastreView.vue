@@ -194,11 +194,13 @@
                 >
                   <option value="" disabled>Seleccione un tipo</option>
                   <option
-                    v-for="option in tipo_equipo_options"
-                    :key="option.id"
-                    :value="option.id"
+                    v-for="equipo in equipos"
+                    :key="equipo.id"
+                    :value="equipo.id"
                   >
-                    {{ option.text }}
+                    {{ equipo.id }}-{{ equipo.tipo_equipo_name }}-{{
+                      equipo.tipo_carga_name
+                    }}
                   </option>
                 </select>
               </div>
@@ -363,7 +365,7 @@
 
           <!-- Tabla cuando hay datos -->
           <div
-            v-if="vagonesAsociados.length > 0"
+            v-if="vagonesAgregados.length > 0"
             class="ufc-vagones-table-container"
           >
             <table class="ufc-vagones-table">
@@ -375,9 +377,9 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(vagon, index) in vagonesAsociados" :key="index">
-                  <td>{{ vagon.equipo_ferroviario_nombre }}</td>
-                  <td>{{ vagon.dias }}</td>
+                <tr v-for="(vagon, index) in vagonesAgregados" :key="index">
+                  <td>{{ vagon.equipo_ferroviario }}</td>
+                  <td>{{ vagon.cant_dias }}</td>
                   <td class="ufc-actions-cell">
                     <button
                       class="ufc-icon-button danger"
@@ -421,17 +423,17 @@
                   >
                   <select
                     class="ufc-select"
-                    v-model="vagonForm.equipo_ferroviario"
+                    v-model="nuevoVagon.equipo_ferroviario"
                     required
                   >
                     <option value="" disabled>Seleccione un equipo</option>
                     <option
-                      v-for="equipo in equiposFerroviarios"
+                      v-for="equipo in equipos_vagones"
                       :key="equipo.id"
                       :value="equipo.id"
                     >
                       {{ equipo.numero_identificacion }} -
-                      {{ equipo.tipo_equipo.tipo_equipo }}
+                      {{ equipo.id }}
                     </option>
                   </select>
                 </div>
@@ -441,7 +443,7 @@
                   <input
                     type="number"
                     class="ufc-input"
-                    v-model.number="vagonForm.dias"
+                    v-model.number="nuevoVagon.cant_dias"
                     min="1"
                     required
                   />
@@ -455,7 +457,11 @@
                   >
                     Cancelar
                   </button>
-                  <button type="submit" class="ufc-button primary">
+                  <button
+                    type="button"
+                    class="ufc-button primary"
+                    @click="guardarVagon"
+                  >
                     {{ modoEdicionVagon ? "Guardar Cambios" : "Agregar" }}
                   </button>
                 </div>
@@ -479,7 +485,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import axios, { formToJSON } from "axios";
 import Swal from "sweetalert2";
 import NavbarComponent from "@/components/NavbarComponent.vue";
 import ModalAgregarProducto from "@/components/ModalAgregarProducto.vue";
@@ -504,6 +510,8 @@ export default {
         cantidad_vagones: 0, // Cambiado a 0 ya que se calculará automáticamente
         observaciones: "",
       },
+      userGroups: [], // Inicializa como array vacío
+      userPermissions: [], // Inicializa como array vacío
       productoSearch: "",
       filteredProductos: [],
       showProductosDropdown: false,
@@ -512,6 +520,14 @@ export default {
       productos: [],
       loading: false,
       mostrarModal: false,
+      equipos: [],
+      equipos_vagones: [],
+      mostrarModalVagon: false,
+      vagonesAgregados: [],
+      nuevoVagon: {
+        equipo_ferroviario: "",
+        cant_dias: 1,
+      },
       tipo_origen_options: [
         { id: "ac_ccd", text: "comercial/AccesoCCD" },
         { id: "puerto", text: "Puerto" },
@@ -520,61 +536,35 @@ export default {
         { id: "ac_ccd", text: "comercial/AccesoCCD" },
         { id: "puerto", text: "Puerto" },
       ],
-      tipo_equipo_options: [
-      { id: "casilla", text: "Casilla" },
-      { id: "caj_gon", text: "Cajones o Góndola" },
-      { id: "planc_plat", text: "Plancha o Plataforma" },
-      { id: "Plan_porta_cont", text: "Plancha porta contenedores" },
-      { id: "cist_liquidos", text: "Cisterna para líquidos" },
-      { id: "cist_solidos", text: "Cisterna para sólidos" },
-      { id: "tolva_g_mineral", text: "Tolva granelera(mineral)" },
-      { id: "tolva_g_agric", text: "Tolva granelera(agrícola)" },
-      { id: "tolva_g_cemento", text: "Tolva para cemento" },
-      { id: "volqueta", text: "Volqueta" },
-      { id: "Vagon_ref", text: "Vagón refrigerado" },
-      { id: "jaula", text: "Jaula" },
-      { id: "locomotora", text: "Locomotora" },
-      { id: "tren", text: "Tren" },
-    ],
-      
-      vagonesAsociados: [],
-      mostrarModalVagon: false,
-      modoEdicionVagon: false,
-      vagonEditIndex: null,
-      vagonForm: {
-        equipo_ferroviario: "",
-        dias: 1,
-      },
-      equiposFerroviarios: [],
+      t_operacion_options: [
+        { id: "carga", text: "Carga" },
+        { id: "descarga", text: "Descarga" },
+      ],
     };
   },
   mounted() {
     this.getProductos();
     this.getEntidades();
     this.getPuertos();
+    this.getEquipos();
+    this.filteredProductos = this.productos;
     this.closeDropdownsOnClickOutside();
   },
   computed: {
     formattedFechaRegistro() {
       if (this.formData.fecha) {
-        return new Date(this.formData.fecha).toLocaleString();
+        return new Date(this.formData.fecha).toLocaleString("es-ES");
       }
-      return new Date().toLocaleString();
+      return new Date().toLocaleString("es-ES");
     },
   },
   methods: {
     async abrirModalAgregarVagon() {
       try {
         // Cargar equipos ferroviarios disponibles
-        const response = await axios.get("/api/equipos-ferroviarios/", {
-          params: {
-            exclude_tipo: "locomotora", // Excluir locomotoras
-          },
-        });
-        this.equiposFerroviarios = response.data.results;
-
+        await this.buscarEquipos();
         this.modoEdicionVagon = false;
-        this.vagonForm = {
+        this.nuevoVagon = {
           equipo_ferroviario: "",
           dias: 1,
         };
@@ -586,6 +576,52 @@ export default {
           "No se pudieron cargar los equipos ferroviarios",
           "error"
         );
+      }
+    },
+    async getEquipos() {
+      try {
+        const response = await axios.get("/api/tipo-e-f-no-locomotora/");
+        this.equipos = response.data;
+      } catch (error) {
+        console.error("Error al obtener los equipos:", error);
+        Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
+      }
+    },
+    async buscarEquipos() {
+      try {
+        let url = "/api/e-f-no-locomotora/";
+        if (!this.formData.tipo_equipo) {
+          return;
+        }
+
+        // al tipo de equipo específico lo añadimos como parámetro
+        url += `?tipo_equipo=${this.formData.tipo_equipo}`;
+        const response = await axios.get(url);
+
+        // en caso de que no exista EF para el tipo seleccionado en el componente padre
+        if (response.data.length === 0) {
+          Swal.fire({
+            title: "Error",
+            text: "No existen equipos ferroviarios para el tipo seleccionado.",
+            icon: "error",
+            willClose: () => {
+              this.cerrarModal();
+            },
+          });
+          return;
+        }
+
+        this.equipos_vagones = response.data;
+      } catch (error) {
+        console.error("Error al obtener los equipos ferroviarios:", error);
+        Swal.fire({
+          title: "Error",
+          text: "Hubo un error al obtener los equipos ferroviarios.",
+          icon: "error",
+          willClose: () => {
+            this.cerrarModal();
+          },
+        });
       }
     },
 
@@ -608,40 +644,39 @@ export default {
     },
 
     guardarVagon() {
-      // Validación
+      // Validación mejorada
       if (
-        !this.vagonForm.equipo_ferroviario ||
-        !this.vagonForm.dias ||
-        this.vagonForm.dias < 1
+        !this.nuevoVagon?.equipo_ferroviario ||
+        !this.nuevoVagon?.cant_dias ||
+        this.nuevoVagon.cant_dias < 1
       ) {
         Swal.fire("Error", "Complete todos los campos correctamente", "error");
         return;
       }
 
-      // Buscar el equipo seleccionado para obtener su nombre
-      const equipoSeleccionado = this.equiposFerroviarios.find(
-        (e) => e.id === this.vagonForm.equipo_ferroviario
-      );
-
-      const vagonData = {
-        equipo_ferroviario: this.vagonForm.equipo_ferroviario,
-        equipo_ferroviario_nombre: equipoSeleccionado
-          ? `${equipoSeleccionado.numero_identificacion} - ${equipoSeleccionado.tipo_equipo.tipo_equipo}`
-          : "Equipo no encontrado",
-        dias: this.vagonForm.dias,
-      };
-
-      if (this.modoEdicionVagon) {
-        // Editar existente
-        this.vagonesAsociados[this.vagonEditIndex] = vagonData;
-      } else {
-        // Agregar nuevo
-        this.vagonesAsociados.push(vagonData);
+      // Verificación adicional de reactividad
+      if (!Array.isArray(this.vagonesAgregados)) {
+        this.vagonesAgregados = [];
       }
 
+      // Crear copia del objeto para evitar mutaciones
+      const vagonData = {
+        equipo_ferroviario: this.nuevoVagon.equipo_ferroviario,
+        cant_dias: this.nuevoVagon.cant_dias,
+      };
+
+      // Usar $set para garantizar reactividad (Vue 2)
+      // this.$set(this, 'vagonesAgregados', [...this.vagonesAgregados, vagonData]);
+
+      // Para Vue 3 (Composition API o Options API):
+      this.vagonesAgregados = [...this.vagonesAgregados, vagonData];
+
+      // Actualizar contador de vagones
+      this.formData.cantidad_vagones = this.vagonesAgregados.length;
+
+      console.log("Vagones agregados:", this.vagonesAgregados);
       this.cerrarModalVagon();
     },
-
     cerrarModalVagon() {
       this.mostrarModalVagon = false;
       this.vagonEditIndex = null;
@@ -752,14 +787,23 @@ export default {
     async submitForm() {
       try {
         // Verificación de informe operativo (código igual)
-        
+
         // Validación de campos requeridos
         const requiredFields = [
-          { field: 'tipo_origen', message: 'El campo Tipo de Origen es requerido' },
-          { field: 'origen', message: 'El campo Origen es requerido' },
-          { field: 'tipo_destino', message: 'El campo Tipo de Destino es requerido' },
-          { field: 'destino', message: 'El campo Destino es requerido' },
-          { field: 'tipo_equipo', message: 'El campo Tipo de Equipo es requerido' },
+          {
+            field: "tipo_origen",
+            message: "El campo Tipo de Origen es requerido",
+          },
+          { field: "origen", message: "El campo Origen es requerido" },
+          {
+            field: "tipo_destino",
+            message: "El campo Tipo de Destino es requerido",
+          },
+          { field: "destino", message: "El campo Destino es requerido" },
+          {
+            field: "tipo_equipo",
+            message: "El campo Tipo de Equipo es requerido",
+          },
         ];
 
         for (const { field, message } of requiredFields) {
@@ -768,11 +812,16 @@ export default {
           }
         }
 
-        if (this.formData.estado === "cargado" && this.formData.productos.length === 0) {
-          throw new Error("Debe seleccionar al menos un producto cuando el estado es Cargado");
+        if (
+          this.formData.estado === "cargado" &&
+          this.formData.productos.length === 0
+        ) {
+          throw new Error(
+            "Debe seleccionar al menos un producto cuando el estado es Cargado"
+          );
         }
 
-        if (this.vagonesAsociados.length === 0) {
+        if (this.vagonesAgregados.length === 0) {
           throw new Error("Debe agregar al menos un vagón asociado");
         }
 
@@ -785,12 +834,16 @@ export default {
           tipo_equipo: this.formData.tipo_equipo,
           estado: this.formData.estado,
           producto: this.formData.productos,
-          cantidad_vagones: this.vagonesAsociados.length, // Calculado automáticamente
+          cantidad_vagones: this.vagonesAgregados.length, // Calculado automáticamente
           observaciones: this.formData.observaciones,
           informe_operativo: this.informeOperativoId,
-          vagones_ids: this.vagonesAsociados.map(v => v.equipo_ferroviario), // Enviar solo los IDs
+          equipo_vagon: this.vagonesAgregados.map((vagon) => ({
+            equipo_ferroviario: vagon.equipo_ferroviario, // ID del equipo
+            cant_dias: vagon.cant_dias,
+            // Otros campos necesarios para el vagon
+          })),
         };
-
+        console.log("Estos son los datos a enviar", payload);
         // Enviar los datos al backend
         const response = await axios.post("/ufc/pendiente-arrastre/", payload);
 
@@ -804,11 +857,10 @@ export default {
           this.resetForm();
           this.$router.push({ name: "PendienteArrastre" });
         });
-
       } catch (error) {
         console.error("Error al enviar el formulario:", error);
         let errorMessage = "Hubo un error al enviar el formulario";
-        
+
         if (error.response) {
           if (error.response.data) {
             errorMessage = Object.values(error.response.data).join("\n");
@@ -827,28 +879,6 @@ export default {
     },
 
     // Modificar el método guardarVagon para devolver solo el ID
-    guardarVagon() {
-      if (!this.vagonForm.equipo_ferroviario || !this.vagonForm.dias || this.vagonForm.dias < 1) {
-        Swal.fire("Error", "Complete todos los campos correctamente", "error");
-        return;
-      }
-
-      const vagonData = {
-        equipo_ferroviario: this.vagonForm.equipo_ferroviario,
-        dias: this.vagonForm.dias,
-      };
-
-      if (this.modoEdicionVagon) {
-        this.vagonesAsociados[this.vagonEditIndex] = vagonData;
-      } else {
-        this.vagonesAsociados.push(vagonData);
-      }
-
-      // Actualizar el contador de vagones
-      this.formData.cantidad_vagones = this.vagonesAsociados.length;
-      
-      this.cerrarModalVagon();
-    },
 
     // Actualizar resetForm
     resetForm() {

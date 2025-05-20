@@ -1081,13 +1081,12 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
         queryset=producto_UFC.objects.all(),
         required=False
     )
-    equipo_vagon = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=vagones_dias.objects.all(),
-        required=False,
-        write_only=True
+    equipo_vagon = serializers.ListField(
+        child=serializers.DictField(),
+        write_only=True,
+        required=False
     )
-    equipo_vagon_detalle=vagones_dias_serializer(many=True, source='equipo_vagon', read_only=True)
+    equipo_vagon_detalle=vagones_dias_serializer(many=True,source='equipo_vagon', read_only=True)
     class Meta:
         model = arrastres
         fields = '__all__'

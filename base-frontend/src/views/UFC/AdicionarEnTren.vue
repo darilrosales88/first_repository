@@ -485,7 +485,7 @@ export default {
       if (this.formData.fecha) {
         return new Date(this.formData.fecha).toLocaleString();
       }
-      return new Date().toLocaleString();
+      return new Date().toLocaleString("es-ES");
     },
   },
   mounted() {

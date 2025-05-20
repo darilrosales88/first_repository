@@ -165,6 +165,7 @@ export default {
         { value: 'alimento', text: 'Alimento' },
         { value: 'combustible', text: 'Combustible'},
         { value: 'otros', text: 'Otros' },
+        { value: 'contenedor', text: 'Contenedor' },
       ],      
     };
   },

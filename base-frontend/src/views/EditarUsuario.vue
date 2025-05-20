@@ -439,6 +439,7 @@ export default {
         this.cargo = user.cargo.id;
         this.groupsAsignados = user.groups || [];
         this.permisosAsignados = user.user_permissions || [];
+        this.role = user.role || 'operador'; // Asigna el rol del usuario o 'operador' como valor po
         this.groupsDisponibles = this.groupsDisponibles.filter(
           group => !this.groupsAsignados.some(g => g.id === group.id)
         );

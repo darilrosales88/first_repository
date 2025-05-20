@@ -540,7 +540,7 @@ export default {
       }
     },
 
-    // Método auxiliar para obtener cookies
+    // Método auxiliar para obtener cookies Esto que co;o es
     getCookie(name) {
       let cookieValue = null;
       if (document.cookie && document.cookie !== "") {

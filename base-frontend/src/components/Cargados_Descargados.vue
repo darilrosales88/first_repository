@@ -422,6 +422,7 @@ export default {
           params: {
             page: this.currentPage,
             page_size: this.itemsPerPage,
+            informe_operativo: this.informeId
           },
         });
 
@@ -438,6 +439,17 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+    getStatusClass(status) {
+      if (!status) return "default";
+      const statusLower = status.toLowerCase();
+
+      if (statusLower.includes("activo")) return "success";
+      if (statusLower.includes("pendiente")) return "warning";
+      if (statusLower.includes("inactivo") || statusLower.includes("cancelado"))
+        return "danger";
+
+      return "info";
     },
 
     // Nuevo método de búsqueda adaptado del componente que funciona
@@ -488,21 +500,33 @@ export default {
       this.getVagonesCargadosDescargados();
     },
 
-    async delete_tren(id) {
+    async delete_vagon(id) {
       try {
-        await axios.delete(`/ufc/vagones-cargados-descargados/${id}/`);
-        this.cargados_descargados = this.cargados_descargados.filter(
-          (objeto) => objeto.id !== id
+        console.log("muestrae el id: ", id);
+        const response = await axios.delete(
+          `/ufc/vagones-cargados-descargados/${id}/`
         );
-        Swal.fire(
-          "Eliminado!",
-          "El producto ha sido eliminado exitosamente.",
-          "success"
-        );
+
+        if (response.status === 204) {
+          // Normalmente DELETE devuelve 204 No Content
+          this.cargados_descargados = this.cargados_descargados.filter(
+            (objeto) => objeto.id !== id
+          );
+          Swal.fire("Eliminado!", "El vagón ha sido eliminado.", "success");
+        } else {
+          throw new Error(`Respuesta inesperada: ${response.status}`);
+        }
       } catch (error) {
-        console.error("Error al eliminar el producto:", error);
-        Swal.fire("Error", "Hubo un error al eliminar el producto.", "error");
+        console.error("Error completo:", error);
+        console.error("Respuesta del servidor:", error.response?.data);
+
+        Swal.fire(
+          "Error",
+          error.response?.data?.message || "Error al eliminar el vagón",
+          "error"
+        );
       }
+      window.location.reload();
     },
 
     cerrarModal() {
@@ -528,7 +552,7 @@ export default {
         reverseButtons: true,
       }).then((result) => {
         if (result.isConfirmed) {
-          this.delete_tren(id);
+          this.delete_vagon(id);
         }
       });
     },
@@ -566,66 +590,364 @@ export default {
   max-width: 300px; /* Ancho máximo del buscador */
 }
 
-/* Estilos para el input del buscador */
-.search-container input {
-  padding-right: 40px; /* Espacio para el icono de lupa */
-  border-radius: 20px; /* Bordes redondeados */
+/* Header */
+.ps-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1.5rem;
 }
 
-/* Estilos para el icono de lupa */
-.search-icon {
+.ps-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--ps-dark);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ps-title-icon {
+  color: var(--ps-primary);
+}
+
+.ps-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* Buscador */
+.ps-search-container {
+  position: relative;
+  width: 280px;
+}
+
+.ps-search-icon {
   position: absolute;
-  right: 10px;
+  left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #888; /* Color del icono */
-  pointer-events: none; /* Evita que el icono interfiera con el input */
+  color: var(--ps-gray);
+  font-size: 1rem;
 }
 
-/* Estilos para la tabla responsive */
-.table-responsive {
-  overflow-x: auto; /* Permite desplazamiento horizontal en pantallas pequeñas */
+.ps-search-input {
+  width: 100%;
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
+  border: 1px solid var(--ps-light-gray);
+  border-radius: var(--ps-border-radius);
+  font-size: 0.95rem;
+  transition: var(--ps-transition);
+  background-color: white;
 }
 
-/* Estilos para el modal */
-.modal-backdrop {
+.ps-search-input:focus {
+  outline: none;
+  border-color: var(--ps-primary);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+}
+
+.ps-search-border {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--ps-primary);
+  transition: var(--ps-transition);
+}
+
+.ps-search-input:focus ~ .ps-search-border {
+  width: 100%;
+}
+
+/* Tarjeta contenedora */
+.ps-card {
+  background: white;
+  border-radius: var(--ps-border-radius);
+  box-shadow: var(--ps-box-shadow);
+  overflow: hidden;
+  transition: var(--ps-transition);
+}
+
+.ps-card:hover {
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.12);
+}
+
+/* Tabla */
+.ps-table-container {
+  overflow-x: auto;
+  padding: 0.5rem;
+}
+
+.ps-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 1000px;
+}
+
+.ps-th {
+  padding: 1rem 1.2rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--ps-dark);
+  background-color: #f9fafb;
+  border-bottom: 2px solid var(--ps-light-gray);
+  position: sticky;
+  top: 0;
+}
+
+.ps-th-actions {
+  text-align: center;
+}
+
+.ps-tr {
+  transition: var(--ps-transition);
+}
+
+.ps-tr:hover {
+  background-color: rgba(67, 97, 238, 0.03);
+}
+
+.ps-td {
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--ps-light-gray);
+  color: var(--ps-dark);
+}
+
+/* Botones de acción */
+.btn-small {
+  font-size: 22px;
+  color: black;
+  margin-right: 5px;
+  outline: none;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.btn-eye {
+  font-size: 22px;
+  margin-right: 5px;
+  outline: none;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.btn:hover {
+  scale: 1.1;
+}
+
+.btn:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Badges y estados */
+.ps-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.ps-status-success {
+  background: rgba(76, 201, 240, 0.1);
+  color: #06d6a0;
+  border: 1px solid rgba(6, 214, 160, 0.2);
+}
+
+.ps-status-warning {
+  background: rgba(248, 150, 30, 0.1);
+  color: #f8961e;
+  border: 1px solid rgba(248, 150, 30, 0.2);
+}
+
+.ps-status-danger {
+  background: rgba(247, 37, 133, 0.1);
+  color: #f72585;
+  border: 1px solid rgba(247, 37, 133, 0.2);
+}
+
+.ps-status-info {
+  background: rgba(72, 149, 239, 0.1);
+  color: #4895ef;
+  border: 1px solid rgba(72, 149, 239, 0.2);
+}
+
+.ps-status-default {
+  background: rgba(108, 117, 125, 0.1);
+  color: var(--ps-gray);
+  border: 1px solid rgba(108, 117, 125, 0.2);
+}
+
+/* Estados de carga y vacío */
+.ps-loading-td,
+.ps-empty-td {
+  padding: 3rem !important;
+}
+
+.ps-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: var(--ps-gray);
+}
+
+.ps-spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 4px solid rgba(67, 97, 238, 0.1);
+  border-top-color: var(--ps-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.ps-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  color: var(--ps-gray);
+}
+
+.ps-empty-state i {
+  font-size: 2.5rem;
+  color: var(--ps-accent);
+}
+
+.ps-empty-state h3 {
+  color: var(--ps-dark);
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.ps-empty-state p {
+  margin: 0;
+  max-width: 400px;
+}
+
+.ps-empty-action {
+  margin-top: 1rem;
+  color: var(--ps-primary);
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: var(--ps-transition);
+}
+
+.ps-empty-action:hover {
+  color: var(--ps-primary-hover);
+  transform: translateY(-2px);
+}
+
+/* Modal mejorado */
+.ps-modal-overlay {
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 90%;
-  background-color: transparent; /* Fondo semitransparente */
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 1000; /* Asegura que el modal esté por encima de todo */
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
 }
 
-.modal-content {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 10px;
+.ps-modal {
+  background: white;
+  border-radius: var(--ps-border-radius);
   width: 90%;
-  max-width: 500px; /* Ancho máximo del modal */
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.modal-header {
+.ps-modal-header {
+  padding: 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
+  background: linear-gradient(135deg, var(--ps-primary), var(--ps-secondary));
+  color: white;
+  position: relative;
 }
 
-.modal-title {
-  margin: 0;
+.ps-modal-header::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  background: linear-gradient(to bottom, rgba(67, 97, 238, 0.2), transparent);
 }
 
-.btn-close {
-  background: none;
-  border: none;
+.ps-modal-header-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ps-modal-icon-container {
+  background: rgba(255, 255, 255, 0.2);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ps-modal-icon {
   font-size: 1.5rem;
+}
+
+.ps-modal h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.ps-modal-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+.ps-modal-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 1.2rem;
   cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: var(--ps-transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
 }
 
 .modal-body {

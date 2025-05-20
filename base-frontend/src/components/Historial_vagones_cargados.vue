@@ -591,7 +591,6 @@ export default {
   animation: spin 1s linear infinite;
 }
 
-
 .ps-empty-state {
   display: flex;
   flex-direction: column;

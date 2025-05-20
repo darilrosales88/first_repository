@@ -433,15 +433,15 @@ export default {
       if (this.formData.fecha) {
         return new Date(this.formData.fecha).toLocaleString();
       }
-      return new Date().toLocaleString();
+      return new Date().toLocaleString("es-ES");
     },
   },
   mounted() {
     this.getProductos();
-    this.getEquipos();
     this.getLocomotoras();
     this.getEntidades();
     this.getPuertos();
+    this.getEquipos();
     this.filteredProductos = this.productos;
     this.closeDropdownsOnClickOutside();
   },
@@ -565,6 +565,19 @@ export default {
         if (!this.formData.origen) {
           throw new Error("El campo Origen es requerido");
         }
+        if (this.formData.origen === this.formData.destino) {
+          throw new Error("No puede tener el mismo Origen y Destino");
+        }
+        if (!this.formData.tipo_destino) {
+          throw new Error("El campo Tipo de Destino es requerido");
+        }
+
+        if (!this.formData.origen) {
+          throw new Error("El campo Destino es requerido");
+        }
+        if (this.formData.origen === this.formData.destino) {
+          throw new Error("No puede tener el mismo Origen y Destino");
+        }
 
         if (!this.formData.tipo_equipo) {
           throw new Error("El campo Tipo de Equipo es requerido");
@@ -601,6 +614,16 @@ export default {
       } catch (error) {
         console.error("Error al enviar el formulario:", error);
 
+        let errorMessage = "Hubo un error al enviar el formulario";
+        if (error.response) {
+          if (error.response.data) {
+            errorMessage = error.response.data.non_field_errors
+              ? error.response.data.non_field_errors[0]
+              : Object.values(error.response.data).join("\n");
+          }
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
         let errorMessage = "Hubo un error al enviar el formulario";
         if (error.response) {
           if (error.response.data) {
@@ -678,17 +701,39 @@ export default {
     },
     async buscarEquipos() {
       try {
-        let peticion = `/api/equipos_ferroviarios/?id_tipo_equipo_territorio=${this.formData["tipo_equipo"]}`;
-        let allEquipos = [];
-        while (peticion) {
-          const response = await axios.get(peticion);
-          allEquipos = [...allEquipos, ...response.data.results];
-          peticion = response.data.next;
+        let url = "/api/e-f-no-locomotora/";
+        if (!this.formData.tipo_equipo) {
+          return;
         }
-        this.equipos_vagones = allEquipos;
+
+        // al tipo de equipo específico lo añadimos como parámetro
+        url += `?tipo_equipo=${this.formData.tipo_equipo}`;
+        const response = await axios.get(url);
+
+        // en caso de que no exista EF para el tipo seleccionado en el componente padre
+        if (response.data.length === 0) {
+          Swal.fire({
+            title: "Error",
+            text: "No existen equipos ferroviarios para el tipo seleccionado.",
+            icon: "error",
+            willClose: () => {
+              this.cerrarModal();
+            },
+          });
+          return;
+        }
+
+        this.equipos_vagones = response.data;
       } catch (error) {
-        console.error("Error al obtener los equipos:", error);
-        Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
+        console.error("Error al obtener los equipos ferroviarios:", error);
+        Swal.fire({
+          title: "Error",
+          text: "Hubo un error al obtener los equipos ferroviarios.",
+          icon: "error",
+          willClose: () => {
+            this.cerrarModal();
+          },
+        });
       }
     },
     async getEntidades() {

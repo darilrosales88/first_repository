@@ -98,7 +98,22 @@
             <button class="btn btn-sm btn-primary" @click="mostrarModal = true">
               <i class="bi bi-plus-circle me-1"></i>Adicionar rotación
             </button>
+          <h6
+            class="d-flex justify-content-between align-items-center text-secondary fw-semibold mb-3"
+            style="padding: 0.5rem 1rem"
+          >
+            <!-- Texto centrado -->
+            <span class="d-flex align-items-center">
+              <i class="bi bi-list-ul me-2"></i>
+              Registro de rotación de cada tipo de equipo ferroviario
+            </span>
+
+            <!-- Botón alineado a la derecha -->
+            <button class="btn btn-sm btn-primary" @click="mostrarModal = true">
+              <i class="bi bi-plus-circle me-1"></i>Adicionar rotación
+            </button>
           </h6>
+
 
           <table class="table table-sm table-bordered table-hover">
             <thead class="table-light">
@@ -127,6 +142,7 @@
                 <td>
                   <button
                     class="btn btn-sm btn-danger"
+                    @click="eliminarRotacion(equipo.id)"
                     @click="eliminarRotacion(equipo.id)"
                   >
                     <i class="bi bi-trash"></i>
@@ -252,11 +268,20 @@ export default {
         tipoEquipo: "",
         vagonesEnServicio: 0,
       },
+      informeOperativoId: null,
       tiposEquiposFerroviarios: [],
       modoEdicion: false, // Indica si estamos editando o agregando un registro
       indiceEdicion: null, // Guarda el índice del registro que se está editando
     };
   },
+
+  props: {
+    informeId: {
+      type: [String, Number],
+      required: true
+    }
+  },
+
   mounted() {
     this.get_rotaciones();
     this.getEquipos();
@@ -270,7 +295,11 @@ export default {
 
         // Bucle para manejar paginación (si aplica)
         while (nextPage) {
-          const response = await axios.get(nextPage);
+          const response = await axios.get(nextPage, {
+          params: { 
+            informe_operativo: this.informeId 
+          }
+        });
           allRotaciones = [...allRotaciones, ...response.data.results]; // Agrega los resultados
           nextPage = response.data.next; // Actualiza la URL de la siguiente página
         }
@@ -376,7 +405,10 @@ export default {
       ) {
         Swal.fire(
           "Campos incompletos",
+        Swal.fire(
+          "Campos incompletos",
           "Por favor, complete todos los campos obligatorios.",
+          "warning"
           "warning"
         );
         return;
@@ -411,12 +443,24 @@ export default {
 
         Swal.fire("Error", mensajeError, "error");
       }
+
+        let mensajeError = "Hubo un problema al guardar la rotación.";
+        if (error.response && error.response.data) {
+          const errores = error.response.data;
+          mensajeError =
+            Object.values(errores).flat().join(" ") ||
+            "Hubo un problema al guardar la rotación.";
+        }
+
+        Swal.fire("Error", mensajeError, "error");
+      }
     },
     async actualizarRotacion() {
       if (
         !this.nuevaRotacion.tipoEquipo ||
         this.nuevaRotacion.vagonesEnServicio <= 0
       ) {
+        Swal.fire(
         Swal.fire(
           "Error",
           "Por favor, complete todos los campos obligatorios.",
@@ -437,6 +481,7 @@ export default {
         };
 
         Swal.fire(
+        Swal.fire(
           "Éxito",
           "La rotación ha sido actualizada correctamente.",
           "success"
@@ -445,12 +490,16 @@ export default {
       } catch (error) {
         console.error("Error al actualizar la rotación:", error);
         Swal.fire(
+        Swal.fire(
           "Error",
           "Hubo un problema al actualizar la rotación.",
           "error"
         );
       }
     },
+    async eliminarRotacion(id) {
+      try {
+        const result = await Swal.fire({
     async eliminarRotacion(id) {
       try {
         const result = await Swal.fire({
@@ -462,6 +511,28 @@ export default {
           cancelButtonColor: "#d33",
           confirmButtonText: "Sí, eliminar",
           cancelButtonText: "Cancelar",
+        });
+
+        if (result.isConfirmed) {
+          await axios.delete(`/ufc/rotaciones/${id}/`);
+
+          await Swal.fire(
+            "Eliminado",
+            "El registro ha sido eliminado correctamente.",
+            "success"
+          );
+
+          // Actualizar los datos sin recargar la página
+          await this.get_rotaciones();
+        }
+      } catch (error) {
+        console.error("Error al eliminar la rotación:", error);
+        Swal.fire(
+          "Error",
+          "Ocurrió un error al eliminar el registro.",
+          "error"
+        );
+      }
         });
 
         if (result.isConfirmed) {

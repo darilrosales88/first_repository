@@ -370,6 +370,27 @@ export default {
       }
     },
     
+    async verificarInformeOperativo() {
+      try {
+        this.formData.fecha = new Date().toISOString();
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+        const response = await axios.get('/ufc/verificar-informe-existente/', {
+          params: { fecha_operacion: fechaFormateada }
+        });
+
+        if (response.data.existe) {
+          this.informeOperativoId = response.data.id;
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error("Error al verificar informe:", error);
+        return false;
+      }
+    },
+    
     async submitForm() {
       try {
         const existeInforme = await this.verificarInformeOperativo();
@@ -495,6 +516,8 @@ export default {
           this.userPermissions = response.data.permissions;
           this.userGroups = response.data.groups;
         }
+        console.log("Permisos: ",this.userPermissions );
+        console.log("Grupos: ",this.userGroups );
         console.log("Permisos: ",this.userPermissions );
         console.log("Grupos: ",this.userGroups );
       } catch (error) {

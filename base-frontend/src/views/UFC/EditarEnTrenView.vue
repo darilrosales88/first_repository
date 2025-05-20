@@ -389,15 +389,22 @@ export default {
       formData: {
         locomotora: "",
         tipo_origen: "ac_ccd",
+        tipo_origen: "ac_ccd",
         origen: "",
         tipo_equipo: "",
         estado: "cargado",
         tipo_destino: "ac_ccd",
         destino: "",
         producto: [],
+        producto: [],
         observaciones: "",
         equipo_vagon: [],
+        cantidad_vagones: 0,
+        equipo_vagon: [],
       },
+      productoSearch: "",
+      filteredProductos: [],
+      showProductosDropdown: false,
       productoSearch: "",
       filteredProductos: [],
       showProductosDropdown: false,
@@ -409,6 +416,8 @@ export default {
       puertos: [],
       entidades: [],
       vagon: [],
+      vagonesAgregados: [],
+      numeroIdentificacionSeleccionado: null,
       vagonesAgregados: [],
       numeroIdentificacionSeleccionado: null,
     };
@@ -423,10 +432,25 @@ export default {
   },
 
   async mounted() {
+  computed: {
+    formattedFechaRegistro() {
+      if (this.formData.fecha) {
+        return new Date(this.formData.fecha).toLocaleString();
+      }
+      return new Date().toLocaleString();
+    },
+  },
+
+  async mounted() {
     this.getProductos();
     this.getLocomotoras();
     this.getEntidades();
     this.getPuertos();
+    this.filteredProductos = this.productos;
+    this.closeDropdownsOnClickOutside();
+    this.getEquipos();
+    await this.getTren();
+    await this.buscarEquipos();
     this.filteredProductos = this.productos;
     this.closeDropdownsOnClickOutside();
     this.getEquipos();
@@ -478,7 +502,10 @@ export default {
         this.formData = {
           ...this.vagon,
           producto: this.vagon.producto ? [this.vagon.producto] : [],
+          ...this.vagon,
+          producto: this.vagon.producto ? [this.vagon.producto] : [],
         };
+        this.formData.producto = [];
         this.formData.producto = [];
       } catch (error) {
         console.error("Error al obtener el vagon:", error);
@@ -486,6 +513,9 @@ export default {
     },
     async submitForm() {
       try {
+        console.log(this.formData.producto);
+        const vagonesJson = localStorage.getItem("vagonesAgregados");
+        const vagones = JSON.parse(vagonesJson);
         console.log(this.formData.producto);
         const vagonesJson = localStorage.getItem("vagonesAgregados");
         const vagones = JSON.parse(vagonesJson);
@@ -501,6 +531,13 @@ export default {
         });
         this.$router.push({ name: "InfoOperativo" });
       } catch (error) {
+        console.error("Error al actualizar:", error);
+        Swal.fire({
+          title: "Error",
+          text: error.response?.data?.detail || "Error al actualizar",
+          icon: "error",
+          confirmButtonText: "Entendido",
+        });
         console.error("Error al actualizar:", error);
         Swal.fire({
           title: "Error",
@@ -532,6 +569,7 @@ export default {
         let allLocomotoras = [];
         let nextPage =
           "/api/equipos_ferroviarios/?id_tipo_equipo_territorio=locomo";
+          "/api/equipos_ferroviarios/?id_tipo_equipo_territorio=locomo";
         while (nextPage) {
           const response = await axios.get(nextPage);
           allLocomotoras = [...allLocomotoras, ...response.data.results];
@@ -548,6 +586,12 @@ export default {
       }
     },
     async buscarEquipos() {
+      const tipo_equipo_buscar = this.formData.tipo_equipo;
+      try {
+        let peticion = await axios.get(
+          `/api/e-f-no-locomotora/?tipo_equipo=${tipo_equipo_buscar}`
+        );
+        this.equipos_vagones = peticion.data;
       const tipo_equipo_buscar = this.formData.tipo_equipo;
       try {
         let peticion = `/api/equipos_ferroviarios/?id_tipo_equipo_territorio=${tipo_equipo_buscar}`;
@@ -567,6 +611,7 @@ export default {
       try {
         let allEntidades = [];
         let nextPage = "/api/entidades/";
+        let nextPage = "/api/entidades/";
         while (nextPage) {
           const response = await axios.get(nextPage);
           allEntidades = [...allEntidades, ...response.data.results];
@@ -579,11 +624,13 @@ export default {
       }
     },
     volverEnTren() {
+    volverEnTren() {
       this.$router.push({ name: "InfoOperativo" });
     },
     async getPuertos() {
       try {
         let allPuertos = [];
+        let nextPage = "/api/puertos/";
         let nextPage = "/api/puertos/";
         while (nextPage) {
           const response = await axios.get(nextPage);
@@ -599,6 +646,7 @@ export default {
     async getEquipos() {
       try {
         const response = await axios.get("/api/tipo-e-f-no-locomotora/");
+        const response = await axios.get("/api/tipo-e-f-no-locomotora/");
         this.equipos = response.data;
       } catch (error) {
         console.error("Error al obtener los equipos:", error);
@@ -609,12 +657,27 @@ export default {
       try {
         let allProductos = [];
         let nextPage = "/ufc/producto-vagon/";
+        let nextPage = "/ufc/producto-vagon/";
         while (nextPage) {
           const response = await axios.get(nextPage);
           allProductos = [...allProductos, ...response.data.results];
           nextPage = response.data.next;
         }
 
+        this.productos = allProductos.map((p) => {
+          // Asegurar que tipo_embalaje esté definido
+          const tipoEmbalaje = p.tipo_embalaje || {};
+          return {
+            ...p,
+            tipo_embalaje: {
+              nombre:
+                tipoEmbalaje.nombre ||
+                tipoEmbalaje.nombre_embalaje ||
+                "Sin embalaje",
+            },
+          };
+        });
+        console.log(this.productos);
         this.productos = allProductos.map((p) => {
           // Asegurar que tipo_embalaje esté definido
           const tipoEmbalaje = p.tipo_embalaje || {};
@@ -670,6 +733,35 @@ export default {
         JSON.stringify(this.vagonesAgregados)
       );
     },
+    agregarVagon() {
+      if (this.vagonesAgregados.length >= this.formData.cantidad_vagones) {
+        Swal.fire({
+          title: "Error",
+          text: "Ya has agregado la cantidad máxima de vagones permitida.",
+          icon: "error",
+          confirmButtonText: "Entendido",
+        });
+        return;
+      }
+
+      const datosVagon = JSON.parse(JSON.stringify(this.formData));
+      const nuevoVagon = {
+        vagon_id: this.formData.equipo_vagon,
+        datos: datosVagon,
+      };
+
+      this.vagonesAgregados.push(nuevoVagon);
+      Swal.fire({
+        title: "Éxito",
+        text: "Vagón agregado correctamente.",
+        icon: "success",
+        confirmButtonText: "Aceptar",
+      });
+      localStorage.setItem(
+        "vagonesAgregados",
+        JSON.stringify(this.vagonesAgregados)
+      );
+    },
     eliminarVagon(index) {
       this.vagonesAgregados.splice(index, 1);
       localStorage.setItem(
@@ -681,6 +773,64 @@ export default {
         text: "Vagón eliminado correctamente.",
         icon: "success",
         confirmButtonText: "Aceptar",
+      });
+      Swal.fire({
+        title: "Éxito",
+        text: "Vagón eliminado correctamente.",
+        icon: "success",
+        confirmButtonText: "Aceptar",
+      });
+    },
+    /* Acciones del producto */
+    toggleProductosDropdown() {
+      this.showProductosDropdown = !this.showProductosDropdown;
+      if (this.showProductosDropdown) {
+        this.productoSearch = "";
+        this.filterProductos();
+      }
+    },
+
+    filterProductos() {
+      if (!this.productoSearch) {
+        this.filteredProductos = this.productos;
+        return;
+      }
+      const searchTerm = this.productoSearch.toLowerCase();
+      this.filteredProductos = this.productos.filter(
+        (producto) =>
+          producto.producto_name.toLowerCase().includes(searchTerm) ||
+          producto.producto_codigo.toLowerCase().includes(searchTerm) ||
+          producto.id.toString().includes(searchTerm)
+      );
+    },
+
+    toggleProductoSelection(productoId) {
+      const index = this.formData.producto.indexOf(productoId);
+      if (index === -1) {
+        this.formData.producto.push(productoId);
+      } else {
+        this.formData.producto.splice(index, 1);
+      }
+    },
+
+    getSelectedProductosText() {
+      if (this.formData.producto.length === 0) return "";
+      if (this.formData.producto.length === 1) {
+        const producto = this.productos.find(
+          (p) => p.id === this.formData.producto[0]
+        );
+        return producto
+          ? `${producto.id}-${producto.producto_name}`
+          : "1 producto seleccionado";
+      }
+      return `${this.formData.producto.length} productos seleccionados`;
+    },
+
+    closeDropdownsOnClickOutside() {
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".ufc-custom-select")) {
+          this.showProductosDropdown = false;
+        }
       });
     },
     /* Acciones del producto */

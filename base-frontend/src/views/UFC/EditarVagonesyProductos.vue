@@ -320,6 +320,9 @@ export default {
           // 1. Obtener datos del vagón
           const response = await axios.get(`/ufc/vagones-productos/${vagonId}/`);
           console.log('RESPUESTA COMPLETA:', response.data);
+          // 1. Obtener datos del vagón
+          const response = await axios.get(`/ufc/vagones-productos/${vagonId}/`);
+          console.log('RESPUESTA COMPLETA:', response.data);
 
           // 2. Procesar equipo ferroviario
           let equipoFerroviarioId = '';
@@ -330,7 +333,54 @@ export default {
                   equipoFerroviarioId = response.data.tipo_equipo_ferroviario.toString();
               }
           }
+          // 2. Procesar equipo ferroviario
+          let equipoFerroviarioId = '';
+          if (response.data.tipo_equipo_ferroviario) {
+              if (typeof response.data.tipo_equipo_ferroviario === 'object') {
+                  equipoFerroviarioId = response.data.tipo_equipo_ferroviario.id?.toString() || '';
+              } else {
+                  equipoFerroviarioId = response.data.tipo_equipo_ferroviario.toString();
+              }
+          }
 
+          // 3. MANEJO ESPECÍFICO PARA PRODUCTOS - VERSIÓN DEFINITIVA
+          let productosAsociados = [];
+          let productosOriginales = [];
+          
+          // Caso 1: producto es un array de IDs
+          if (Array.isArray(response.data.producto)) {
+              productosAsociados = response.data.producto
+                  .filter(id => id != null && !isNaN(id))
+                  .map(id => id.toString());
+              
+              productosOriginales = this.productos.filter(p =>
+                  productosAsociados.includes(p.id.toString())
+              );
+          }
+          // Caso 2: producto es un array de objetos
+          else if (Array.isArray(response.data.producto) && response.data.producto.length > 0 && typeof response.data.producto[0] === 'object') {
+              productosOriginales = response.data.producto.filter(p => p && p.id != null);
+              productosAsociados = productosOriginales.map(p => p.id.toString());
+          }
+          // Caso 3: producto_ids está disponible
+          else if (Array.isArray(response.data.producto_ids)) {
+              productosAsociados = response.data.producto_ids
+                  .filter(id => id != null)
+                  .map(id => id.toString());
+              productosOriginales = this.productos.filter(p =>
+                  productosAsociados.includes(p.id.toString())
+              );
+          }
+          // Caso 4: producto es un ID directo
+          else if (response.data.producto && !isNaN(response.data.producto)) {
+              productosAsociados = [response.data.producto.toString()];
+              const productoEncontrado = this.productos.find(p =>
+                  p.id.toString() === response.data.producto.toString()
+              );
+              if (productoEncontrado) {
+                  productosOriginales = [productoEncontrado];
+              }
+          }
           // 3. MANEJO ESPECÍFICO PARA PRODUCTOS - VERSIÓN DEFINITIVA
           let productosAsociados = [];
           let productosOriginales = [];
@@ -389,13 +439,52 @@ export default {
                               response.data.tipo_equipo_ferroviario_name ||
                               ''
           };
+          // 4. Establecer datos del formulario
+          this.formData = {
+              fecha: response.data.fecha_registro || new Date().toISOString(),
+              tipo_equipo_ferroviario: equipoFerroviarioId,
+              tipo_origen: response.data.tipo_origen || 'ac_ccd',
+              origen: response.data.origen || '',
+              tipo_combustible: response.data.tipo_combustible || '',
+              tipo_producto: response.data.tipo_producto || '',
+              plan_mensual: response.data.plan_mensual || 0,
+              plan_anual: response.data.plan_anual || 0,
+              plan_acumulado_dia_anterior: response.data.plan_acumulado_dia_anterior || 0,
+              real_acumulado_dia_anterior: response.data.real_acumulado_dia_anterior || 0,
+              lista_productos: productosAsociados,
+              observaciones: response.data.observaciones || '',
+              original_productos: productosOriginales,
+              original_equipo: response.data.tipo_equipo_ferroviario?.tipo_equipo_name ||
+                              response.data.tipo_equipo_ferroviario_name ||
+                              ''
+          };
 
           // 5. Forzar actualización del select multiple
           this.$nextTick(() => {
               this.formData.lista_productos = [...productosAsociados];
               console.log('SELECT ACTUALIZADO CON:', this.formData.lista_productos);
           });
+          // 5. Forzar actualización del select multiple
+          this.$nextTick(() => {
+              this.formData.lista_productos = [...productosAsociados];
+              console.log('SELECT ACTUALIZADO CON:', this.formData.lista_productos);
+          });
 
+      } catch (error) {
+          console.error("Error al cargar datos:", error);
+          let errorMsg = "Error al cargar el vagón";
+          if (error.response?.data?.detail) {
+              errorMsg += `: ${error.response.data.detail}`;
+          }
+          Swal.fire("Error", errorMsg, "error");
+          this.$router.push({ name: 'infoOperativo' });
+      } finally {
+          this.loading = false;
+      }
+    },
+
+    // Envío del formulario
+    async submitForm() {
       } catch (error) {
           console.error("Error al cargar datos:", error);
           let errorMsg = "Error al cargar el vagón";
@@ -439,7 +528,34 @@ export default {
           }
 
           // 2. Preparar los IDs de productos (siempre se preparan, aunque pueda estar vacío)
+
+          // 1. Manejar cambios en el tipo de producto
+          if (this.formData.tipo_producto === 'producto') {
+            // Si el tipo es producto, limpiar campos de combustible
+            this.formData.tipo_combustible = "-";
+            this.formData.tipo_equipo_ferroviario = "";
+          } 
+          else if (this.formData.tipo_producto === 'contenedor') {
+            // Si el tipo es contenedor, limpiar campos de combustible y productos
+            this.formData.tipo_combustible = "-";
+            this.formData.tipo_equipo_ferroviario = "";
+            this.formData.lista_productos = [];
+          } 
+          else if (this.formData.tipo_producto === 'combustible') {
+            // Si el tipo es combustible, limpiar campo de productos
+            this.formData.lista_productos = [];
+          }
+
+          // 2. Preparar los IDs de productos (siempre se preparan, aunque pueda estar vacío)
           const productosParaEnviar = this.prepararProductosParaEnvio();
+        
+          // 3. Validar que los productos seleccionados existan (solo si hay productos y es tipo producto)
+          if (this.formData.tipo_producto === 'producto' && productosParaEnviar.length > 0) {
+            const productosValidos = await this.validarProductos(productosParaEnviar);
+            if (!productosValidos) {
+              Swal.fire("Error", "Uno o más productos seleccionados no existen", "error");
+              return;
+            }
         
           // 3. Validar que los productos seleccionados existan (solo si hay productos y es tipo producto)
           if (this.formData.tipo_producto === 'producto' && productosParaEnviar.length > 0) {
@@ -451,14 +567,20 @@ export default {
           }
 
           // 4. Preparar datos para enviar
+
+          // 4. Preparar datos para enviar
           const datosEnvio = {
             ...this.formData,
             producto_ids: productosParaEnviar,
           };
 
           // 5. Enviar la solicitud PUT al backend
+
+          // 5. Enviar la solicitud PUT al backend
           const vagonId = this.$route.params.id;
           await axios.put(`/ufc/vagones-productos/${vagonId}/`, datosEnvio);
+        
+          // 6. Mostrar mensaje de éxito
         
           // 6. Mostrar mensaje de éxito
           Swal.fire("Éxito", "Los cambios se han guardado correctamente", "success")
@@ -467,6 +589,7 @@ export default {
             });
         } catch (error) {
           console.error("Error al guardar:", error.response);
+        
         
           // Manejar errores de validación del backend
           if (error.response?.status === 400) {
@@ -482,6 +605,130 @@ export default {
           this.loading = false;
         }
       },
+
+    prepararProductosParaEnvio() {
+      return this.formData.lista_productos
+        .map(id => {
+          const idNum = parseInt(id);
+          return isNaN(idNum) ? null : idNum;
+        })
+        .filter(id => id !== null);
+    },
+
+    async validarProductos(idsProductos) {
+      try {
+        const response = await axios.post("/ufc/producto-vagon/verificar/", {
+          producto_ids: idsProductos.map(id => parseInt(id))
+        });
+        return response.data.todos_existen;
+      } catch (error) {
+        console.error("Error al validar productos:", error);
+        return false;
+      }
+    },
+
+    // Métodos auxiliares
+    resetForm() {
+      this.formData = {
+        fecha: new Date().toISOString(),
+        tipo_equipo_ferroviario: "",
+        tipo_origen: "ac_ccd",
+        origen: "",
+        tipo_combustible: "",
+        tipo_producto: "",
+        plan_mensual: "",
+        plan_anual: "",
+        plan_acumulado_dia_anterior: 0,
+        real_acumulado_dia_anterior: 0,
+        lista_productos: [],
+        observaciones: "",
+      };
+      this.errors = {};
+    },
+
+    volver_principal() {
+      this.$router.push({ name: "InfoOperativo" });
+    },
+
+    // Métodos para obtener datos
+    async getNoLocomotoras() {
+      try {
+        let url = "/api/tipo-e-f-no-locomotora/";
+       
+        // Si hay un tipo de combustible seleccionado, añadirlo como parámetro
+        if (this.formData.tipo_combustible) {
+          url += `?tipo_combustible=${this.formData.tipo_combustible}`;
+        }
+       
+        const response = await axios.get(url);
+        this.tipos_equipos_ferroviarios = response.data.map(item => ({
+          ...item,
+          id: item.id.toString() // Convertir IDs a string
+        }));
+        
+        console.log('Equipos ferroviarios cargados:', this.tipos_equipos_ferroviarios);
+      } catch (error) {
+        console.error("Error al obtener los equipos ferroviarios:", error);
+        Swal.fire("Error", "Hubo un error al obtener los equipos ferroviarios.", "error");
+      }
+    },
+
+    async getEntidades() {
+      try {
+        let allEntidades = [];
+        let nextPage = "/api/entidades/";
+
+        while (nextPage) {
+          const response = await axios.get(nextPage);
+          allEntidades = [...allEntidades, ...response.data.results];
+          nextPage = response.data.next;
+        }
+
+        this.entidades = allEntidades;
+      } catch (error) {
+        console.error("Error al obtener las entidades:", error);
+        Swal.fire("Error", "Hubo un error al obtener las entidades.", "error");
+      }
+    },
+
+    async getPuertos() {
+      try {
+        let allPuertos = [];
+        let nextPage = "/api/puertos/";
+
+        while (nextPage) {
+          const response = await axios.get(nextPage);
+          allPuertos = [...allPuertos, ...response.data.results];
+          nextPage = response.data.next;
+        }
+
+        this.puertos = allPuertos;
+      } catch (error) {
+        console.error("Error al obtener los puertos:", error);
+        Swal.fire("Error", "Hubo un error al obtener los puertos.", "error");
+      }
+    },
+
+    async getProductos() {
+      try {
+        const response = await axios.get("/ufc/producto-vagon/");
+        if (response.data && response.data.results) {
+          this.productos = response.data.results.map(p => ({
+            ...p,
+            id: p.id?.toString() || '' // Conversión segura a string
+          }));
+        } else {
+          console.error('Estructura inesperada en productos:', response.data);
+          this.productos = [];
+        }
+      } catch (error) {
+        console.error("Error al obtener productos:", error);
+        this.productos = [];
+      }
+    },
+  },
+};
+</script>
 
     prepararProductosParaEnvio() {
       return this.formData.lista_productos

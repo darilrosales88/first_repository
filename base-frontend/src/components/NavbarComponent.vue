@@ -4,6 +4,8 @@
     <div class="logo-container">
       <h1 class="company-name">MITRANS</h1>
       <p class="company-slogan">Transporte y Logística</p>
+      <h1 class="company-name">MITRANS</h1>
+      <p class="company-slogan">Transporte y Logística</p>
     </div>
     
     <!-- Contenedor principal del menú con scroll -->
@@ -158,6 +160,9 @@ export default {
       } catch (error) {
         console.error("Error al obtener permisos y grupos:", error);
       }
+    },
+    toggleDropdown(menu) {
+      this.activeDropdown = this.activeDropdown === menu ? null : menu;
     },
     async logout() {
       try {

@@ -70,6 +70,17 @@
         <i class="bi bi-check2-circle"></i> Aprobar
       </button>
     </div>
+    <div class="action-buttons">
+      <button class="action-btn reject" @click="rechazar">
+        <i class="bi bi-x-circle"></i> Rechazar
+      </button>
+      <button class="action-btn ready" @click="listo">
+        <i class="bi bi-check-circle"></i> Listo
+      </button>
+      <button class="action-btn approve" @click="aprobar">
+        <i class="bi bi-check2-circle"></i> Aprobar
+      </button>
+    </div>
   </div>
 </template>
 

@@ -647,7 +647,7 @@ const routes = [
   {
     path: "/ufc",
     name: "ufc",
-    component: () => import("../views/UFCView.vue"),
+    component: () => import("../views/UFC/UFCView.vue"),
     meta: {
       requireLogin: true,
     },
@@ -787,6 +787,13 @@ const routes = [
       requireLogin: true,
     },
   },
+  {
+  path: '/VisualizarInfoOperative/:id',
+  name: 'VisualizarInfoOperative', // Este nombre debe coincidir con el usado en el router-link
+  component: () => import('@/views/UFC/VisualizarInfoOperativo.vue'),
+  props: true
+}
+  
 ];
 
 const router = createRouter({

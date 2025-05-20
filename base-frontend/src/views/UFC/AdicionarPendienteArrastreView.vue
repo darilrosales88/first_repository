@@ -304,8 +304,8 @@
 
               <!-- Campo: cantidad_vagones -->
               <div class="ufc-input-group">
-                <label for="cantidad_vagones"
-                  >Cantidad de Vagones <span class="required">*</span></label
+                <label for="por_situar"
+                  >Vagones Pendientes <span class="required">*</span></label
                 >
                 <div class="ufc-por-situar-container">
                   <input
@@ -314,7 +314,6 @@
                     v-model.number="formData.cantidad_vagones"
                     min="1"
                     required
-                    readonly
                   />
                   <span class="ufc-por-situar-suffix">unidades</span>
                 </div>

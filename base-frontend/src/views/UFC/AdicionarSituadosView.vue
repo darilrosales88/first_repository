@@ -113,16 +113,19 @@
                   v-model="formData.tipo_equipo"
                   id="tipo_equipo"
                   name="tipo_equipo"
+                  @change="buscarEquipos"
                   required
                   :disabled="isSubmitting"
                 >
                   <option value="" disabled>Seleccione un tipo</option>
                   <option
-                    v-for="option in tipo_equipo_options"
-                    :key="option.id"
-                    :value="option.id"
+                    v-for="equipo in equipos"
+                    :key="equipo.id"
+                    :value="equipo.id"
                   >
-                    {{ option.text }}
+                    {{ equipo.id }}-{{ equipo.tipo_equipo_name }}-{{
+                      equipo.tipo_carga_name
+                    }}
                   </option>
                 </select>
               </div>
@@ -248,22 +251,22 @@
 
               <!-- Campo: situados -->
               <div class="ufc-input-group">
-  <label for="situados">
-    Situados <span class="required">*</span>
-  </label>
-  <div class="ufc-por-situar-container">
-    <input
-      type="number"
-      class="ufc-por-situar-input"
-      v-model.number="formData.situados"
-      id="situados"
-      name="situados"
-      min="1"
-      required
-      readonly
-    />
-  </div>
-</div>
+                <label for="situados">
+                  Situados <span class="required">*</span>
+                </label>
+                <div class="ufc-por-situar-container">
+                  <input
+                    type="number"
+                    class="ufc-por-situar-input"
+                    v-model.number="formData.situados"
+                    id="situados"
+                    name="situados"
+                    min="1"
+                    required
+                    readonly
+                  />
+                </div>
+              </div>
 
               <!-- Campo: pendiente_proximo_dia -->
               <div class="ufc-input-group">
@@ -301,150 +304,162 @@
 
           <div class="ufc-form-actions">
             <button
-              type="submit"
-              class="ufc-button primary"
-              :disabled="isSubmitting"
-            >
-              <span v-if="isSubmitting">
-                <span class="spinner" role="status" aria-hidden="true"></span>
-                Procesando...
-              </span>
-              <span v-else>Agregar</span>
-            </button>
-            <button
               type="button"
-              @click="confirmCancel"
               class="ufc-button secondary"
-              :disabled="isSubmitting"
+              @click="confirmCancel"
             >
-              Cancelar
+              <i class="bi bi-x-circle"></i> Cancelar
+            </button>
+            <button type="submit" class="ufc-button primary">
+              <i class="bi bi-check-circle"></i> Agregar
             </button>
           </div>
         </form>
-
-        
-
-
       </div>
-
-
-<!-- Tabla de Vagones Asociados -->
-<div class="ufc-vagones-container">
-  <div class="ufc-vagones-header">
-    <h3><i class="bi bi-train-freight-front"></i> Vagones Asociados</h3>
-    <div>
-      <span class="ufc-vagones-count">
-        {{ vagonesAsociados.length }} / {{ formData.situados }}
-      </span>
-      <button 
-        class="ufc-button primary small"
-        @click="abrirModalAgregarVagon"
-        :disabled="vagonesAsociados.length >= formData.situados"
-      >
-        <i class="bi bi-plus-circle"></i> Agregar Vagón
-      </button>
-    </div>
-  </div>
-
-  <!-- Tabla cuando hay datos -->
-  <div v-if="vagonesAsociados.length > 0" class="ufc-vagones-table-container">
-    <table class="ufc-vagones-table">
-      <thead>
-        <tr>
-          <th>Equipo Ferroviario</th>
-          <th>Días</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(vagon, index) in vagonesAsociados" :key="index">
-          <td>{{ vagon.equipo_ferroviario_nombre }}</td>
-          <td>{{ vagon.dias }}</td>
-          <td class="ufc-actions-cell">
-            <button 
-              class="ufc-icon-button danger"
-              @click="eliminarVagon(index)"
-              title="Eliminar"
-            >
-              <i class="bi bi-trash"></i>
+      <!-- Agrega esto justo antes de la sección de vagones agregados -->
+      <div class="ufc-form-actions" style="margin-bottom: 20px">
+        <button
+          type="button"
+          class="ufc-button primary"
+          @click="mostrarModalVagon = true"
+        >
+          <i class="bi bi-plus-circle"></i> Adicionar Vagón
+        </button>
+      </div>
+      <div v-if="mostrarModalVagon" class="ufc-modal-overlay">
+        <div class="ufc-modal-container">
+          <div class="ufc-modal-header">
+            <h3><i class="bi bi-train-freight-front"></i> Agregar Vagón</h3>
+            <button @click="cerrarModalVagon" class="ufc-modal-close">
+              <i class="bi bi-x"></i>
             </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+          </div>
+          <div class="ufc-modal-body">
+            <div class="ufc-form-grid">
+              <!-- Campo: Equipo Ferroviario -->
+              <div class="ufc-input-group">
+                <label for="equipo_ferroviario"
+                  >Equipo Ferroviario <span class="required">*</span></label
+                >
+                <select
+                  class="ufc-select"
+                  v-model="nuevoVagon.equipo_ferroviario"
+                  required
+                >
+                  <option value="" disabled>Seleccione un equipo</option>
+                  <option
+                    v-for="equipo in equipos_vagones"
+                    :key="equipo.id"
+                    :value="equipo.id"
+                  >
+                    {{ equipo.numero_identificacion }} -
+                    {{ equipo.tipo_equipo_name }}
+                  </option>
+                </select>
+              </div>
 
-  <!-- Mensaje cuando no hay datos -->
-  <div v-else class="ufc-vagones-empty">
-    <div class="ufc-empty-state">
-      <i class="bi bi-train-freight-front"></i>
-      <p>No hay vagones asociados</p>
-    </div>
-  </div>
-</div>
+              <!-- Campo: Cantidad de días -->
+              <div class="ufc-input-group">
+                <label for="cant_dias"
+                  >Cantidad de días <span class="required">*</span></label
+                >
+                <input
+                  type="number"
+                  class="ufc-input"
+                  v-model.number="nuevoVagon.cant_dias"
+                  min="1"
+                  required
+                />
+              </div>
+            </div>
 
-<!-- Modal para agregar/editar vagón -->
-<div v-if="mostrarModalVagon" class="ufc-modal-overlay">
-  <div class="ufc-modal-container">
-    <div class="ufc-modal-header">
-      <h3>
-        <i class="bi bi-train-freight-front"></i> 
-        {{ modoEdicionVagon ? 'Editar Vagón' : 'Agregar Vagón' }}
-      </h3>
-      <button @click="cerrarModalVagon" class="ufc-modal-close">
-        <i class="bi bi-x"></i>
-      </button>
-    </div>
-    <div class="ufc-modal-body">
-      <form @submit.prevent="guardarVagon" class="ufc-modal-form">
-        <div class="ufc-input-group">
-          <label for="equipo_ferroviario">Equipo Ferroviario <span class="required">*</span></label>
-          <select
-            class="ufc-select"
-            v-model="vagonForm.equipo_ferroviario"
-            required
-          >
-            <option value="" disabled>Seleccione un equipo</option>
-            <option 
-              v-for="equipo in equiposFerroviarios" 
-              :key="equipo.id"
-              :value="equipo.id"
-            >
-              {{ equipo.numero_identificacion }} - {{ equipo.tipo_equipo.tipo_equipo }}
-            </option>
-          </select>
+            <!-- Botones del modal -->
+            <div class="ufc-form-actions">
+              <button
+                type="button"
+                class="ufc-button secondary"
+                @click="cerrarModalVagon"
+              >
+                <i class="bi bi-x-circle"></i> Cancelar
+              </button>
+              <button
+                type="button"
+                class="ufc-button primary"
+                @click="agregarNuevoVagon"
+                :disabled="
+                  !nuevoVagon.equipo_ferroviario || !nuevoVagon.cant_dias
+                "
+              >
+                <i class="bi bi-check-circle"></i> Agregar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Sección de vagones agregados -->
+      <div class="ufc-vagones-agregados">
+        <h3 class="ufc-subtitle">
+          <i class="bi bi-list-check"></i> Vagones agregados
+        </h3>
+
+        <div class="ufc-table-container">
+          <table class="ufc-table">
+            <thead>
+              <tr>
+                <th>No.</th>
+                <th>No. ID en trenes</th>
+                <th>Cant. días</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(vagon, index) in vagonesAgregados" :key="index">
+                <td>{{ index + 1 }}</td>
+                <td>
+                  {{
+                    vagon.datos?.equipo_vagon ||
+                    vagon.equipo_ferroviario.numero_identificacion
+                  }}
+                </td>
+                <td>
+                  {{ vagon.cant_dias }}
+                </td>
+                <td>
+                  <button
+                    class="ufc-button danger ufc-button-sm"
+                    @click="eliminarVagon(index)"
+                  >
+                    <i class="bi bi-trash"></i> Eliminar
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <div class="ufc-input-group">
-          <label for="dias">Días <span class="required">*</span></label>
-          <input
-            type="number"
-            class="ufc-input"
-            v-model.number="vagonForm.dias"
-            min="1"
-            required
-          />
+        <!-- Validación de cantidad de vagones -->
+        <div
+          class="ufc-validation-message"
+          :class="{
+            warning: vagonesAgregados.length < formData.situados,
+            success: vagonesAgregados.length === formData.situados,
+            error: vagonesAgregados.length > formData.situados,
+          }"
+        >
+          <p v-if="vagonesAgregados.length < formData.situados">
+            Faltan
+            {{ formData.situados - vagonesAgregados.length }}
+            vagones por agregar.
+          </p>
+          <p v-else-if="vagonesAgregados.length === formData.situados">
+            Todos los vagones han sido agregados.
+          </p>
+          <p v-else>
+            Se han agregado más vagones de los permitidos. Por favor, elimina
+            los excedentes.
+          </p>
         </div>
-
-        <div class="ufc-modal-actions">
-          <button 
-            type="button" 
-            class="ufc-button secondary"
-            @click="cerrarModalVagon"
-          >
-            Cancelar
-          </button>
-          <button type="submit" class="ufc-button primary">
-            {{ modoEdicionVagon ? 'Guardar Cambios' : 'Agregar' }}
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-
-
+      </div>
     </div>
   </div>
 </template>
@@ -474,159 +489,236 @@ export default {
         situados: 1,
         pendiente_proximo_dia: 0,
         observaciones: "",
+        equipos_vagones: [],
       },
-      entidades: [],
-      puertos: [],
-      productos: [],
+      userGroups: [], // Inicializa como array vacío
+      userPermissions: [], // Inicializa como array vacío
       productoSearch: "",
       filteredProductos: [],
       showProductosDropdown: false,
+      entidades: [],
+      puertos: [],
+      productos: [],
+      loading: false,
       mostrarModal: false,
-      loadingProducts: false,
-      isSubmitting: false,
+      equipos: [],
+      equipos_vagones: [],
+      mostrarModalVagon: false,
+      vagonesAgregados: [],
+      nuevoVagon: {
+        equipo_ferroviario: "",
+        cant_dias: 1,
+      },
 
       tipo_origen_options: [
         { id: "ac_ccd", text: "comercial/AccesoCCD" },
         { id: "puerto", text: "Puerto" },
       ],
-      tipo_equipo_options: [
-        { id: "casilla", text: "Casilla" },
-        { id: "caj_gon", text: "Cajon o Gondola" },
-      ],
       t_operacion_options: [
         { id: "carga", text: "Carga" },
         { id: "descarga", text: "Descarga" },
       ],
-      vagonesAsociados: [], // Aquí se almacenarán los vagones antes de enviar
-      equiposFerroviarios: [], // Lista de equipos disponibles
-      mostrarModalVagon: false,
-      vagonForm: {
-        equipo_ferroviario: '',
-        dias: 1
-      },
-      vagonEditIndex: null,
-      modoEdicionVagon: false
     };
   },
   mounted() {
     this.getProductos();
     this.getEntidades();
     this.getPuertos();
+    this.getEquipos();
+    this.filteredProductos = this.productos;
     this.closeDropdownsOnClickOutside();
   },
   computed: {
     formattedFechaRegistro() {
       if (this.formData.fecha) {
-        return new Date(this.formData.fecha).toLocaleString();
+        return new Date(this.formData.fecha).toLocaleString("es-ES");
       }
-      return new Date().toLocaleString();
+      return new Date().toLocaleString("es-ES");
     },
   },
   methods: {
-    async abrirModalAgregarVagon() {
+    async verificarInformeOperativo() {
       try {
-        // Cargar equipos ferroviarios disponibles
-        const response = await axios.get('/api/equipos-ferroviarios/', {
-          params: {
-            exclude_tipo: 'locomotora', // Excluir locomotoras
-            estado: 'activo' // Solo equipos activos
-          }
+        this.formData.fecha = new Date().toISOString();
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(
+          today.getMonth() + 1
+        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+        const response = await axios.get("/ufc/verificar-informe-existente/", {
+          params: { fecha_operacion: fechaFormateada },
         });
-        
-        // Filtrar equipos que no estén ya en la lista de vagones asociados
-        const equiposDisponibles = response.data.results.filter(equipo => 
-          !this.vagonesAsociados.some(v => v.equipo_ferroviario === equipo.id)
-        );
-        
-        this.equiposFerroviarios = equiposDisponibles;
-        
-        if (this.equiposFerroviarios.length === 0) {
+
+        if (response.data.existe) {
+          this.informeOperativoId = response.data.id;
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error("Error al verificar informe:", error);
+        return false;
+      }
+    },
+    async abrirModalVagon() {
+      this.mostrarModalVagon = true;
+      console.log(this.vagonesAgregados);
+      if (this.equiposFerroviarios.length === 0) {
+        await this.buscarEquipos();
+      }
+    },
+    cerrarModalVagon() {
+      this.mostrarModalVagon = false;
+      this.nuevoVagon = {
+        equipo_ferroviario: "",
+        cant_dias: 1,
+      };
+    },
+
+    async getEntidades() {
+      try {
+        const response = await axios.get("/api/entidades/");
+        this.entidades = response.data.results;
+      } catch (error) {
+        console.error("Error al obtener entidades:", error);
+        Swal.fire("Error", "No se pudieron obtener las entidades", "error");
+      }
+    },
+    agregarNuevoVagon() {
+      if (!this.nuevoVagon.equipo_ferroviario || !this.nuevoVagon.cant_dias) {
+        Swal.fire("Error", "Debe completar todos los campos", "error");
+        return;
+      }
+
+      const equipoSeleccionado = this.equipos_vagones.find(
+        (e) => e.id === this.nuevoVagon.equipo_ferroviario
+      );
+
+      const vagonAgregado = {
+        equipo_ferroviario: equipoSeleccionado,
+        cant_dias: this.nuevoVagon.cant_dias,
+        // Agrega otros datos necesarios para mantener consistencia
+        datos: {
+          equipo_vagon: equipoSeleccionado.numero_identificacion,
+        },
+      };
+
+      this.vagonesAgregados.push(vagonAgregado);
+      this.cerrarModalVagon();
+
+      Swal.fire("Éxito", "Vagón agregado correctamente", "success");
+    },
+    async getEquipos() {
+      try {
+        const response = await axios.get("/api/tipo-e-f-no-locomotora/");
+        this.equipos = response.data;
+      } catch (error) {
+        console.error("Error al obtener los equipos:", error);
+        Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
+      }
+    },
+    async buscarEquipos() {
+      try {
+        let url = "/api/e-f-no-locomotora/";
+        if (!this.formData.tipo_equipo) {
+          return;
+        }
+
+        // al tipo de equipo específico lo añadimos como parámetro
+        url += `?tipo_equipo=${this.formData.tipo_equipo}`;
+        const response = await axios.get(url);
+
+        // en caso de que no exista EF para el tipo seleccionado en el componente padre
+        if (response.data.length === 0) {
           Swal.fire({
-            title: 'No hay equipos disponibles',
-            text: 'Todos los equipos ferroviarios ya están asociados o no hay equipos activos',
-            icon: 'info'
+            title: "Error",
+            text: "No existen equipos ferroviarios para el tipo seleccionado.",
+            icon: "error",
+            willClose: () => {
+              this.cerrarModal();
+            },
           });
           return;
         }
-        
-        this.modoEdicionVagon = false;
-        this.vagonForm = {
-          equipo_ferroviario: this.equiposFerroviarios[0]?.id || '',
-          dias: 1
-        };
-        this.mostrarModalVagon = true;
+
+        this.equipos_vagones = response.data;
       } catch (error) {
-        console.error("Error al cargar equipos:", error);
-        Swal.fire("Error", "No se pudieron cargar los equipos ferroviarios", "error");
+        console.error("Error al obtener los equipos ferroviarios:", error);
+        Swal.fire({
+          title: "Error",
+          text: "Hubo un error al obtener los equipos ferroviarios.",
+          icon: "error",
+          willClose: () => {
+            this.cerrarModal();
+          },
+        });
       }
     },
 
     guardarVagon() {
       // Validación
-      if (!this.vagonForm.equipo_ferroviario || !this.vagonForm.dias || this.vagonForm.dias < 1) {
-        Swal.fire('Error', 'Complete todos los campos correctamente', 'error');
+      if (
+        !this.vagonForm.equipo_ferroviario ||
+        !this.vagonForm.dias ||
+        this.vagonForm.dias < 1
+      ) {
+        Swal.fire("Error", "Complete todos los campos correctamente", "error");
         return;
       }
-      
+
       // Buscar el equipo seleccionado para obtener su nombre
       const equipoSeleccionado = this.equiposFerroviarios.find(
-        e => e.id === this.vagonForm.equipo_ferroviario
+        (e) => e.id === this.vagonForm.equipo_ferroviario
       );
-      
+
       const vagonData = {
         equipo_ferroviario: this.vagonForm.equipo_ferroviario,
-        equipo_ferroviario_nombre: equipoSeleccionado 
+        equipo_ferroviario_nombre: equipoSeleccionado
           ? `${equipoSeleccionado.numero_identificacion} - ${equipoSeleccionado.tipo_equipo.tipo_equipo}`
-          : 'Equipo no encontrado',
-        dias: this.vagonForm.dias
+          : "Equipo no encontrado",
+        dias: this.vagonForm.dias,
       };
-      
+
       if (this.modoEdicionVagon) {
         // Editar existente
         this.vagonesAsociados[this.vagonEditIndex] = vagonData;
-        Swal.fire('Actualizado', 'El vagón ha sido actualizado', 'success');
+        Swal.fire("Actualizado", "El vagón ha sido actualizado", "success");
       } else {
         // Agregar nuevo
         this.vagonesAsociados.push(vagonData);
-        Swal.fire('Agregado', 'El vagón ha sido agregado', 'success');
+        Swal.fire("Agregado", "El vagón ha sido agregado", "success");
       }
-      
+
       // Actualizar el campo situados automáticamente
       this.formData.situados = this.vagonesAsociados.length;
-      
+
       this.cerrarModalVagon();
     },
 
     eliminarVagon(index) {
       Swal.fire({
-        title: '¿Eliminar vagón?',
+        title: "¿Eliminar vagón?",
         text: "Esta acción no se puede deshacer",
-        icon: 'warning',
+        icon: "warning",
         showCancelButton: true,
-        confirmButtonColor: '#002a68',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
+        confirmButtonColor: "#002a68",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
       }).then((result) => {
         if (result.isConfirmed) {
           this.vagonesAsociados.splice(index, 1);
           // Actualizar el campo situados automáticamente
           this.formData.situados = this.vagonesAsociados.length;
-          Swal.fire(
-            'Eliminado',
-            'El vagón ha sido eliminado',
-            'success'
-          );
+          Swal.fire("Eliminado", "El vagón ha sido eliminado", "success");
         }
       });
     },
-  
-  cerrarModalVagon() {
-    this.mostrarModalVagon = false;
-    this.vagonEditIndex = null;
-    this.modoEdicionVagon = false;
-  },
 
+    cerrarModalVagon() {
+      this.mostrarModalVagon = false;
+      this.vagonEditIndex = null;
+      this.modoEdicionVagon = false;
+    },
 
     async getEntidades() {
       try {
@@ -733,16 +825,18 @@ export default {
       }
 
       // 2. Verificar que el informe no esté en estado "Aprobado"
-    const informeResponse = await axios.get(`/ufc/informe-operativo/${this.informeOperativoId}/`);
-    console.log("anijijijijiji",informeResponse.data.estado_parte);
-    if (informeResponse.data.estado_parte === "Aprobado") {
-      Swal.fire(
-        "Error",
-        "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
-        "error"
+      const informeResponse = await axios.get(
+        `/ufc/informe-operativo/${this.informeOperativoId}/`
       );
-      return;
-    }
+      console.log("anijijijijiji", informeResponse.data.estado_parte);
+      if (informeResponse.data.estado_parte === "Aprobado") {
+        Swal.fire(
+          "Error",
+          "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
+          "error"
+        );
+        return;
+      }
 
       this.isSubmitting = true;
       try {
@@ -796,22 +890,21 @@ export default {
           throw new Error(errors.join("\n"));
         }
 
-        if (this.vagonesAsociados.length !== this.formData.situados) {
-        Swal.fire({
-          title: 'Advertencia',
-          text: `El número de vagones asociados (${this.vagonesAsociados.length}) no coincide con la cantidad "Situados" (${this.formData.situados}). ¿Desea actualizar el campo "Situados" para que coincida?`,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Sí, actualizar',
-          cancelButtonText: 'No, corregir manualmente'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            this.formData.situados = this.vagonesAsociados.length;
-          }
-        });
-        return;
-      }
-
+        if (this.vagonesAgregados.length !== this.formData.situados) {
+          Swal.fire({
+            title: "Advertencia",
+            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad "Situados" (${this.formData.situados}). ¿Desea actualizar el campo "Situados" para que coincida?`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, actualizar",
+            cancelButtonText: "No, corregir manualmente",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.formData.situados = this.vagonesAgregados.length;
+            }
+          });
+          return;
+        }
 
         // Preparar datos para enviar
         const payload = {
@@ -824,12 +917,15 @@ export default {
           situados: this.formData.situados,
           pendiente_proximo_dia: this.formData.pendiente_proximo_dia,
           observaciones: this.formData.observaciones,
-          vagones_asociados: this.vagonesAsociados.map(v => ({
-          equipo_ferroviario: v.equipo_ferroviario,
-          dias: v.dias
-        }))
+          informe_operativo: this.informeOperativoId,
+
+          equipo_vagon: this.vagonesAgregados.map((vagon) => ({
+            equipo_ferroviario: vagon.equipo_ferroviario.id, // ID del equipo
+            cant_dias: vagon.cant_dias,
+            // Otros campos necesarios para el vagon
+          })),
         };
-        
+        console.log("Datos a enviar", payload);
 
         // Enviar datos al endpoint
         const response = await axios.post("/ufc/situados/", payload);
@@ -844,8 +940,6 @@ export default {
 
         // Resetear el formulario después de enviar
         this.resetForm();
-        this.$router.push({ name: 'ListaSituados' });
-
       } catch (error) {
         console.error("Error al enviar el formulario:", error);
         Swal.fire({
@@ -870,7 +964,7 @@ export default {
         pendiente_proximo_dia: 0,
         observaciones: "",
       };
-      this.vagonesAsociados = [];
+      this.vagonesAgregados = [];
     },
 
     async confirmCancel() {
@@ -1090,9 +1184,6 @@ export default {
   border-top: 1px solid #eee;
 }
 
-
-
-
 /* Estilos para el select personalizado de productos */
 .ufc-custom-select {
   position: relative;
@@ -1223,6 +1314,49 @@ export default {
   margin: 0;
   font-size: 1rem;
   font-weight: 500;
+}
+.ufc-vagones-agregados {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.ufc-subtitle {
+  color: #002a68;
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ufc-table-container {
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.ufc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.ufc-table th {
+  background-color: #f8f9fa;
+  padding: 10px;
+  text-align: left;
+  border-bottom: 2px solid #ddd;
+  color: #555;
+}
+
+.ufc-table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.ufc-table tr:hover {
+  background-color: #f5f5f5;
 }
 
 .ufc-form-wrapper {

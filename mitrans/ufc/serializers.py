@@ -8,7 +8,10 @@ from django.db.models import Q,Sum
 from .models import (ufc_informe_operativo, vagon_cargado_descargado,producto_UFC, en_trenes,nom_equipo_ferroviario
                     ,por_situar,Situado_Carga_Descarga,arrastres,HistorialVagonesProductos 
                     ,registro_vagones_cargados,vagones_productos,rotacion_vagones,HistorialVagonCargadoDescargado
+
                      )
+
+from .models import (CCD_registro_vagones_cargados,CCD_en_trenes, CCD_Situado_Carga_Descarga, CCD_por_situar, CCD_arrastres, CCD_vagon_cargado_descargado)
 
 from Administracion.models import Auditoria 
 from rest_framework.response import Response
@@ -1377,3 +1380,391 @@ class ufc_informe_operativo_serializer(serializers.ModelSerializer):
         """Obtiene todas las rotaciones de vagones asociadas al informe operativo."""
         rotacion_vagones_queryset = obj.rotacion.all()
         return RotacionVagonesSerializer(rotacion_vagones_queryset, many=True).data
+
+
+
+
+
+
+
+
+
+
+# Serializers para CCD
+class CCD_registro_vagones_cargados_serializer(serializers.ModelSerializer):
+    tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
+    identificacion = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = CCD_registro_vagones_cargados
+        fields = '__all__'
+        extra_kwargs = {
+            'no_id': {'validators': []}
+        }
+        read_only_fields = ('identificacion', 'tipo_origen_name')
+    
+    def get_identificacion(self, obj):
+        return obj.no_id if obj.no_id else f"Registro-{obj.id}"
+    
+    def validate_no_id(self, value):
+        if self.instance is None and CCD_registro_vagones_cargados.objects.filter(no_id=value).exists():
+            raise serializers.ValidationError("Ya existe un vagón con este ID")
+        return value
+
+    def create(self, validated_data):
+        try:
+            obj, created = CCD_registro_vagones_cargados.objects.get_or_create(
+                no_id=validated_data['no_id'],
+                defaults=validated_data
+            )
+            if not created:
+                for attr, value in validated_data.items():
+                    setattr(obj, attr, value)
+                obj.save()
+            return obj
+        except Exception as e:
+            raise serializers.ValidationError(f"Error al guardar el vagón: {str(e)}")
+
+
+class CCD_en_trenes_serializer(serializers.ModelSerializer):
+    fecha_registro = serializers.DateTimeField(
+        source='fecha', 
+        format='%Y-%m-%d %H:%M', 
+        read_only=True
+    )
+    producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')
+    tipo_equipo_name = serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
+    productos_info = serializers.SerializerMethodField()
+    vagones_info = serializers.SerializerMethodField()
+    producto = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=producto_UFC.objects.all(),
+        required=False
+    )
+    equipo_vagon = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=nom_equipo_ferroviario.objects.all(),
+        required=False
+    )
+
+    class Meta:
+        model = CCD_en_trenes
+        fields = '__all__'
+
+    def get_productos_info(self, obj):
+        productos = obj.producto.all()
+        return [{
+            'id': p.id,
+            'nombre_producto': p.producto.nombre_producto,
+            'codigo_producto': p.producto.codigo_producto,
+            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
+            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
+            'cantidad': p.cantidad,
+            'estado': p.estado,
+            'contiene': p.contiene
+        } for p in productos]
+        
+    def get_vagones_info(self, obj):
+        equipo_vagon = obj.equipo_vagon.all()
+        return [{
+            'id': e.id,
+            'tipo_equipo': e.tipo_equipo.tipo_equipo,
+            'numero_identificacion': e.numero_identificacion,
+            'tipo_carga': e.tipo_carga,
+            'tipo_combustible': e.tipo_combustible
+        } for e in equipo_vagon]
+
+    def create(self, validated_data):
+        productos_data = validated_data.pop('producto', [])
+        equipo_vagon_data = validated_data.pop('equipo_vagon', [])
+        instance = CCD_en_trenes.objects.create(**validated_data)
+        instance.producto.set(productos_data)
+        instance.equipo_vagon.set(equipo_vagon_data)
+        
+        for equipo in equipo_vagon_data:    
+            actualizar_estado_equipo_ferroviario(equipo.numero_identificacion, 'Asignado al estado En Trenes')
+        
+        return instance
+
+    def update(self, instance, validated_data):
+        productos_data = validated_data.pop('producto', None)
+        equipo_vagon_data = validated_data.pop('equipo_vagon', None)
+        
+        if productos_data is not None:
+            instance.producto.set(productos_data)
+            
+        if equipo_vagon_data:
+            ids_nuevos = [equipo_id.id for equipo_id in equipo_vagon_data if equipo_id.id]
+            registros_a_eliminar = instance.equipo_vagon.all()
+            
+            for registro in registros_a_eliminar:
+                actualizar_estado_equipo_ferroviario(registro, 'Disponible')
+            
+            for registro_id in equipo_vagon_data:
+                if registro_id:
+                    registro = nom_equipo_ferroviario.objects.get(id=registro_id.id)
+                    instance.equipo_vagon.add(registro)
+                    actualizar_estado_equipo_ferroviario(registro_id, 'Asignado al estado En Trenes')
+        
+        instance.equipo_vagon.set(equipo_vagon_data)
+        return instance
+
+
+class CCD_SituadoCargaDescargaSerializers(serializers.ModelSerializer):
+    productos_info = serializers.SerializerMethodField()
+    tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
+    tipo_equipo_name = serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
+    producto = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=producto_UFC.objects.all(),
+        required=False
+    )
+    equipo_vagon = serializers.ListField(
+        child=serializers.DictField(),
+        write_only=True,
+        required=False
+    )
+    equipo_vagon_detalle = vagones_dias_serializer(many=True, source='equipo_vagon', read_only=True)
+    situados = serializers.IntegerField()
+    pendiente_proximo_dia = serializers.IntegerField()
+    
+    class Meta:
+        model = CCD_Situado_Carga_Descarga
+        fields = '__all__'
+        extra_kwargs = {
+            'producto': {'required': False},
+            'observaciones': {'required': False, 'allow_null': True}
+        }
+
+    def get_productos_info(self, obj):
+        productos = obj.producto.all()
+        return [{
+            'id': p.id,
+            'nombre_producto': p.producto.nombre_producto,
+            'codigo_producto': p.producto.codigo_producto,
+            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
+            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
+            'cantidad': p.cantidad,
+            'estado': p.estado,
+            'contiene': p.contiene
+        } for p in productos]
+        
+    def to_internal_value(self, data):
+        if 'situados' in data:
+            data['situados'] = int(data['situados']) if data['situados'] else 0
+        if 'pendiente_proximo_dia' in data:
+            data['pendiente_proximo_dia'] = int(data['pendiente_proximo_dia']) if data['pendiente_proximo_dia'] else 0
+        return super().to_internal_value(data)
+        
+    def validate(self, data):
+        if 'producto' not in data:
+            data['producto'] = []
+        return data
+
+    def create(self, validated_data):
+        vagones_data = validated_data.pop('equipo_vagon', [])
+        productos_data = validated_data.pop('producto', [])
+        instance = super().create(validated_data)
+        
+        for vagon_data in vagones_data:
+            equipo = nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+            vagon = CCD_vagones_dias.objects.create(
+                equipo_ferroviario=equipo,
+                cant_dias=vagon_data['cant_dias']
+            )
+            actualizar_estado_equipo_ferroviario(equipo, "Asignado al estado Situado")
+            instance.equipo_vagon.add(vagon)
+        
+        if productos_data:
+            instance.producto.set(productos_data)
+            instance.save()
+        
+        return instance
+
+    def update(self, instance, validated_data):
+        vagones_data = validated_data.pop('equipo_vagon', None)
+        productos_data = validated_data.pop('producto', None)
+        
+        for equipo in instance.equipo_vagon.all():
+            equipo_id = equipo.equipo_ferroviario
+            actualizar_estado_equipo_ferroviario(equipo_id, "Disponible")
+        
+        if vagones_data is not None:
+            instance.equipo_vagon.clear()
+            for vagon_data in vagones_data:
+                equipo = nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+                actualizar_estado_equipo_ferroviario(equipo, "Asignado al estado Situado")
+                vagon = CCD_vagones_dias.objects.create(
+                    equipo_ferroviario=equipo,
+                    cant_dias=vagon_data['cant_dias']
+                )
+                instance.equipo_vagon.add(vagon)
+        
+        if productos_data is not None:
+            instance.producto.set(productos_data)
+        
+        return instance
+
+
+class CCD_PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
+    fecha_registro = serializers.DateTimeField(
+        source='fecha', 
+        format='%Y-%m-%d %H:%M', 
+        read_only=True
+    )
+    productos_info = serializers.SerializerMethodField()
+    tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
+    tipo_equipo_name = serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
+    producto = serializers.PrimaryKeyRelatedField(
+        write_only=True,
+        many=True,
+        queryset=producto_UFC.objects.all(),
+        required=False
+    )
+    equipo_vagon = serializers.ListField(
+        child=serializers.DictField(),
+        write_only=True,
+        required=False
+    )
+    equipo_vagon_detalle = vagones_dias_serializer(many=True, source='equipo_vagon', read_only=True)
+    
+    class Meta:
+        model = CCD_por_situar
+        fields = '__all__'
+        extra_kwargs = {
+            'producto': {'required': False},
+            'observaciones': {'required': False, 'allow_null': True}
+        }
+
+    def get_productos_info(self, obj):
+        productos = obj.producto.all()
+        return [{
+            'id': p.id,
+            'nombre_producto': p.producto.nombre_producto,
+            'codigo_producto': p.producto.codigo_producto,
+            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
+            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
+            'cantidad': p.cantidad,
+            'estado': p.estado,
+            'contiene': p.contiene
+        } for p in productos]
+
+    def create(self, validated_data):
+        vagones_data = validated_data.pop('equipo_vagon', [])
+        productos_data = validated_data.pop('producto', [])
+        instance = super().create(validated_data)
+        
+        for vagon_data in vagones_data:
+            equipo = nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+            vagon = CCD_vagones_dias.objects.create(
+                equipo_ferroviario=equipo,
+                cant_dias=vagon_data['cant_dias']
+            )
+            actualizar_estado_equipo_ferroviario(equipo, "Asignado al estado Por Situar")
+            instance.equipo_vagon.add(vagon)
+        
+        instance.producto.set(productos_data)
+        return instance
+
+    def update(self, instance, validated_data):
+        vagones_data = validated_data.pop('equipo_vagon', None)
+        productos_data = validated_data.pop('producto', None)
+        
+        for equipo in instance.equipo_vagon.all():
+            equipo_id = equipo.equipo_ferroviario
+            actualizar_estado_equipo_ferroviario(equipo_id, "Disponible")
+        
+        if vagones_data is not None:
+            instance.equipo_vagon.clear()
+            for vagon_data in vagones_data:
+                equipo = nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+                actualizar_estado_equipo_ferroviario(equipo, "Asignado al estado Por Situar")
+                vagon = CCD_vagones_dias.objects.create(
+                    equipo_ferroviario=equipo,
+                    cant_dias=vagon_data['cant_dias']
+                )
+                instance.equipo_vagon.add(vagon)
+        
+        if productos_data is not None:
+            instance.producto.set(productos_data)
+        
+        return instance
+
+
+class CCD_PendienteArrastreSerializer(serializers.ModelSerializer):
+    fecha_registro = serializers.DateTimeField(
+        source='fecha', 
+        format='%Y-%m-%d %H:%M', 
+        read_only=True
+    )
+    tipo_equipo_name = serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
+    productos_info = serializers.SerializerMethodField()
+    producto = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=producto_UFC.objects.all(),
+        required=False
+    )
+    equipo_vagon = serializers.ListField(
+        child=serializers.DictField(),
+        write_only=True,
+        required=False
+    )
+    equipo_vagon_detalle = vagones_dias_serializer(many=True, source='equipo_vagon', read_only=True)
+    
+    class Meta:
+        model = CCD_arrastres
+        fields = '__all__'
+
+    def get_productos_info(self, obj):
+        productos = obj.producto.all()
+        return [{
+            'id': p.id,
+            'nombre_producto': p.producto.nombre_producto,
+            'codigo_producto': p.producto.codigo_producto,
+            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
+            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
+            'cantidad': p.cantidad,
+            'estado': p.estado,
+            'contiene': p.contiene
+        } for p in productos]
+
+    def create(self, validated_data):
+        vagones_data = validated_data.pop('equipo_vagon', [])
+        productos_data = validated_data.pop('producto', [])
+        instance = super().create(validated_data)
+        
+        for vagon_data in vagones_data:
+            equipo = nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+            vagon = CCD_vagones_dias.objects.create(
+                equipo_ferroviario=equipo,
+                cant_dias=vagon_data['cant_dias']
+            )
+            actualizar_estado_equipo_ferroviario(equipo, "Asignado al estado Pendiente a Arrastre")
+            instance.equipo_vagon.add(vagon)
+        
+        instance.producto.set(productos_data)
+        return instance
+
+    def update(self, instance, validated_data):
+        vagones_data = validated_data.pop('equipo_vagon', None)
+        productos_data = validated_data.pop('producto', None)
+        
+        for equipo in instance.equipo_vagon.all():
+            equipo_id = equipo.equipo_ferroviario
+            actualizar_estado_equipo_ferroviario(equipo_id, "Disponible")
+        
+        if vagones_data is not None:
+            instance.equipo_vagon.clear()
+            for vagon_data in vagones_data:
+                equipo = nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+                actualizar_estado_equipo_ferroviario(equipo, "Asignado al estado Pendiente a Arrastre")
+                vagon = CCD_vagones_dias.objects.create(
+                    equipo_ferroviario=equipo,
+                    cant_dias=vagon_data['cant_dias']
+                )
+                instance.equipo_vagon.add(vagon)
+        
+        if productos_data is not None:
+            instance.producto.set(productos_data)
+        
+        return instance

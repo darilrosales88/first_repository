@@ -792,7 +792,15 @@ const routes = [
   name: 'VisualizarInfoOperative', // Este nombre debe coincidir con el usado en el router-link
   component: () => import('@/views/UFC/VisualizarInfoOperativo.vue'),
   props: true
-}
+},
+{
+    path: "/CCD-Producto",
+    name: "CCD-Producto",
+    component: () => import("../views/UFC/CCD-ProductoView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  }
   
 ];
 

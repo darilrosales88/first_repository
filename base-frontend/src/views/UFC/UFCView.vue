@@ -24,10 +24,9 @@
   >
   <router-link
     style="margin-right: 28em"
-    to="#"
+    to="/CCD-Producto"
     class="btn btn-primary"
-    role="button"
-    data-bs-toggle="button"
+    
     >CCD por producto</router-link
   >
   <div class="d-flex justify-content-center">

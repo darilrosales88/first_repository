@@ -56,13 +56,13 @@ from ufc.serializers import actualizar_estado_equipo_ferroviario
 
 
 @receiver(post_save, sender=ufc_informe_operativo)
-def actualizar_estado_vagones(sender, instance, **kwargs):
+def actualizar_estado_vagones(sender, instance:ufc_informe_operativo, **kwargs):
     """
     Signal que actualiza el estado de los vagones asociados cuando cambia estado_parte
     del informe operativo, considerando todas las relaciones posibles.
     """
     # Solo ejecutar si es una actualización y estado_parte está en los campos actualizados
-    if kwargs.get('created', False):
+    if kwargs.get('created', False) or instance.estado_parte=="Creado":
         return
 
     with transaction.atomic():
@@ -70,26 +70,50 @@ def actualizar_estado_vagones(sender, instance, **kwargs):
         informe = ufc_informe_operativo.objects.select_for_update().get(pk=instance.pk)
         updated=0
         # 1. Vagones a través de por_situar -> vagones_dias
-        
+####-----------Aqui se pone a disponible Los estados de Por Situar, Situados, Pendiente---------########        
         vagones_ids = vagones_dias.objects.filter(
-        por_situar_vagones_dias__informe_operativo=informe
-    ).values_list('equipo_ferroviario_id', flat=True).distinct()
+        por_situar_vagones_dias__informe_operativo=informe,
+    ).values_list('equipo_ferroviario_id', flat=True)
         
+        vagones_partes = nom_equipo_ferroviario.objects.filter(id__in=list(vagones_ids))
+        updated += vagones_partes.update(estado_actual='Disponible')
     #     vagones_por_situar=nom_equipo_ferroviario.objects.filter(
     #     registro_por_dias__por_situar_vagones_dias__informe_operativo_id=informe.id
     # ).distinct()
-    
-        vagones_por_situar = nom_equipo_ferroviario.objects.filter(id__in=list(vagones_ids))
-      
-        updated += vagones_por_situar.update(estado_actual='Disponible')
+        
+        vagones_ids = vagones_dias.objects.filter(
+        situados_vagones_dias__informe_operativo=informe,
+    ).values_list('equipo_ferroviario_id', flat=True)
+        print(vagones_ids)
+        vagones_partes = nom_equipo_ferroviario.objects.filter(id__in=list(vagones_ids))
+        updated += vagones_partes.update(estado_actual='Disponible')
+
+
+        vagones_ids = vagones_dias.objects.filter(
+        arrastre_vagones_dias__informe_operativo=informe,
+    ).values_list('equipo_ferroviario_id', flat=True)
+        
+        vagones_partes = nom_equipo_ferroviario.objects.filter(id__in=list(vagones_ids))
+        updated += vagones_partes.update(estado_actual='Disponible')
+####-----------Aqui se pone a disponible Los estado Cargado/Descargado---------########       
+        # Obtener los números de identificación de los vagones asociados
+        vagones_cargados=nom_equipo_ferroviario.objects.filter(
+        numero_identificacion__in=Subquery(
+            registro_vagones_cargados.objects.filter(
+                registro_vagones_cargados__informe_operativo=informe
+            ).values_list('no_id', flat=True)
+        )
+    )
+        #vagones_cargados = nom_equipo_ferroviario.objects.filter(id__in=list(vagones_cargados))
+        updated += vagones_cargados.update(estado_actual='Disponible')
         
         
         # 2. Vagones a través de la relación ManyToMany en en_trenes
-        
+####-----------Aqui se pone a disponible Los estado En Trenes---------########     
         vagones_en_trenes = nom_equipo_ferroviario.objects.filter(
             en_trenes_vagones__informe_operativo=informe
         ).distinct()
-        print (vagones_por_situar,vagones_ids)
+        #print (vagones_partes,vagones_ids)
         
         
         updated += vagones_en_trenes.update(estado_actual='Disponible')
@@ -319,7 +343,7 @@ def recalcular_informe_operativo_al_eliminar(sender, instance, **kwargs):
 
 
 # Señal para crear el historial cuando se crea un arrastre
-#@receiver(post_save, sender=arrastres)
+@receiver(post_save, sender=arrastres)
 def crear_historial_arrastre(sender, instance, created, **kwargs):
     """
     Crea un historial de arrastre asociado al informe operativo de su fecha
@@ -525,7 +549,7 @@ def eliminar_historial_vagon_cargado_descargado(sender, instance, **kwargs):
 
 
 # Señal para crear el historial cuando se crea un Situado_Carga_Descarga
-#receiver(post_save, sender=Situado_Carga_Descarga)
+receiver(post_save, sender=Situado_Carga_Descarga)
 def crear_historial_situado(sender, instance, created, **kwargs):
     if not created:
         return

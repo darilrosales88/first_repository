@@ -43,3 +43,7 @@
 - Situados (Check)
 - Cargados (check)
 - Por Situar (check)
+
+### Problema al pasar a disponible los registros de Situados. Hay unas llamadas de mas
+
+- Revisar views, serializer, funcion submit, y signals dependientes de este

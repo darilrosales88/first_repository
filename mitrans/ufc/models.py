@@ -1283,7 +1283,7 @@ class CCD_vagon_cargado_descargado(models.Model):
 
 class CCD_HistorialVagonCargadoDescargado(models.Model):
     informe_operativo = models.ForeignKey(
-        ufc_informe_operativo,
+        ufc_informe_ccd,
         on_delete=models.CASCADE,
         related_name="ccd_historiales_vagones",
     )
@@ -1364,7 +1364,7 @@ class CCD_Situado_Carga_Descarga(models.Model):
     # )Esto no lo tiene el modelo
     
     informe_operativo = models.ForeignKey(
-        ufc_informe_operativo,
+        ufc_informe_ccd,
         on_delete=models.CASCADE,
         related_name='ccd_situados',
         null=True, blank=True
@@ -1384,42 +1384,44 @@ class CCD_Situado_Carga_Descarga(models.Model):
         
     def delete(self, *args, **kwargs):
         try:
-            from nomencladores.models import nom_equipo_ferroviario
             
+            # Obtener todos los registros asociados antes de eliminarlos
             registros_asociados = list(self.equipo_vagon.all())
             
+            # Actualizar estado de equipos y eliminar registros asociados
             for registro in registros_asociados:
                 try:
                     with transaction.atomic():
-                        equipo = nom_equipo_ferroviario.objects.filter(
-                            numero_identificacion=registro.no_id
-                        ).first()
+                        # Actualizar estado del equipo
+                        equipo =registro.equipo_ferroviario
                         
                         if equipo:
                             equipo.estado_actual = 'Disponible'
                             equipo.save()
                         
+                        # Eliminar el registro asociado
                         registro.delete()
                 except Exception as e:
-                    print(f"Error al procesar registro {registro.no_id}: {str(e)}")
+                    print(f"Error al procesar registro {registro.id}: {str(e)}")
                     continue
             
+            # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
             self.equipo_vagon.clear()
             self.producto.clear()
             
+            # Finalmente eliminar el registro principal
             super().delete(*args, **kwargs)
             
         except Exception as e:
-            print(f"Error crítico al eliminar CCD_Situado_Carga_Descarga {self.id}: {str(e)}")
-            raise
-
+            print(f"Error crítico al eliminar vagon_cargado_descargado {self.id}: {str(e)}")
+        
     def __str__(self):
         return f"CCD {self.tipo_origen} - {self.origen} - {self.tipo_equipo}"
 
 
 class CCD_HistorialSituadoCargaDescarga(models.Model):
     informe_operativo = models.ForeignKey(
-        ufc_informe_operativo,
+        ufc_informe_ccd,
         on_delete=models.CASCADE,
         related_name="ccd_historiales_situados",
     )
@@ -1440,132 +1442,117 @@ class CCD_HistorialSituadoCargaDescarga(models.Model):
         return f"CCD Historial de situado para informe {self.informe_operativo.id} - {self.fecha_creacion}"
 
 
-class CCD_vagones_productos(models.Model):
-    TIPO_ORIGEN_CHOICES = [
-        ("puerto", "Puerto"),
-        ("ac_ccd", "Acceso comercial/CCD"),
-    ]
+# class CCD_vagones_productos(models.Model):
+#     TIPO_ORIGEN_CHOICES = [
+#         ("puerto", "Puerto"),
+#         ("ac_ccd", "Acceso comercial/CCD"),
+#     ]
 
-    TIPO_PRODUCTO_CHOICES = [
-        ("producto", "Producto"),
-        ("contenedor", "Contenedor"),
-        ("combustible", "Combustible"),
-    ]
+#     TIPO_PRODUCTO_CHOICES = [
+#         ("producto", "Producto"),
+#         ("contenedor", "Contenedor"),
+#         ("combustible", "Combustible"),
+#     ]
     
-    TIPO_COMBUSTIBLE_CHOICES = [
-        ("combustible_blanco", "Combustible blanco"),
-        ("combustible_negro", "Combustible negro"),
-        ("combustible_turbo", "Combustible turbo"),
-        ("-", "-"),
-    ]
+#     TIPO_COMBUSTIBLE_CHOICES = [
+#         ("combustible_blanco", "Combustible blanco"),
+#         ("combustible_negro", "Combustible negro"),
+#         ("combustible_turbo", "Combustible turbo"),
+#         ("-", "-"),
+#     ]
 
-    fecha = models.DateTimeField(
-        auto_now_add=True, verbose_name="Fecha de registro", editable=False
-    )
-    tipo_origen = models.CharField(choices=TIPO_ORIGEN_CHOICES, max_length=50)
-    origen = models.CharField(max_length=40)
-    tipo_producto = models.CharField(
-        choices=TIPO_PRODUCTO_CHOICES, max_length=20, blank=True, null=True
-    )
-    tipo_combustible = models.CharField(
-        choices=TIPO_COMBUSTIBLE_CHOICES, max_length=20, blank=True, null=True
-    )
-    tipo_equipo_ferroviario = models.ForeignKey(
-        nom_tipo_equipo_ferroviario, on_delete=models.CASCADE, blank=True, null=True
-    )
-    plan_mensual = models.IntegerField()
-    plan_dia = models.IntegerField(editable=False, default=0)
-    vagones_situados = models.IntegerField(editable=False, default=0)
-    vagones_cargados = models.IntegerField(editable=False, default=0)
-    plan_acumulado_actual = models.IntegerField(editable=False, default=0)
-    real_acumulado_actual = models.IntegerField(editable=False, default=0)
-    plan_acumulado_anual = models.IntegerField(editable=False, default=0)
-    real_acumulado_anual = models.IntegerField(editable=False, default=0)
-    plan_aseguramiento_proximos_dias = models.IntegerField(
-        editable=False, default=0, blank=True
-    )
-    observaciones = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name="Observaciones",
-        help_text="Admite letras, números y caracteres especiales",
-    )
+#     fecha = models.DateTimeField(
+#         auto_now_add=True, verbose_name="Fecha de registro", editable=False
+#     )
+#     tipo_origen = models.CharField(choices=TIPO_ORIGEN_CHOICES, max_length=50)
+#     origen = models.CharField(max_length=40)
+#     tipo_producto = models.CharField(
+#         choices=TIPO_PRODUCTO_CHOICES, max_length=20, blank=True, null=True
+#     )
+#     tipo_combustible = models.CharField(
+#         choices=TIPO_COMBUSTIBLE_CHOICES, max_length=20, blank=True, null=True
+#     )
+#     tipo_equipo_ferroviario = models.ForeignKey(
+#         nom_tipo_equipo_ferroviario, on_delete=models.CASCADE, blank=True, null=True
+#     )
+#     plan_mensual = models.IntegerField()
+#     plan_dia = models.IntegerField(editable=False, default=0)
+#     vagones_situados = models.IntegerField(editable=False, default=0)
+#     vagones_cargados = models.IntegerField(editable=False, default=0)
+#     plan_acumulado_actual = models.IntegerField(editable=False, default=0)
+#     real_acumulado_actual = models.IntegerField(editable=False, default=0)
+#     plan_acumulado_anual = models.IntegerField(editable=False, default=0)
+#     real_acumulado_anual = models.IntegerField(editable=False, default=0)
+#     plan_aseguramiento_proximos_dias = models.IntegerField(
+#         editable=False, default=0, blank=True
+#     )
+#     observaciones = models.TextField(
+#         null=True,
+#         blank=True,
+#         verbose_name="Observaciones",
+#         help_text="Admite letras, números y caracteres especiales",
+#     )
 
-    producto = models.ManyToManyField(
-        producto_UFC, blank=True, related_name="ccd_vagones_productos"
-    )
-    plan_anual = models.IntegerField(default=0)
-    plan_acumulado_dia_anterior = models.IntegerField()
-    real_acumulado_dia_anterior = models.IntegerField()
+#     producto = models.ManyToManyField(
+#         producto_UFC, blank=True, related_name="ccd_vagones_productos"
+#     )
+#     plan_anual = models.IntegerField(default=0)
+#     plan_acumulado_dia_anterior = models.IntegerField()
+#     real_acumulado_dia_anterior = models.IntegerField()
     
-    informe_operativo = models.ForeignKey(
-        ufc_informe_operativo,
-        on_delete=models.CASCADE,
-        related_name='ccd_vagones_productos',
-        null=True, blank=True
-    )
+#     informe_operativo = models.ForeignKey(
+#         ufc_informe_operativo,
+#         on_delete=models.CASCADE,
+#         related_name='ccd_vagones_productos',
+#         null=True, blank=True
+#     )
 
-    class Meta:
-        verbose_name_plural = "CCD Vagones y productos"
-        verbose_name = "CCD Vagón y producto"
+#     class Meta:
+#         verbose_name_plural = "CCD Vagones y productos"
+#         verbose_name = "CCD Vagón y producto"
 
-    def __str__(self):
-        productos = self.producto.all()
-        nombres_productos = [
-            str(producto.producto.nombre_producto) for producto in productos
-        ]
-        productos_str = (
-            ", ".join(nombres_productos) if nombres_productos else "Sin productos"
-        )
-        return f"CCD Vagones y productos: {productos_str}"
+#     def __str__(self):
+#         productos = self.producto.all()
+#         nombres_productos = [
+#             str(producto.producto.nombre_producto) for producto in productos
+#         ]
+#         productos_str = (
+#             ", ".join(nombres_productos) if nombres_productos else "Sin productos"
+#         )
+#         return f"CCD Vagones y productos: {productos_str}"
+##---------------Esto lo comente porqno esta en la plantilla original del modelo---------
 
+# class CCD_HistorialVagonesProductos(models.Model):
+#     informe_operativo = models.ForeignKey(
+#         ufc_informe_operativo,
+#         on_delete=models.CASCADE,
+#         related_name="ccd_historiales_vagones_productos",
+#     )
+#     fecha_creacion = models.DateTimeField(auto_now_add=True)
+#     datos_vagon_producto = models.JSONField()
+#     datos_productos = models.JSONField()
 
-class CCD_HistorialVagonesProductos(models.Model):
-    informe_operativo = models.ForeignKey(
-        ufc_informe_operativo,
-        on_delete=models.CASCADE,
-        related_name="ccd_historiales_vagones_productos",
-    )
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    datos_vagon_producto = models.JSONField()
-    datos_productos = models.JSONField()
+#     class Meta:
+#         verbose_name = "CCD Historial de vagón-producto"
+#         verbose_name_plural = "CCD Historiales de vagones-productos"
+#         ordering = ["-fecha_creacion"]
 
-    class Meta:
-        verbose_name = "CCD Historial de vagón-producto"
-        verbose_name_plural = "CCD Historiales de vagones-productos"
-        ordering = ["-fecha_creacion"]
-
-    def __str__(self):
-        return f"CCD Historial vagon-producto para informe {self.informe_operativo.id}"
+#     def __str__(self):
+#         return f"CCD Historial vagon-producto para informe {self.informe_operativo.id}"
 
 
 class CCD_en_trenes(models.Model):
-    TIPO_ORIGEN_DESTINO_CHOICES = [
-        ("puerto", "Puerto"),
-        ("ac_ccd", "Acceso comercial/CCD"),
-    ]
+   
     
     ESTADO_CHOICES = [
         ("vacio", "Vacío"),
         ("cargado", "Cargado"),
     ]
 
-    locomotora = models.ForeignKey(
-        nom_equipo_ferroviario,
-        on_delete=models.CASCADE,
-        verbose_name="Locomotora asignada",
-        help_text="Seleccione una locomotora.",
-        related_name="ccd_trenes_locomotora",
-    )
     fecha = models.DateTimeField(
         auto_now_add=True, verbose_name="Fecha de registro", editable=False
     )
-    numero_identificacion_locomotora = models.CharField(
-        max_length=10,
-        verbose_name="Número de identificación de la locomotora",
-        blank=True,
-        null=True,
-    )
+    
     tipo_equipo = models.ForeignKey(
         nom_tipo_equipo_ferroviario, on_delete=models.CASCADE, default="", max_length=50
     )
@@ -1574,15 +1561,9 @@ class CCD_en_trenes(models.Model):
         producto_UFC, blank=True, related_name="ccd_en_trenes", verbose_name="Productos"
     )
 
-    tipo_origen = models.CharField(
-        default="", choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length=50
-    )
+   
     origen = models.CharField(default="", max_length=40)
 
-    tipo_destino = models.CharField(
-        default="", choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length=50
-    )
-    destino = models.CharField(default="", max_length=40)
     cantidad_vagones = models.IntegerField(
         default=1, verbose_name="Cantidad de vagones"
     )
@@ -1600,7 +1581,7 @@ class CCD_en_trenes(models.Model):
     )
     
     informe_operativo = models.ForeignKey(
-        ufc_informe_operativo,
+        ufc_informe_ccd,
         on_delete=models.CASCADE,
         related_name='ccd_en_trenes',
         null=True, blank=True

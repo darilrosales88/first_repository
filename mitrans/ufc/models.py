@@ -1059,7 +1059,97 @@ class HistorialRotacionVagones(models.Model):
 
 
 
+#####-------------------Aqui termina UFC-----------------------------
 
+class ufc_informe_ccd(models.Model):    
+
+    fecha_operacion = models.DateTimeField(
+        auto_now_add=True, verbose_name="Fecha de operación", unique=True
+    )
+    fecha_actual = models.DateTimeField(
+        auto_now=True, verbose_name="Fecha actual", unique=True
+    )
+    
+    estado_parte = models.CharField(default="Creado",max_length=14)
+    provincia=models.ForeignKey(nom_provincia,on_delete=models.CASCADE,blank=True, null=True, verbose_name="Provincia")
+    creado_por=models.ForeignKey(CustomUser,on_delete=models.CASCADE, blank=True, null=True, verbose_name="Creado por: ", related_name="informe_creador" )
+    aprobado_por=models.ForeignKey(CustomUser,on_delete=models.CASCADE, blank=True,null=True, verbose_name="Aprobado por: ", related_name="informe_aprobador")
+    entidad = models.ForeignKey(
+        nom_entidades,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Entidad de donde proviene el parte"
+    )
+    class Meta:
+        permissions = [
+            ("puede_rechazar_informe", "Puede rechazar informes operativos"),
+            ("puede_aprobar_informe", "Puede aprobar informes operativos"),
+            ("puede_cambiar_a_listo", "Puede cambiar el estado del informe a listo"),
+        ]
+        verbose_name = "Parte informe operativo"
+        verbose_name_plural = "Parte informe operativo"
+        ordering = ["-fecha_operacion"]
+    
+    def save(self, *args, **kwargs):
+        # Asignar entidad del creador si no está establecida
+        if not self.entidad and self.creado_por:
+            self.entidad = self.creado_por.entidad
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"ID Parte {self.id} -- Fecha de operación {self.fecha_operacion}"
+
+#*************************************************************************************************************************
+
+
+#productos asociados a vagones en trenes
+# class producto_CCD(models.Model):
+
+#     ESTADO_CHOICES = [
+#         ("vacio", "Vacío"),
+#         ("lleno", "Lleno"),
+#     ]
+#     CONTIENE_CHOICES = [
+#         ("alimentos", "Alimentos"),
+#         ("prod_varios", "Productos Varios"),
+#     ]
+#     PRODUCTO_CHOICE=[
+#         ("producto","Producto"),
+#         ("contendor","Contenedor"),
+#     ]
+#     tipo_producto=models.CharField(choices=PRODUCTO_CHOICE,null=True,blank=True,verbose_name="Tipo de Producto", max_length=20)
+
+#     producto = models.ForeignKey(nom_producto, on_delete=models.CASCADE,null=True)
+#     tipo_embalaje = models.ForeignKey(nom_tipo_embalaje, on_delete=models.CASCADE)
+#     unidad_medida = models.ForeignKey(nom_unidad_medida, on_delete=models.CASCADE)
+#     cantidad = models.IntegerField()
+#     estado = models.CharField(
+#         choices=ESTADO_CHOICES, null=True, blank=True, max_length=20
+#     )
+#     contiene = models.CharField(
+#         choices=CONTIENE_CHOICES, null=True, blank=True, max_length=20
+#     )
+
+#     class Meta:
+#         verbose_name = "Producto CCD"
+#         verbose_name_plural = "Productos en CCD"
+#         # unique_together = [['cliente', 'destino']]
+
+#     def __str__(self):
+#         return f"tipo de producto {self.get_contiene_display()} - {self.producto.nombre_producto}"
+
+#     @property
+#     def embalaje_display(self):
+#         return self.tipo_embalaje if self.tipo_embalaje else "Sin especificar"
+
+#     @property
+#     def unidad_medida_display(self):
+#         return self.unidad_medida if self.unidad_medida else "Sin especificar"
+
+#     @property
+#     def producto_display(self):
+#         return f"{self.producto.nombre_producto} - {self.embalaje_display}"
 
 
 
@@ -1067,8 +1157,8 @@ class HistorialRotacionVagones(models.Model):
 # Modelos CCD (Centro de Carga y Descarga)
 class CCD_registro_vagones_cargados(models.Model):
     TIPO_ORIGEN_CHOICES = [
-        ("puerto", "Puerto"),
-        ("ac_ccd", "Acceso comercial/CCD"),
+        ("entidad", "Entidad"),
+        ("municipio", "Municipio"),
     ]
 
     no_id = models.CharField(
@@ -1110,10 +1200,6 @@ class CCD_registro_vagones_cargados(models.Model):
 
 
 class CCD_vagon_cargado_descargado(models.Model):
-    TIPO_ORIGEN_DESTINO_CHOICES = [
-        ("puerto", "Puerto"),
-        ("ac_ccd", "Acceso comercial/CCD"),
-    ]
 
     ESTADO_CHOICES = [
         ("vacio", "Vacío"),
@@ -1124,28 +1210,20 @@ class CCD_vagon_cargado_descargado(models.Model):
         ("carga", "Carga"),
         ("descarga", "Descarga"),
     ]
-
-    TIPO_DESTINO_CHOICES = [
-        ("puerto", "Puerto"),
-        ("ac_ccd", "Acceso comercial/CCD"),
-    ]
-
+    
     fecha = models.DateTimeField(
         auto_now_add=True, verbose_name="Fecha de registro", editable=False
     )
-    tipo_origen = models.CharField(choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length=50)
+
     origen = models.CharField(max_length=40)
     tipo_equipo_ferroviario = models.ForeignKey(
         nom_tipo_equipo_ferroviario, on_delete=models.CASCADE
     )
-    estado = models.CharField(choices=ESTADO_CHOICES, max_length=50)
+
     operacion = models.CharField(
         choices=OPERACION_CHOICES, editable=True, max_length=50
     )
-    plan_diario_carga_descarga = models.IntegerField()
-    real_carga_descarga = models.IntegerField(default=0, editable=False)
-    tipo_destino = models.CharField(choices=TIPO_ORIGEN_DESTINO_CHOICES, max_length=50)
-    destino = models.CharField(max_length=40)
+    
     causas_incumplimiento = models.TextField(
         null=False, blank=True, default="", max_length=100
     )
@@ -1160,8 +1238,8 @@ class CCD_vagon_cargado_descargado(models.Model):
         verbose_name="CCD Registros de vagones asociados"
     )
 
-    informe_operativo = models.ForeignKey(
-        ufc_informe_operativo,
+    informe_ccd = models.ForeignKey(
+        ufc_informe_ccd,
         on_delete=models.CASCADE,
         related_name='ccd_vagones_cargados_descargados',
         null=True, blank=True
@@ -1224,12 +1302,7 @@ class CCD_HistorialVagonCargadoDescargado(models.Model):
 
 
 class CCD_Situado_Carga_Descarga(models.Model):
-    TIPO_ORIGEN_DESTINO_CHOICES = [
-        ('puerto', 'Puerto'),
-        ('ac_ccd', 'Acceso comercial/CCD'),
-    ]
-    
-    tipo_origen = models.CharField(max_length=100, choices=TIPO_ORIGEN_DESTINO_CHOICES, verbose_name="Tipo de origen", blank=True, null=True)
+
     origen = models.CharField(max_length=200, verbose_name="Origen")
     
     tipo_equipo = models.ForeignKey(
@@ -1265,10 +1338,9 @@ class CCD_Situado_Carga_Descarga(models.Model):
         producto_UFC, blank=True, related_name="ccd_situados", verbose_name="Productos"
     )
 
-    situados = models.CharField(
-        max_length=10,
+    situados = models.IntegerField(
         verbose_name="Cantidad de situados",
-        default="0",
+        default=1,
         validators=[
             RegexValidator(
                 regex="^[0-9]+$",
@@ -1278,18 +1350,18 @@ class CCD_Situado_Carga_Descarga(models.Model):
         ],
     )
 
-    pendiente_proximo_dia = models.CharField(
-        max_length=10,
-        verbose_name="Pendientes para el próximo día",
-        default="0",
-        validators=[
-            RegexValidator(
-                regex="^[0-9]+$",
-                message="Solo se permiten números positivos",
-                code="invalid_pendientes",
-            )
-        ],
-    )
+    # pendiente_proximo_dia = models.CharField(
+    #     max_length=10,
+    #     verbose_name="Pendientes para el próximo día",
+    #     default="0",
+    #     validators=[
+    #         RegexValidator(
+    #             regex="^[0-9]+$",
+    #             message="Solo se permiten números positivos",
+    #             code="invalid_pendientes",
+    #         )
+    #     ],
+    # )Esto no lo tiene el modelo
     
     informe_operativo = models.ForeignKey(
         ufc_informe_operativo,

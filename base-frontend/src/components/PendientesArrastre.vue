@@ -337,8 +337,8 @@ export default {
   props: {
     informeId: {
       type: [String, Number],
-      required: true
-    }
+      required: true,
+    },
   },
 
   computed: {
@@ -391,22 +391,36 @@ export default {
     },
 
     async getArrastres() {
-  this.loading = true;
-  try {
-    const response = await axios.get("http://127.0.0.1:8000/ufc/pendiente-arrastre-hoy/", {
-      params: { 
-        informe_operativo: this.informeId 
+      this.loading = true;
+      const today = new Date();
+      const fechaFormateada = `${today.getFullYear()}-${String(
+        today.getMonth() + 1
+      ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+      try {
+        const infoID = await axios.get(
+          `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
+        );
+        if (infoID.data.existe) {
+          //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
+          const response = await axios.get("/ufc/pendiente-arrastre/", {
+            params: {
+              page: this.currentPage,
+              page_size: this.itemsPerPage,
+              informe: infoID.data.id,
+            },
+          });
+
+          this.totalItems = response.data.count;
+          this.registrosArrastre = response.data.results;
+        }
+      } catch (error) {
+        console.error("Error al obtener datos:", error);
+        this.errorLoading = true;
+        this.showErrorToast("No se pudieron cargar los registros");
+      } finally {
+        this.loading = false;
       }
-    });
-    this.registrosArrastre = response.data.results;
-  } catch (error) {
-    console.error("Error al obtener datos:", error);
-    this.errorLoading = true;
-    this.showErrorToast("No se pudieron cargar los registros");
-  } finally {
-    this.loading = false;
-  }
-},
+    },
 
     getTipoOrigenText(id) {
       const option = this.tipo_origen_options.find((o) => o.id === id);

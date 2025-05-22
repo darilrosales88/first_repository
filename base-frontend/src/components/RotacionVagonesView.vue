@@ -277,8 +277,8 @@ export default {
   props: {
     informeId: {
       type: [String, Number],
-      required: true
-    }
+      required: true,
+    },
   },
 
   mounted() {
@@ -288,19 +288,31 @@ export default {
   methods: {
     async get_rotaciones() {
       this.loading = true; // Activa el estado de carga
+      const today = new Date();
+      const fechaFormateada = `${today.getFullYear()}-${String(
+        today.getMonth() + 1
+      ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
       try {
         let allRotaciones = []; // Almacena todos los registros de rotaciones
         let nextPage = "/ufc/rotaciones/"; // URL inicial del endpoint
-
-        // Bucle para manejar paginación (si aplica)
-        while (nextPage) {
-          const response = await axios.get(nextPage, {
-          params: { 
-            informe_operativo: this.informeId 
+        const infoID = await axios.get(
+          `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
+        );
+        if (infoID.data.existe) {
+          //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
+          // Bucle para manejar paginación (si aplica)
+          while (nextPage) {
+            const response = await axios.get(nextPage, {
+              params: {
+                page: this.currentPage,
+                page_size: this.itemsPerPage,
+                informe: infoID.data.id,
+              },
+            });
+            allRotaciones = [...allRotaciones, ...response.data.results]; // Agrega los resultados
+            nextPage = response.data.next; // Actualiza la URL de la siguiente página
           }
-        });
-          allRotaciones = [...allRotaciones, ...response.data.results]; // Agrega los resultados
-          nextPage = response.data.next; // Actualiza la URL de la siguiente página
         }
 
         // Asigna los datos obtenidos a una variable en el componente

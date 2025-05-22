@@ -1248,8 +1248,9 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
     def calculate_plan_carga(self,validated_data):
         """Calcula la sumatoria del plan diario de carga para la operación 'carga'."""
         hoy=timezone.now().date()
+        print(validated_data)
         return (
-            vagon_cargado_descargado.objects.filter(fecha__date=hoy,operacion="carga",tipo_equipo_ferroviario=validated_data["tipo_equipo_ferroviario"])
+            vagon_cargado_descargado.objects.filter(fecha__date=hoy,operacion="carga",tipo_equipo_ferroviario=validated_data["tipo_equipo_ferroviario"],informe_operativo=validated_data["informe_operativo"])
             .aggregate(total_plan_carga=Sum("plan_diario_carga_descarga"))
             .get("total_plan_carga", 0) or 0
         )
@@ -1258,7 +1259,7 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
         """Calcula la sumatoria del real de carga para la operación 'carga'."""
         hoy=timezone.now().date()
         return (
-            vagon_cargado_descargado.objects.filter(fecha__date=hoy,operacion="carga",tipo_equipo_ferroviario=validated_data["tipo_equipo_ferroviario"])
+            vagon_cargado_descargado.objects.filter(fecha__date=hoy,operacion="carga",tipo_equipo_ferroviario=validated_data["tipo_equipo_ferroviario"],informe_operativo=validated_data["informe_operativo"])
             .aggregate(total_real_carga=Sum("real_carga_descarga"))
             .get("total_real_carga", 0) or 0
         )
@@ -1299,8 +1300,8 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         """Actualiza una instancia existente de rotación de vagones."""
         # Calcular valores dinámicos
-        plan_carga = self.calculate_plan_carga()
-        real_carga = self.calculate_real_carga()
+        plan_carga = self.calculate_plan_carga(validated_data)
+        real_carga = self.calculate_real_carga(validated_data)
         en_servicio = validated_data.get("en_servicio", instance.en_servicio)
 
         # Calcular rotaciones

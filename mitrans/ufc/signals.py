@@ -142,22 +142,23 @@ def actualizar_rotacion(sender, instance, **kwargs):
         print("El registro no tiene tipo de equipo ferroviario.")
         return
     tipo_equipo = instance.tipo_equipo_ferroviario
+    informe=instance.informe_operativo
 
-    rotaciones = rotacion_vagones.objects.filter(tipo_equipo_ferroviario=tipo_equipo)
+    rotaciones = rotacion_vagones.objects.filter(tipo_equipo_ferroviario=tipo_equipo, informe_operativo=informe)
     for rotacion in rotaciones:
-        actualizar_datos_rotacion(rotacion, tipo_equipo)
+        actualizar_datos_rotacion(rotacion, tipo_equipo, informe)
         rotacion.save()
         print(f"Se actualizó el registro de rotación: {rotacion.id}")
 
     # Filtrar solo los vagones cargados/descargados para este tipo de equipo
 
 
-def actualizar_datos_rotacion(rotacion, tipo_equipo):
+def actualizar_datos_rotacion(rotacion, tipo_equipo,informe):
 
     # Filtrar los vagones cargados/descargados para este tipo de equipo
     hoy = timezone.now().date()
     registros = vagon_cargado_descargado.objects.filter(
-        tipo_equipo_ferroviario=tipo_equipo, operacion="carga", fecha__date=hoy
+        tipo_equipo_ferroviario=tipo_equipo, operacion="carga", fecha__date=hoy,informe_operativo=informe
     )
     total_plan_carga = (
         registros.aggregate(Sum("plan_diario_carga_descarga"))[

@@ -301,7 +301,8 @@ def verificar_informe_existente(request):
         print(existe)
         if existe:
             informe = ufc_informe_operativo.objects.filter(
-                fecha_operacion__date=fecha_obj
+                fecha_operacion__date=fecha_obj,
+                entidad=entidad
             ).first()
             return Response({
                 "existe": True,

@@ -44,6 +44,16 @@
 - Cargados (check)
 - Por Situar (check)
 
+### Que te muestre los estados por InfoOperativo por entidad
+
+- PorSituar (Check)
+- En Trenes (Check)
+- Situados (check)
+- Rotacdion (check)
+- VAgones y P ()
+- Arrastres (check)
+- Carga Descarga (check)
+
 ### Problema al pasar a disponible los registros de Situados. Hay unas llamadas de mas
 
 - Revisar views, serializer, funcion submit, y signals dependientes de este

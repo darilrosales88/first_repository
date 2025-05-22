@@ -33,7 +33,7 @@
               <th class="io-th">Fecha</th>
               <th class="io-th">Hora</th>
               <th class="io-th">Tipo de Parte</th>
-              <th class="io-th">Provincia</th>
+              <th class="io-th">Entidad</th>
               <th class="io-th">Estado</th>
               <th class="io-th">Creado por</th>
               <th class="io-th">Aprobado por</th>
@@ -65,9 +65,7 @@
               </td>
               <td class="io-td">Informe operativo</td>
               <td class="io-td">
-                {{
-                  informe.creado_por_detalle?.provincia.nombre_provincia || "-"
-                }}
+                {{ informe.entidad_detalle || "-" }}
               </td>
               <td class="io-td">
                 <span

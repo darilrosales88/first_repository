@@ -53,6 +53,7 @@ class ufc_informe_operativo(models.Model):
         # Asignar entidad del creador si no está establecida
         if not self.entidad and self.creado_por:
             self.entidad = self.creado_por.entidad
+            self.provincia=self.creado_por.entidad.provincia
         super().save(*args, **kwargs)
     
     def __str__(self):

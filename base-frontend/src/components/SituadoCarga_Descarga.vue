@@ -393,8 +393,8 @@ export default {
   props: {
     informeId: {
       type: [String, Number],
-      required: true
-    }
+      required: true,
+    },
   },
 
   computed: {
@@ -429,33 +429,45 @@ export default {
     async getSituado() {
       this.loading = true;
       try {
-        const response = await axios.get("/ufc/situados-hoy/", {
-          params: { 
-            informe_operativo: this.informeId 
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(
+          today.getMonth() + 1
+        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+        const infoID = await axios.get(
+          `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
+        );
+        if (infoID.data.existe) {
+          //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
+          const response = await axios.get("/ufc/situados/", {
+            params: {
+              page: this.currentPage,
+              page_size: this.itemsPerPage,
+              informe: infoID.data.id,
+            },
+          });
+          this.totalItems = response.data.count;
+
+          if (
+            response.data &&
+            Array.isArray(response.data.results || response.data)
+          ) {
+            const data = response.data.results || response.data;
+            this.allRecords = data.map((item) => ({
+              id: item.id,
+              tipo_origen_name: item.tipo_origen_name || "",
+              origen: item.origen || "",
+              tipo_equipo_name: item.tipo_equipo_name || "",
+              estado: item.estado || "",
+              operacion: item.operacion || "",
+              productos_info: item.productos_info || [],
+              situados: parseInt(item.situados) || 0, // Convertir a número
+              pendiente_proximo_dia: parseInt(item.pendiente_proximo_dia) || 0, // Convertir a número
+              observaciones: item.observaciones || "",
+              created_at: item.created_at || null,
+            }));
+
+            this.registrosPorSituar = [...this.allRecords];
           }
-        });
-        this.totalItems = response.data.count;
-
-        if (
-          response.data &&
-          Array.isArray(response.data.results || response.data)
-        ) {
-          const data = response.data.results || response.data;
-          this.allRecords = data.map((item) => ({
-            id: item.id,
-            tipo_origen_name: item.tipo_origen_name || "",
-            origen: item.origen || "",
-            tipo_equipo_name: item.tipo_equipo_name || "",
-            estado: item.estado || "",
-            operacion: item.operacion || "",
-            productos_info: item.productos_info || [],
-            situados: parseInt(item.situados) || 0, // Convertir a número
-            pendiente_proximo_dia: parseInt(item.pendiente_proximo_dia) || 0, // Convertir a número
-            observaciones: item.observaciones || "",
-            created_at: item.created_at || null,
-          }));
-
-          this.registrosPorSituar = [...this.allRecords];
         }
       } catch (error) {
         this.handleApiError(error, "cargar registros");
@@ -489,9 +501,7 @@ export default {
         this.loading = true;
         this.selectedItem = { ...item };
         this.showDetailsModal = true; // Corregir aquí
-        const response = await axios.get(
-          `/ufc/situados/${item.id}/`
-        );
+        const response = await axios.get(`/ufc/situados/${item.id}/`);
         this.currentRecord = response.data; // Usar currentRecord en lugar de selectedItem
       } catch (error) {
         console.error("Error al cargar detalles:", error);

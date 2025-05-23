@@ -395,8 +395,8 @@ export default {
   props: {
     informeId: {
       type: [String, Number],
-      required: true
-    }
+      required: true,
+    },
   },
 
   computed: {
@@ -484,17 +484,30 @@ export default {
 
     async getTrenes() {
       this.loading = true;
+      const today = new Date();
+      const fechaFormateada = `${today.getFullYear()}-${String(
+        today.getMonth() + 1
+      ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
       try {
-        const response = await axios.get("/ufc/en-trenes/", {
-          params: {
-            page: this.currentPage,
-            page_size: this.itemsPerPage,
-            informe_operativo: this.informeId
-          },
-        });
-        this.en_trenes = response.data.results;
-        this.allRecords = response.data.results;
-        this.totalItems = response.data.count;
+        const infoID = await axios.get(
+          `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
+        );
+        console.log("Informe", infoID);
+        if (infoID.data.existe) {
+          const response = await axios.get("/ufc/en-trenes/", {
+            params: {
+              page: this.currentPage,
+              page_size: this.itemsPerPage,
+              informe: infoID.data.id,
+            },
+          });
+          this.en_trenes = response.data.results;
+          this.allRecords = response.data.results;
+          this.totalItems = response.data.count;
+        } else {
+          return;
+        }
       } catch (error) {
         console.error("Error al obtener los trenes:", error);
         this.showErrorToast("No se pudieron cargar los registros");

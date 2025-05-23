@@ -150,6 +150,7 @@
                     >Vagon No ID <span class="required">*</span></label
                   >
                   <select
+                    v-if="formData.tipo_equipo"
                     class="ufc-select"
                     v-model="formData.equipo_vagon"
                     required
@@ -238,7 +239,9 @@
 
                       <div
                         class="ufc-productos-dropdown"
-                        v-if="showProductosDropdown"
+                        v-if="
+                          showProductosDropdown && formData.estado !== 'vacio'
+                        "
                       >
                         <div class="ufc-productos-search-container">
                           <input
@@ -337,6 +340,7 @@
                 <i class="bi bi-x-circle"></i> Cancelar
               </button>
               <button
+                v-if="formData.equipo_vagon.length !== 0"
                 type="button"
                 class="ufc-button primary"
                 @click="agregarVagon"

@@ -26,16 +26,34 @@
 - Implementar que se pueda crear un informe operativo solamente por entidad
 - Se necesita hacer que cuando se cree el informe operativo solo se vean los registros asociados a ese informe de esa entidad,
 
-## ISSUES Para crear
+### Implementacion de filtro segun el id del informe Asociado
 
-- Implementar Validaciones
+- ARRASTRES (check)
+- En Trenes (Check)
+- Rotacion(Check)
+- Situados (Check)
+- Cargados (check)
+- Por Situar (check)
+- Vagones y Productos (Check)
 
-### Registro de En Trenes
+### Se actualizan el estado de los vagones al pasar a Listo el parte o Aprobado
 
-- La combinación de los campos Tipo equipo ferroviario, Estado, Producto, Origen, Destino, deben ser únicos, el valor especificado ya se encuentra en uso.
+- ARRASTRES (check)
+- En Trenes (Check)
+- Situados (Problem)
+- Cargados (check)
+- Por Situar (check)
 
-### Rotacion de vagones
+### Que te muestre los estados por InfoOperativo por entidad
 
-- El campo Tipo equipo ferroviario debe ser único. Si hay una rotacion que use ese tipo equipo debe arrojar un error desde el serializer con su debido mensaje.
+- PorSituar (Check)
+- En Trenes (Check)
+- Situados (check)
+- Rotacdion (check)
+- VAgones y P ()
+- Arrastres (check)
+- Carga Descarga (check)
 
-### Tiempo Estimado 3 dias.
+### Problema al pasar a disponible los registros de Situados. Hay unas llamadas de mas
+
+- Revisar views, serializer, funcion submit, y signals dependientes de este

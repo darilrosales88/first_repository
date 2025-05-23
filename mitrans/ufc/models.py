@@ -1587,12 +1587,6 @@ class CCD_en_trenes(models.Model):
         null=True, blank=True
     )
 
-    def save(self, *args, **kwargs):
-        if self.locomotora:
-            self.numero_identificacion_locomotora = (
-                self.locomotora.numero_identificacion
-            )
-        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "CCD Tren"
@@ -1631,11 +1625,8 @@ class CCD_HistorialEnTrenes(models.Model):
 
 
 class CCD_por_situar(models.Model):
-    t_origen = (("puerto", "Puerto"), ("ac_ccd", "Acceso Comercial"))
+   
 
-    tipo_origen = models.CharField(
-        max_length=100, choices=t_origen, verbose_name="Tipo de origen"
-    )
     origen = models.CharField(max_length=200, verbose_name="Origen")
 
     tipo_equipo = models.ForeignKey(
@@ -1672,8 +1663,8 @@ class CCD_por_situar(models.Model):
         producto_UFC, blank=True, related_name="ccd_por_situar", verbose_name="Productos"
     )
 
-    por_situar = models.CharField(
-        max_length=10,
+    por_situar = models.IntegerField(
+        default=10,
         validators=[
             RegexValidator(
                 regex="^-?\d+$",

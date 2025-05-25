@@ -263,7 +263,6 @@
                     name="situados"
                     min="1"
                     required
-                    readonly
                   />
                 </div>
               </div>

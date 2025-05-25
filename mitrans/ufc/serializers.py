@@ -876,11 +876,11 @@ class producto_vagon_serializer(serializers.ModelSerializer):
     
 class SituadoCargaDescargaFilter(filters.FilterSet):
     tipo_equipo = filters.CharFilter(lookup_expr='icontains')  # Filtro exacto (puedes usar 'icontains' para parcial
-    
+    informe = filters.NumberFilter(field_name='informe_operativo__id')
     
     class Meta:
-        model = por_situar
-        fields = ['tipo_equipo']  # Campos filtrables
+        model = Situado_Carga_Descarga
+        fields = ['tipo_equipo','informe']  # Campos filtrables
         
         
 class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
@@ -903,9 +903,7 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
     
     class Meta:
         model = Situado_Carga_Descarga
-        fields = ('id', 'tipo_origen' , 'tipo_origen_name', 'origen', 'tipo_equipo' , 'tipo_equipo_name','equipo_vagon','equipo_vagon_detalle', 'estado', 
-                 'operacion', 'producto', 'productos_info', 'situados', 
-                 'pendiente_proximo_dia', 'observaciones')
+        fields = '__all__'
         extra_kwargs = {
             'producto': {'required': False},
             'observaciones': {'required': False, 'allow_null': True}
@@ -957,13 +955,14 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
             
             actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Situado")
             instance.equipo_vagon.add(vagon)
+        
+        print(instance,validated_data)
         return instance
 
     def update(self, instance, validated_data):
-        productos_data = validated_data.pop('producto', None)
-        instance = super().update(instance, validated_data)
-        
+        productos_data = validated_data.pop('producto', None)   
         vagones_data = validated_data.pop('equipo_vagon', None)
+        
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
             instance.save()

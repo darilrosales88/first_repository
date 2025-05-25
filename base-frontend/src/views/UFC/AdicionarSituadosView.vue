@@ -788,31 +788,23 @@ export default {
       }
     },
 
-    async verificarInformeOperativo() {
+    async verificarEstadoInforme() {
       try {
-        this.formData.fecha = new Date().toISOString();
-        const today = new Date();
-        const fechaFormateada = `${today.getFullYear()}-${String(
-          today.getMonth() + 1
-        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+        if (!this.informeOperativoId) return false;
 
-        const response = await axios.get("/ufc/verificar-informe-existente/", {
-          params: { fecha_operacion: fechaFormateada },
-        });
-
-        if (response.data.existe) {
-          this.informeOperativoId = response.data.id;
-          return true;
-        }
-        return false;
+        const response = await axios.get(
+          `/ufc/informe-operativo/${this.informeOperativoId}/`
+        );
+        return response.data.estado_parte !== "Aprobado";
       } catch (error) {
-        console.error("Error al verificar informe:", error);
+        console.error("Error al verificar estado del informe:", error);
         return false;
       }
     },
 
     async submitForm() {
       // 1. Verifificar que el informe operativo existe ya para la fecha creada
+      // 1. Verificar que exista un informe operativo
       const existeInforme = await this.verificarInformeOperativo();
       if (!existeInforme) {
         Swal.fire(
@@ -824,12 +816,9 @@ export default {
         return;
       }
 
-      // 2. Verificar que el informe no esté en estado "Aprobado"
-      const informeResponse = await axios.get(
-        `/ufc/informe-operativo/${this.informeOperativoId}/`
-      );
-      console.log("anijijijijiji", informeResponse.data.estado_parte);
-      if (informeResponse.data.estado_parte === "Aprobado") {
+      // 2. Verificar que el informe no esté aprobado
+      const informeNoAprobado = await this.verificarEstadoInforme();
+      if (!informeNoAprobado) {
         Swal.fire(
           "Error",
           "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",

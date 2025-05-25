@@ -1388,6 +1388,9 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         tipo_equipo = self.request.query_params.get("tipo_equipo")
+        informe_id = self.request.query_params.get('informe')
+        if informe_id:
+            queryset = queryset.filter(informe_operativo__id=informe_id)
         if tipo_equipo:
             if "," in tipo_equipo:
                 tipos = tipo_equipo.split(",")

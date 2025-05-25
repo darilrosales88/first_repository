@@ -1432,7 +1432,6 @@ class ufc_informe_operativo_serializer(serializers.ModelSerializer):
 
 # Serializers para CCD
 class CCD_registro_vagones_cargados_serializer(serializers.ModelSerializer):
-    tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
     identificacion = serializers.SerializerMethodField()
     
     class Meta:
@@ -1516,43 +1515,57 @@ class CCD_en_trenes_serializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         productos_data = validated_data.pop('producto', [])
-        equipo_vagon_data = validated_data.pop('equipo_vagon', [])
-        instance = CCD_en_trenes.objects.create(**validated_data)
+        equipo_vagon_data=validated_data.pop('equipo_vagon',[])
+        instance = en_trenes.objects.create(**validated_data)
         instance.producto.set(productos_data)
         instance.equipo_vagon.set(equipo_vagon_data)
         
         for equipo in equipo_vagon_data:    
-            actualizar_estado_equipo_ferroviario(equipo.numero_identificacion, 'Asignado al estado En Trenes')
+        # Actualizar estado del equipo ferroviario
+            print("Este es el id a cambiar", equipo)
+            actualizar_estado_equipo_ferroviario(equipo.numero_identificacion, 'Asignado al estado En Trenes CCD')
         
         return instance
 
     def update(self, instance, validated_data):
         productos_data = validated_data.pop('producto', None)
-        equipo_vagon_data = validated_data.pop('equipo_vagon', None)
-        
+        equipo_vagon_data=validated_data.pop('equipo_vagon',None)
+        print("###**Log: ",equipo_vagon_data)
+        #instance = super().update(instance, validated_data)
+        print("###**Log: ",productos_data)
         if productos_data is not None:
             instance.producto.set(productos_data)
             
         if equipo_vagon_data:
+# Eliminar registros antiguos no incluidos
             ids_nuevos = [equipo_id.id for equipo_id in equipo_vagon_data if equipo_id.id]
+            print("###**Log: ",ids_nuevos)
+            # Primero, liberar equipos ferroviarios de registros que se eliminarán
             registros_a_eliminar = instance.equipo_vagon.all()
-            
+            print("###**Log: ",registros_a_eliminar)
             for registro in registros_a_eliminar:
                 actualizar_estado_equipo_ferroviario(registro, 'Disponible')
             
+            
+            # Actualizar o crear registros
             for registro_id in equipo_vagon_data:
+                
                 if registro_id:
+                    # Actualizar registro existente
                     registro = nom_equipo_ferroviario.objects.get(id=registro_id.id)
                     instance.equipo_vagon.add(registro)
-                    actualizar_estado_equipo_ferroviario(registro_id, 'Asignado al estado En Trenes')
+                
+                # Actualizar estado del equipo ferroviario
+                actualizar_estado_equipo_ferroviario(registro_id, 'Asignado al estado En Trenes CCD')
         
         instance.equipo_vagon.set(equipo_vagon_data)
+        
+        
         return instance
 
 
 class CCD_SituadoCargaDescargaSerializers(serializers.ModelSerializer):
     productos_info = serializers.SerializerMethodField()
-    tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
     tipo_equipo_name = serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
     producto = serializers.PrimaryKeyRelatedField(
         many=True,
@@ -1587,9 +1600,10 @@ class CCD_SituadoCargaDescargaSerializers(serializers.ModelSerializer):
             'cantidad': p.cantidad,
             'estado': p.estado,
             'contiene': p.contiene
-        } for p in productos]
+        } for p in productos] # (truco) Esta bueno este truquito para evitar errores si el objeto no tiene el atributo
         
     def to_internal_value(self, data):
+        # Convertir los valores de string a integer antes de la validación
         if 'situados' in data:
             data['situados'] = int(data['situados']) if data['situados'] else 0
         if 'pendiente_proximo_dia' in data:
@@ -1597,53 +1611,58 @@ class CCD_SituadoCargaDescargaSerializers(serializers.ModelSerializer):
         return super().to_internal_value(data)
         
     def validate(self, data):
+        # Validar que el producto sea opcional
         if 'producto' not in data:
             data['producto'] = []
         return data
 
     def create(self, validated_data):
-        vagones_data = validated_data.pop('equipo_vagon', [])
         productos_data = validated_data.pop('producto', [])
+        vagones_data = validated_data.pop('equipo_vagon', [])
         instance = super().create(validated_data)
         
+        # Asociar productos MANUALMENTE después de crear la instancia
+        if productos_data:
+            instance.producto.set(productos_data)
+            instance.save()  # Guardar explícitamente
+        
         for vagon_data in vagones_data:
-            equipo = nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
-            vagon = CCD_vagones_dias.objects.create(
+            equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+            vagon = vagones_dias.objects.create(
                 equipo_ferroviario=equipo,
                 cant_dias=vagon_data['cant_dias']
             )
-            actualizar_estado_equipo_ferroviario(equipo, "Asignado al estado Situado")
+            
+            actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Situado")
             instance.equipo_vagon.add(vagon)
-        
-        if productos_data:
-            instance.producto.set(productos_data)
-            instance.save()
-        
         return instance
 
     def update(self, instance, validated_data):
-        vagones_data = validated_data.pop('equipo_vagon', None)
         productos_data = validated_data.pop('producto', None)
+        instance = super().update(instance, validated_data)
+        
+        vagones_data = validated_data.pop('equipo_vagon', None)
         
         for equipo in instance.equipo_vagon.all():
-            equipo_id = equipo.equipo_ferroviario
-            actualizar_estado_equipo_ferroviario(equipo_id, "Disponible")
-        
+            equipo_id=equipo.equipo_ferroviario
+            actualizar_estado_equipo_ferroviario(equipo_id,"Disponible")
+        # Actualizar vagones si se proporcionan
         if vagones_data is not None:
             instance.equipo_vagon.clear()
             for vagon_data in vagones_data:
-                equipo = nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
-                actualizar_estado_equipo_ferroviario(equipo, "Asignado al estado Situado")
-                vagon = CCD_vagones_dias.objects.create(
+                equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+                actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Situado")
+                vagon = vagones_dias.objects.create(
                     equipo_ferroviario=equipo,
                     cant_dias=vagon_data['cant_dias']
                 )
                 instance.equipo_vagon.add(vagon)
-        
+                
         if productos_data is not None:
             instance.producto.set(productos_data)
+            instance.save()
         
-        return instance
+        return instance        
 
 
 class CCD_PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
@@ -1653,7 +1672,6 @@ class CCD_PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         read_only=True
     )
     productos_info = serializers.SerializerMethodField()
-    tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
     tipo_equipo_name = serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
     producto = serializers.PrimaryKeyRelatedField(
         write_only=True,
@@ -1690,41 +1708,51 @@ class CCD_PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         } for p in productos]
 
     def create(self, validated_data):
+        # Extraer datos de vagones
         vagones_data = validated_data.pop('equipo_vagon', [])
         productos_data = validated_data.pop('producto', [])
+        
+        # Crear instancia principal
         instance = super().create(validated_data)
         
+        # Crear registros de vagones_dias y asociarlos
         for vagon_data in vagones_data:
-            equipo = nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
-            vagon = CCD_vagones_dias.objects.create(
+            equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+            vagon = vagones_dias.objects.create(
                 equipo_ferroviario=equipo,
                 cant_dias=vagon_data['cant_dias']
             )
-            actualizar_estado_equipo_ferroviario(equipo, "Asignado al estado Por Situar")
+            
+            actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Por Situar")
             instance.equipo_vagon.add(vagon)
         
+        # Asociar productos
         instance.producto.set(productos_data)
+        
         return instance
 
-    def update(self, instance, validated_data):
-        vagones_data = validated_data.pop('equipo_vagon', None)
+###Tanke
+
+    def update(self, instance:por_situar, validated_data):
         productos_data = validated_data.pop('producto', None)
+        vagones_data = validated_data.pop('equipo_vagon', None)
         
         for equipo in instance.equipo_vagon.all():
-            equipo_id = equipo.equipo_ferroviario
-            actualizar_estado_equipo_ferroviario(equipo_id, "Disponible")
-        
+            equipo_id=equipo.equipo_ferroviario
+            actualizar_estado_equipo_ferroviario(equipo_id,"Disponible")
+        # Actualizar vagones si se proporcionan
         if vagones_data is not None:
             instance.equipo_vagon.clear()
             for vagon_data in vagones_data:
-                equipo = nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
-                actualizar_estado_equipo_ferroviario(equipo, "Asignado al estado Por Situar")
-                vagon = CCD_vagones_dias.objects.create(
+                equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+                actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Por Situar")
+                vagon = vagones_dias.objects.create(
                     equipo_ferroviario=equipo,
                     cant_dias=vagon_data['cant_dias']
                 )
                 instance.equipo_vagon.add(vagon)
         
+        # Actualizar productos si se proporcionan
         if productos_data is not None:
             instance.producto.set(productos_data)
         
@@ -1755,55 +1783,50 @@ class CCD_PendienteArrastreSerializer(serializers.ModelSerializer):
         model = CCD_arrastres
         fields = '__all__'
 
-    def get_productos_info(self, obj):
-        productos = obj.producto.all()
-        return [{
-            'id': p.id,
-            'nombre_producto': p.producto.nombre_producto,
-            'codigo_producto': p.producto.codigo_producto,
-            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
-            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
-            'cantidad': p.cantidad,
-            'estado': p.estado,
-            'contiene': p.contiene
-        } for p in productos]
-
     def create(self, validated_data):
+        # Extraer datos de vagones
         vagones_data = validated_data.pop('equipo_vagon', [])
         productos_data = validated_data.pop('producto', [])
+        
+        # Crear instancia principal
         instance = super().create(validated_data)
         
+        # Crear registros de vagones_dias y asociarlos
         for vagon_data in vagones_data:
-            equipo = nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
-            vagon = CCD_vagones_dias.objects.create(
+            equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+            vagon = vagones_dias.objects.create(
                 equipo_ferroviario=equipo,
                 cant_dias=vagon_data['cant_dias']
             )
-            actualizar_estado_equipo_ferroviario(equipo, "Asignado al estado Pendiente a Arrastre")
+            
+            actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Pendiente a Arrastre")
             instance.equipo_vagon.add(vagon)
         
+        # Asociar productos
         instance.producto.set(productos_data)
+        
         return instance
 
-    def update(self, instance, validated_data):
+    def update(self, instance:arrastres, validated_data):
         vagones_data = validated_data.pop('equipo_vagon', None)
         productos_data = validated_data.pop('producto', None)
         
         for equipo in instance.equipo_vagon.all():
-            equipo_id = equipo.equipo_ferroviario
-            actualizar_estado_equipo_ferroviario(equipo_id, "Disponible")
-        
+            equipo_id=equipo.equipo_ferroviario
+            actualizar_estado_equipo_ferroviario(equipo_id,"Disponible")
+        # Actualizar vagones si se proporcionan
         if vagones_data is not None:
             instance.equipo_vagon.clear()
             for vagon_data in vagones_data:
-                equipo = nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
-                actualizar_estado_equipo_ferroviario(equipo, "Asignado al estado Pendiente a Arrastre")
-                vagon = CCD_vagones_dias.objects.create(
+                equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+                actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Pendiente a Arrastre")
+                vagon = vagones_dias.objects.create(
                     equipo_ferroviario=equipo,
                     cant_dias=vagon_data['cant_dias']
                 )
                 instance.equipo_vagon.add(vagon)
         
+        # Actualizar productos si se proporcionan
         if productos_data is not None:
             instance.producto.set(productos_data)
         

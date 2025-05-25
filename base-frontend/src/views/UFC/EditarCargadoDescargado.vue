@@ -1,4 +1,7 @@
 <template>
+  <div class="ufc-header">
+    <h6>Partes UFC</h6>
+  </div>
   <Navbar-Component />
   <div class="container py-3" style="margin-left: 20em; width: 70%">
     <div class="card border">
@@ -12,100 +15,132 @@
           <div class="row">
             <!-- Columna 1 -->
             <div class="col-md-6">
+              <div class="ufc-form-group">
+                <div class="ufc-form-row">
+                  <!-- Campo: tipo_origen -->
+                  <div class="mb-3">
+                    <label for="tipo_origen" class="form-label small fw-semibold text-secondary">Tipo de Origen</label>
+                    <select class="form-select form-select-sm border-secondary" style="width:187px; padding-top:8px;padding-bottom:8px;" v-model="formData.tipo_origen" id="tipo_origen" name="tipo_origen" required
+                      oninvalid="this.setCustomValidity('Por favor, seleccione un tipo de origen')"
+                      oninput="this.setCustomValidity('')">
+                      <option value="" disabled>Seleccione un tipo</option>
+                      <option value="ac_ccd">Acceso Comercial</option>
+                      <option value="puerto">Puerto</option>
+                    </select>
+                  </div>
+
+                  <!-- Campo: origen -->
+                  <div class="mb-3">
+                    <label for="origen" class="form-label small fw-semibold text-secondary" >Origen</label>
+                    <select v-if="formData.tipo_origen !== 'puerto' && formData.tipo_origen != ''" class="form-select form-select-sm border-secondary" style="width:230px; padding-top:8px;padding-bottom:8px;"  v-model="formData.origen" id="origen" name="origen" required
+                      oninvalid="this.setCustomValidity('Por favor, seleccione un origen')"
+                      oninput="this.setCustomValidity('')">
+                      
+                      <option v-for="entidad in entidades" :key="entidad.id" :value="entidad.nombre">
+                        {{ entidad.id }}-{{ entidad.nombre }}
+                      </option>
+                    </select>
+
+                    <select v-else-if ="formData.tipo_origen === 'puerto' && formData.tipo_origen != ''" class="form-select form-select-sm border-secondary" style="width:230px; padding-top:8px;padding-bottom:8px;" v-model="formData.origen" id="origen" name="origen" required
+                      oninvalid="this.setCustomValidity('Por favor, seleccione un puerto')"
+                      oninput="this.setCustomValidity('')">
+                      <option value="" disabled>Seleccione un puerto</option>
+                      <option v-for="puerto in puertos" :key="puerto.id" :value="puerto.nombre_puerto">
+                        {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                      </option>
+                    </select>
+                    <select
+                      v-if="formData.tipo_origen == '' "
+                      class="form-select form-select-sm border-secondary" style="width:230px; padding-top:8px;padding-bottom:8px;"
+                      disabled>
+                      <option value="">Seleccione un tipo de destino</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ufc-form-group">
+                <div class="ufc-form-row">
+                  <!-- Campo: tipo_destino -->
+                  <div class="mb-3">
+                    <label for="tipo_destino" class="form-label small fw-semibold text-secondary">Tipo de Destino</label>
+                    <select class="form-select form-select-sm border-secondary" style="width:187px; padding-top:8px;padding-bottom:8px;" v-model="formData.tipo_destino" id="tipo_destino" name="tipo_destino" required
+                      oninvalid="this.setCustomValidity('Por favor, seleccione un tipo de destino')"
+                      oninput="this.setCustomValidity('')">
+                      <option value="" disabled>Seleccione un destino</option>
+                      <option value="ac_ccd">Acceso Comercial</option>
+                      <option value="puerto">Puerto</option>
+                    </select>
+                  </div>
+
+                  <!-- Campo: destino -->
+                  <div class="mb-3">
+                    <label for="destino" class="form-label small fw-semibold text-secondary">Destino</label>
+                    <select v-if="formData.tipo_destino !== 'puerto' && formData.tipo_destino != ''" class="form-select form-select-sm border-secondary" style="width:230px; padding-top:8px;padding-bottom:8px;" v-model="formData.destino" id="tipo_destino" name="tipo_destino" required
+                      oninvalid="this.setCustomValidity('Por favor, seleccione un destino')"
+                      oninput="this.setCustomValidity('')">
+                      <option value="" disabled>Seleccione un destino</option>
+                      <option v-for="entidad in entidades" :key="entidad.id":value="entidad.nombre">
+                        {{ entidad.id }}-{{ entidad.nombre }}
+                      </option>
+                    </select>
+
+                    <select v-else-if ="formData.tipo_destino === 'puerto' && formData.tipo_destino != ''" class="form-select form-select-sm border-secondary" style="width:230px; padding-top:8px;padding-bottom:8px;" v-model="formData.destino" id="destino" name="destino" required
+                      oninvalid="this.setCustomValidity('Por favor, seleccione un puerto')"
+                      oninput="this.setCustomValidity('')">
+                      <option value="" disabled>Seleccione un puerto</option>
+                      <option v-for="puerto in puertos" :key="puerto.id" :value="puerto.nombre_puerto">
+                        {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                      </option>
+                    </select>
+                    <select
+                      v-if="formData.tipo_destino == '' "
+                      class="form-select form-select-sm border-secondary" style="width:230px; padding-top:8px;padding-bottom:8px;"
+                      disabled>
+                      <option value="">Seleccione un tipo de destino</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
               <!-- Campo: TEF -->
               <div class="mb-3">
-                <label for="tipo_equipo_ferroviario" class="form-label small fw-semibold text-secondary">Tipo de equipo ferroviario</label>
-                <select class="form-select form-select-sm border-secondary" v-model="formData.tipo_equipo_ferroviario" id="tipo_equipo_ferroviario" name="tipo_equipo_ferroviario" required>
+                <label for="tipo_equipo_ferroviario" class="form-label small fw-semibold text-secondary">Tipo de Equipo Ferroviario</label>
+                <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" v-model="formData.tipo_equipo_ferroviario" id="tipo_equipo_ferroviario" name="tipo_equipo_ferroviario" required
+                  oninvalid="this.setCustomValidity('Por favor, seleccione un tipo de equipo ferroviario')"
+                  oninput="this.setCustomValidity('')">
                   <option v-for="tipo_equipo_ferroviario in tipos_equipos_ferroviarios" :key="tipo_equipo_ferroviario.id" :value="tipo_equipo_ferroviario.id">
                     {{ tipo_equipo_ferroviario.id }}-{{tipo_equipo_ferroviario.tipo_equipo_name}}-{{ tipo_equipo_ferroviario.descripcion }}
                   </option>
-                </select>
-              </div>
-
-              <!-- Campo: tipo_origen -->
-              <div class="mb-3">
-                <label for="tipo_origen" class="form-label small fw-semibold text-secondary">Tipo de Origen</label>
-                <select class="form-select form-select-sm border-secondary" v-model="formData.tipo_origen" id="tipo_origen" name="tipo_origen">
-                  <option value="ac_ccd">Acceso Comercial</option>
-                  <option value="puerto">Puerto</option>
-                </select>
-              </div>
-
-              <!-- Campo: origen -->
-              <div class="mb-3">
-                <label for="origen" class="form-label small fw-semibold text-secondary">Origen</label>
-                <select v-if="formData.tipo_origen !== 'puerto'" class="form-select form-select-sm border-secondary" v-model="formData.origen" id="origen" name="origen">
-                  <option v-for="entidad in entidades" :key="entidad.id" :value="entidad.nombre">
-                    {{ entidad.id }}-{{ entidad.nombre }}
-                  </option>
-                </select>
-
-                <select v-else class="form-select form-select-sm border-secondary" v-model="formData.origen" id="origen" name="origen">
-                  <option v-for="puerto in puertos" :key="puerto.id" :value="puerto.nombre_puerto">
-                    {{ puerto.id }}- {{ puerto.nombre_puerto }}
-                  </option>
-                </select>
-              </div>
-
-              <!-- Campo: tipo_destino -->
-              <div class="mb-3">
-                <label for="tipo_destino" class="form-label small fw-semibold text-secondary">Tipo de Destino</label>
-                <select class="form-select form-select-sm border-secondary" v-model="formData.tipo_destino" id="tipo_destino" name="tipo_destino" required>
-                  <option value="ac_ccd">Acceso Comercial</option>
-                  <option value="puerto">Puerto</option>
-                </select>
-              </div>
-
-              <!-- Campo: destino -->
-              <div class="mb-3">
-                <label for="destino" class="form-label small fw-semibold text-secondary">Destino</label>
-                <select v-if="formData.tipo_destino !== 'puerto'" class="form-select form-select-sm border-secondary" v-model="formData.destino" id="tipo_destino" name="tipo_destino">
-                  <option v-for="entidad in entidades" :key="entidad.id":value="entidad.nombre">
-                    {{ entidad.id }}-{{ entidad.nombre }}
-                  </option>
-                </select>
-
-                <select v-else class="form-select form-select-sm border-secondary" v-model="formData.destino" id="destino" name="destino">
-                  <option v-for="puerto in puertos" :key="puerto.id" :value="puerto.nombre_puerto">
-                    {{ puerto.id }}- {{ puerto.nombre_puerto }}
-                  </option>
-                </select>
-              </div>
-
-              <!-- Campo: estado -->
-              <div class="mb-3">
-                <label for="estado" class="form-label small fw-semibold text-secondary">Estado</label>
-                <select class="form-select form-select-sm border-secondary" v-model="formData.estado" id="estado" name="estado" required>
-                  <option value="cargado">Cargado</option>
-                  <option value="vacio">Vacio</option>
                 </select>
               </div>
             </div>
 
             <!-- Columna 2 -->
             <div class="col-md-6">
+              <!-- Campo: estado -->
+              <div class="mb-3">
+                <label for="estado" class="form-label small fw-semibold text-secondary">Estado</label>
+                <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" v-model="formData.estado" id="estado" name="estado" required>
+                  <option value="cargado">Cargado</option>
+                  <option value="vacio">Vacio</option>
+                </select>
+              </div>
+
               <!-- Campo: operacion -->
               <div class="mb-3">
                 <label for="operacion" class="form-label small fw-semibold text-secondary">Operación</label>
-                <input type="text" class="form-control form-control-sm border-secondary" v-model="formData.operacion" id="operacion" name="operacion" readonly/>
+                <input type="text" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.operacion" id="operacion" name="operacion" readonly/>
               </div>
 
-              
               <!-- Campo: plan_diario_carga -->
               <div class="mb-3">
                 <label for="plan_diario_carga" class="form-label small fw-semibold text-secondary">Plan diario de carga/descarga</label>
-                <input type="number" class="form-control form-control-sm border-secondary" v-model="formData.plan_diario_carga_descarga" id="plan_diario_carga_descarga" name="plan_diario_carga_descarga"/>
-              </div>
-
-              <!-- Campo: plan_diario_carga -->
-              <div class="mb-3">
-                <label for="real_carga_descarga" class="form-label small fw-semibold text-secondary">Real de carga/descarga</label>
-                <input type="number" class="form-control form-control-sm border-secondary" v-model="formData.real_carga_descarga" id="real_carga_descarga" name="real_carga_descarga" readonly/>
+                <input type="number" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.plan_diario_carga_descarga" id="plan_diario_carga_descarga" min="0" name="plan_diario_carga_descarga"/>
               </div>
 
               <!-- Campo: producto -->
               <div class="mb-3">
-                <label for="producto" class="form-label small fw-semibold text-secondary">Productos <span v-if="formData.estado === 'cargado'" class="required"></span></label>
+                <label for="producto" class="form-label small fw-semibold text-secondary">Productos <span v-if="formData.estado === 'cargado'" ></span></label>
                 <div class="ufc-input-with-action">
                   <div class="ufc-custom-select" @click="toggleProductosDropdown">
                     <div class="ufc-select-display">
@@ -150,16 +185,18 @@
               <!-- Modal para agregar vagon a estado cargado/descargado -->
               <ModalAgregarVagonCargado v-if="mostrarModalVagon" :visible="mostrarModalVagon" :tipo-equipo="formData.tipo_equipo_ferroviario" @cerrar-modal="cerrarModalAddVagonCargado" @vagon-agregado="handleVagonAgregado"/>
 
-              <!-- Campo: causas_incumplimiento -->
-              <div class="mb-3">
-                <label for="causas_incumplimiento" class="form-label small fw-semibold text-secondary">Causas del incumplimiento
-                </label>
-                <textarea class="form-control form-control-sm border-secondary" v-model="formData.causas_incumplimiento" id="causas_incumplimiento" name="causas_incumplimiento" rows="3" required></textarea>
-              </div>
             </div>
           </div>
+          <!-- Campo: causas_incumplimiento -->
+          <div class="full-width">
+            <label for="causas_incumplimiento" class="form-label small fw-semibold text-secondary">Causas del incumplimiento
+            </label>
+            <textarea class="form-control form-control-sm border-secondary" v-model="formData.causas_incumplimiento" id="causas_incumplimiento" name="causas_incumplimiento" rows="4" required
+            oninvalid="this.setCustomValidity('Por favor, escriba las causas del imcumplimiento')"
+            oninput="this.setCustomValidity('')"></textarea>
+          </div>
 
-          <div class="modal-footer">
+          <div class="modal-footer mt-3">
             <div class=" d-flex justify-content-between align-items-center mb-4">
               <button class="ufc-button secondary" @click="volver_principal">
                 <i class="bi bi-x-circle" me-1></i>Cancelar
@@ -1104,6 +1141,7 @@ export default {
 
 .create-button {
   text-decoration: none;
+  border: none;
   color: green;
   margin-left: 940px;
 }
@@ -1111,7 +1149,6 @@ export default {
 button {
   margin-left: 10px;
   padding: 5px 15px;
-  border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
@@ -1199,6 +1236,11 @@ button[type="submit"] {
   padding: 20px;
 }
 
+.ufc-form-row {
+  display: flex;
+  gap: 15px;
+}
+
 @keyframes modalFadeIn {
   from {
     opacity: 0;
@@ -1208,5 +1250,15 @@ button[type="submit"] {
     opacity: 1;
     transform: translateY(0);
   }
+}
+.form-select:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+  outline: 0;
+}
+.form-control:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+  outline: 0;
 }
 </style>

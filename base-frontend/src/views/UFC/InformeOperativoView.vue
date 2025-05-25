@@ -2,25 +2,44 @@
   <div style="background-color: #002a68; color: white; text-align: right; padding: 10px;">
     <h6>Informe Operativo</h6>
   </div>
-  <div style="margin-left: 17em; width: 73%">
-    <router-link to="HistorialCargadoDescargado">
-      <button class="action-btn ready">
-        <i class="bi bi-list-ul me-2"></i>Historial de cargados/descargados
-      </button>
-    </router-link>
-  </div>
-  <br/>
   
   <Navbar-Component /><br />
 
-  <div style="margin-left: 17em; width: 73%">
-    <Inf-Operative />    
+  <div style="margin-left: 25em; width: 60%">
+    <div class="container py-3">
+      <div class="card border">
+        <div class="card-header bg-light border-bottom">
+          <h5 class="mb-0 text-dark fw-semibold">
+            <i class="bi bi-clipboard-data me-2"></i>Fechas de operaciones - UFC
+          </h5>
+        </div>
+
+        <div class="card-body p-3">
+          <form @submit.prevent="submitForm">
+            <!-- Fila 1 -->
+            <div class="row mb-3 g-2">        
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="fechaActual" class="form-label small fw-semibold text-secondary">
+                    <i class="bi bi-calendar-check me-2 text-primary"></i>Fecha Actual
+                  </label>
+                  <input 
+                    type="date" 
+                    class="form-control form-control-sm border-secondary" 
+                    id="fechaActual" 
+                    v-model="formData.fecha_actual"
+                    required
+                    :disabled="isExistingRecord">
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div style="margin-left: 17em; width: 73%">
-    <div>
-      <Vagones_productos />
-    </div>
+  <div style="margin-left: 16em; width: 80%">
     <!-- Navbar con enlaces -->
     <nav>
       <ul>
@@ -56,20 +75,22 @@
     <div>
       <component :is="currentComponent" />
     </div>
-    
+  </div>
+
+  <div style="margin-left: 16em; width: 80%">
+    <Vagones_productos />
+  </div>
+
+  <div style="margin-left: 16em; width: 80%">
     <!-- Componente de Rotacion de vagones -->
     <ConsultaRotacionVagones />
-    <div class="action-buttons">
-      <button class="action-btn reject" @click="rechazar">
-        <i class="bi bi-x-circle"></i> Rechazar
-      </button>
-      <button class="action-btn ready" @click="listo">
-        <i class="bi bi-check-circle"></i> Listo
-      </button>
-      <button class="action-btn approve" @click="aprobar">
-        <i class="bi bi-check2-circle"></i> Aprobar
-      </button>
-    </div>
+  </div>
+
+  <div style="margin-left: 16em; width: 80%">
+    <Inf-Operative :fechaActual="formData.fecha_actual" @record-status-changed="handleRecordStatusChange"/>    
+  </div>
+
+  <div style="margin-left: 16em; width: 80%">
     <div class="action-buttons">
       <button class="action-btn reject" @click="rechazar">
         <i class="bi bi-x-circle"></i> Rechazar
@@ -113,12 +134,19 @@ export default {
     ConsultaRotacionVagones, 
   },
   data() {
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000; // offset en milisegundos
+    const localISOTime = new Date(now - offset).toISOString().split("T")[0];
     return {
       userPermissions: [],
       userGroups: [],
       currentComponent: "PorSituarCarga_Descarga",
       informeOperativoId: null,
       loadingPermissions: false,
+      isExistingRecord: false,
+      formData: {
+        fecha_actual: localISOTime,
+      },
     };
   },
   
@@ -315,6 +343,11 @@ export default {
         console.error("Error al verificar informe:", error);
         return false;
       }
+    },
+    handleRecordStatusChange(payload) {
+      this.isExistingRecord = payload.isExisting;
+      // Opcional: Mostrar feedback
+      console.log('Estado actualizado:', payload);
     },
   }
 };

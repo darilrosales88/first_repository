@@ -1,225 +1,246 @@
 <template>
-    <div class="ufc-header">
-      <h6>Partes UFC</h6>
-    </div>
-    <Navbar-Component />
-    <Producto-Vagones />
-    <div class="container py-3" style="margin-left: 20em; width: 70%">
-      <div class="card border">
-        <div class="card-header bg-light border-bottom">
-          <h5 class="mb-0 text-dark fw-semibold">
-            <i class="bi bi-file-earmark-plus"></i> Nuevo registro pendiente a arrastre</h5>
-        </div>
-          <div class="card-body p-3">
-            <form @submit.prevent="submitForm" class="ufc-form">
-              <!-- Primera fila - Origen y Destino -->
-              <div class="ufc-form-grid">
-                <!-- Campo:Fecha de registro -->
+  <div class="ufc-header">
+    <h6>Partes UFC</h6>
+  </div>
+  <Navbar-Component />
+  <Producto-Vagones />
+  
+  <!-- Primer contenedor principal -->
+  <div class="container py-3" style="margin-left: 20em; width: 70%">
+    <div class="card border">
+      <div class="card-header bg-light border-bottom">
+        <h5 class="mb-0 text-dark fw-semibold">
+          <i class="bi bi-file-earmark-plus"></i> Nuevo registro pendiente a arrastre
+        </h5>
+      </div>
+      <div class="card-body p-3">
+        <form @submit.prevent="submitForm" class="ufc-form">
+          <div class="row">
+            <!-- Columna Izquierda -->
+            <div class="col-md-6">
+              <!-- Campo: Fecha de registro -->
               <div class="mb-3">
                 <label for="fecha_registro" class="form-label small fw-semibold text-secondary">Fecha de registro</label>
                 <input
                   type="text"
-                  class="form-control form-control-sm border-secondary"
+                  class="form-control form-control-sm border-secondary" style="padding: 8px 12px;"
                   :value="formattedFechaRegistro"
                   id="fecha_registro"
                   name="fecha_registro"
                   readonly
                 />
               </div>
-                <!-- Grupo Origen -->
-                <div class="ufc-form-group">
-                  <div class="ufc-form-row">
-                    <!-- Campo: tipo_origen -->
-                    <div class="ufc-input-group paired">
-                      <label for="tipo_origen" class="form-label small fw-semibold text-secondary">Tipo de Origen</label>
-                      <select
-                        class="form-select form-select-sm border-secondary"
-                        v-model="formData.tipo_origen"
-                        required>
-                        <option value="" disabled>Seleccione un tipo</option>
-                        <option v-for="item in tipo_origen_options" 
-                                :key="item.id" 
-                                :value="item.id">
-                          {{ item.text }}
-                        </option>
-                      </select>
-                    </div>
-    
-                    <!-- Campo: origen -->
-                    <div class="ufc-input-group paired">
-                      <label for="origen" class="form-label small fw-semibold text-secondary">Origen </label>
-                      <select
-                        v-if="formData.tipo_origen && formData.tipo_origen !== 'puerto'"
-                        class="form-select form-select-sm border-secondary"
-                        v-model="formData.origen"
-                        required>
-                        <option value="" disabled>Seleccione un origen</option>
-                        <option
-                          v-for="entidad in entidades"
-                          :key="entidad.id"
-                          :value="entidad.nombre">
-                          {{ entidad.id }}-{{ entidad.nombre }}
-                        </option>
-                      </select>
-    
-                      <select
-                        v-else-if="formData.tipo_origen === 'puerto'"
-                        class="form-select form-select-sm border-secondary"
-                        v-model="formData.origen"
-                        required>
-                        <option value="" disabled>Seleccione un puerto</option>
-                        <option
-                          v-for="puerto in puertos"
-                          :key="puerto.id"
-                          :value="puerto.nombre_puerto">
-                          {{ puerto.id }}- {{ puerto.nombre_puerto }}
-                        </option>
-                      </select>
-                      
-                      <select
-                        v-else
-                        class="form-select form-select-sm border-secondary"
-                        disabled>
-                        <option value="">Seleccione primero el tipo de origen</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-    
-                <!-- Grupo Destino -->
-                <div class="ufc-form-group">
-                  <div class="ufc-form-row">
-                    <!-- Campo: tipo_destino -->
-                    <div class="ufc-input-group paired">
-                      <label for="tipo_destino" class="form-label small fw-semibold text-secondary">Tipo de Destino</label>
-                      <select
-                        class="form-select form-select-sm border-secondary"
-                        v-model="formData.tipo_destino"
-                        required>
-                        <option value="" disabled>Seleccione un tipo</option>
-                        <option v-for="item in tipo_destino_options" 
-                                :key="item.id" 
-                                :value="item.id">
-                          {{ item.text }}
-                        </option>
-                      </select>
-                    </div>
-    
-                    <!-- Campo: destino -->
-                    <div class="ufc-input-group paired">
-                      <label for="destino" class="form-label small fw-semibold text-secondary">Destino</label>
-                      <select
-                        v-if="formData.tipo_destino && formData.tipo_destino !== 'puerto'"
-                        class="form-select form-select-sm border-secondary"
-                        v-model="formData.destino"
-                        required>
-                        <option value="" disabled>Seleccione un destino</option>
-                        <option
-                          v-for="entidad in entidades"
-                          :key="entidad.id"
-                          :value="entidad.nombre">
-                          {{ entidad.id }}-{{ entidad.nombre }}
-                        </option>
-                      </select>
-    
-                      <select
-                        v-else-if="formData.tipo_destino === 'puerto'"
-                        class="form-select form-select-sm border-secondary"
-                        v-model="formData.destino"
-                        required>
-                        <option value="" disabled>Seleccione un puerto</option>
-                        <option
-                          v-for="puerto in puertos"
-                          :key="puerto.id"
-                          :value="puerto.nombre_puerto">
-                          {{ puerto.id }}- {{ puerto.nombre_puerto }}
-                        </option>
-                      </select>
-                      
-                      <select
-                        v-else
-                        class="form-select form-select-sm border-secondary"
-                        disabled>
-                        <option value="">Seleccione primero el tipo de destino</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-    
-              <!-- Segunda fila - Otros campos -->
-              <div class="ufc-form-grid">
-                <!-- Columna Izquierda -->
-                <div class="ufc-form-column">
-                  <!-- Campo: tipo_equipo -->
-                  <div class="ufc-input-group">
-                    <label for="tipo_equipo" class="form-label small fw-semibold text-secondary">Tipo de Equipo</label>
+
+              <!-- Grupo Origen -->
+              <div class="ufc-form-group">
+                <div class="ufc-form-row">
+                  <!-- Campo: tipo_origen -->
+                  <div class="mb-3">
+                    <label for="tipo_origen" class="form-label small fw-semibold text-secondary">Tipo de Origen</label>
                     <select
-                      class="form-select form-select-sm border-secondary"
-                      v-model="formData.tipo_equipo"
-                      required>
+                      class="form-select form-select-sm border-secondary" style="width:187px; padding-top:8px;padding-bottom:8px;"
+                      v-model="formData.tipo_origen"
+                      required
+                      oninvalid="this.setCustomValidity('Por favor, seleccione un tipo de origen')"
+                      oninput="this.setCustomValidity('')">
                       <option value="" disabled>Seleccione un tipo</option>
-                      <option
-                        v-for="option in tipo_equipo_options"
-                        :key="option.id"
-                        :value="option.id">
-                        {{ option.text }}
+                      <option v-for="item in tipo_origen_options" 
+                              :key="item.id" 
+                              :value="item.id">
+                        {{ item.text }}
                       </option>
                     </select>
                   </div>
-    
-                  <!-- Campo: estado -->
-                  <div class="ufc-input-group">
-                    <label for="estado" class="form-label small fw-semibold text-secondary">Estado</label>
+
+                  <!-- Campo: origen -->
+                  <div class="mb-3">
+                    <label for="origen" class="form-label small fw-semibold text-secondary">Origen</label>
                     <select
-                      class="form-select form-select-sm border-secondary"
-                      v-model="formData.estado"
-                      @change="handleEstadoChange"
-                      required>
-                      <option value="cargado">Cargado</option>
-                      <option value="vacio">Vacío</option>
-                    </select>
-                  </div>
-                </div>
-    
-                <!-- Columna Derecha -->
-                <div class="ufc-form-column">
-                  <!-- Campo: operacion -->
-                  <div class="ufc-input-group">
-                    <label for="operacion" class="form-label small fw-semibold text-secondary">Operación</label>
-                    <select
-                      class="form-select form-select-sm border-secondary"
-                      v-model="formData.operacion"
-                      required>
-                      <option value="" disabled>Seleccione una operación</option>
+                      v-if="formData.tipo_origen && formData.tipo_origen !== 'puerto'"
+                      class="form-select form-select-sm border-secondary" style="width:230px; padding-top:8px;padding-bottom:8px;"
+                      v-model="formData.origen"
+                      required
+                      oninvalid="this.setCustomValidity('Por favor, seleccione un origen')"
+                      oninput="this.setCustomValidity('')">
+                      <option value="" disabled>Seleccione un origen</option>
                       <option
-                        v-for="option in t_operacion_options"
-                        :key="option.id"
-                        :value="option.id">
-                        {{ option.text }}
+                        v-for="entidad in entidades"
+                        :key="entidad.id"
+                        :value="entidad.nombre">
+                        {{ entidad.id }}-{{ entidad.nombre }}
                       </option>
                     </select>
-                  </div>
-    
-                  <!-- Campo: cantidad_vagones -->
-                  <div class="ufc-input-group">
-                    <label for="cantidad_vagones" class="form-label small fw-semibold text-secondary">Cantidad de Vagones</label>
-                    <div class="ufc-por-situar-container">
-                      <input
-                        type="number"
-                        class="ufc-por-situar-input"
-                        v-model.number="formData.cantidad_vagones"
-                        min="1"
-                        required>
-                      <span class="ufc-por-situar-suffix">unidades</span>
-                    </div>
+
+                    <select
+                      v-else-if="formData.tipo_origen === 'puerto'"
+                      class="form-select form-select-sm border-secondary" style="width:230px; padding-top:8px;padding-bottom:8px;"
+                      v-model="formData.origen"
+                      required
+                      oninvalid="this.setCustomValidity('Por favor, seleccione un puerto')"
+                      oninput="this.setCustomValidity('')">
+                      <option value="" disabled>Seleccione un puerto</option>
+                      <option
+                        v-for="puerto in puertos"
+                        :key="puerto.id"
+                        :value="puerto.nombre_puerto">
+                        {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                      </option>
+                    </select>
+                    
+                    <select
+                      v-else
+                      class="form-select form-select-sm border-secondary" style="width:230px; padding-top:8px;padding-bottom:8px;"
+                      disabled>
+                      <option value="">Seleccione un tipo de origen</option>
+                    </select>
                   </div>
                 </div>
               </div>
-    
-              <!-- Tercera fila - Productos -->
-              <div class="ufc-input-group full-width">
-                <label for="producto" class="form-label small fw-semibold text-secondary">Productos <span v-if="formData.estado === 'cargado'" class="required"></span></label>
+
+              <!-- Grupo Destino -->
+              <div class="ufc-form-group">
+                <div class="ufc-form-row">
+                  <!-- Campo: tipo_destino -->
+                  <div class="mb-3">
+                    <label for="tipo_destino" class="form-label small fw-semibold text-secondary">Tipo de Destino</label>
+                    <select
+                      class="form-select form-select-sm border-secondary" style="width:187px; padding-top:8px;padding-bottom:8px;"
+                      v-model="formData.tipo_destino"
+                      required
+                      oninvalid="this.setCustomValidity('Por favor, seleccione un tipo de destino')"
+                      oninput="this.setCustomValidity('')">
+                      <option value="" disabled>Seleccione un tipo</option>
+                      <option v-for="item in tipo_destino_options" 
+                              :key="item.id" 
+                              :value="item.id">
+                        {{ item.text }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <!-- Campo: destino -->
+                  <div class="mb-3">
+                    <label for="destino" class="form-label small fw-semibold text-secondary">Destino</label>
+                    <select
+                      v-if="formData.tipo_destino && formData.tipo_destino !== 'puerto'"
+                      class="form-select form-select-sm border-secondary" style="width:230px; padding-top:8px;padding-bottom:8px;"
+                      v-model="formData.destino"
+                      required
+                      oninvalid="this.setCustomValidity('Por favor, seleccione un destino')"
+                      oninput="this.setCustomValidity('')">
+                      <option value="" disabled>Seleccione un destino</option>
+                      <option
+                        v-for="entidad in entidades"
+                        :key="entidad.id"
+                        :value="entidad.nombre">
+                        {{ entidad.id }}-{{ entidad.nombre }}
+                      </option>
+                    </select>
+
+                    <select
+                      v-else-if="formData.tipo_destino === 'puerto'"
+                      class="form-select form-select-sm border-secondary" style="width:230px; padding-top:8px;padding-bottom:8px;"
+                      v-model="formData.destino"
+                      required
+                      oninvalid="this.setCustomValidity('Por favor, seleccione un puerto')"
+                      oninput="this.setCustomValidity('')">
+                      <option value="" disabled>Seleccione un puerto</option>
+                      <option
+                        v-for="puerto in puertos"
+                        :key="puerto.id"
+                        :value="puerto.nombre_puerto">
+                        {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                      </option>
+                    </select>
+                    
+                    <select
+                      v-else
+                      class="form-select form-select-sm border-secondary" style="width:230px; padding-top:8px;padding-bottom:8px;"
+                      disabled>
+                      <option value="">Seleccione un tipo de destino</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Campo: tipo_equipo -->
+              <div class="mb-3">
+                <label for="tipo_equipo"class="form-label small fw-semibold text-secondary">Tipo de Equipo Ferroviario</label>
+                <select
+                  class="form-select form-select-sm border-secondary" style="padding: 8px 12px;"
+                  v-model="formData.tipo_equipo"
+                  @change="buscarEquipos"
+                  required
+                  oninvalid="this.setCustomValidity('Por favor, seleccione un equipo ferroviario')"
+                  oninput="this.setCustomValidity('')">
+                  <option value="" disabled>Seleccione un tipo</option>
+                  <option
+                    v-for="equipo in equipos"
+                    :key="equipo.id"
+                    :value="equipo.id">
+                    {{ equipo.id }}-{{ equipo.tipo_equipo_name }}-{{
+                      equipo.tipo_carga_name
+                    }}
+                  </option>
+                </select>
+              </div>
+              <!-- Campo: cantidad_vagones -->
+              <div class="mb-3">
+                <label for="cantidad_vagones" v-if="isDisable" class="form-label small fw-semibold text-secondary">Deshabilitado - Seleccione un tipo de equipo ferroviario</label>
+                <label for="cantidad_vagones" v-else class="form-label small fw-semibold text-secondary">Cantidad de Vagones - Cantidad Máxima {{this.equipos_vagones.length}}</label>
+                <div class="ufc-por-situar-container">
+                  <input
+                    type="number"
+                    class="ufc-por-situar-input"
+                    v-model.number="formData.cantidad_vagones"
+                    min="1"
+                    :max= "`${this.equipos_vagones.length}`" :disabled="isDisable"
+                    required>
+                  <span class="ufc-por-situar-suffix">unidades</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Columna Derecha -->
+            <div class="col-md-6">
+              <!-- Campo: estado -->
+              <div class="mb-3">
+                <label for="estado" class="form-label small fw-semibold text-secondary">Estado</label>
+                <select
+                  class="form-select form-select-sm border-secondary" style="padding: 8px 12px;"
+                  v-model="formData.estado"
+                  @change="handleEstadoChange"
+                  required
+                  oninvalid="this.setCustomValidity('Por favor, seleccione un estado')"
+                  oninput="this.setCustomValidity('')">
+                  <option value="cargado">Cargado</option>
+                  <option value="vacio">Vacío</option>
+                </select>
+              </div>
+
+              <!-- Campo: operacion -->
+              <div class="mb-3">
+                <label for="operacion" class="form-label small fw-semibold text-secondary">Operación</label>
+                <select
+                  class="form-select form-select-sm border-secondary" style="padding: 8px 12px;"
+                  v-model="formData.operacion"
+                  required
+                  oninvalid="this.setCustomValidity('Por favor, seleccione una operación')"
+                  oninput="this.setCustomValidity('')">
+                  <option value="" disabled>Seleccione una operación</option>
+                  <option
+                    v-for="option in t_operacion_options"
+                    :key="option.id"
+                    :value="option.id">
+                    {{ option.text }}
+                  </option>
+                </select>
+              </div>
+
+ 
+              <!-- Campo: Productos -->
+              <div class="mb-3">
+                <label for="producto" class="form-label small fw-semibold text-secondary">Productos <span v-if="formData.estado === 'cargado'"></span></label>
                 <div class="ufc-input-with-action">
                   <div class="ufc-custom-select" @click="toggleProductosDropdown">
                     <div class="ufc-select-display">
@@ -257,42 +278,162 @@
                   </button>
                 </div>
               </div>
-    
-              <!-- Observaciones (full width) -->
-              <div class="ufc-input-group full-width">
+              <div class="mb-3">
                 <label for="observaciones" class="form-label small fw-semibold text-secondary">Observaciones</label>
                 <textarea
                   class="form-control form-control-sm border-secondary"
                   v-model="formData.observaciones"
-                  rows="2"></textarea>
+                  rows="4"></textarea>
               </div>
-    
-              <!-- Botones de acción -->
-              <div class="modal-footer">
-                <div class=" d-flex justify-content-between align-items-center mb-4">
-                  <button class="ufc-button secondary" @click="volver_principal">
-                    <i class="bi bi-x-circle" me-1></i>Cancelar
-                  </button>
-                  <button type="submit" class=" ufc-button primary" >
-                    <i class="bi bi-check-circle" me-1></i>Agregar
-                  </button>
-                </div>
-              </div>
-            </form>          
+            </div>
+          </div>
+          
+          <!-- Botones de acción -->
+          <div class="modal-footer">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <button class="ufc-button secondary" @click="volver_principal">
+                  <i class="bi bi-x-circle" me-1></i>Cancelar
+              </button>
+              <button type="submit" class="ufc-button primary">
+                <i class="bi bi-check-circle" me-1></i>Agregar
+              </button>
+            </div>
+          </div>
+        </form>          
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para agregar producto -->
+  <ModalAgregarProducto v-if="mostrarModal" :visible="mostrarModal" @cerrar-modal="cerrarModal"/>
+
+  <!-- Modal para agregar vagón -->
+  <div v-if="mostrarModalVagon" class="ufc-modal-overlay">
+    <div class="ufc-modal-container">
+      <div class="ufc-modal-header">
+        <h3><i class="bi bi-train-freight-front"></i> Agregar Vagón</h3>
+        <button @click="cerrarModalVagon" class="ufc-modal-close">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+      <div class="ufc-modal-body">
+        <div class="ufc-form-grid">
+          <!-- Campo: Equipo Ferroviario -->
+          <div class="ufc-input-group">
+            <label for="equipo_ferroviario">Equipo Ferroviario</label>
+            <select class="ufc-select" v-model="nuevoVagon.equipo_ferroviario" required
+              oninvalid="this.setCustomValidity('Por favor, seleccione un estado')"
+              oninput="this.setCustomValidity('')">
+              <option value="" disabled>Seleccione un equipo</option>
+              <option v-for="equipo in equipos_vagones" :key="equipo.id" :value="equipo.id">
+                {{ equipo.numero_identificacion }} -
+                {{ equipo.tipo_equipo_name }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Campo: Cantidad de días -->
+          <div class="ufc-input-group">
+            <label for="cant_dias">Cantidad de días</label>
+            <input
+              type="number"
+              class="ufc-input"
+              v-model.number="nuevoVagon.cant_dias"
+              min="1"
+              required
+            />
           </div>
         </div>
+
+        <!-- Botones del modal -->
+        <div class="ufc-form-actions">
+          <button
+            type="button"
+            class="ufc-button secondary"
+            @click="cerrarModalVagon">
+            <i class="bi bi-x-circle"></i> Cancelar
+          </button>
+          <button
+            type="button"
+            class="ufc-button primary"
+            @click="agregarNuevoVagon"
+            :disabled="!nuevoVagon.equipo_ferroviario || !nuevoVagon.cant_dias">
+            <i class="bi bi-check-circle"></i> Agregar
+          </button>
+        </div>
       </div>
-      
-      <ModalAgregarProducto v-if="mostrarModal" :visible="mostrarModal" @cerrar-modal="cerrarModal"/>
+    </div>
+  </div>
 
-  </template>
+  <!-- Contenedor de vagones agregados -->
+  <div class="container py-3" style="margin-left: 20em; width: 70%">
+    <div class="card border">
+      <div class="card-header bg-light border-bottom">
+        <h5 class="mb-0 text-dark fw-semibold">
+          <i class="bi bi-train-freight-front"></i> Vagones agregados
+        </h5>
+      </div>
+      <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <button class="btn btn-primary" @click="abrirModalVagon()">
+            <i class="bi bi-plus-circle"></i> Agregar Vagon
+          </button>
+        </div>
+        <!-- Tabla responsive con mejoras -->
+        <div class="table table-responsive">
+          <table class="table table-sm table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th scope="col">No.</th>
+                <th scope="col">No. ID en trenes</th>
+                <th>Cant. días</th>
+                <th scope="col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(vagon, index) in vagonesAgregados" :key="index">
+                <td>{{ index + 1 }}</td>
+                <td>
+                    {{
+                      vagon.datos?.equipo_vagon ||
+                      vagon.equipo_ferroviario.numero_identificacion
+                    }}
+                </td>
+                <td>
+                    {{ vagon.cant_dias }}
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-outline-danger" @click="eliminarVagon(index)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-<script>
-import axios, { formToJSON } from "axios";
-import Swal from "sweetalert2";
-import NavbarComponent from "@/components/NavbarComponent.vue";
-import ModalAgregarProducto from "@/components/ModalAgregarProducto.vue";
+        <!-- Validación de cantidad de vagones -->
+        <div class="ufc-validation-message" :class="{ warning: vagonesAgregados.length < formData.cantidad_vagones, success: vagonesAgregados.length === formData.cantidad_vagones, error: vagonesAgregados.length > formData.cantidad_vagones,}">
+          <p v-if="vagonesAgregados.length < formData.cantidad_vagones">
+            Faltan
+            {{ formData.cantidad_vagones - vagonesAgregados.length }}
+            vagones por agregar.
+          </p>
+          <p v-else-if="vagonesAgregados.length === formData.cantidad_vagones">
+            Todos los vagones han sido agregados.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
 
+  <script>
+  import axios from "axios";
+  import Swal from "sweetalert2";
+  import NavbarComponent from "@/components/NavbarComponent.vue";
+  import ModalAgregarProducto from "@/components/ModalAgregarProducto.vue";
+  
 export default {
   name: "AdicionarPendienteArrastre",
   components: {
@@ -314,6 +455,7 @@ export default {
         observaciones: "",
         equipos_vagones: [],
       },
+      isDisable:true,
       userGroups: [], // Inicializa como array vacío
       userPermissions: [], // Inicializa como array vacío
       productoSearch: "",
@@ -428,12 +570,26 @@ export default {
     },
 
     async abrirModalVagon() {
-      this.mostrarModalVagon = true;
-      console.log(this.vagonesAgregados);
-      if (this.equiposFerroviarios.length === 0) {
-        await this.buscarEquipos();
+      if (this.equipos_vagones.length==0) {
+        Swal.fire({
+          title: "Error",
+          text: "Debe seleccionar el tipo de equipo ferroviario",
+          icon: "error",
+        });
+        return;
       }
+      
+      if (this.vagonesAgregados.length==this.formData.cantidad_vagones) {
+        Swal.fire({
+          title: "Error",
+          text: "Ya añadió todos los vagones según la cantidad de vagones situados definida. Si lo desea aumente la cantidad de vagones situados",
+          icon: "error",
+        });
+        return;
+      }
+      this.mostrarModalVagon = true;
     },
+
     cerrarModalVagon() {
       this.mostrarModalVagon = false;
       this.nuevoVagon = {
@@ -457,9 +613,18 @@ export default {
         return;
       }
 
-      const equipoSeleccionado = this.equipos_vagones.find(
-        (e) => e.id === this.nuevoVagon.equipo_ferroviario
-      );
+      const equipoSeleccionado = this.equipos_vagones.find((e) => e.id === this.nuevoVagon.equipo_ferroviario);
+
+      const yaExistente = this.vagonesAgregados.some((vagon) => vagon.equipo_ferroviario.id === this.nuevoVagon.equipo_ferroviario);
+
+      if (yaExistente) {
+        Swal.fire({
+          title: "Error",
+          text: "Este vagón ya ha sido agregado a la lista",
+          icon: "error",
+        });
+        return;
+      }
 
       const vagonAgregado = {
         equipo_ferroviario: equipoSeleccionado,
@@ -508,7 +673,7 @@ export default {
           });
           return;
         }
-
+        this.isDisable=false;
         this.equipos_vagones = response.data;
       } catch (error) {
         console.error("Error al obtener los equipos ferroviarios:", error);
@@ -587,8 +752,8 @@ export default {
 
     async submitForm() {
       try {
-        // 1. Verificar que exista un informe operativo
         const existeInforme = await this.verificarInformeOperativo();
+
         if (!existeInforme) {
           Swal.fire(
             "Error",
@@ -599,7 +764,17 @@ export default {
           return;
         }
 
-        // 2. Verificar que el informe no esté aprobado
+        if (this.vagonesAgregados.length==0) {
+          Swal.fire({title: "Error",text: "Debe añadir al menos un vagón",icon: "error",});
+          return;
+        }
+
+        if (this.formData.origen === this.formData.destino) {
+          Swal.fire("Error", "No puede tener el mismo Origen y Destino", "error");
+          return;
+        }
+
+
         const informeNoAprobado = await this.verificarEstadoInforme();
         if (!informeNoAprobado) {
           Swal.fire(
@@ -610,45 +785,6 @@ export default {
           return;
         }
 
-        // Validación de campos requeridos
-        if (!this.formData.tipo_origen) {
-          throw new Error("El campo Tipo de Origen es requerido");
-        }
-
-        if (!this.formData.origen) {
-          throw new Error("El campo Origen es requerido");
-        }
-
-        if (!this.formData.tipo_destino) {
-          throw new Error("El campo Tipo de Destino es requerido");
-        }
-
-        if (!this.formData.destino) {
-          throw new Error("El campo Destino es requerido");
-        }
-
-        if (!this.formData.tipo_equipo) {
-          throw new Error("El campo Tipo de Equipo es requerido");
-        }
-
-        if (!this.formData.operacion) {
-          throw new Error("El campo Operación es requerido");
-        }
-
-        if (
-          this.formData.estado === "cargado" &&
-          this.formData.productos.length === 0
-        ) {
-          throw new Error(
-            "Debe seleccionar al menos un producto cuando el estado es Cargado"
-          );
-        }
-
-        if (this.vagonesAgregados.length === 0) {
-          throw new Error("Debe agregar al menos un vagón");
-        }
-
-        // Preparar los datos para enviar
         const payload = {
           tipo_origen: this.formData.tipo_origen,
           origen: this.formData.origen,
@@ -669,8 +805,7 @@ export default {
             // Otros campos necesarios para el vagon
           })),
         };
-        console.log("Payload a enviar:", payload);
-        // Enviar los datos al backend
+
         const response = await axios.post("/ufc/pendiente-arrastre/", payload);
 
         // Mostrar mensaje de éxito
@@ -678,11 +813,11 @@ export default {
           title: "¡Éxito!",
           text: "El registro ha sido creado correctamente",
           icon: "success",
-          confirmButtonText: "Aceptar",
-        }).then(() => {
-          // Resetear el formulario después de enviar
-          this.resetForm();
-        });
+          confirmButtonText: "OK",
+        })
+        this.resetForm();
+        this.$router.push({ name: "InfoOperativo" });
+        
       } catch (error) {
         console.error("Error al enviar el formulario:", error);
 
@@ -754,340 +889,6 @@ export default {
       const searchTerm = this.productoSearch.toLowerCase();
       this.filteredProductos = this.productos.filter(
         (producto) =>
-  <script>
-  import axios from "axios";
-  import Swal from "sweetalert2";
-  import NavbarComponent from "@/components/NavbarComponent.vue";
-  import ModalAgregarProducto from "@/components/ModalAgregarProducto.vue";
-  
-  export default {
-    name: "AdicionarPendienteArrastre",
-    components: {
-      NavbarComponent,
-      ModalAgregarProducto,
-    },
-    data() {
-      return {
-        informeOperativoId: null,
-        formData: {
-          tipo_origen: "",
-          origen: "",
-          tipo_destino: "",
-          destino: "",
-          tipo_equipo: "",
-          operacion: "",
-          estado: "cargado",
-          productos: [], 
-          cantidad_vagones: 1,
-          observaciones: "",
-        },
-        productoSearch: '',
-        filteredProductos: [],
-        showProductosDropdown: false,
-        entidades: [],
-        puertos: [],
-        productos: [],
-        loading: false,
-        mostrarModal: false,
-        tipo_origen_options: [
-          { id: "ac_ccd", text: "comercial/AccesoCCD" },
-          { id: "puerto", text: "Puerto" },
-        ],
-        tipo_destino_options: [
-          { id: "ac_ccd", text: "comercial/AccesoCCD" },
-          { id: "puerto", text: "Puerto" },
-        ],
-        tipo_equipo_options: [
-          { id: "casilla", text: "Casilla" },
-          { id: "caj_gon", text: "Cajon o Gondola" },
-        ],
-        t_operacion_options: [
-          { id: "carga", text: "Carga" },
-          { id: "descarga", text: "Descarga" },
-        ],
-      };
-    },
-    mounted() {
-      this.getProductos();
-      this.getEntidades();
-      this.getPuertos();
-      this.closeDropdownsOnClickOutside();
-    },
-    computed:{
-      formattedFechaRegistro() {
-      if (this.formData.fecha) {
-        return new Date(this.formData.fecha).toLocaleString();
-      }
-      return new Date().toLocaleString();
-    }
-    },
-    methods: {
-      async verificarInformeOperativo() {
-        try {
-          this.formData.fecha = new Date().toISOString();
-          const today = new Date();
-          const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-
-          const response = await axios.get('/ufc/verificar-informe-existente/', {
-            params: { fecha_operacion: fechaFormateada }
-          });
-
-          if (response.data.existe) {
-            this.informeOperativoId = response.data.id;
-            return true;
-          }
-          return false;
-        } catch (error) {
-          console.error("Error al verificar informe:", error);
-          return false;
-        }
-      },
-      async getEntidades() {
-        try {
-          const response = await axios.get("/api/entidades/");
-          this.entidades = response.data.results;
-        } catch (error) {
-          console.error("Error al obtener entidades:", error);
-          Swal.fire("Error", "No se pudieron obtener las entidades", "error");
-        }
-      },
-  
-      async getProductos() {
-        this.loading = true;
-        try {
-          const response = await axios.get("/ufc/producto-vagon/", {
-            params: {
-              include_details: true
-            }
-          });
-          
-          this.productos = response.data.results.map(p => {
-            const tipoEmbalaje = p.tipo_embalaje || {};
-            return {
-              ...p,
-              tipo_embalaje: {
-                nombre: tipoEmbalaje.nombre || tipoEmbalaje.nombre_embalaje || 'Sin embalaje'
-              }
-            };
-          });
-          this.filteredProductos = this.productos;
-        } catch (error) {
-          console.error("Error al obtener productos:", error);
-          Swal.fire("Error", "No se pudieron cargar los productos", "error");
-        } finally {
-          this.loading = false;
-        }
-      },
-  
-      async getPuertos() {
-        try {
-          let allPuertos = [];
-          let nextPage = "/api/puertos/";
-  
-          while (nextPage) {
-            const response = await axios.get(nextPage);
-            allPuertos = [...allPuertos, ...response.data.results];
-            nextPage = response.data.next;
-          }
-  
-          this.puertos = allPuertos;
-        } catch (error) {
-          console.error("Error al obtener los puertos:", error);
-          Swal.fire("Error", "Hubo un error al obtener los puertos.", "error");
-        }
-      },
-  
-      abrirModalAgregarProducto() {
-        this.showProductosDropdown = false;
-        this.mostrarModal = true;
-      },
-  
-      cerrarModal() {
-        this.mostrarModal = false;
-      },
-  
-      handleNuevoProducto(nuevoProducto) {
-        this.getProductos();
-        this.formData.productos.push(nuevoProducto.id);
-        this.cerrarModal();
-      },
-  
-      handleEstadoChange() {
-        if (this.formData.estado === 'vacio') {
-          this.formData.productos = [];
-        }
-      },
-      volver_principal() {
-        event.preventDefault();
-        event.stopPropagation();
-        Swal.fire({
-          title: "¿Cancelar operación?",
-          text: "Los datos no guardados se perderán",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonText: "Sí, cancelar",
-          cancelButtonText: "No, continuar",
-        }).then((result) => {
-          if (result.isConfirmed) {
-            this.resetForm();
-            this.$router.push({ name: "InfoOperativo" });
-          }
-        });
-      },
-      async submitForm() {
-        try {
-          // 1. Verificar si existe un informe operativo para la fecha actual
-          const existeInforme = await this.verificarInformeOperativo();
-          if (!existeInforme) {
-            Swal.fire(
-              "Error",
-              "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
-              "error"
-            );
-            this.$router.push({ name: "InfoOperativo" });
-            return;
-          }
-
-          // 2. Verificar que el informe no esté en estado "Aprobado"
-          const informeDetalleResponse = await axios.get(`/ufc/informe-operativo/${this.informeOperativoId}/`);
-          if (informeDetalleResponse.data.estado_parte === "Aprobado") {
-            Swal.fire(
-              "Error",
-              "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
-              "error"
-            );
-            return;
-          }
-
-          // 3. Validación de campos requeridos
-          if (!this.formData.tipo_origen) {
-            throw new Error("El campo Tipo de Origen es requerido");
-          }
-          
-          if (!this.formData.origen) {
-            throw new Error("El campo Origen es requerido");
-          }
-          
-          if (!this.formData.tipo_destino) {
-            throw new Error("El campo Tipo de Destino es requerido");
-          }
-          
-          if (!this.formData.destino) {
-            throw new Error("El campo Destino es requerido");
-          }
-          
-          if (!this.formData.tipo_equipo) {
-            throw new Error("El campo Tipo de Equipo es requerido");
-          }
-          
-          if (!this.formData.operacion) {
-            throw new Error("El campo Operación es requerido");
-          }
-          
-          if (this.formData.estado === 'cargado' && this.formData.productos.length === 0) {
-            throw new Error("Debe seleccionar al menos un producto cuando el estado es Cargado");
-          }
-          
-          if (!this.formData.cantidad_vagones || this.formData.cantidad_vagones < 1) {
-            throw new Error("La cantidad de vagones debe ser al menos 1");
-          }
-
-          // 4. Preparar los datos para enviar
-          const payload = {
-            tipo_origen: this.formData.tipo_origen,
-            origen: this.formData.origen,
-            tipo_destino: this.formData.tipo_destino,
-            destino: this.formData.destino,
-            tipo_equipo: this.formData.tipo_equipo,
-            operacion: this.formData.operacion,
-            estado: this.formData.estado,
-            producto: this.formData.productos,
-            cantidad_vagones: this.formData.cantidad_vagones,
-            observaciones: this.formData.observaciones,
-            informe_operativo: this.informeOperativoId // Añadir el ID del informe operativo
-          };
-
-          // 5. Enviar los datos al backend
-          const response = await axios.post("/ufc/pendiente-arrastre/", payload);
-          
-          // 6. Mostrar mensaje de éxito
-          Swal.fire({
-            title: "¡Éxito!",
-            text: "El registro ha sido creado correctamente",
-            icon: "success",
-            confirmButtonText: "Aceptar"
-          }).then(() => {
-            this.resetForm();
-          });
-
-        } catch (error) {
-          console.error("Error al enviar el formulario:", error);
-          
-          let errorMessage = "Hubo un error al enviar el formulario";
-          if (error.response) {
-            if (error.response.data) {
-              errorMessage = Object.values(error.response.data).join('\n');
-            }
-          } else if (error.message) {
-            errorMessage = error.message;
-          }
-          
-          Swal.fire({
-            title: "Error",
-            text: errorMessage,
-            icon: "error",
-            confirmButtonText: "Entendido"
-          });
-        }
-      },
-  
-      resetForm() {
-        this.formData = {
-          tipo_origen: "",
-          origen: "",
-          tipo_destino: "",
-          destino: "",
-          tipo_equipo: "",
-          operacion: "",
-          estado: "cargado",
-          productos: [],
-          cantidad_vagones: 1,
-          observaciones: "",
-        };
-      },
-  
-      confirmCancel() {
-        Swal.fire({
-          title: "¿Cancelar operación?",
-          text: "Los datos no guardados se perderán",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonText: "Sí, cancelar",
-          cancelButtonText: "No, continuar",
-        }).then((result) => {
-          if (result.isConfirmed) {
-            this.resetForm();
-            this.$router.push({ name: "InfoOperativo" });
-          }
-        });
-      },
-  
-      toggleProductosDropdown() {
-        if (this.mostrarModal) return;
-        this.showProductosDropdown = !this.showProductosDropdown;
-        if (this.showProductosDropdown) {
-          this.productoSearch = '';
-          this.filterProductos();
-        }
-      },
-      
-      filterProductos() {
-        if (!this.productoSearch) {
-          this.filteredProductos = this.productos;
-          return;
-        }
-        const searchTerm = this.productoSearch.toLowerCase();
-        this.filteredProductos = this.productos.filter(producto => 
           producto.producto_name.toLowerCase().includes(searchTerm) ||
           producto.producto_codigo.toLowerCase().includes(searchTerm) ||
           producto.id.toString().includes(searchTerm)
@@ -1133,6 +934,27 @@ export default {
         confirmButtonText: "Aceptar",
       });
     },
+
+    volver_principal() {
+      event.preventDefault();
+      event.stopPropagation();
+      Swal.fire({
+        title: "¿Volver a la página principal?",
+        text: "Los datos no guardados se perderán",
+        icon: "warning",
+        showCancelButton: true,
+        cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Continuar',
+        cancelButtonColor: "#f1513f",
+        confirmButtonText: '<i class="bi bi-box-arrow-right me-1"></i>Volver',
+        confirmButtonColor: "#007bff",
+        reverseButtons: true,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.resetForm();
+          this.$router.push({ name: "InfoOperativo" });
+        }
+      });
+    },
   },
 };
 </script>
@@ -1142,7 +964,6 @@ export default {
 .ufc-form-row {
   display: flex;
   gap: 15px;
-  margin-bottom: 15px;
 }
 
 .ufc-input-group.paired {
@@ -1457,8 +1278,18 @@ export default {
     background:rgb(228, 56, 37);
 }
 
+.btn-outline-danger {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+  color: #fff;
+}
+
 .create-button {
   text-decoration: none;
+  border: none;
   color: green;
   margin-left: 940px;
 }
@@ -1466,7 +1297,6 @@ export default {
 button {
   margin-left: 10px;
   padding: 5px 15px;
-  border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
@@ -1715,4 +1545,15 @@ button[type="submit"] {
     transform: translateY(0);
   }
 }
+.form-select:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+  outline: 0;
+}
+.form-control:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+  outline: 0;
+}
+
 </style>

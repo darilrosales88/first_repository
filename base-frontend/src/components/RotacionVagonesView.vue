@@ -2,106 +2,22 @@
   <div class="container py-3">
     <!-- Encabezado -->
     <div class="card border">
-      <div
-        class="card-header bg-light border-bottom d-flex justify-content-between align-items-center"
-      >
+      <div class="card-header bg-light border-bottom">
         <h5 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-search me-2"></i>Consultar rotación de los vagones
+          <i class="bi bi-search me-2"></i>Rotación de los vagones
         </h5>
         <!-- Botón para abrir el modal -->
       </div>
 
       <!-- Cuerpo -->
       <div class="card-body p-3">
-        <!-- Resumen general -->
-        <div class="mt-4">
-          <h6 class="text-secondary fw-semibold mb-3">
-            <i class="bi bi-bar-chart-line me-2"></i>Resumen general
-          </h6>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <div class="card border-secondary">
-                <div class="card-body p-3">
-                  <h6 class="card-title text-secondary fw-semibold">
-                    Total de vagones en servicio
-                  </h6>
-                  <p class="card-text display-6 text-center">
-                    {{ resumen.totalVagonesEnServicio }}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="card border-secondary">
-                <div class="card-body p-3">
-                  <h6 class="card-title text-secondary fw-semibold">
-                    Plan total carga
-                  </h6>
-                  <p class="card-text display-6 text-center">
-                    {{ resumen.planCarga }}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="card border-secondary">
-                <div class="card-body p-3">
-                  <h6 class="card-title text-secondary fw-semibold">
-                    Total real carga
-                  </h6>
-                  <p class="card-text display-6 text-center">
-                    {{ resumen.realCarga }}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="card border-secondary">
-                <div class="card-body p-3">
-                  <h6 class="card-title text-secondary fw-semibold">
-                    Plan total de rotación
-                  </h6>
-                  <p class="card-text display-6 text-center">
-                    {{ resumen.planRotacion }}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="card border-secondary">
-                <div class="card-body p-3">
-                  <h6 class="card-title text-secondary fw-semibold">
-                    Total real de rotación
-                  </h6>
-                  <p class="card-text display-6 text-center">
-                    {{ resumen.realRotacion }}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <!-- Registro de rotación por tipo de equipo -->
         <div class="mt-4">
           <h6
             class="d-flex justify-content-between align-items-center text-secondary fw-semibold mb-3"
-            style="padding: 0.5rem 1rem"
-          >
-            <!-- Texto centrado -->
-            <span class="d-flex align-items-center">
-              <i class="bi bi-list-ul me-2"></i>
-              Registro de rotación de cada tipo de equipo ferroviario
-            </span>
-
-            <!-- Botón alineado a la derecha -->
-            <button class="btn btn-sm btn-primary" @click="mostrarModal = true">
-              <i class="bi bi-plus-circle me-1"></i>Adicionar rotación
-            </button>
-          <h6
-            class="d-flex justify-content-between align-items-center text-secondary fw-semibold mb-3"
-            style="padding: 0.5rem 1rem"
-          >
+            style="padding: 0.5rem 1rem">
+            
             <!-- Texto centrado -->
             <span class="d-flex align-items-center">
               <i class="bi bi-list-ul me-2"></i>
@@ -113,7 +29,6 @@
               <i class="bi bi-plus-circle me-1"></i>Adicionar rotación
             </button>
           </h6>
-
 
           <table class="table table-sm table-bordered table-hover">
             <thead class="table-light">
@@ -141,10 +56,8 @@
                 <td>{{ equipo.real_rotacion }}</td>
                 <td>
                   <button
-                    class="btn btn-sm btn-danger"
-                    @click="eliminarRotacion(equipo.id)"
-                    @click="eliminarRotacion(equipo.id)"
-                  >
+                    class="btn btn-sm btn-outline-danger"
+                    @click="eliminarRotacion(equipo.id)">
                     <i class="bi bi-trash"></i>
                   </button>
                 </td>
@@ -157,89 +70,134 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Resumen general -->
+        <div class="mt-4">
+          <h6 class="text-secondary fw-semibold mb-3">
+            <i class="bi bi-bar-chart-line me-2"></i>Resumen general
+          </h6>
+
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="card border-secondary">
+                <div class="card-body p-1">
+                  <h6 class="card-title text-secondary fw-semibold">
+                    Plan total carga
+                  </h6>
+                  <p class="card-text display-6 text-center">
+                    {{ resumen.planCarga }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card border-secondary">
+                <div class="card-body p-1">
+                  <h6 class="card-title text-secondary fw-semibold">
+                    Plan total de rotación
+                  </h6>
+                  <p class="card-text display-6 text-center">
+                    {{ resumen.planRotacion }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card border-secondary">
+                <div class="card-body p-1">
+                  <h6 class="card-title text-secondary fw-semibold">
+                    Total de vagones en servicio
+                  </h6>
+                  <p class="card-text display-6 text-center">
+                    {{ resumen.totalVagonesEnServicio }}
+                  </p>
+                </div>
+              </div>             
+            </div>
+            
+          </div>
+
+          <div class="row g-3 mt-1">
+            <div class="col-md-6">
+              <div class="card border-secondary">
+                <div class="card-body p-1">
+                  <h6 class="card-title text-secondary fw-semibold">
+                    Total real carga
+                  </h6>
+                  <p class="card-text display-6 text-center">
+                    {{ resumen.realCarga }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="card border-secondary">
+                <div class="card-body p-1">
+                  <h6 class="card-title text-secondary fw-semibold">
+                    Total real de rotación
+                  </h6>
+                  <p class="card-text display-6 text-center">
+                    {{ resumen.realRotacion }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Modal para adicionar/editar rotación de vagones -->
-    <div class="modal fade" :class="{ show: mostrarModal }" tabindex="-1" role="dialog" style="display: block" v-if="mostrarModal">
-      <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-          <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title">
+    <div class="modal fade ufc-modal-overlay" :class="{ show: mostrarModal }" tabindex="-1" role="dialog" style="display: block; " v-if="mostrarModal">
+      <div class="modal-dialog modal-dialog-centered" role="document" >
+        <div class="modal-content" >
+          <div class="ufc-modal-header">
+            <h3 class="modal-title">
               {{
                 modoEdicion
                   ? "Editar rotación de vagones"
                   : "Adicionar rotación de vagones"
               }}
-            </h5>
-            <button
-              type="button"
-              class="btn-close btn-close-white"
-              @click="cerrarModal"
-            ></button>
+            </h3>
+            <button class="ufc-modal-close" @click="cerrarModal"><i class="bi bi-x"></i></button>
           </div>
-          <div class="modal-body">
-            <form
-              @submit.prevent="
-                modoEdicion ? actualizarRotacion() : guardarRotacion()
-              "
-            >
-              <div class="row g-3">
-                <!-- Tipo de equipo ferroviario -->
-                <div class="col-12">
-                  <label
-                    for="tipoEquipo"
-                    class="form-label small fw-semibold text-secondary"
-                  >
-                    Tipo de equipo ferroviario<span style="color: red">*</span>
-                  </label>
-                  <select
-                    class="form-select form-select-sm"
-                    id="tipoEquipo"
-                    v-model="nuevaRotacion.tipoEquipo"
-                    required
-                  >
-                    <option value="" disabled>
-                      Seleccione un tipo de equipo
-                    </option>
-                    <option
-                      v-for="equipo in tiposEquiposFerroviarios"
-                      :key="equipo.id"
-                      :value="equipo.id"
-                    >
-                      {{ equipo.tipo_equipo_name }}--{{
-                        equipo.tipo_carga_name
-                      }}
-                    </option>
-                  </select>
-                </div>
+          <div class="ufc-modal-body">
+            
+              <form @submit.prevent="modoEdicion ? actualizarRotacion() : guardarRotacion()">
+                <div class="ufc-form-grid">
+                  <!-- Tipo de equipo ferroviario -->
+                  <div class="ufc-input-group">
+                    <label for="tipoEquipo" class="form-label small fw-semibold text-secondary">
+                      Tipo de equipo ferroviario
+                    </label>
 
-                <!-- Vagones en servicio -->
-                <div class="col-12">
-                  <label
-                    for="vagonesEnServicio"
-                    class="form-label small fw-semibold text-secondary"
-                  >
-                    Vagones en servicio<span style="color: red">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    class="form-control form-control-sm"
-                    id="vagonesEnServicio"
-                    v-model.number="nuevaRotacion.vagonesEnServicio"
-                    min="0"
-                    required
-                  />
+                    <select class="form-select form-select-sm" style="width:280px; padding: 8px 12px;" id="tipoEquipo" v-model="nuevaRotacion.tipoEquipo" required>
+                      <option value="" disabled>
+                        Seleccione un tipo de equipo
+                      </option>
+                      <option v-for="equipo in tiposEquiposFerroviarios":key="equipo.id" :value="equipo.id"> {{ equipo.tipo_equipo_name }}--{{equipo.tipo_carga_name}}
+                      </option>
+                    </select>
+                  </div>
+
+                  <!-- Vagones en servicio -->
+                  <div class="ufc-input-group">
+                    <label for="vagonesEnServicio" class="form-label small fw-semibold text-secondary" >
+                      Vagones en servicio
+                    </label>
+                    <input type="number" class="form-control form-control-sm" style="width:165px; padding: 8px 12px;" id="vagonesEnServicio" v-model.number="nuevaRotacion.vagonesEnServicio" min="0" required/>
+                  </div>
                 </div>
-              </div>
-            </form>
+              </form>
+            
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-sm btn-secondary" @click="cerrarModal">
-              Cancelar
+          <div class="ufc-form-actions">
+            <button type="button" class="ufc-button secondary" @click="cerrarModal">
+              <i class="bi bi-x-circle"></i>Cancelar
             </button>
-            <button type="button" class="btn btn-sm btn-primary" @click="modoEdicion ? actualizarRotacion() : guardarRotacion()">
-              {{ modoEdicion ? "Actualizar" : "Aceptar" }}
+            <button type="button" class="ufc-button primary" @click="modoEdicion ? actualizarRotacion() : guardarRotacion()">
+              <i class="bi bi-check-circle"></i>{{ modoEdicion ? "Actualizar" : "Aceptar" }}
             </button>
           </div>
         </div>
@@ -287,6 +245,7 @@ export default {
     this.getEquipos();
   },
   methods: {
+
     async get_rotaciones() {
       this.loading = true; // Activa el estado de carga
       try {
@@ -343,6 +302,7 @@ export default {
         this.loading = false; // Desactiva el estado de carga
       }
     },
+
     async getEquipos() {
       try {
         const response = await axios.get("/api/tipo-e-f-no-locomotora/");
@@ -352,6 +312,7 @@ export default {
         Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
       }
     },
+
     cerrarModal() {
       this.mostrarModal = false;
       this.nuevaRotacion = {
@@ -386,8 +347,6 @@ export default {
     }, */
 
     async guardarRotacion() {
-      // 1. Verificar si existe informe operativo para la fecha actual
-      /* const existeInforme = await this.verificarInformeOperativo(); */
       if (0) {
         Swal.fire(
           "Error",
@@ -398,69 +357,39 @@ export default {
         return;
       }
 
-      // 2. Validar campos obligatorios
-      if (
-        !this.nuevaRotacion.tipoEquipo ||
-        this.nuevaRotacion.vagonesEnServicio <= 0
-      ) {
-        Swal.fire(
-          "Campos incompletos",
+      if (!this.nuevaRotacion.tipoEquipo || this.nuevaRotacion.vagonesEnServicio <= 0) {
         Swal.fire(
           "Campos incompletos",
           "Por favor, complete todos los campos obligatorios.",
-          "warning"
           "warning"
         );
         return;
       }
 
       try {
-        // 3. Hacer POST real a la API
         const response = await axios.post("/ufc/rotaciones/", {
           tipo_equipo_ferroviario: this.nuevaRotacion.tipoEquipo,
           en_servicio: this.nuevaRotacion.vagonesEnServicio,
         });
         await this.get_rotaciones();
-        // 4. Actualizar la tabla local con el nuevo registro desde la respuesta del backend
-
-        // 5. Mostrar mensaje de éxito y cerrar el modal
-        Swal.fire(
-          "Éxito",
-          "La rotación ha sido guardada correctamente.",
-          "success"
-        );
+        Swal.fire("Éxito", "La rotación ha sido guardada correctamente.", "success");
         this.cerrarModal();
       } catch (error) {
         console.error("Error al guardar la rotación:", error);
-
         let mensajeError = "Hubo un problema al guardar la rotación.";
         if (error.response && error.response.data) {
           const errores = error.response.data;
-          mensajeError =
-            Object.values(errores).flat().join(" ") ||
-            "Hubo un problema al guardar la rotación.";
+          mensajeError = Object.values(errores).flat().join(" ") || "Hubo un problema al guardar la rotación.";
         }
-
-        Swal.fire("Error", mensajeError, "error");
-      }
-
-        let mensajeError = "Hubo un problema al guardar la rotación.";
-        if (error.response && error.response.data) {
-          const errores = error.response.data;
-          mensajeError =
-            Object.values(errores).flat().join(" ") ||
-            "Hubo un problema al guardar la rotación.";
-        }
-
         Swal.fire("Error", mensajeError, "error");
       }
     },
+
     async actualizarRotacion() {
       if (
         !this.nuevaRotacion.tipoEquipo ||
         this.nuevaRotacion.vagonesEnServicio <= 0
       ) {
-        Swal.fire(
         Swal.fire(
           "Error",
           "Por favor, complete todos los campos obligatorios.",
@@ -479,8 +408,6 @@ export default {
           planRotacion: 0,
           realRotacion: 0,
         };
-
-        Swal.fire(
         Swal.fire(
           "Éxito",
           "La rotación ha sido actualizada correctamente.",
@@ -490,77 +417,199 @@ export default {
       } catch (error) {
         console.error("Error al actualizar la rotación:", error);
         Swal.fire(
-        Swal.fire(
           "Error",
           "Hubo un problema al actualizar la rotación.",
           "error"
         );
       }
     },
+
     async eliminarRotacion(id) {
       try {
         const result = await Swal.fire({
-    async eliminarRotacion(id) {
-      try {
-        const result = await Swal.fire({
-          title: "¿Está seguro?",
-          text: "Esta acción no se puede deshacer.",
+          title: "¿Estás seguro?",
+          text: "¡No podrás revertir esta acción!",
           icon: "warning",
           showCancelButton: true,
-          confirmButtonColor: "#3085d6",
-          cancelButtonColor: "#d33",
-          confirmButtonText: "Sí, eliminar",
-          cancelButtonText: "Cancelar",
+          cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Cancelar',
+          cancelButtonColor: "#f1513f",
+          confirmButtonText: '<i class="bi bi-trash me-1"></i>Eliminar',
+          confirmButtonColor: "#007bff",
+          reverseButtons: true,
         });
 
         if (result.isConfirmed) {
           await axios.delete(`/ufc/rotaciones/${id}/`);
-
-          await Swal.fire(
-            "Eliminado",
-            "El registro ha sido eliminado correctamente.",
-            "success"
-          );
-
-          // Actualizar los datos sin recargar la página
+          await Swal.fire("Eliminado", "El registro ha sido eliminado correctamente.", "success");
           await this.get_rotaciones();
         }
       } catch (error) {
         console.error("Error al eliminar la rotación:", error);
-        Swal.fire(
-          "Error",
-          "Ocurrió un error al eliminar el registro.",
-          "error"
-        );
+        Swal.fire("Error", "Ocurrió un error al eliminar el registro.", "error");
       }
-        });
-
-        if (result.isConfirmed) {
-          await axios.delete(`/ufc/rotaciones/${id}/`);
-
-          await Swal.fire(
-            "Eliminado",
-            "El registro ha sido eliminado correctamente.",
-            "success"
-          );
-
-          // Actualizar los datos sin recargar la página
-          await this.get_rotaciones();
-        }
-      } catch (error) {
-        console.error("Error al eliminar la rotación:", error);
-        Swal.fire(
-          "Error",
-          "Ocurrió un error al eliminar el registro.",
-          "error"
-        );
-      }
-    },
+      },
   },
 };
 </script>
 
 <style scoped>
+
+/* Estilos para el modal */
+.ufc-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.ufc-modal-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #002a68;
+  color: white;
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+.ufc-modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+
+.ufc-modal-close {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 5px;
+  transition: all 0.2s;
+}
+
+.ufc-modal-close:hover {
+  color: #ccc;
+}
+
+.ufc-modal-body .ufc-form-actions {
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+  margin-top: 0;
+}
+
+.ufc-modal-body {
+  padding: 20px;
+}
+.ufc-input-group {
+  margin-bottom: 15px;
+}
+
+.ufc-input-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #444;
+}
+
+.ufc-input-group .required {
+  color: #e74c3c;
+}
+
+.ufc-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+@media (max-width: 768px) {
+  .ufc-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ufc-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+ 
+  border-top: 1px solid #eee;
+}
+.ufc-button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 1 rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 15px 0;
+}
+
+.ufc-button.primary {
+  margin-right: 20px;
+}
+
+.ufc-button.primary:hover {
+  background: #003d8f;
+}
+
+.ufc-button.secondary {
+    background:rgb(241, 81, 63);
+    color: white;
+}
+
+.ufc-button.secondary:hover {
+    background:rgb(228, 56, 37);
+}
+
+.create-button {
+  text-decoration: none;
+  color: green;
+  margin-left: 940px;
+}
+
+button {
+  margin-left: 10px;
+  padding: 5px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button[type="button"] {
+  background-color: #007bff;
+  color: white;
+}
+
+button[type="submit"] {
+  margin-left: 15px;
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-outline-danger {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+  color: #fff;
+}
+
 /* Resumen general */
 .card {
   border-radius: 0.5rem;

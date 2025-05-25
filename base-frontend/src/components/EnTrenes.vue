@@ -15,7 +15,7 @@
           </router-link>
           <form @submit.prevent="search_producto" class="search-container">
             <div class="input-group">
-              <input type="search" class="form-control" placeholder="Origen, Tipo Equipo, Producto" v-model="searchQuery" @input="handleSearchInput"/>
+              <input type="search" class="form-control" placeholder="Cod Locomotora, Tipo Equipo,..." v-model="searchQuery" @input="handleSearchInput"/>
               <span class="position-absolute top-50 start-0 translate-middle-y ps-2">
                 <i class="bi bi-search"></i>
               </span>
@@ -67,14 +67,6 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-if="loading">
-                <td colspan="9" class="ps-loading-td">
-                  <div class="ps-loading">
-                    <div class="ps-spinner"></div>
-                    <span>Cargando registros...</span>
-                  </div>
-                </td>
-              </tr>
               <tr v-for="(item, index) in enTrenes" :key="item.id" class="align-middle">
                 <th scope="row">{{ index + 1 }}</th>
                 <td>{{ item.numero_identificacion_locomotora || "-" }}</td>
@@ -487,7 +479,7 @@
           );
         } catch (error) {
           console.error("Error al eliminar el registro:", error);
-          Swal.fire("Error", "Hubo un error al eliminar el registro.", "error");
+          Swal.fire("Error", "un error al eliminar el registro.", "error");
         }
       },
   
@@ -506,6 +498,21 @@
         // Aquí puedes implementar la navegación a la página de edición
         this.$router.push({ name: 'EditarEnTren', params: { id: id } });
       },
+
+      async delete_tren(id) {
+        try {
+          await axios.delete(`/ufc/en-trenes/${id}/`);
+          this.enTrenes = this.enTrenes.filter((tren) => tren.id !== id);
+          Swal.fire(
+            "Eliminado!",
+            "El producto ha sido eliminado exitosamente.",
+            "success"
+          );
+        } catch (error) {
+          console.error("Error al eliminar el producto:", error);
+          Swal.fire("Error", "un error al eliminar el producto.", "error");
+        }
+      },
   
       confirmDelete(id) {
         Swal.fire({
@@ -513,12 +520,14 @@
           text: "¡No podrás revertir esta acción!",
           icon: "warning",
           showCancelButton: true,
-          confirmButtonText: "Sí, eliminar",
-          cancelButtonText: "Cancelar",
+          cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Cancelar',
+          cancelButtonColor: "#f1513f",
+          confirmButtonText: '<i class="bi bi-trash me-1"></i>Eliminar',
+          confirmButtonColor: "#007bff",
           reverseButtons: true,
         }).then((result) => {
           if (result.isConfirmed) {
-            this.deleteVagon(id);
+            this.delete_tren(id);
           }
         });
       },
@@ -575,6 +584,13 @@
   border-top-color: var(--ps-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Tabla */

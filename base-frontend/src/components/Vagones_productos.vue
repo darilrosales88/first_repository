@@ -64,14 +64,6 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-if="loading">
-                <td colspan="9" class="ps-loading-td">
-                  <div class="ps-loading">
-                    <div class="ps-spinner"></div>
-                    <span>Cargando registros...</span>
-                  </div>
-                </td>
-              </tr>
               <tr v-for="(vagon, index) in vagones_productos" :key="vagon.id" class="align-middle">
                 <th scope="row">{{ index + 1 }}</th>
                 <td>{{ vagon.origen }}</td>
@@ -510,8 +502,10 @@
           text: "¡No podrás revertir esta acción!",
           icon: "warning",
           showCancelButton: true,
-          confirmButtonText: "Sí, eliminar",
-          cancelButtonText: "Cancelar",
+          cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Cancelar',
+          cancelButtonColor: "#f1513f",
+          confirmButtonText: '<i class="bi bi-trash me-1"></i>Eliminar',
+          confirmButtonColor: "#007bff",
           reverseButtons: true,
         }).then((result) => {
           if (result.isConfirmed) {
@@ -572,6 +566,12 @@
   border-top-color: var(--ps-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Tabla */

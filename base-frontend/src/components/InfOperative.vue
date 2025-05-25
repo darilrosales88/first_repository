@@ -3,59 +3,37 @@
     <div class="card border">
       <div class="card-header bg-light border-bottom">
         <h5 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-clipboard-data me-2"></i>Registros de operaciones UFC
+          <i class="bi bi-clipboard-data me-2"></i>Registros de operaciones - UFC
         </h5>
       </div>
 
       <div class="card-body p-3">
         <form @submit.prevent="submitForm">
-          <!-- Fila 1 -->
-          <div class="row mb-3 g-2">        
-            
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="fechaActual" class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-calendar-check me-2 text-primary"></i>Fecha Actual
-                </label>
-                <input 
-                  type="date" 
-                  class="form-control form-control-sm border-secondary" 
-                  id="fechaActual" 
-                  v-model="formData.fecha_actual"
-                  required
-                  :disabled="isExistingRecord"
-                >
-              </div>
-            </div>
-          </div>
 
           <!-- Fila 2 -->
           <div class="row mb-3 g-2">
-            <div class="col-md-6">
+            <div class="col-md-3">
               <div class="form-group">
                 <label
                   for="planMensualTotal"
-                  class="form-label small fw-semibold text-secondary"
-                >
+                  class="form-label small fw-semibold text-secondary">
                   <i class="bi bi-calendar-month me-2 text-primary"></i>Plan
                   Mensual Total
                 </label>
                 <input 
                   type="number" 
-                  class="form-control form-control-sm border-secondary" 
+                  class="form-control form-control-sm border-secondary" style="margin-top: 19px;" 
                   id="planMensualTotal" 
                   v-model="formData.plan_mensual_total"
-                  :disabled="isExistingRecord"
-                >
+                  :disabled="isExistingRecord">
               </div>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-3">
               <div class="form-group">
                 <label
                   for="planDiarioTotal"
-                  class="form-label small fw-semibold text-secondary"
-                >
+                  class="form-label small fw-semibold text-secondary">
                   <i class="bi bi-calendar-day me-2 text-primary"></i>Plan
                   Diario Total Vagones Cargados
                 </label>
@@ -64,61 +42,52 @@
                   class="form-control form-control-sm border-secondary" 
                   id="planDiarioTotal" 
                   v-model="formData.plan_diario_total_vagones_cargados"
-                  :disabled="isExistingRecord"
-                >
+                  :disabled="isExistingRecord">
               </div>
             </div>
-          </div>
 
-          <!-- Fila 3 -->
-          <div class="row mb-3 g-2">
-            <div class="col-md-6">
+            <div class="col-md-3">
               <div class="form-group">
                 <label
                   for="realTotalVagones"
-                  class="form-label small fw-semibold text-secondary"
-                >
+                  class="form-label small fw-semibold text-secondary">
                   <i class="bi bi-train-freight-front me-2 text-primary"></i
                   >Real Total Vagones Cargados
                 </label>
                 <input 
                   type="number" 
-                  class="form-control form-control-sm border-secondary" 
+                  class="form-control form-control-sm border-secondary" style="margin-top: 19px;"
                   id="realTotalVagones" 
                   v-model="formData.real_total_vagones_cargados"
-                  :disabled="isExistingRecord"
-                >
+                  :disabled="isExistingRecord">
               </div>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-3">
               <div class="form-group">
                 <label
                   for="totalVagonesSituados"
-                  class="form-label small fw-semibold text-secondary"
-                >
+                  class="form-label small fw-semibold text-secondary">
                   <i class="bi bi-pin-map me-2 text-primary"></i>Total de
                   Vagones Situados
                 </label>
-                <input 
-                  type="number" 
-                  class="form-control form-control-sm border-secondary" 
-                  id="totalVagonesSituados" 
+                <input
+                  type="number"
+                  class="form-control form-control-sm border-secondary" style="margin-top: 19px;"
+                  id="totalVagonesSituados"
                   v-model="formData.total_vagones_situados"
-                  :disabled="isExistingRecord"
-                >
+                  :disabled="isExistingRecord"/>
               </div>
             </div>
           </div>
 
-          <!-- Fila 4 -->
+          <!-- Fila 3 -->
           <div class="row mb-4 g-2">
             <div class="col-md-6">
               <div class="form-group">
                 <label
                   for="planTotalAcumulado"
-                  class="form-label small fw-semibold text-secondary"
-                >
+                  class="form-label small fw-semibold text-secondary">
                   <i class="bi bi-graph-up me-2 text-primary"></i>Plan Total
                   Acumulado Actual
                 </label>
@@ -127,8 +96,7 @@
                   class="form-control form-control-sm border-secondary" 
                   id="planTotalAcumulado" 
                   v-model="formData.plan_total_acumulado_actual"
-                  :disabled="isExistingRecord"
-                >
+                  :disabled="isExistingRecord">
               </div>
             </div>
 
@@ -136,8 +104,7 @@
               <div class="form-group">
                 <label
                   for="realTotalAcumulado"
-                  class="form-label small fw-semibold text-secondary"
-                >
+                  class="form-label small fw-semibold text-secondary">
                   <i class="bi bi-graph-up-arrow me-2 text-primary"></i>Real
                   Total Acumulado Actual
                 </label>
@@ -146,8 +113,7 @@
                   class="form-control form-control-sm border-secondary" 
                   id="realTotalAcumulado" 
                   v-model="formData.real_total_acumulado_actual"
-                  :disabled="isExistingRecord"
-                >
+                  :disabled="isExistingRecord">
               </div>
             </div>
           </div>
@@ -158,6 +124,7 @@
               <i class="bi bi-save me-1"></i>Guardar
             </button>
           </div>
+
         </form>
       </div>
     </div>
@@ -170,14 +137,19 @@ import axios from 'axios';
 
 export default {
   name: "InfOperative",
+  props: {
+    fechaActual: {
+      type: Date,
+      required: true,
+    },
+  },
   data() {
     return {
       informeOperativoId: null,
       isExistingRecord: false,
       informeOperativoId: null,
-      isExistingRecord: false,
+      fecha_actual:this.fechaActual,
       formData: {
-        fecha_actual: "",
         plan_mensual_total: 0,
         plan_diario_total_vagones_cargados: 0,
         real_total_vagones_cargados: 0,
@@ -193,18 +165,13 @@ export default {
     };
   },
   async mounted() {
-    // Obtener la fecha actual en formato YYYY-MM-DD según la zona horaria local
-    const now = new Date();
-    const offset = now.getTimezoneOffset() * 60000; // offset en milisegundos
-    const localISOTime = new Date(now - offset).toISOString().split("T")[0];
-    this.formData.fecha_actual = localISOTime;
-    await this.obtenerUsername(); //Busca el nombre del usuario
-
     // Check for existing record on load
+    console.log(this.fecha_actual)
     await this.checkExistingRecord();
 
     // Configurar el intervalo para verificar cada 10 segundos
   },
+
   beforeUnmount() {
     // Limpiar el intervalo cuando el componente se desmonte
     if (this.checkInterval) {
@@ -226,12 +193,16 @@ export default {
       try {
         // Enviar la fecha ya ajustada a la vista para ver si existe el parte
         const response = await axios.get("/ufc/verificar-informe-existente/", {
-          params: { fecha_operacion: this.formData.fecha_actual },
+          params: { fecha_operacion: this.fechaActual },
         });
 
         if (response.data.existe) {
           this.informeOperativoId = response.data.id;
           this.isExistingRecord = true;
+
+          this.$emit('record-status-changed', {
+            isExisting: true,
+          });
 
           // Cargar datos del informe creado
           const recordResponse = await axios.get(
@@ -240,7 +211,7 @@ export default {
 
           // Formatear la fecha para mostrar solo YYYY-MM-DD
           if (recordResponse.data.fecha_operacion) {
-            this.formData.fecha_actual = recordResponse.data.fecha_operacion;
+            this.fecha_actual= recordResponse.data.fecha_operacion;
             const today = new Date();
             const fechaFormateada = `${today.getFullYear()}-${String(
               today.getMonth() + 1
@@ -284,7 +255,7 @@ export default {
       this.isLoading = true;
       try {
         const dataToSend = {
-          fecha_actual: this.formData.fecha_actual, // Usamos la fecha ya ajustada
+          fecha_actual: this.fecha_actual, // Usamos la fecha ya ajustada
           plan_mensual_total: this.formData.plan_mensual_total || 0,
           plan_diario_total_vagones_cargados:
             this.formData.plan_diario_total_vagones_cargados || 0,
@@ -299,13 +270,18 @@ export default {
           creado_por: this.formData.creado_por,
           aprobado_por: this.formData.aprobado_por,
         };
-
+        
+        console.log(dataToSend)
         const response = await axios.post(
           "/ufc/informe-operativo/",
           dataToSend
         );
         this.informeOperativoId = response.data.id;
         this.isExistingRecord = true;
+
+        this.$emit('record-status-changed', {
+          isExisting: true,
+        });
 
         await Swal.fire({
           title: "¡Éxito!",

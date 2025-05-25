@@ -15,7 +15,7 @@
           </router-link>
           <form @submit.prevent="search_producto" class="search-container">
             <div class="input-group">
-              <input type="search" class="form-control" placeholder="Origen, Destino, Producto, Locomotora" v-model="searchQuery"
+              <input type="search" class="form-control" placeholder="TEF, Origen, Destino, Estado,..." v-model="searchQuery"
                 @input="handleSearchInput"/>
               <span class="position-absolute top-50 start-0 translate-middle-y ps-2">
                 <i class="bi bi-search"></i>
@@ -526,7 +526,6 @@ export default {
           "error"
         );
       }
-      window.location.reload();
     },
 
     cerrarModal() {
@@ -541,18 +540,37 @@ export default {
       });
     },
 
+    async delete_tren(id) {
+      try {
+        await axios.delete(`/ufc/vagones-cargados-descargados/${id}/`);
+        this.cargados_descargados = this.cargados_descargados.filter(
+          (objeto) => objeto.id !== id
+        );
+        Swal.fire(
+          "Eliminado!",
+          "El producto ha sido eliminado exitosamente.",
+          "success"
+        );
+      } catch (error) {
+        console.error("Error al eliminar el producto:", error);
+        Swal.fire("Error", "Hubo un error al eliminar el producto.", "error");
+      }
+    },
+
     confirmDelete(id) {
       Swal.fire({
         title: "¿Estás seguro?",
         text: "¡No podrás revertir esta acción!",
         icon: "warning",
         showCancelButton: true,
-        confirmButtonText: "Sí, eliminar",
-        cancelButtonText: "Cancelar",
+        cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Cancelar',
+        cancelButtonColor: "#f1513f",
+        confirmButtonText: '<i class="bi bi-trash me-1"></i>Eliminar',
+        confirmButtonColor: "#007bff",
         reverseButtons: true,
       }).then((result) => {
         if (result.isConfirmed) {
-          this.delete_vagon(id);
+          this.delete_tren(id); // 'this' se mantiene correctamente
         }
       });
     },
@@ -740,10 +758,6 @@ export default {
   padding: 0;
 }
 
-.btn:hover {
-  scale: 1.1;
-}
-
 .btn:focus {
   outline: none;
   box-shadow: none;
@@ -809,6 +823,12 @@ export default {
   border-top-color: var(--ps-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .ps-empty-state {

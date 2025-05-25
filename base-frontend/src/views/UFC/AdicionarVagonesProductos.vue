@@ -21,6 +21,7 @@
               <div class="mb-3">
                 <label for="tipo_origen" class="form-label small fw-semibold text-secondary">Tipo de Origen</label>
                 <select class="form-select form-select-sm border-secondary" v-model="formData.tipo_origen" id="tipo_origen" name="tipo_origen" required>
+                  <option value="" disabled>Seleccione un tipo</option>
                   <option value="ac_ccd">Acceso Comercial</option>
                   <option value="puerto">Puerto</option>
                 </select>
@@ -29,16 +30,22 @@
               <!-- Campo: origen -->
               <div class="mb-3">
                 <label for="origen" class="form-label small fw-semibold text-secondary">Origen</label>
-                <select v-if="formData.tipo_origen !== 'puerto'" class="form-select form-select-sm border-secondary" v-model="formData.origen" id="origen"name="origen" required>
+                <select  v-if="formData.tipo_origen && formData.tipo_origen !== 'puerto'" class="form-select form-select-sm border-secondary" v-model="formData.origen" id="origen"name="origen" required>
+                  <option value=""  disabled>Seleccione un origen</option>
                   <option v-for="entidad in entidades" :key="entidad.id" :value="entidad.nombre">
                     {{ entidad.id }}-{{ entidad.nombre }}
                   </option>
                 </select>
 
-                <select v-else class="form-select" v-model="formData.origen" id="origen" name="origen" required>
+                <select v-else-if="formData.tipo_origen === 'puerto'" class="form-select form-select-sm border-secondary" v-model="formData.origen" id="origen" name="origen" required>
+                  <option value="" disabled>Seleccione un puerto</option>
                   <option v-for="puerto in puertos" :key="puerto.id" :value="puerto.nombre_puerto">
                     {{ puerto.id }}- {{ puerto.nombre_puerto }}
                   </option>
+                </select>
+
+                <select v-else class="form-select form-select-sm border-secondary" disabled>
+                  <option value="">Seleccione primero el tipo de origen</option>
                 </select>
               </div>
 
@@ -163,7 +170,7 @@ export default {
       mostrarModalProducto: false,
       formData: {
         tipo_equipo_ferroviario: "",
-        tipo_origen: "ac_ccd",
+        tipo_origen: "",
         origen: "",
         tipo_combustible: "",
         tipo_producto: "",
@@ -428,12 +435,15 @@ export default {
       event.preventDefault();
       event.stopPropagation();
       Swal.fire({
-        title: "¿Cancelar operación?",
+        title: "¿Volver a la página principal?",
         text: "Los datos no guardados se perderán",
         icon: "warning",
         showCancelButton: true,
-        confirmButtonText: "Sí, cancelar",
-        cancelButtonText: "No, continuar",
+        cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Continuar',
+        cancelButtonColor: "#f1513f",
+        confirmButtonText: '<i class="bi bi-box-arrow-right me-1"></i>Volver',
+        confirmButtonColor: "#007bff",
+        reverseButtons: true,
       }).then((result) => {
         if (result.isConfirmed) {
           this.resetForm();

@@ -15,7 +15,7 @@
           </router-link>
           <form @submit.prevent="search_producto" class="search-container">
             <div class="input-group">
-              <input type="search" class="form-control" placeholder="Origen, Destino, Producto, Locomotora" v-model="searchQuery"
+              <input type="search" class="form-control" placeholder="Tipo Origen,Origen,Tipo equipo,..." v-model="searchQuery"
                 @input="handleSearchInput"/>
               <span class="position-absolute top-50 start-0 translate-middle-y ps-2">
                 <i class="bi bi-search"></i>
@@ -336,6 +336,7 @@ export default {
 
   async mounted() {
     await this.getPorSituarCarga_Descargas();
+    console.log('Hola',this.porSituarCarga_Descarga)
     await this.fetchUserPermissionsAndGroups();
   },
 
@@ -510,8 +511,10 @@ export default {
         text: "¡No podrás revertir esta acción!",
         icon: "warning",
         showCancelButton: true,
-        confirmButtonText: "Sí, eliminar",
-        cancelButtonText: "Cancelar",
+        cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Cancelar',
+        cancelButtonColor: "#f1513f",
+        confirmButtonText: '<i class="bi bi-trash me-1"></i>Eliminar',
+        confirmButtonColor: "#007bff",
         reverseButtons: true,
       }).then((result) => {
         if (result.isConfirmed) {
@@ -519,7 +522,7 @@ export default {
         }
       });
     },
-
+    
     // Método para manejar errores (similar al del componente que funciona)
     handleApiError(error, action) {
       let errorMsg = `Error al ${action}`;
@@ -677,6 +680,11 @@ export default {
   animation: spin 1s linear infinite;
 }
 
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .ps-empty-state {
   display: flex;

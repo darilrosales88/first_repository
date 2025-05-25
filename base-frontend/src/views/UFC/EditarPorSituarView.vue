@@ -747,9 +747,9 @@ export default {
             // Otros campos necesarios para el vagon
           })),
         };
-
+        console.log("Esto fue lo que se envio", payload);
         // Enviar datos para actualizar (PUT)
-        const response = await axios.put(
+        const response = await axios.patch(
           `http://127.0.0.1:8000/ufc/por-situar/${this.registroId}/`,
           payload
         );

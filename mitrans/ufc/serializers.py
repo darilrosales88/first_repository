@@ -802,6 +802,10 @@ class en_trenes_serializer(serializers.ModelSerializer):
         if productos_data is not None:
             instance.producto.set(productos_data)
             
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            instance.save()
+            
         if equipo_vagon_data:
 # Eliminar registros antiguos no incluidos
             ids_nuevos = [equipo_id.id for equipo_id in equipo_vagon_data if equipo_id.id]
@@ -960,6 +964,9 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
         instance = super().update(instance, validated_data)
         
         vagones_data = validated_data.pop('equipo_vagon', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            instance.save()
         
         for equipo in instance.equipo_vagon.all():
             equipo_id=equipo.equipo_ferroviario
@@ -1066,6 +1073,11 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         productos_data = validated_data.pop('producto', None)
         vagones_data = validated_data.pop('equipo_vagon', None)
         
+        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            instance.save()
+        
         for equipo in instance.equipo_vagon.all():
             equipo_id=equipo.equipo_ferroviario
             actualizar_estado_equipo_ferroviario(equipo_id,"Disponible")
@@ -1085,6 +1097,8 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         if productos_data is not None:
             instance.producto.set(productos_data)
         
+        print(validated_data)
+        instance.save()
         return instance
 
 
@@ -1160,6 +1174,10 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
     def update(self, instance:arrastres, validated_data):
         vagones_data = validated_data.pop('equipo_vagon', None)
         productos_data = validated_data.pop('producto', None)
+        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            instance.save()
         
         for equipo in instance.equipo_vagon.all():
             equipo_id=equipo.equipo_ferroviario

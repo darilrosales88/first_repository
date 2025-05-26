@@ -887,11 +887,20 @@ class arrastres(models.Model):
         ('vacio', 'Vacio'),
         ('cargado', 'Cargado')
     )
-    
+    OPERACION_CHOICES=[('carga', 'Carga'),
+        ('descarga', 'Descarga')
+    ]
     estado = models.CharField(
         max_length=200,
         choices=ESTADO_CHOICES,
         verbose_name="Estado",
+        blank=True,
+        null=True,
+    )
+    operacion=models.CharField(
+        max_length=200,
+        choices=OPERACION_CHOICES,
+        verbose_name="Operacion",
         blank=True,
         null=True,
     )

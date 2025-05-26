@@ -1527,10 +1527,10 @@ class SituadoCargaDescarga_hoy_Viewset(viewsets.ModelViewSet):
     
 class PendienteArrastreViewset(viewsets.ModelViewSet):
     queryset = arrastres.objects.all()
-    a=arrastres.objects.create
     serializer_class = PendienteArrastreSerializer
     permission_classes = [IsUFCPermission] 
     filter_class = PendienteArrastreFilter
+    
     def get_queryset(self):
         queryset = super().get_queryset()
         informe_id = self.request.query_params.get('informe')

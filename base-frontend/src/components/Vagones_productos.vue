@@ -388,9 +388,10 @@
             params: {
               page: this.currentPage,
               page_size: this.itemsPerPage,
+              informe: infoID.data.id,
             },
           });
-          
+
           this.vagones_productos = response.data.results;
           this.allRecords = [...response.data.results]; // Guardar copia completa para filtrado
           this.totalItems = response.data.count;

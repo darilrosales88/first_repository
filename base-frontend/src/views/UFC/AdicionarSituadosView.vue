@@ -112,6 +112,7 @@
                   id="tipo_equipo"
                   name="tipo_equipo"
                   @change="buscarEquipos"
+                  @change="buscarEquipos"
                   required
                   :disabled="isSubmitting">
                   <option value="" disabled>Seleccione un tipo</option>
@@ -417,6 +418,7 @@ export default {
         pendiente_proximo_dia: 0,
         observaciones: "",
         equipos_vagones: [],
+        equipos_vagones: [],
       },
       isDisable:true,
       userGroups: [], // Inicializa como array vacío
@@ -428,7 +430,19 @@ export default {
       puertos: [],
       productos: [],
       loading: false,
+      entidades: [],
+      puertos: [],
+      productos: [],
+      loading: false,
       mostrarModal: false,
+      equipos: [],
+      equipos_vagones: [],
+      mostrarModalVagon: false,
+      vagonesAgregados: [],
+      nuevoVagon: {
+        equipo_ferroviario: "",
+        cant_dias: 1,
+      },
       equipos: [],
       equipos_vagones: [],
       mostrarModalVagon: false,
@@ -454,17 +468,22 @@ export default {
     this.getPuertos();
     this.getEquipos();
     this.filteredProductos = this.productos;
+    this.getEquipos();
+    this.filteredProductos = this.productos;
     this.closeDropdownsOnClickOutside();
   },
   computed: {
     formattedFechaRegistro() {
       if (this.formData.fecha) {
         return new Date(this.formData.fecha).toLocaleString("es-ES");
+        return new Date(this.formData.fecha).toLocaleString("es-ES");
       }
+      return new Date().toLocaleString("es-ES");
       return new Date().toLocaleString("es-ES");
     },
   },
   methods: {
+    async verificarInformeOperativo() {
     async verificarInformeOperativo() {
       try {
         this.formData.fecha = new Date().toISOString();
@@ -612,34 +631,51 @@ export default {
         this.vagonForm.dias < 1
       ) {
         Swal.fire("Error", "Complete todos los campos correctamente", "error");
+      if (
+        !this.vagonForm.equipo_ferroviario ||
+        !this.vagonForm.dias ||
+        this.vagonForm.dias < 1
+      ) {
+        Swal.fire("Error", "Complete todos los campos correctamente", "error");
         return;
       }
+
 
       // Buscar el equipo seleccionado para obtener su nombre
       const equipoSeleccionado = this.equiposFerroviarios.find(
         (e) => e.id === this.vagonForm.equipo_ferroviario
+        (e) => e.id === this.vagonForm.equipo_ferroviario
       );
+
 
       const vagonData = {
         equipo_ferroviario: this.vagonForm.equipo_ferroviario,
         equipo_ferroviario_nombre: equipoSeleccionado
+        equipo_ferroviario_nombre: equipoSeleccionado
           ? `${equipoSeleccionado.numero_identificacion} - ${equipoSeleccionado.tipo_equipo.tipo_equipo}`
           : "Equipo no encontrado",
         dias: this.vagonForm.dias,
+          : "Equipo no encontrado",
+        dias: this.vagonForm.dias,
       };
+
 
       if (this.modoEdicionVagon) {
         // Editar existente
         this.vagonesAsociados[this.vagonEditIndex] = vagonData;
         Swal.fire("Actualizado", "El vagón ha sido actualizado", "success");
+        Swal.fire("Actualizado", "El vagón ha sido actualizado", "success");
       } else {
         // Agregar nuevo
         this.vagonesAsociados.push(vagonData);
         Swal.fire("Agregado", "El vagón ha sido agregado", "success");
+        Swal.fire("Agregado", "El vagón ha sido agregado", "success");
       }
+
 
       // Actualizar el campo situados automáticamente
       this.formData.situados = this.vagonesAsociados.length;
+
 
       this.cerrarModalVagon();
     },
@@ -656,6 +692,12 @@ export default {
         icon: "success",
         confirmButtonText: "Aceptar",
       });
+    },
+
+    cerrarModalVagon() {
+      this.mostrarModalVagon = false;
+      this.vagonEditIndex = null;
+      this.modoEdicionVagon = false;
     },
 
     cerrarModalVagon() {
@@ -781,6 +823,18 @@ export default {
         );
         return;
       }
+      const informeResponse = await axios.get(
+        `/ufc/informe-operativo/${this.informeOperativoId}/`
+      );
+      console.log("anijijijijiji", informeResponse.data.estado_parte);
+      if (informeResponse.data.estado_parte === "Aprobado") {
+        Swal.fire(
+          "Error",
+          "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
+          "error"
+        );
+        return;
+      }
 
       this.isSubmitting = true;
       try {
@@ -849,6 +903,21 @@ export default {
           });
           return;
         }
+        if (this.vagonesAgregados.length !== this.formData.situados) {
+          Swal.fire({
+            title: "Advertencia",
+            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad "Situados" (${this.formData.situados}). ¿Desea actualizar el campo "Situados" para que coincida?`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, actualizar",
+            cancelButtonText: "No, corregir manualmente",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.formData.situados = this.vagonesAgregados.length;
+            }
+          });
+          return;
+        }
 
         // Preparar datos para enviar
         const payload = {
@@ -869,6 +938,7 @@ export default {
             // Otros campos necesarios para el vagon
           })),
         };
+        console.log("Datos a enviar", payload);
         console.log("Datos a enviar", payload);
 
         // Enviar datos al endpoint
@@ -908,6 +978,7 @@ export default {
         pendiente_proximo_dia: 0,
         observaciones: "",
       };
+      this.vagonesAgregados = [];
       this.vagonesAgregados = [];
     },
 
@@ -1149,9 +1220,6 @@ export default {
   border-top: 1px solid #eee;
 }
 
-
-
-
 /* Estilos para el select personalizado de productos */
 .ufc-custom-select {
   position: relative;
@@ -1283,6 +1351,49 @@ export default {
   margin: 0;
   font-size: 1rem;
   font-weight: 500;
+}
+.ufc-vagones-agregados {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.ufc-subtitle {
+  color: #002a68;
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ufc-table-container {
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.ufc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.ufc-table th {
+  background-color: #f8f9fa;
+  padding: 10px;
+  text-align: left;
+  border-bottom: 2px solid #ddd;
+  color: #555;
+}
+
+.ufc-table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.ufc-table tr:hover {
+  background-color: #f5f5f5;
 }
 
 .ufc-form-wrapper {

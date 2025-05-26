@@ -418,18 +418,31 @@ export default {
     async getVagonesCargadosDescargados() {
       this.loading = true;
       try {
-        const response = await axios.get("/ufc/vagones-cargados-descargados/", {
-          params: {
-            page: this.currentPage,
-            page_size: this.itemsPerPage,
-            informe_operativo: this.informeId
-          },
-        });
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(
+          today.getMonth() + 1
+        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+        const infoID = await axios.get(
+          `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
+        );
+        if (infoID.data.existe) {
+          //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
+          const response = await axios.get(
+            "/ufc/vagones-cargados-descargados/",
+            {
+              params: {
+                page: this.currentPage,
+                page_size: this.itemsPerPage,
+                informe: infoID.data.id,
+              },
+            }
+          );
 
-        this.cargados_descargados = response.data.results;
-        this.allRecords = [...response.data.results]; // Guardar copia completa para filtrado
-        this.totalItems = response.data.count;
-        this.busqueda_existente = true;
+          this.cargados_descargados = response.data.results;
+          this.allRecords = [...response.data.results]; // Guardar copia completa para filtrado
+          this.totalItems = response.data.count;
+          this.busqueda_existente = true;
+        }
       } catch (error) {
         console.error(
           "Error al obtener los vagones cargados/descargados:",

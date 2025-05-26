@@ -314,7 +314,6 @@
                     v-model.number="formData.cantidad_vagones"
                     min="1"
                     required
-                    readonly
                   />
                   <span class="ufc-por-situar-suffix">unidades</span>
                 </div>

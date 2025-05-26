@@ -584,29 +584,28 @@ export default {
       }
     },
     agregarNuevoVagon() {
-      if (!this.nuevoVagon.equipo_ferroviario || !this.nuevoVagon.cant_dias) {
-        Swal.fire("Error", "Debe completar todos los campos", "error");
-        return;
-      }
+  if (!this.nuevoVagon.equipo_ferroviario || !this.nuevoVagon.cant_dias) {
+    Swal.fire("Error", "Debe completar todos los campos", "error");
+    return;
+  }
 
-      const equipoSeleccionado = this.equipos_vagones.find(
-        (e) => e.id === this.nuevoVagon.equipo_ferroviario
-      );
+  const equipoSeleccionado = this.equipos_vagones.find(
+    (e) => e.id === this.nuevoVagon.equipo_ferroviario
+  );
 
-      const vagonAgregado = {
-        equipo_ferroviario: equipoSeleccionado,
-        cant_dias: this.nuevoVagon.cant_dias,
-        // Agrega otros datos necesarios para mantener consistencia
-        datos: {
-          equipo_vagon: equipoSeleccionado.numero_identificacion,
-        },
-      };
-
-      this.vagonesAgregados.push(vagonAgregado);
-      this.cerrarModalVagon();
-
-      Swal.fire("Éxito", "Vagón agregado correctamente", "success");
+  const vagonAgregado = {
+    equipo_ferroviario: equipoSeleccionado,
+    cant_dias: this.nuevoVagon.cant_dias,
+    datos: {
+      equipo_vagon: equipoSeleccionado.numero_identificacion,
     },
+  };
+
+  this.vagonesAgregados.push(vagonAgregado); // Usando vagonesAgregados
+  this.cerrarModalVagon();
+
+  Swal.fire("Éxito", "Vagón agregado correctamente", "success");
+},
     async getEquipos() {
       try {
         const response = await axios.get("/api/tipo-e-f-no-locomotora/");
@@ -695,24 +694,25 @@ export default {
     },
 
     eliminarVagon(index) {
-      Swal.fire({
-        title: "¿Eliminar vagón?",
-        text: "Esta acción no se puede deshacer",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#002a68",
-        cancelButtonColor: "#6c757d",
-        confirmButtonText: "Sí, eliminar",
-        cancelButtonText: "Cancelar",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.vagonesAsociados.splice(index, 1);
-          // Actualizar el campo situados automáticamente
-          this.formData.situados = this.vagonesAsociados.length;
-          Swal.fire("Eliminado", "El vagón ha sido eliminado", "success");
-        }
-      });
-    },
+  Swal.fire({
+    title: "¿Eliminar vagón?",
+    text: "Esta acción no se puede deshacer",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#002a68",
+    cancelButtonColor: "#6c757d",
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Cambia vagonesAsociados por vagonesAgregados
+      this.vagonesAgregados.splice(index, 1);
+      // Actualizar el campo situados automáticamente
+      this.formData.situados = this.vagonesAgregados.length;
+      Swal.fire("Eliminado", "El vagón ha sido eliminado", "success");
+    }
+  });
+},
 
     cerrarModalVagon() {
       this.mostrarModalVagon = false;
@@ -1047,144 +1047,7 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos para la sección de vagones asociados */
-.ufc-vagones-container {
-  margin-top: 30px;
-  border-top: 1px solid #eee;
-  padding-top: 20px;
-}
-
-.ufc-vagones-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.ufc-vagones-header h3 {
-  color: #002a68;
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-}
-
-.ufc-button.small {
-  padding: 6px 12px;
-  font-size: 0.8rem;
-}
-
-.ufc-vagones-table-container {
-  overflow-x: auto;
-}
-
-.ufc-vagones-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.ufc-vagones-table th {
-  background-color: #002a68;
-  color: white;
-  padding: 10px 12px;
-  text-align: left;
-  font-weight: 500;
-  font-size: 0.85rem;
-}
-
-.ufc-vagones-table td {
-  padding: 12px;
-  border-bottom: 1px solid #eee;
-  font-size: 0.85rem;
-}
-
-.ufc-vagones-table tr:hover {
-  background-color: #f8f9fa;
-}
-
-.ufc-actions-cell {
-  display: flex;
-  gap: 8px;
-}
-
-.ufc-icon-button {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.ufc-icon-button i {
-  font-size: 0.9rem;
-}
-
-.ufc-icon-button.warning {
-  background-color: #ffc107;
-  color: #212529;
-}
-
-.ufc-icon-button.warning:hover {
-  background-color: #e0a800;
-}
-
-.ufc-icon-button.danger {
-  background-color: #dc3545;
-  color: white;
-}
-
-.ufc-icon-button.danger:hover {
-  background-color: #c82333;
-}
-
-/* Estilo para estado vacío */
-.ufc-vagones-empty {
-  margin-top: 20px;
-  text-align: center;
-  padding: 30px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-}
-
-.ufc-empty-state {
-  color: #6c757d;
-}
-
-.ufc-empty-state i {
-  font-size: 2rem;
-  margin-bottom: 10px;
-  color: #adb5bd;
-}
-
-.ufc-empty-state p {
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-/* Estilos para el modal de vagón */
-.ufc-modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.ufc-modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
-  padding-top: 15px;
-  border-top: 1px solid #eee;
-}
-
-/* Estilos para el select personalizado de productos */
+/* Estilos para el select con búsqueda */
 .ufc-custom-select {
   position: relative;
   width: 100%;
@@ -1262,6 +1125,20 @@ export default {
 .ufc-producto-option:hover {
   background-color: #f5f5f5;
 }
+/* Estilos para el grid dentro del modal */
+.ufc-modal-body .ufc-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+/* Ajustes para los botones del modal */
+.ufc-modal-body .ufc-form-actions {
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+  margin-top: 0;
+}
 
 .ufc-producto-option.selected {
   background-color: #002a68;
@@ -1273,47 +1150,13 @@ export default {
   margin-left: 8px;
 }
 
-.ufc-select[multiple] {
-  height: auto;
-  min-height: 100px;
-  padding: 8px;
-}
-
-.ufc-select[multiple] option {
-  padding: 6px 8px;
-  margin: 2px 0;
-  border-radius: 4px;
-}
-
-.ufc-select[multiple] option:checked {
-  background-color: #002a68;
-  color: white;
-}
-
-.ufc-selected-products {
-  font-size: 0.8rem;
-  color: #666;
-  margin-top: 5px;
-}
-
-.ufc-form-container {
-  font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
-  color: #333;
-  padding-bottom: 20px;
-}
-
-.ufc-header {
-  background-color: #002a68;
-  color: white;
-  text-align: right;
-  padding: 10px 15px;
-  margin-bottom: 20px;
-}
-
-.ufc-header h6 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 500;
+/* Para navegadores que soportan datalist */
+input[list] {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.85rem;
 }
 .ufc-vagones-agregados {
   margin-top: 30px;
@@ -1357,6 +1200,43 @@ export default {
 
 .ufc-table tr:hover {
   background-color: #f5f5f5;
+}
+
+.ufc-select[multiple] {
+  height: auto;
+  min-height: 100px;
+  padding: 8px;
+}
+
+.ufc-select[multiple] option {
+  padding: 6px 8px;
+  margin: 2px 0;
+  border-radius: 4px;
+}
+
+.ufc-select[multiple] option:checked {
+  background-color: #002a68;
+  color: white;
+}
+
+.ufc-form-container {
+  font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+  color: #333;
+  padding-bottom: 20px;
+}
+
+.ufc-header {
+  background-color: #002a68;
+  color: white;
+  text-align: right;
+  padding: 10px 15px;
+  margin-bottom: 20px;
+}
+
+.ufc-header h6 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
 }
 
 .ufc-form-wrapper {

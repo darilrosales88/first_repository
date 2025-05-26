@@ -802,6 +802,10 @@ class en_trenes_serializer(serializers.ModelSerializer):
         if productos_data is not None:
             instance.producto.set(productos_data)
             
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            instance.save()
+            
         if equipo_vagon_data:
 # Eliminar registros antiguos no incluidos
             ids_nuevos = [equipo_id.id for equipo_id in equipo_vagon_data if equipo_id.id]
@@ -872,11 +876,11 @@ class producto_vagon_serializer(serializers.ModelSerializer):
     
 class SituadoCargaDescargaFilter(filters.FilterSet):
     tipo_equipo = filters.CharFilter(lookup_expr='icontains')  # Filtro exacto (puedes usar 'icontains' para parcial
-    
+    informe = filters.NumberFilter(field_name='informe_operativo__id')
     
     class Meta:
-        model = por_situar
-        fields = ['tipo_equipo']  # Campos filtrables
+        model = Situado_Carga_Descarga
+        fields = ['tipo_equipo','informe']  # Campos filtrables
         
         
 class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
@@ -899,9 +903,7 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
     
     class Meta:
         model = Situado_Carga_Descarga
-        fields = ('id', 'tipo_origen' , 'tipo_origen_name', 'origen', 'tipo_equipo' , 'tipo_equipo_name','equipo_vagon','equipo_vagon_detalle', 'estado', 
-                 'operacion', 'producto', 'productos_info', 'situados', 
-                 'pendiente_proximo_dia', 'observaciones')
+        fields = '__all__'
         extra_kwargs = {
             'producto': {'required': False},
             'observaciones': {'required': False, 'allow_null': True}
@@ -953,13 +955,17 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
             
             actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Situado")
             instance.equipo_vagon.add(vagon)
+        
+        print(instance,validated_data)
         return instance
 
     def update(self, instance, validated_data):
-        productos_data = validated_data.pop('producto', None)
-        instance = super().update(instance, validated_data)
-        
+        productos_data = validated_data.pop('producto', None)   
         vagones_data = validated_data.pop('equipo_vagon', None)
+        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            instance.save()
         
         for equipo in instance.equipo_vagon.all():
             equipo_id=equipo.equipo_ferroviario
@@ -1066,6 +1072,11 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         productos_data = validated_data.pop('producto', None)
         vagones_data = validated_data.pop('equipo_vagon', None)
         
+        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            instance.save()
+        
         for equipo in instance.equipo_vagon.all():
             equipo_id=equipo.equipo_ferroviario
             actualizar_estado_equipo_ferroviario(equipo_id,"Disponible")
@@ -1085,6 +1096,8 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         if productos_data is not None:
             instance.producto.set(productos_data)
         
+        print(validated_data)
+        instance.save()
         return instance
 
 
@@ -1160,6 +1173,10 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
     def update(self, instance:arrastres, validated_data):
         vagones_data = validated_data.pop('equipo_vagon', None)
         productos_data = validated_data.pop('producto', None)
+        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            instance.save()
         
         for equipo in instance.equipo_vagon.all():
             equipo_id=equipo.equipo_ferroviario

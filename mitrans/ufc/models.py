@@ -128,7 +128,7 @@ class registro_vagones_cargados(models.Model):
         max_length=50,
         null=True,
         blank=True,
-        unique=True,
+        
         verbose_name="Número de identificación",
         help_text="Valores definidos en el nomenclador de equipos ferroviarios (excepto 'Locomotora')",
     )

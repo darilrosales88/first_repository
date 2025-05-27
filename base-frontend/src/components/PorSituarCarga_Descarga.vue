@@ -8,7 +8,7 @@
       </h1>
 
       <div class="ps-actions">
-        <button class="btn btn-link p-0">
+        <button v-if="this.estado_parte === 'Creado'" class="btn btn-link p-0">
           <router-link to="/AdicionarPorSituar"
             ><i class="bi bi-plus-circle fs-3"></i
           ></router-link>
@@ -137,7 +137,7 @@
                   <router-link
                     to="/AdicionarPorSituar"
                     class="ps-empty-action"
-                    v-if="!searchQuery"
+                    v-if="!searchQuery && this.estado_parte === 'Creado'"
                   >
                     <i class="bi bi-plus-circle"></i> Crear primer registro
                   </router-link>
@@ -368,6 +368,7 @@ export default {
       totalItems: 0,
       userGroups: [],
       userPermissions: [],
+      estado_parte: "",
     };
   },
 
@@ -438,6 +439,7 @@ export default {
         const infoID = await axios.get(
           `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
         );
+        this.estado_parte = infoID.data.estado;
         if (infoID.data.existe) {
           //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
           const response = await axios.get("/ufc/por-situar/", {

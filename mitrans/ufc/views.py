@@ -316,7 +316,8 @@ def verificar_informe_existente(request):
             return Response({
                 "existe": True,
                 "id": informe.id,
-                "fecha_operacion": informe.fecha_operacion
+                "fecha_operacion": informe.fecha_operacion,
+                "estado":informe.estado_parte,
             })
         return Response({"existe": False})
     except ValueError:

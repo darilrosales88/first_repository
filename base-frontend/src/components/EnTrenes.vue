@@ -8,7 +8,7 @@
       </h1>
 
       <div class="ps-actions">
-        <button class="btn btn-link p-0">
+        <button class="btn btn-link p-0" v-if="this.estado_parte === 'Creado'">
           <router-link to="/AdicionarVagon"
             ><i class="bi bi-plus-circle fs-3"></i
           ></router-link>
@@ -144,7 +144,7 @@
                   <router-link
                     to="/AdicionarVagon"
                     class="ps-empty-action"
-                    v-if="!searchQuery"
+                    v-if="!searchQuery && this.estado_parte === 'Creado'"
                   >
                     <i class="bi bi-plus-circle"></i> Crear primer registro
                   </router-link>
@@ -389,6 +389,7 @@ export default {
       showDetailsModal: false,
       currentTren: {},
       allRecords: [],
+      estado_parte: "",
     };
   },
 
@@ -493,7 +494,7 @@ export default {
         const infoID = await axios.get(
           `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
         );
-        console.log("Informe", infoID);
+        this.estado_parte = infoID.data.estado;
         if (infoID.data.existe) {
           const response = await axios.get("/ufc/en-trenes/", {
             params: {

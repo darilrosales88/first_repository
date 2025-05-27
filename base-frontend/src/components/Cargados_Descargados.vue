@@ -9,7 +9,7 @@
       </h1>
 
       <div class="ps-actions">
-        <button class="btn btn-link p-0" v-if="hasGroup('AdminUFC')">
+        <button class="btn btn-link p-0" v-if="this.estado_parte === 'Creado'">
           <router-link
             to="AdicionarVagonCargadoDescargado"
             title="Agregar nuevo vagón cargado/descargado"
@@ -135,7 +135,7 @@
                   <router-link
                     to="/AdicionarVagonCargadoDescargado"
                     class="ps-empty-action"
-                    v-if="hasGroup('AdminUFC')"
+                    v-if="!searchQuery && this.estado_parte === 'Creado'"
                   >
                     <i class="bi bi-plus-circle"></i> Crear primer registro
                   </router-link>
@@ -332,6 +332,7 @@ export default {
       loading: false,
       mostrarModalDetalles: false,
       vagonSeleccionado: null,
+      estado_parte: "",
     };
   },
 
@@ -387,6 +388,7 @@ export default {
         const infoID = await axios.get(
           `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
         );
+        this.estado_parte = infoID.data.estado;
         if (infoID.data.existe) {
           //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
           const response = await axios.get(

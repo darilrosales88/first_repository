@@ -30,6 +30,25 @@
                 />
               </div>
             </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label
+                  for="fechaOperacion"
+                  class="form-label small fw-semibold text-secondary"
+                >
+                  <i class="bi bi-calendar-check me-2 text-primary"></i>Fecha
+                  Operación
+                </label>
+                <input
+                  type="date"
+                  class="form-control form-control-sm border-secondary"
+                  id="FechaOperacion"
+                  v-model="formData.fecha_operacion"
+                  required
+                  :disabled="isExistingRecord"
+                />
+              </div>
+            </div>
           </div>
 
           <!-- Fila 2 -->
@@ -183,6 +202,7 @@ export default {
       isExistingRecord: false,
       formData: {
         fecha_actual: "",
+        fecha_operacion: "",
         plan_mensual_total: 0,
         plan_diario_total_vagones_cargados: 0,
         real_total_vagones_cargados: 0,
@@ -203,6 +223,8 @@ export default {
     const offset = now.getTimezoneOffset() * 60000; // offset en milisegundos
     const localISOTime = new Date(now - offset).toISOString().split("T")[0];
     this.formData.fecha_actual = localISOTime;
+    this.formData.fecha_operacion = localISOTime;
+
     await this.obtenerUsername(); //Busca el nombre del usuario
 
     // Check for existing record on load

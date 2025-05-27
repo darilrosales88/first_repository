@@ -1,11 +1,18 @@
 <template>
   <div>
-    <div style="background-color: #002a68; color: white; text-align: right; padding: 10px;">
+    <div
+      style="
+        background-color: #002a68;
+        color: white;
+        text-align: right;
+        padding: 10px;
+      "
+    >
       <h6>Informe Operativo</h6>
     </div>
-    
+
     <NavbarComponent />
-    
+
     <!-- Mostrar datos principales del informe -->
     <div style="margin-left: 17em; width: 73%">
       <InfOperativeView :informeId="informeId" />
@@ -15,36 +22,53 @@
     <div style="margin-left: 12em">
       <h4>Transportación de las cargas</h4>
       <Vagones_productos :informeId="informeId" />
-      
+
       <nav>
         <ul>
           <li>
-            <a href="#" @click.prevent="currentComponent = 'PorSituarCarga_Descarga'" 
-               :class="{ active: currentComponent === 'PorSituarCarga_Descarga' }">
+            <a
+              href="#"
+              @click.prevent="currentComponent = 'PorSituarCarga_Descarga'"
+              :class="{
+                active: currentComponent === 'PorSituarCarga_Descarga',
+              }"
+            >
               Por Situar Carga/Descarga
             </a>
           </li>
           <li>
-            <a href="#" @click.prevent="currentComponent = 'SituadoCarga_Descarga'" 
-               :class="{ active: currentComponent === 'SituadoCarga_Descarga' }">
+            <a
+              href="#"
+              @click.prevent="currentComponent = 'SituadoCarga_Descarga'"
+              :class="{ active: currentComponent === 'SituadoCarga_Descarga' }"
+            >
               Situado Carga/Descarga
             </a>
           </li>
           <li>
-            <a href="#" @click.prevent="currentComponent = 'Cargados_Descargados'" 
-               :class="{ active: currentComponent === 'Cargados_Descargados' }">
+            <a
+              href="#"
+              @click.prevent="currentComponent = 'Cargados_Descargados'"
+              :class="{ active: currentComponent === 'Cargados_Descargados' }"
+            >
               Cargados
             </a>
           </li>
           <li>
-            <a href="#" @click.prevent="currentComponent = 'PendientesArrastre'" 
-               :class="{ active: currentComponent === 'PendientesArrastre' }">
+            <a
+              href="#"
+              @click.prevent="currentComponent = 'PendientesArrastre'"
+              :class="{ active: currentComponent === 'PendientesArrastre' }"
+            >
               Pendientes
             </a>
           </li>
           <li>
-            <a href="#" @click.prevent="currentComponent = 'EnTrenes'" 
-               :class="{ active: currentComponent === 'EnTrenes' }">
+            <a
+              href="#"
+              @click.prevent="currentComponent = 'EnTrenes'"
+              :class="{ active: currentComponent === 'EnTrenes' }"
+            >
               En Trenes
             </a>
           </li>
@@ -53,9 +77,9 @@
 
       <!-- Componente dinámico -->
       <component :is="currentComponent" :informeId="informeId" />
-      
+
       <ConsultaRotacionVagones :informeId="informeId" />
-      
+
       <div class="action-buttons">
         <button class="action-btn reject" @click="rechazar">
           <i class="bi bi-x-circle"></i> Rechazar
@@ -72,37 +96,35 @@
 </template>
 
 <script>
-import NavbarComponent from '@/components/NavbarComponent.vue';
-import InfOperativeView from '@/components/InfOperativeView.vue';
-import Vagones_productos from '@/components/Vagones_productos.vue';
-import PorSituarCarga_Descarga from '@/components/PorSituarCarga_Descarga.vue';
-import SituadoCarga_Descarga from '@/components/SituadoCarga_Descarga.vue';
-import Cargados_Descargados from '@/components/Cargados_Descargados.vue';
-import PendientesArrastre from '@/components/PendientesArrastre.vue';
-import EnTrenes from '@/components/EnTrenes.vue';
-import ConsultaRotacionVagones from '@/components/RotacionVagonesView.vue';
-import Swal from 'sweetalert2';
-import axios from 'axios';
+import NavbarComponent from "@/components/NavbarComponent.vue";
+import Vagones_productos from "@/components/Vagones_productos.vue";
+import PorSituarCarga_Descarga from "@/components/PorSituarCarga_Descarga.vue";
+import SituadoCarga_Descarga from "@/components/SituadoCarga_Descarga.vue";
+import Cargados_Descargados from "@/components/Cargados_Descargados.vue";
+import PendientesArrastre from "@/components/PendientesArrastre.vue";
+import EnTrenes from "@/components/EnTrenes.vue";
+import ConsultaRotacionVagones from "@/components/RotacionVagonesView.vue";
+import Swal from "sweetalert2";
+import axios from "axios";
 
 export default {
-  name: 'VisualizarInformeOperativo',
+  name: "VisualizarInformeOperativo",
   components: {
     NavbarComponent,
-    InfOperativeView,
     Vagones_productos,
     PorSituarCarga_Descarga,
     SituadoCarga_Descarga,
     Cargados_Descargados,
     PendientesArrastre,
     EnTrenes,
-    ConsultaRotacionVagones
+    ConsultaRotacionVagones,
   },
   data() {
     return {
       informeId: null,
-      currentComponent: 'PorSituarCarga_Descarga',
+      currentComponent: "PorSituarCarga_Descarga",
       userPermissions: [],
-      userGroups: []
+      userGroups: [],
     };
   },
   created() {
@@ -112,9 +134,11 @@ export default {
   methods: {
     async fetchUserPermissionsAndGroups() {
       try {
-        const userId = localStorage.getItem('userid');
+        const userId = localStorage.getItem("userid");
         if (userId) {
-          const response = await axios.get(`/apiAdmin/user/${userId}/permissions-and-groups/`);
+          const response = await axios.get(
+            `/apiAdmin/user/${userId}/permissions-and-groups/`
+          );
           this.userPermissions = response.data.permissions;
           this.userGroups = response.data.groups;
         }
@@ -123,10 +147,10 @@ export default {
       }
     },
     hasGroup(group) {
-      return this.userGroups.some(g => g.name === group);
+      return this.userGroups.some((g) => g.name === group);
     },
     async rechazar() {
-      if (!this.hasGroup('RevisorUFC')) {
+      if (!this.hasGroup("RevisorUFC")) {
         await Swal.fire({
           icon: "error",
           title: "Acceso denegado",
@@ -135,7 +159,7 @@ export default {
         });
         return;
       }
-      
+
       const result = await Swal.fire({
         title: "¿Estás seguro?",
         text: "Está seguro que desea rechazar este informe operativo?",
@@ -152,7 +176,7 @@ export default {
       }
     },
     async aprobar() {
-      if (!this.hasGroup('RevisorUFC')) {
+      if (!this.hasGroup("RevisorUFC")) {
         await Swal.fire({
           icon: "error",
           title: "Acceso denegado",
@@ -178,7 +202,7 @@ export default {
       }
     },
     async listo() {
-      if (!this.hasGroup('AdminUFC')) {
+      if (!this.hasGroup("AdminUFC")) {
         await Swal.fire({
           icon: "error",
           title: "Acceso denegado",
@@ -187,7 +211,7 @@ export default {
         });
         return;
       }
-      
+
       const result = await Swal.fire({
         title: "¿Estás seguro?",
         text: "Está seguro que desea poner a 'Listo' este informe operativo?",
@@ -205,12 +229,12 @@ export default {
     },
     async cambiarEstado(nuevoEstado) {
       try {
-        const userId = localStorage.getItem('userid');
+        const userId = localStorage.getItem("userid");
         const response = await axios.patch(
           `/ufc/informe-operativo/${this.informeId}/`,
-          { 
+          {
             estado_parte: nuevoEstado,
-            aprobado_por: nuevoEstado === "Aprobado" ? userId : null
+            aprobado_por: nuevoEstado === "Aprobado" ? userId : null,
           }
         );
 
@@ -227,12 +251,13 @@ export default {
         await Swal.fire({
           icon: "error",
           title: "Error",
-          text: error.response?.data?.detail || "Error al actualizar el estado.",
+          text:
+            error.response?.data?.detail || "Error al actualizar el estado.",
           confirmButtonColor: "#002a68",
         });
       }
-    }
-  }
+    },
+  },
 };
 </script>
 

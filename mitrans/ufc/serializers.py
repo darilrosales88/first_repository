@@ -797,20 +797,21 @@ class en_trenes_serializer(serializers.ModelSerializer):
 #serializador de productoUFC
 class producto_vagon_serializer(serializers.ModelSerializer):
    # tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
-   # estado_name = serializers.ReadOnlyField(source='get_estado_display')
    # tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
     producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
     producto_codigo = serializers.ReadOnlyField(source='producto.codigo_producto')
     tipo_embalaje_name=serializers.ReadOnlyField(source='tipo_embalaje.nombre_tipo_embalaje')
     unidad_medida_name=serializers.ReadOnlyField(source='unidad_medida.unidad_medida')
     estado_name=serializers.ReadOnlyField(source='get_estado_display')
+    contiene_name = serializers.ReadOnlyField(source = 'get_contiene_display')
     
     class Meta:
         model = producto_UFC
         fields = '__all__'
-        filterset_class=en_trenes_filter
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
+        filterset_class=vagones_productos_filter
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         
   
     

@@ -174,34 +174,38 @@
             </div>
 
             <!-- Campo: plan_acumulado_dia_anterior -->
-            <div class="mb-3" v-if="mostrarCamposAcumulados">
-              <label for="plan_acumulado_dia_anterior" class="form-label"
-                >Plan acumulado día anterior</label
-              >
-              <input
-                type="number"
-                class="form-control"
-                v-model="formData.plan_acumulado_dia_anterior"
-                id="plan_acumulado_dia_anterior"
-                name="plan_acumulado_dia_anterior"
-                readonly
-              />
-            </div>
+              <div class="mb-3" v-if="mostrarCamposAcumulados">
+                  <label for="plan_acumulado_dia_anterior" class="form-label">
+                      Plan acumulado día anterior
+                      <span style="color: red" v-if="camposAcumuladosEditables">*</span>
+                  </label>
+                  <input
+                      type="number"
+                      class="form-control"
+                      v-model="formData.plan_acumulado_dia_anterior"
+                      id="plan_acumulado_dia_anterior"
+                      name="plan_acumulado_dia_anterior"
+                      :readonly="!camposAcumuladosEditables"
+                      :required="camposAcumuladosEditables"
+                  />
+              </div>
 
-            <!-- Campo: real_acumulado_dia_anterior -->
-            <div class="mb-3" v-if="mostrarCamposAcumulados">
-              <label for="real_acumulado_dia_anterior" class="form-label"
-                >Real acumulado día anterior</label
-              >
-              <input
-                type="number"
-                class="form-control"
-                v-model="formData.real_acumulado_dia_anterior"
-                id="real_acumulado_dia_anterior"
-                name="real_acumulado_dia_anterior"
-                readonly
-              />
-            </div>
+              <!-- Campo: real_acumulado_dia_anterior -->
+              <div class="mb-3" v-if="mostrarCamposAcumulados">
+                  <label for="real_acumulado_dia_anterior" class="form-label">
+                      Real acumulado día anterior
+                      <span style="color: red" v-if="camposAcumuladosEditables">*</span>
+                  </label>
+                  <input
+                      type="number"
+                      class="form-control"
+                      v-model="formData.real_acumulado_dia_anterior"
+                      id="real_acumulado_dia_anterior"
+                      name="real_acumulado_dia_anterior"
+                      :readonly="!camposAcumuladosEditables"
+                      :required="camposAcumuladosEditables"
+                  />
+              </div>
 
             <!-- Campo: producto -->
             <div class="mb-3" v-if="mostrarCampoProducto">
@@ -344,6 +348,12 @@ export default {
     }
     return this.esUnicoInformeAnual;
     },
+    camposAcumuladosEditables() {
+      // Hacer campos acumulados editables cuando:
+      // 1. Es el único registro en el año actual
+      // 2. NO es el primer día del mes
+      return this.esUnicoInformeAnual && !this.esPrimerDiaMes;
+    }
   },
 
   async mounted() {
@@ -561,62 +571,56 @@ export default {
 
     // Método para verificar fecha y estado de informes
     async verificarFechaEInformes() {
-      try {
-        const hoy = new Date();
-        this.esPrimerDiaMes = hoy.getDate() === 1;
+        try {
+            const hoy = new Date();
+            this.esPrimerDiaMes = hoy.getDate() === 1;
 
-        // Obtener año actual
-        const añoActual = hoy.getFullYear();
+            // Obtener el año actual
+            const añoActual = hoy.getFullYear();
 
-        // Verificar si hay informes operativos en el año actual
-        const response = await axios.get(
-          `/ufc/informe-operativo/?fecha_operacion__year=${añoActual}`
-        );
-        const informesAnuales = response.data.results || [];
-
-        // Verificar si es el único informe del año
-        this.esUnicoInformeAnual = informesAnuales.length === 1;
-
-        if (!this.esUnicoInformeAnual) {
-          // Obtener el informe del día anterior
-          const ayer = new Date(hoy);
-          ayer.setDate(ayer.getDate() - 1);
-          const fechaAyer = ayer.toISOString().split("T")[0];
-
-          const responseAnterior = await axios.get(
-            `/ufc/informe-operativo/?fecha_operacion=${fechaAyer}`
-          );
-          if (
-            responseAnterior.data.results &&
-            responseAnterior.data.results.length > 0
-          ) {
-            this.informeOperativoAnterior = responseAnterior.data.results[0];
-
-            // Obtener historial del informe anterior
-            const responseHistorial = await axios.get(
-              `/ufc/historial-vagones-productos/?informe_id=${this.informeOperativoAnterior.id}`
+            // Verificar si hay informes operativos en el año actual
+            const response = await axios.get(
+                `/ufc/informe-operativo/?fecha_operacion__year=${añoActual}`
             );
-            if (
-              responseHistorial.data.results &&
-              responseHistorial.data.results.length > 0
-            ) {
-              const historialAnterior = responseHistorial.data.results[0];
+            const informesAnuales = response.data.results || [];
 
-              // Asignar valores del día anterior
-              this.formData.plan_anual =
-                historialAnterior.datos_vagon_producto.plan_anual || 0;
-              this.formData.plan_acumulado_dia_anterior =
-                historialAnterior.datos_vagon_producto
-                  .plan_acumulado_dia_anterior || 0;
-              this.formData.real_acumulado_dia_anterior =
-                historialAnterior.datos_vagon_producto
-                  .real_acumulado_dia_anterior || 0;
+            // Verificar si es el único informe del año
+            this.esUnicoInformeAnual = informesAnuales.length === 1;
+
+            if (!this.esPrimerDiaMes) {
+                // Obtener el informe del día anterior
+                const ayer = new Date(hoy);
+                ayer.setDate(ayer.getDate() - 1);
+                const fechaAyer = ayer.toISOString().split('T')[0];
+
+                const responseAnterior = await axios.get(
+                    `/ufc/informe-operativo/?fecha_operacion=${fechaAyer}`
+                );
+                
+                if (responseAnterior.data.results && responseAnterior.data.results.length > 0) {
+                    this.informeOperativoAnterior = responseAnterior.data.results[0];
+
+                    // Obtener historial del informe anterior
+                    const responseHistorial = await axios.get(
+                        `/ufc/historial-vagones-productos/?informe_id=${this.informeOperativoAnterior.id}`
+                    );
+                    
+                    if (responseHistorial.data.results && responseHistorial.data.results.length > 0) {
+                        const historialAnterior = responseHistorial.data.results[0];
+
+                        // Asignar valores del día anterior
+                        this.formData.plan_anual = 
+                            historialAnterior.datos_vagon_producto.plan_anual || 0;
+                        this.formData.plan_acumulado_dia_anterior = 
+                            historialAnterior.datos_vagon_producto.plan_acumulado_dia_anterior || 0;
+                        this.formData.real_acumulado_dia_anterior = 
+                            historialAnterior.datos_vagon_producto.real_acumulado_dia_anterior || 0;
+                    }
+                }
             }
-          }
+        } catch (error) {
+            console.error("Error al verificar fecha e informes:", error);
         }
-      } catch (error) {
-        console.error("Error al verificar fecha e informes:", error);
-      }
     },
 
     // Métodos para obtener datos

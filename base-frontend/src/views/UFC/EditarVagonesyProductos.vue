@@ -204,32 +204,44 @@
 
             <!-- Campo: plan_acumulado_dia_anterior -->
             <div class="mb-3" v-if="mostrarCamposAcumulados">
-              <label for="plan_acumulado_dia_anterior" class="form-label"
-                >Plan acumulado día anterior</label
-              >
+              <label for="plan_acumulado_dia_anterior" class="form-label">
+                Plan acumulado día anterior
+                <span style="color: red" v-if="camposAcumuladosEditables">*</span>
+              </label>
               <input
                 type="number"
                 class="form-control"
                 v-model="formData.plan_acumulado_dia_anterior"
                 id="plan_acumulado_dia_anterior"
                 name="plan_acumulado_dia_anterior"
-                readonly
+                :readonly="!camposAcumuladosEditables"
+                :required="camposAcumuladosEditables"
+                :class="{ 'is-invalid': errors.plan_acumulado_dia_anterior }"
               />
+              <div class="invalid-feedback" v-if="errors.plan_acumulado_dia_anterior">
+                {{ errors.plan_acumulado_dia_anterior }}
+              </div>
             </div>
 
             <!-- Campo: real_acumulado_dia_anterior -->
             <div class="mb-3" v-if="mostrarCamposAcumulados">
-              <label for="real_acumulado_dia_anterior" class="form-label"
-                >Real acumulado día anterior</label
-              >
+              <label for="real_acumulado_dia_anterior" class="form-label">
+                Real acumulado día anterior
+                <span style="color: red" v-if="camposAcumuladosEditables">*</span>
+              </label>
               <input
                 type="number"
                 class="form-control"
                 v-model="formData.real_acumulado_dia_anterior"
                 id="real_acumulado_dia_anterior"
                 name="real_acumulado_dia_anterior"
-                readonly
+                :readonly="!camposAcumuladosEditables"
+                :required="camposAcumuladosEditables"
+                :class="{ 'is-invalid': errors.real_acumulado_dia_anterior }"
               />
+              <div class="invalid-feedback" v-if="errors.real_acumulado_dia_anterior">
+                {{ errors.real_acumulado_dia_anterior }}
+              </div>
             </div>
 
             <!-- Campo: producto -->
@@ -384,6 +396,12 @@ export default {
     },
     esPlanAnualEditable() {
       return this.esUnicoInformeAnual;
+    },
+    camposAcumuladosEditables() {
+      // Hacer campos acumulados editables cuando:
+      // 1. Es el único registro en el año actual
+      // 2. NO es el primer día del mes
+      return this.esUnicoInformeAnual && !this.esPrimerDiaMes;
     }
   },
 
@@ -456,25 +474,34 @@ export default {
         // Verificar si es el único informe del año
         this.esUnicoInformeAnual = informesAnuales.length === 1;
 
-        if (!this.esUnicoInformeAnual) {
+        // Solo cargar valores del día anterior si no es el primer día del mes
+        if (!this.esPrimerDiaMes) {
           // Obtener el informe del día anterior
           const ayer = new Date(hoy);
           ayer.setDate(ayer.getDate() - 1);
           const fechaAyer = ayer.toISOString().split('T')[0];
 
           const responseAnterior = await axios.get(`/ufc/informe-operativo/?fecha_operacion=${fechaAyer}`);
+          
           if (responseAnterior.data.results && responseAnterior.data.results.length > 0) {
             this.informeOperativoAnterior = responseAnterior.data.results[0];
             
             // Obtener historial del informe anterior
             const responseHistorial = await axios.get(`/ufc/historial-vagones-productos/?informe_id=${this.informeOperativoAnterior.id}`);
+            
             if (responseHistorial.data.results && responseHistorial.data.results.length > 0) {
               const historialAnterior = responseHistorial.data.results[0];
               
-              // Asignar valores del día anterior
-              this.formData.plan_anual = historialAnterior.datos_vagon_producto.plan_anual || 0;
-              this.formData.plan_acumulado_dia_anterior = historialAnterior.datos_vagon_producto.plan_acumulado_dia_anterior || 0;
-              this.formData.real_acumulado_dia_anterior = historialAnterior.datos_vagon_producto.real_acumulado_dia_anterior || 0;
+              // Solo asignar valores del día anterior si los campos acumulados están vacíos
+              // o si estamos en el caso especial donde deben ser editables
+              if (this.camposAcumuladosEditables || 
+                  this.formData.plan_acumulado_dia_anterior === 0 ||
+                  this.formData.real_acumulado_dia_anterior === 0) {
+                this.formData.plan_acumulado_dia_anterior = 
+                  historialAnterior.datos_vagon_producto.plan_acumulado_dia_anterior || 0;
+                this.formData.real_acumulado_dia_anterior = 
+                  historialAnterior.datos_vagon_producto.real_acumulado_dia_anterior || 0;
+              }
             }
           }
         }
@@ -506,7 +533,7 @@ export default {
               }
           }
 
-          // 3. MANEJO ESPECÍFICO PARA PRODUCTOS - VERSIÓN DEFINITIVA
+          // 3. MANEJO ESPECÍFICO PARA PRODUCTOS
           let productosAsociados = [];
           let productosOriginales = [];
           
@@ -549,7 +576,7 @@ export default {
           this.formData = {
               fecha: response.data.fecha_registro || new Date().toISOString(),
               tipo_equipo_ferroviario: equipoFerroviarioId,
-              tipo_origen: response.data.tipo_origen || 'ac_ccd',
+              tipo_origen: response.data.tipo_origen || '',
               origen: response.data.origen || '',
               tipo_combustible: response.data.tipo_combustible || '',
               tipo_producto: response.data.tipo_producto || '',
@@ -564,6 +591,9 @@ export default {
                               response.data.tipo_equipo_ferroviario_name ||
                               ''
           };
+
+          // 5.1. Verificar fecha e informes después de cargar los datos
+          await this.verificarFechaEInformes();
 
           // 5. Forzar actualización del select multiple
           this.$nextTick(() => {

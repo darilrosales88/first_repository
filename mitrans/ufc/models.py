@@ -79,7 +79,12 @@ class producto_UFC(models.Model):
         return self.unidad_medida if self.unidad_medida else "Sin especificar"
     @property
     def producto_display(self):
-        return f"{self.producto.nombre_producto} - {self.embalaje_display}"
+        return f"{self.producto.nombre_producto} - {self.embalaje_display}"  
+    
+    @property
+    def contiene_name(self):
+        return self.get_contiene_display()
+    
     
 #productos asociados al estado vagones cargados/descargados
 
@@ -247,7 +252,7 @@ class HistorialVagonCargadoDescargado(models.Model):
 #funcion que se encarga de almacenar el historial de vagon_cargado_descargado, la activa la creacion 
 # o modificacion del modelo padre
 @receiver(post_save, sender=ufc_informe_operativo)
-def crear_historial_vagones_al_aprobar(sender, instance, created, **kwargs):
+def crear_historial_vagones_cargados(sender, instance, created, **kwargs):
     """
     Crea historial de TODOS los vagones cargados/descargados cuando se aprueba el informe operativo.
     Un registro de historial por cada vagon_cargado_descargado existente.
@@ -299,8 +304,8 @@ def crear_historial_vagones_al_aprobar(sender, instance, created, **kwargs):
                     'tipo_embalaje_name': producto.tipo_embalaje.nombre_tipo_embalaje if producto.tipo_embalaje else None,
                     'unidad_medida_simbolo': producto.unidad_medida.simbolo if producto.unidad_medida else None,
                     'cantidad': producto.cantidad,
-                    'estado': producto.estado,
-                    'contiene': producto.contiene
+                    'estado': producto.get_estado_display() if producto.estado else None,
+                    'contiene': producto.get_contiene_display() if producto.contiene else None
                 })
             
             # Serializar registros de vagones relacionados
@@ -517,88 +522,9 @@ def crear_historial_situado(sender, instance, created, **kwargs):
                 datos_situado=datos_situado,
                 datos_productos=productos
             )
-    if not created:
-        return
 
-    def _crear_historial():
-        # 1. Obtener el situado con relaciones FRESCAS de la base de datos
-        situado = Situado_Carga_Descarga.objects.prefetch_related(
-            Prefetch('producto', queryset=producto_UFC.objects.select_related(
-                'producto', 'tipo_embalaje', 'unidad_medida'
-            ))
-        ).get(pk=instance.pk)
-
-        # 2. Debug avanzado - Verificar conexión M2M en BD
-        from django.db import connection
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                SELECT producto_ufc_id 
-                FROM ufc_situado_carga_descarga_producto 
-                WHERE situado_carga_descarga_id = %s
-            """, [instance.id])
-            ids_productos = cursor.fetchall()
-            print(f"Productos en tabla M2M: {ids_productos}")
-
-        # 3. Serialización a prueba de errores
-        productos_data = []
-        print(situado,situado.producto)
-        for p in situado.producto.all():
-            try:
-                productos_data.append({
-                    'id': p.id,
-                    'producto': {
-                        'id': p.producto.id,
-                        'nombre': p.producto.nombre_producto,
-                        'codigo': p.producto.codigo_producto
-                    },
-                    'embalaje': {
-                        'id': p.tipo_embalaje.id,
-                        'nombre': p.tipo_embalaje.nombre_tipo_embalaje
-                    } if p.tipo_embalaje else None,
-                    'unidad_medida': {
-                        'id': p.unidad_medida.id,
-                        'nombre': p.unidad_medida.unidad_medida,
-                        'simbolo': p.unidad_medida.simbolo
-                    } if p.unidad_medida else None,
-                    'cantidad': p.cantidad,
-                    'estado': p.estado,
-                    'contiene': p.contiene
-                })
-            except Exception as e:
-                print(f"Error serializando producto {p.id}: {str(e)}")
-                continue
-
-        # 4. Creación condicional del historial
-        if not productos_data:
-            print(f"ADVERTENCIA CRÍTICA: Situado {instance.id} tiene productos en el serializer pero no en la señal")
-            return
-
-        HistorialSituadoCargaDescarga.objects.create(
-            informe_operativo=ufc_informe_operativo.objects.filter(
-                fecha_operacion__date=instance.fecha.date()
-            ).first(),
-            datos_situado={
-                'id': instance.id,
-                'tipo_origen': instance.tipo_origen,
-                'origen': instance.origen,
-                'tipo_equipo': instance.tipo_equipo,
-                'estado': instance.estado,
-                'operacion': instance.operacion,
-                'fecha': str(instance.fecha),
-                'situados': instance.situados,
-                'pendiente_proximo_dia': instance.pendiente_proximo_dia,
-                'observaciones': instance.observaciones
-            },
-            datos_productos=productos_data
-        )
-
-    # Retardo opcional para asegurar consistencia (solo en desarrollo)
-    import os
-    if os.environ.get('DEBUG') == 'True':
-        import time
-        time.sleep(0.5)
-    
-    transaction.on_commit(_crear_historial)
+    # Eliminar la función _crear_historial completamente ya que no es necesaria
+    # y está causando el problema al intentar acceder a instancias que no existen
 
 # Señal para eliminar el historial cuando se elimina un Situado_Carga_Descarga
 @receiver(post_delete, sender=Situado_Carga_Descarga)
@@ -691,6 +617,7 @@ class vagones_productos(models.Model):
 #funcion que calcula automaticamente los valores de los campos de vagones_productos
 @receiver(post_save, sender=vagon_cargado_descargado)
 @receiver(post_save, sender=Situado_Carga_Descarga)
+@receiver(post_save, sender=ufc_informe_operativo)
 def actualizar_campos_automaticos_vagones_productos(sender, instance, **kwargs):    
     '''Actualiza los campos automáticos en vagones_productos cuando hay cambios
     en los modelos relacionados vagon_cargado_descargado, Situado_Carga_Descarga'''
@@ -712,7 +639,7 @@ def actualizar_campos_automaticos_vagones_productos(sender, instance, **kwargs):
     es_unico_informe_año = not informes_año_actual.exists()
     
     with transaction.atomic():
-        # Obtener todos los objetos vagones_productos que necesitan actualización
+        # Obtener todos los objetos de vagones_productos que necesitan actualización
         objetos_actualizar = vagones_productos.objects.all()
         
         for vagon_producto in objetos_actualizar:
@@ -1548,7 +1475,7 @@ def crear_historial_rotacion_vagones(sender, instance, created, **kwargs):
                 informe_operativo=instance,
                 datos_rotacion=datos_rotacion
             )
-# Señal para eliminar el historial
+# Señal para eliminar el historial de rotacion
 @receiver(post_delete, sender=rotacion_vagones)
 def eliminar_historial_rotacion_vagones(sender, instance, **kwargs):
     try:

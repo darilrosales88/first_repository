@@ -1,8 +1,15 @@
 <template>
-  <div style="background-color: #002a68; color: white; text-align: right; padding: 10px;">
+  <div
+    style="
+      background-color: #002a68;
+      color: white;
+      text-align: right;
+      padding: 10px;
+    "
+  >
     <h6>Informe Operativo</h6>
   </div>
-  
+
   <Navbar-Component /><br />
 
   <div style="margin-left: 25em; width: 60%">
@@ -17,19 +24,24 @@
         <div class="card-body p-3">
           <form @submit.prevent="submitForm">
             <!-- Fila 1 -->
-            <div class="row mb-3 g-2">        
+            <div class="row mb-3 g-2">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="fechaActual" class="form-label small fw-semibold text-secondary">
-                    <i class="bi bi-calendar-check me-2 text-primary"></i>Fecha Actual
+                  <label
+                    for="fechaActual"
+                    class="form-label small fw-semibold text-secondary"
+                  >
+                    <i class="bi bi-calendar-check me-2 text-primary"></i>Fecha
+                    Actual
                   </label>
-                  <input 
-                    type="date" 
-                    class="form-control form-control-sm border-secondary" 
-                    id="fechaActual" 
+                  <input
+                    type="date"
+                    class="form-control form-control-sm border-secondary"
+                    id="fechaActual"
                     v-model="formData.fecha_actual"
                     required
-                    :disabled="isExistingRecord">
+                    :disabled="isExistingRecord"
+                  />
                 </div>
               </div>
             </div>
@@ -44,27 +56,47 @@
     <nav>
       <ul>
         <li>
-          <a href="#" @click.prevent="currentComponent = 'PorSituarCarga_Descarga'" :class="{ active: currentComponent === 'PorSituarCarga_Descarga' }">
+          <a
+            href="#"
+            @click.prevent="currentComponent = 'PorSituarCarga_Descarga'"
+            :class="{ active: currentComponent === 'PorSituarCarga_Descarga' }"
+          >
             Por Situar Carga/Descarga
           </a>
         </li>
         <li>
-          <a href="#" @click.prevent="currentComponent = 'SituadoCarga_Descarga'" :class="{ active: currentComponent === 'SituadoCarga_Descarga' }">
+          <a
+            href="#"
+            @click.prevent="currentComponent = 'SituadoCarga_Descarga'"
+            :class="{ active: currentComponent === 'SituadoCarga_Descarga' }"
+          >
             Situado Carga/Descarga
           </a>
         </li>
         <li>
-          <a href="#" @click.prevent="currentComponent = 'Cargados_Descargados'":class="{ active: currentComponent === 'Cargados_Descargados' }">
+          <a
+            href="#"
+            @click.prevent="currentComponent = 'Cargados_Descargados'"
+            :class="{ active: currentComponent === 'Cargados_Descargados' }"
+          >
             Cargados
           </a>
         </li>
         <li>
-          <a href="#" @click.prevent="currentComponent = 'PendientesArrastre'" :class="{ active: currentComponent === 'PendientesArrastre' }">
+          <a
+            href="#"
+            @click.prevent="currentComponent = 'PendientesArrastre'"
+            :class="{ active: currentComponent === 'PendientesArrastre' }"
+          >
             Pendientes
           </a>
         </li>
         <li>
-          <a href="#" @click.prevent="currentComponent = 'EnTrenes'" :class="{ active: currentComponent === 'EnTrenes' }">
+          <a
+            href="#"
+            @click.prevent="currentComponent = 'EnTrenes'"
+            :class="{ active: currentComponent === 'EnTrenes' }"
+          >
             En Trenes
           </a>
         </li>
@@ -87,7 +119,10 @@
   </div>
 
   <div style="margin-left: 16em; width: 80%">
-    <Inf-Operative :fechaActual="formData.fecha_actual" @record-status-changed="handleRecordStatusChange"/>    
+    <Inf-Operative
+      :fechaActual="formData.fecha_actual"
+      @record-status-changed="handleRecordStatusChange"
+    />
   </div>
 
   <div style="margin-left: 16em; width: 80%">
@@ -106,7 +141,7 @@
 </template>
 
 <script>
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 import axios from "axios";
 import NavbarComponent from "@/components/NavbarComponent.vue";
 import PorSituarCarga_Descarga from "@/components/PorSituarCarga_Descarga.vue";
@@ -131,7 +166,7 @@ export default {
     InfOperative,
     Vagones_productos,
     AdicionarVagonProducto,
-    ConsultaRotacionVagones, 
+    ConsultaRotacionVagones,
   },
   data() {
     const now = new Date();
@@ -149,31 +184,31 @@ export default {
       },
     };
   },
-  
+
   async created() {
     await this.fetchUserPermissionsAndGroups();
   },
 
   methods: {
-    async rechazar() {      
-      if (!this.hasGroup('RevisorUFC')) {
+    async rechazar() {
+      if (!this.hasGroup("RevisorUFC")) {
         await Swal.fire({
-          icon: 'error',
-          title: 'Acceso denegado',
-          text: 'No tienes permiso para rechazar informes operativos.',
-          confirmButtonColor: '#002a68',
+          icon: "error",
+          title: "Acceso denegado",
+          text: "No tienes permiso para rechazar informes operativos.",
+          confirmButtonColor: "#002a68",
         });
         return;
-      }      
+      }
       const result = await Swal.fire({
-        title: '¿Estás seguro?',
+        title: "¿Estás seguro?",
         text: "Está seguro que desea rechazar este informe operativo?",
-        icon: 'question',
+        icon: "question",
         showCancelButton: true,
-        confirmButtonColor: '#002a68',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, rechazar',
-        cancelButtonText: 'Cancelar'
+        confirmButtonColor: "#002a68",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Sí, rechazar",
+        cancelButtonText: "Cancelar",
       });
 
       // Si el usuario confirma, proceder con la aprobación
@@ -182,27 +217,27 @@ export default {
       }
     },
 
-    async aprobar() {      
-      if (!this.hasGroup('RevisorUFC')) {
+    async aprobar() {
+      if (!this.hasGroup("RevisorUFC")) {
         await Swal.fire({
-          icon: 'error',
-          title: 'Acceso denegado',
-          text: 'No tienes permiso para aprobar informes operativos.',
-          confirmButtonColor: '#002a68',
+          icon: "error",
+          title: "Acceso denegado",
+          text: "No tienes permiso para aprobar informes operativos.",
+          confirmButtonColor: "#002a68",
         });
         return;
       }
 
       // Mostrar confirmación antes de aprobar
       const result = await Swal.fire({
-        title: '¿Estás seguro?',
+        title: "¿Estás seguro?",
         text: "Está seguro que desea aprobar este informe operativo?",
-        icon: 'question',
+        icon: "question",
         showCancelButton: true,
-        confirmButtonColor: '#002a68',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, aprobar',
-        cancelButtonText: 'Cancelar'
+        confirmButtonColor: "#002a68",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Sí, aprobar",
+        cancelButtonText: "Cancelar",
       });
 
       // Si el usuario confirma, proceder con la aprobación
@@ -210,25 +245,25 @@ export default {
         await this.CambiarEstado("Aprobado");
       }
     },
-    async listo() {      
-      if (!this.hasGroup('AdminUFC')) {
+    async listo() {
+      if (!this.hasGroup("AdminUFC")) {
         await Swal.fire({
-          icon: 'error',
-          title: 'Acceso denegado',
-          text: 'No tienes permiso para cambiar el estado a Listo.',
-          confirmButtonColor: '#002a68',
+          icon: "error",
+          title: "Acceso denegado",
+          text: "No tienes permiso para cambiar el estado a Listo.",
+          confirmButtonColor: "#002a68",
         });
         return;
-      }      
+      }
       const result = await Swal.fire({
-        title: '¿Estás seguro?',
+        title: "¿Estás seguro?",
         text: "Está seguro que desea poner a 'Listo' este informe operativo?",
-        icon: 'question',
+        icon: "question",
         showCancelButton: true,
-        confirmButtonColor: '#002a68',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, poner a listo',
-        cancelButtonText: 'Cancelar'
+        confirmButtonColor: "#002a68",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Sí, poner a listo",
+        cancelButtonText: "Cancelar",
       });
 
       // Si el usuario confirma, proceder con la aprobación
@@ -239,7 +274,7 @@ export default {
 
     hasPermission(permission) {
       if (!this.userPermissions || !Array.isArray(this.userPermissions)) {
-        console.warn('userPermissions no está disponible o no es un array');
+        console.warn("userPermissions no está disponible o no es un array");
         return false;
       }
       return this.userPermissions.some((p) => p.codename === permission);
@@ -257,12 +292,14 @@ export default {
       try {
         const userId = localStorage.getItem("userid");
         if (userId) {
-          const response = await axios.get(`/apiAdmin/user/${userId}/permissions-and-groups/`);
-          
+          const response = await axios.get(
+            `/apiAdmin/user/${userId}/permissions-and-groups/`
+          );
+
           // Verificación profunda de la respuesta
           console.log("Respuesta completa de permisos:", {
             permissions: response.data?.permissions,
-            groups: response.data?.groups
+            groups: response.data?.groups,
           });
 
           this.userPermissions = response.data?.permissions || [];
@@ -272,7 +309,7 @@ export default {
         console.error("Error al obtener permisos:", {
           message: error.message,
           response: error.response?.data,
-          status: error.response?.status
+          status: error.response?.status,
         });
         this.userPermissions = [];
         this.userGroups = [];
@@ -284,29 +321,29 @@ export default {
     async CambiarEstado(NuevoEstado) {
       try {
         const existeInforme = await this.verificarInformeOperativo();
-        
+
         if (!existeInforme || !this.informeOperativoId) {
           await Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'No existe un informe operativo para la fecha actual.',
-            confirmButtonColor: '#002a68',
+            icon: "error",
+            title: "Error",
+            text: "No existe un informe operativo para la fecha actual.",
+            confirmButtonColor: "#002a68",
           });
           return;
         }
 
         const response = await axios.patch(
-          `/ufc/informe-operativo/${this.informeOperativoId}/`, 
+          `/ufc/informe-operativo/${this.informeOperativoId}/`,
           { estado_parte: NuevoEstado },
-          { headers: { 'Content-Type': 'application/json' } }
+          { headers: { "Content-Type": "application/json" } }
         );
 
         if (response.status === 200) {
           await Swal.fire({
-            icon: 'success',
-            title: 'Éxito',
+            icon: "success",
+            title: "Éxito",
             text: `Estado actualizado a "${NuevoEstado}" correctamente.`,
-            confirmButtonColor: '#002a68',
+            confirmButtonColor: "#002a68",
           });
           this.$forceUpdate();
         }
@@ -314,13 +351,14 @@ export default {
         console.error("Error al cambiar estado:", {
           url: error.config?.url,
           status: error.response?.status,
-          data: error.response?.data
+          data: error.response?.data,
         });
         await Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: error.response?.data?.detail || 'Error al actualizar el estado.',
-          confirmButtonColor: '#002a68',
+          icon: "error",
+          title: "Error",
+          text:
+            error.response?.data?.detail || "Error al actualizar el estado.",
+          confirmButtonColor: "#002a68",
         });
       }
     },
@@ -328,10 +366,12 @@ export default {
     async verificarInformeOperativo() {
       try {
         const today = new Date();
-        const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        const fechaFormateada = `${today.getFullYear()}-${String(
+          today.getMonth() + 1
+        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-        const response = await axios.get('/ufc/verificar-informe-existente/', {
-          params: { fecha_operacion: fechaFormateada }
+        const response = await axios.get("/ufc/verificar-informe-existente/", {
+          params: { fecha_operacion: fechaFormateada },
         });
 
         if (response.data.existe) {
@@ -347,9 +387,9 @@ export default {
     handleRecordStatusChange(payload) {
       this.isExistingRecord = payload.isExisting;
       // Opcional: Mostrar feedback
-      console.log('Estado actualizado:', payload);
+      console.log("Estado actualizado:", payload);
     },
-  }
+  },
 };
 </script>
 <style scoped>

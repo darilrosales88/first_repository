@@ -10,14 +10,22 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
           <router-link v-if="hasGroup('AdminUFC')" to="/AdicionarSituados">
             <button class="btn btn-sm btn-primary">
-              <i class="bi bi-plus-circle me-1"></i>Agregar nuevo registro situado
+              <i class="bi bi-plus-circle me-1"></i>Agregar nuevo registro
+              situado
             </button>
           </router-link>
           <form @submit.prevent="search_producto" class="search-container">
             <div class="input-group">
-              <input type="search" class="form-control" placeholder="Tipo Origen,Origen,Tipo equipo,..." v-model="searchQuery"
-                @input="handleSearchInput"/>
-              <span class="position-absolute top-50 start-0 translate-middle-y ps-2">
+              <input
+                type="search"
+                class="form-control"
+                placeholder="Tipo Origen,Origen,Tipo equipo,..."
+                v-model="searchQuery"
+                @input="handleSearchInput"
+              />
+              <span
+                class="position-absolute top-50 start-0 translate-middle-y ps-2"
+              >
                 <i class="bi bi-search"></i>
               </span>
             </div>
@@ -33,10 +41,10 @@
                 <th scope="col">Origen</th>
                 <th scope="col">Tipo Equipo</th>
                 <th scope="col">Estado</th>
-				        <th scope="col">Operación</th>
+                <th scope="col">Operación</th>
                 <th scope="col">Producto</th>
-				        <th scope="col">Situados</th>
-				        <th scope="col">Pendientes</th>
+                <th scope="col">Situados</th>
+                <th scope="col">Pendientes</th>
                 <th scope="col">Acciones</th>
               </tr>
               <tr v-if="!busqueda_existente && registroSituado.length != 0">
@@ -55,32 +63,41 @@
                   </div>
                   <div v-else>
                     <i class="bi bi-database-exclamation fs-4"></i>
-                    <p class="mt-2">
-                      No hay registros
-                    </p>
+                    <p class="mt-2">No hay registros</p>
                     <router-link to="/AdicionarSituados">
                       <button class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-circle me-1"></i>Crear primer registro
+                        <i class="bi bi-plus-circle me-1"></i>Crear primer
+                        registro
                       </button>
                     </router-link>
                   </div>
                 </td>
-              </tr>       
+              </tr>
             </thead>
             <tbody>
-              <tr v-for="(item, index) in registroSituado" :key="item.id" class="align-middle">
+              <tr
+                v-for="(item, index) in registroSituado"
+                :key="item.id"
+                class="align-middle"
+              >
                 <th scope="row">{{ index + 1 }}</th>
                 <td>{{ item.tipo_origen_name }}</td>
-                <td>{{ item.origen  }}</td>
-				        <td>{{ item.tipo_equipo_name  }}</td>
-                  <td class="ps-td">
-                  <span :class="`ps-status ps-status-${getStatusClass(item.estado)}`">
+                <td>{{ item.origen }}</td>
+                <td>{{ item.tipo_equipo_name }}</td>
+                <td class="ps-td">
+                  <span
+                    :class="`ps-status ps-status-${getStatusClass(
+                      item.estado
+                    )}`"
+                  >
                     {{ item.estado }}
                   </span>
-                  </td>
+                </td>
                 <td>{{ item.operacion }}</td>
                 <td class="ps-td">
-                  <span v-if="item.productos_info && item.productos_info.length > 0">
+                  <span
+                    v-if="item.productos_info && item.productos_info.length > 0"
+                  >
                     {{ getNombresProductos(item.productos_info) }}
                   </span>
                   <span v-else>-</span>
@@ -97,14 +114,26 @@
                 </td>
                 <td v-if="hasGroup('AdminUFC')">
                   <div class="d-flex">
-                    <button @click="viewDetails(item)" class="btn btn-sm btn-outline-info me-2" title="Ver detalles">
+                    <button
+                      @click="viewDetails(item)"
+                      class="btn btn-sm btn-outline-info me-2"
+                      title="Ver detalles"
+                    >
                       <i class="bi bi-eye-fill"></i>
                     </button>
 
-                    <button @click="editRegistroSituado(item)" class="btn btn-sm btn-outline-warning me-2" title="Editar">
+                    <button
+                      @click="editRegistroSituado(item)"
+                      class="btn btn-sm btn-outline-warning me-2"
+                      title="Editar"
+                    >
                       <i class="bi bi-pencil-square"></i>
                     </button>
-                    <button @click="confirmDelete(item.id)" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                    <button
+                      @click="confirmDelete(item.id)"
+                      class="btn btn-sm btn-outline-danger"
+                      title="Eliminar"
+                    >
                       <i class="bi bi-trash"></i>
                     </button>
                   </div>
@@ -117,8 +146,7 @@
         <!-- Paginación mejorada -->
         <div class="d-flex justify-content-between align-items-center">
           <div class="text-muted small">
-            Mostrando {{ registroSituado.length }} de
-            {{ totalItems }} registros
+            Mostrando {{ registroSituado.length }} de {{ totalItems }} registros
           </div>
           <nav aria-label="Page navigation">
             <ul class="pagination pagination-sm mb-0">
@@ -133,7 +161,10 @@
                   {{ Math.ceil(totalItems / itemsPerPage) }}
                 </span>
               </li>
-              <li class="page-item" :class="{ disabled: currentPage * itemsPerPage >= totalItems }">
+              <li
+                class="page-item"
+                :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
+              >
                 <button class="page-link" @click="nextPage">
                   <i class="bi bi-chevron-right"></i>
                 </button>
@@ -141,7 +172,11 @@
             </ul>
           </nav>
         </div>
-        <div v-if="showDetailsModal" class="ps-modal-overlay" @click.self="closeModal">
+        <div
+          v-if="showDetailsModal"
+          class="ps-modal-overlay"
+          @click.self="closeModal"
+        >
           <!-- Modal -->
           <div class="ps-modal">
             <!-- 1. Encabezado del Modal -->
@@ -165,7 +200,6 @@
             <!-- 2. Cuerpo del Modal -->
             <div class="ps-modal-body">
               <div class="ps-detail-grid">
-                
                 <!-- 2.1 Tarjeta - Información Básica -->
                 <div class="ps-detail-card">
                   <div class="ps-detail-card-header">
@@ -173,7 +207,6 @@
                     <h4>Información Básica</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    
                     <!-- 2.1.1 Item - Tipo Origen -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Tipo Origen:</span>
@@ -181,7 +214,7 @@
                         {{ currentRecord.tipo_origen_name || "N/A" }}
                       </span>
                     </div>
-                    
+
                     <!-- 2.1.2 Item - Origen -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Origen:</span>
@@ -189,7 +222,7 @@
                         {{ currentRecord.origen || "N/A" }}
                       </span>
                     </div>
-                    
+
                     <!-- 2.1.3 Item - Tipo de Equipo -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Tipo de Equipo:</span>
@@ -207,17 +240,20 @@
                     <h4>Estado,Operación y Producto</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    
                     <!-- 2.2.1 Item - Estado -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Estado:</span>
                       <span class="ps-detail-value">
-                        <span :class="`ps-status ps-status-${getStatusClass(currentRecord.estado)}`">
+                        <span
+                          :class="`ps-status ps-status-${getStatusClass(
+                            currentRecord.estado
+                          )}`"
+                        >
                           {{ currentRecord.estado || "N/A" }}
                         </span>
                       </span>
                     </div>
-                    
+
                     <!-- 2.2.2 Item - Operación -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Operación:</span>
@@ -225,15 +261,26 @@
                         {{ currentRecord.operacion || "N/A" }}
                       </span>
                     </div>
-                    
+
                     <!-- 2.2.3 Item - Productos (lista) -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Productos:</span>
                       <span class="ps-detail-value">
-                        <template v-if="currentRecord.productos_info && currentRecord.productos_info.length > 0">
-                          <div v-for="producto in currentRecord.productos_info" :key="producto.id" class="producto-item">
+                        <template
+                          v-if="
+                            currentRecord.productos_info &&
+                            currentRecord.productos_info.length > 0
+                          "
+                        >
+                          <div
+                            v-for="producto in currentRecord.productos_info"
+                            :key="producto.id"
+                            class="producto-item"
+                          >
                             • {{ producto.nombre_producto }}
-                            <span v-if="producto.tipo_embalaje">({{ producto.tipo_embalaje }})</span>
+                            <span v-if="producto.tipo_embalaje"
+                              >({{ producto.tipo_embalaje }})</span
+                            >
                           </div>
                         </template>
                         <span v-else>N/A</span>
@@ -249,15 +296,16 @@
                     <h4>Cantidades</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    
                     <!-- 2.3.1 Item - Situados -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Situados:</span>
-                      <span class="ps-detail-value ps-highlight-value ps-badge-success">
+                      <span
+                        class="ps-detail-value ps-highlight-value ps-badge-success"
+                      >
                         {{ currentRecord.situados || "0" }}
                       </span>
                     </div>
-                    
+
                     <!-- 2.3.2 Item - Pendientes -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Pendientes:</span>
@@ -275,11 +323,13 @@
                     <h4>Observaciones</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    
                     <!-- 2.4.1 Item - Observaciones -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-value">
-                        {{ currentRecord.observaciones || "Ninguna observación registrada" }}
+                        {{
+                          currentRecord.observaciones ||
+                          "Ninguna observación registrada"
+                        }}
                       </span>
                     </div>
                   </div>
@@ -289,7 +339,7 @@
           </div>
         </div>
       </div>
-    </div> 
+    </div>
   </div>
 </template>
 
@@ -319,14 +369,12 @@ export default {
   },
 
   async mounted() {
-    await this.getVagonesCargadosDescargados();
-    console.log('Hola',this.registroSituado)
+    await this.getSituado();
+    console.log("Hola", this.registroSituado);
     await this.fetchUserPermissionsAndGroups();
-  },    
-  
- 
-  methods: {
+  },
 
+  methods: {
     closeModal() {
       this.showDetailsModal = false;
       this.currentRecord = {};
@@ -335,12 +383,9 @@ export default {
     async viewDetails(item) {
       this.loading = true;
       try {
-        
         this.selectedItem = { ...item };
         this.showDetailsModal = true; // Corregir aquí
-        const response = await axios.get(
-          `/ufc/situados/${item.id}/`
-        );
+        const response = await axios.get(`/ufc/situados/${item.id}/`);
         this.currentRecord = response.data; // Usar currentRecord en lugar de selectedItem
       } catch (error) {
         console.error("Error al cargar detalles:", error);
@@ -361,8 +406,8 @@ export default {
 
       return "info";
     },
-    
-	  getNombresProductos(productos) {
+
+    getNombresProductos(productos) {
       if (!productos || !Array.isArray(productos)) return "-";
       return productos
         .filter((p) => p && p.nombre_producto)
@@ -389,7 +434,7 @@ export default {
       }
     },
 
-    async getVagonesCargadosDescargados() {
+    /*     async getVagonesCargadosDescargados() {
       this.loading = true;
       try {
         const response = await axios.get("/ufc/situados-hoy/", {
@@ -409,6 +454,58 @@ export default {
           error
         );
         this.busqueda_existente = false;
+      } finally {
+        this.loading = false;
+      }
+    },
+ */
+    async getSituado() {
+      this.loading = true;
+      try {
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(
+          today.getMonth() + 1
+        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+        const infoID = await axios.get(
+          `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
+        );
+        this.estado_parte = infoID.data.estado;
+        if (infoID.data.existe) {
+          //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
+          const response = await axios.get("/ufc/situados/", {
+            params: {
+              page: this.currentPage,
+              page_size: this.itemsPerPage,
+              informe: infoID.data.id,
+            },
+          });
+          this.totalItems = response.data.count;
+
+          if (
+            response.data &&
+            Array.isArray(response.data.results || response.data)
+          ) {
+            const data = response.data.results || response.data;
+            this.allRecords = data.map((item) => ({
+              id: item.id,
+              tipo_origen_name: item.tipo_origen_name || "",
+              origen: item.origen || "",
+              tipo_equipo_name: item.tipo_equipo_name || "",
+              estado: item.estado || "",
+              operacion: item.operacion || "",
+              productos_info: item.productos_info || [],
+              situados: parseInt(item.situados) || 0, // Convertir a número
+              pendiente_proximo_dia: parseInt(item.pendiente_proximo_dia) || 0, // Convertir a número
+              observaciones: item.observaciones || "",
+              created_at: item.created_at || null,
+            }));
+
+            this.registroSituado = [...this.allRecords];
+          }
+        }
+      } catch (error) {
+        console.error("Error al obtener los Situados:", error);
+        this.showErrorToast("No se pudieron cargar los registros");
       } finally {
         this.loading = false;
       }
@@ -508,7 +605,6 @@ export default {
         }
       });
     },
-    
 
     // Método para manejar errores (similar al del componente que funciona)
     handleApiError(error, action) {
@@ -529,7 +625,6 @@ export default {
 </script>
 
 <style scoped>
-
 .card-header {
   background-color: #f8f9fa;
   border-bottom: 2px solid #e0e0e0 !important;
@@ -710,7 +805,7 @@ export default {
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-  border-radius:10px;
+  border-radius: 10px;
   animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   overflow: hidden;
 }
@@ -720,7 +815,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color:#0d6efd;
+  background-color: #0d6efd;
   color: white;
   position: relative;
 }
@@ -816,7 +911,7 @@ export default {
 
 .ps-detail-card-header {
   padding: 1rem;
-  background-color:#0d6efd;
+  background-color: #0d6efd;
   color: white;
   border-bottom: 1px solid var(--ps-light-gray);
   display: flex;
@@ -928,5 +1023,4 @@ export default {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
 }
-
 </style>

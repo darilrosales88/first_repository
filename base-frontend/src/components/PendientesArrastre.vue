@@ -10,14 +10,22 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
           <router-link v-if="hasGroup('AdminUFC')" to="/AdicionarArrastre">
             <button class="btn btn-sm btn-primary">
-              <i class="bi bi-plus-circle me-1"></i>Agregar nuevo vagón pendiente
+              <i class="bi bi-plus-circle me-1"></i>Agregar nuevo vagón
+              pendiente
             </button>
           </router-link>
           <form @submit.prevent="search_producto" class="search-container">
             <div class="input-group">
-              <input type="search" class="form-control" placeholder="Tipo Origen,Origen,Tipo equipo,..." v-model="searchQuery"
-                @input="handleSearchInput"/>
-              <span class="position-absolute top-50 start-0 translate-middle-y ps-2">
+              <input
+                type="search"
+                class="form-control"
+                placeholder="Tipo Origen,Origen,Tipo equipo,..."
+                v-model="searchQuery"
+                @input="handleSearchInput"
+              />
+              <span
+                class="position-absolute top-50 start-0 translate-middle-y ps-2"
+              >
                 <i class="bi bi-search"></i>
               </span>
             </div>
@@ -34,8 +42,8 @@
                 <th scope="col">Tipo Equipo</th>
                 <th scope="col">Estado</th>
                 <th scope="col">Producto</th>
-				        <th scope="col">Situados</th>
-				        <th scope="col">Pendientes</th>
+                <th scope="col">Situados</th>
+                <th scope="col">Pendientes</th>
                 <th scope="col">Acciones</th>
               </tr>
               <tr v-if="!busqueda_existente && arrastresPendientes.length != 0">
@@ -53,46 +61,67 @@
                     <span>Cargando registros...</span>
                   </div>
                   <i class="bi bi-database-exclamation fs-4"></i>
-                  <p class="mt-2">
-                    No hay registros
-                  </p>
+                  <p class="mt-2">No hay registros</p>
                   <router-link to="/AdicionarArrastre">
                     <button class="btn btn-sm btn-primary">
-                      <i class="bi bi-plus-circle me-1"></i>Crear primer registro
+                      <i class="bi bi-plus-circle me-1"></i>Crear primer
+                      registro
                     </button>
                   </router-link>
                 </td>
-              </tr>       
+              </tr>
             </thead>
             <tbody>
-              <tr v-for="(item, index) in arrastresPendientes" :key="item.id" class="align-middle">
+              <tr
+                v-for="(item, index) in arrastresPendientes"
+                :key="item.id"
+                class="align-middle"
+              >
                 <th scope="row">{{ index + 1 }}</th>
                 <td>{{ getTipoOrigenText(item.tipo_origen) }}</td>
                 <td>{{ item.origen }}</td>
-				        <td>{{ item.tipo_equipo }}</td>
-			          <td class="ps-td">
-                  <span :class="`ps-status ps-status-${getStatusClass(item.estado)}`">
+                <td>{{ item.tipo_equipo }}</td>
+                <td class="ps-td">
+                  <span
+                    :class="`ps-status ps-status-${getStatusClass(
+                      item.estado
+                    )}`"
+                  >
                     {{ item.estado }}
                   </span>
-			          </td>
+                </td>
                 <td class="ps-td">
-                  <span v-if="item.productos_info && item.productos_info.length > 0">
+                  <span
+                    v-if="item.productos_info && item.productos_info.length > 0"
+                  >
                     {{ getNombresProductos(item.productos_info) }}
                   </span>
-					      <span v-else>-</span>
-				      </td>
-				      <td class="ps-td">{{ item.cantidad_vagones }}</td>
-				      <td class="ps-td">{{ item.destino }}</td>
+                  <span v-else>-</span>
+                </td>
+                <td class="ps-td">{{ item.cantidad_vagones }}</td>
+                <td class="ps-td">{{ item.destino }}</td>
                 <td v-if="hasGroup('AdminUFC')">
                   <div class="d-flex">
-                    <button @click="viewDetails(item)" class="btn btn-sm btn-outline-info me-2" title="Ver detalles">
+                    <button
+                      @click="viewDetails(item)"
+                      class="btn btn-sm btn-outline-info me-2"
+                      title="Ver detalles"
+                    >
                       <i class="bi bi-eye-fill"></i>
                     </button>
 
-                    <button @click="editPendienteArrastre(item)" class="btn btn-sm btn-outline-warning me-2" title="Editar">
+                    <button
+                      @click="editPendienteArrastre(item)"
+                      class="btn btn-sm btn-outline-warning me-2"
+                      title="Editar"
+                    >
                       <i class="bi bi-pencil-square"></i>
                     </button>
-                    <button @click="confirmDelete(item.id)" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                    <button
+                      @click="confirmDelete(item.id)"
+                      class="btn btn-sm btn-outline-danger"
+                      title="Eliminar"
+                    >
                       <i class="bi bi-trash"></i>
                     </button>
                   </div>
@@ -121,7 +150,10 @@
                   {{ Math.ceil(totalItems / itemsPerPage) }}
                 </span>
               </li>
-              <li class="page-item" :class="{ disabled: currentPage * itemsPerPage >= totalItems }">
+              <li
+                class="page-item"
+                :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
+              >
                 <button class="page-link" @click="nextPage">
                   <i class="bi bi-chevron-right"></i>
                 </button>
@@ -130,11 +162,13 @@
           </nav>
         </div>
         <!-- Contenedor principal del modal -->
-        <div v-if="showDetailsModal" class="ps-modal-overlay" @click.self="closeModal">
-          
+        <div
+          v-if="showDetailsModal"
+          class="ps-modal-overlay"
+          @click.self="closeModal"
+        >
           <!-- Modal -->
           <div class="ps-modal">
-            
             <!-- 1. Encabezado del Modal -->
             <div class="ps-modal-header">
               <div class="ps-modal-header-content">
@@ -156,7 +190,6 @@
             <!-- 2. Cuerpo del Modal -->
             <div class="ps-modal-body">
               <div class="ps-detail-grid">
-                
                 <!-- 2.1 Tarjeta - Información Básica -->
                 <div class="ps-detail-card">
                   <div class="ps-detail-card-header">
@@ -164,15 +197,16 @@
                     <h4>Información Básica</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    
                     <!-- 2.1.1 Item - Tipo Origen -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Tipo Origen:</span>
                       <span class="ps-detail-value">
-                        {{ getTipoOrigenText(currentRecord.tipo_origen) || "N/A" }}
+                        {{
+                          getTipoOrigenText(currentRecord.tipo_origen) || "N/A"
+                        }}
                       </span>
                     </div>
-                    
+
                     <!-- 2.1.2 Item - Origen -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Origen:</span>
@@ -180,7 +214,7 @@
                         {{ currentRecord.origen || "N/A" }}
                       </span>
                     </div>
-                    
+
                     <!-- 2.1.3 Item - Tipo de Equipo -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Tipo de Equipo:</span>
@@ -198,23 +232,33 @@
                     <h4>Estado y Productos</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    
                     <!-- 2.2.1 Item - Estado -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Estado:</span>
                       <span class="ps-detail-value">
-                        <span :class="`ps-status ps-status-${getStatusClass(currentRecord.estado)}`">
+                        <span
+                          :class="`ps-status ps-status-${getStatusClass(
+                            currentRecord.estado
+                          )}`"
+                        >
                           {{ getEstadoText(currentRecord.estado) || "N/A" }}
                         </span>
                       </span>
                     </div>
-                    
+
                     <!-- 2.2.2 Item - Productos -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Productos:</span>
                       <span class="ps-detail-value">
-                        <span v-if="currentRecord.productos_info && currentRecord.productos_info.length > 0">
-                          {{ getNombresProductos(currentRecord.productos_info) }}
+                        <span
+                          v-if="
+                            currentRecord.productos_info &&
+                            currentRecord.productos_info.length > 0
+                          "
+                        >
+                          {{
+                            getNombresProductos(currentRecord.productos_info)
+                          }}
                         </span>
                         <span v-else>N/A</span>
                       </span>
@@ -229,7 +273,6 @@
                     <h4>Cantidad</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    
                     <!-- 2.3.1 Item - Vagones -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Vagones:</span>
@@ -247,15 +290,16 @@
                     <h4>Destino</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    
                     <!-- 2.4.1 Item - Tipo Destino -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Tipo Destino:</span>
                       <span class="ps-detail-value">
-                        {{ getTipoOrigenText(currentRecord.tipo_destino) || "N/A" }}
+                        {{
+                          getTipoOrigenText(currentRecord.tipo_destino) || "N/A"
+                        }}
                       </span>
                     </div>
-                    
+
                     <!-- 2.4.2 Item - Destino -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Destino:</span>
@@ -270,14 +314,17 @@
 
             <!-- 3. Pie del Modal -->
             <div class="ps-modal-footer">
-              <button class="ps-modal-btn ps-modal-btn-secondary" @click="closeModal">
+              <button
+                class="ps-modal-btn ps-modal-btn-secondary"
+                @click="closeModal"
+              >
                 <i class="bi bi-x-circle"></i> Cerrar
               </button>
             </div>
           </div>
         </div>
       </div>
-    </div> 
+    </div>
   </div>
 </template>
 
@@ -315,7 +362,7 @@ export default {
   },
 
   async mounted() {
-    await this.getVagonesCargadosDescargados();
+    await this.getArrastres();
     await this.fetchUserPermissionsAndGroups();
   },
 
@@ -333,7 +380,6 @@ export default {
         );
         this.currentRecord = response.data;
         this.showDetailsModal = true;
-        
       } catch (error) {
         console.error("Error al cargar detalles:", error);
         this.showErrorToast("No se pudieron cargar los detalles completos");
@@ -357,7 +403,7 @@ export default {
       const option = this.tipo_origen_options.find((o) => o.id === id);
       return option ? option.text : id;
     },
-	  getNombresProductos(productos) {
+    getNombresProductos(productos) {
       if (!productos || !Array.isArray(productos)) return "-";
       return productos
         .filter((p) => p && p.nombre_producto)
@@ -393,7 +439,7 @@ export default {
         console.error("Error al obtener permisos y grupos:", error);
       }
     },
-
+    /* 
     async getVagonesCargadosDescargados() {
       this.loading = true;
       try {
@@ -414,6 +460,39 @@ export default {
           error
         );
         this.busqueda_existente = false;
+      } finally {
+        this.loading = false;
+      }
+    },
+ */
+    async getArrastres() {
+      this.loading = true;
+      const today = new Date();
+      const fechaFormateada = `${today.getFullYear()}-${String(
+        today.getMonth() + 1
+      ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+      try {
+        const infoID = await axios.get(
+          `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
+        );
+        this.estado_parte = infoID.data.estado;
+        if (infoID.data.existe) {
+          //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
+          const response = await axios.get("/ufc/pendiente-arrastre/", {
+            params: {
+              page: this.currentPage,
+              page_size: this.itemsPerPage,
+              informe: infoID.data.id,
+            },
+          });
+
+          this.totalItems = response.data.count;
+          this.arrastresPendientes = response.data.results;
+        }
+      } catch (error) {
+        console.error("Error al obtener datos:", error);
+        this.errorLoading = true;
+        this.showErrorToast("No se pudieron cargar los registros");
       } finally {
         this.loading = false;
       }
@@ -533,7 +612,6 @@ export default {
 </script>
 
 <style scoped>
-
 .card-header {
   background-color: #f8f9fa;
   border-bottom: 2px solid #e0e0e0 !important;
@@ -644,8 +722,6 @@ export default {
   width: 100%;
 }
 
-
-
 /* Estados de carga y vacío */
 .ps-loading-td,
 .ps-empty-td {
@@ -715,7 +791,7 @@ export default {
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-  border-radius:10px;
+  border-radius: 10px;
   animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   overflow: hidden;
 }
@@ -725,7 +801,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color:#0d6efd;
+  background-color: #0d6efd;
   color: white;
   position: relative;
 }
@@ -821,7 +897,7 @@ export default {
 
 .ps-detail-card-header {
   padding: 1rem;
-  background-color:#0d6efd;
+  background-color: #0d6efd;
   color: white;
   border-bottom: 1px solid var(--ps-light-gray);
   display: flex;
@@ -933,5 +1009,4 @@ export default {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
 }
-
 </style>

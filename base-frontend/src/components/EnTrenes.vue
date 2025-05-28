@@ -15,8 +15,16 @@
           </router-link>
           <form @submit.prevent="search_producto" class="search-container">
             <div class="input-group">
-              <input type="search" class="form-control" placeholder="Cod Locomotora, Tipo Equipo,..." v-model="searchQuery" @input="handleSearchInput"/>
-              <span class="position-absolute top-50 start-0 translate-middle-y ps-2">
+              <input
+                type="search"
+                class="form-control"
+                placeholder="Cod Locomotora, Tipo Equipo,..."
+                v-model="searchQuery"
+                @input="handleSearchInput"
+              />
+              <span
+                class="position-absolute top-50 start-0 translate-middle-y ps-2"
+              >
                 <i class="bi bi-search"></i>
               </span>
             </div>
@@ -39,7 +47,10 @@
                 <th scope="col">Acciones</th>
               </tr>
               <tr v-if="!busqueda_existente && enTrenes.length != 0">
-                <td :colspan="showNoId ? 10 : 9"  class="text-center text-muted py-4">
+                <td
+                  :colspan="showNoId ? 10 : 9"
+                  class="text-center text-muted py-4"
+                >
                   <i class="bi bi-exclamation-circle fs-4"></i>
                   <p class="mt-2">
                     No se encontraron resultados para "{{ searchQuery }}"
@@ -47,19 +58,21 @@
                 </td>
               </tr>
               <tr v-if="enTrenes.length == 0">
-                <td :colspan="showNoId ? 10 : 9" class="text-center text-muted py-4">
+                <td
+                  :colspan="showNoId ? 10 : 9"
+                  class="text-center text-muted py-4"
+                >
                   <div class="ps-loading" v-if="loading">
                     <div class="ps-spinner"></div>
                     <span>Cargando registros...</span>
                   </div>
                   <div v-else>
                     <i class="bi bi-database-exclamation fs-4"></i>
-                    <p class="mt-2">
-                      No hay registros
-                    </p>
+                    <p class="mt-2">No hay registros</p>
                     <router-link to="/AdicionarVagon">
                       <button class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-circle me-1"></i>Crear primer registro
+                        <i class="bi bi-plus-circle me-1"></i>Crear primer
+                        registro
                       </button>
                     </router-link>
                   </div>
@@ -67,7 +80,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(item, index) in enTrenes" :key="item.id" class="align-middle">
+              <tr
+                v-for="(item, index) in enTrenes"
+                :key="item.id"
+                class="align-middle"
+              >
                 <th scope="row">{{ index + 1 }}</th>
                 <td>{{ item.numero_identificacion_locomotora || "-" }}</td>
                 <td>{{ item.tipo_equipo_name || "-" }}</td>
@@ -77,13 +94,15 @@
                   </span>
                 </td>
                 <td>
-					        <span v-if="item.productos_info && item.productos_info.length > 0">
-					          {{ getNombresProductos(item.productos_info) }}
-					        </span>
-					        <span v-else>-</span>
-				        </td>
-				        <td>
-					        <span>{{ item.cantidad_vagones || "0" }}</span>
+                  <span
+                    v-if="item.productos_info && item.productos_info.length > 0"
+                  >
+                    {{ getNombresProductos(item.productos_info) }}
+                  </span>
+                  <span v-else>-</span>
+                </td>
+                <td>
+                  <span>{{ item.cantidad_vagones || "0" }}</span>
                 </td>
                 <td>{{ item.origen || "-" }}</td>
                 <td>{{ item.destino || "-" }}</td>
@@ -92,13 +111,25 @@
                 </td>
                 <td v-if="hasGroup('AdminUFC')">
                   <div class="d-flex">
-                    <button @click="viewDetails(item)" class="btn btn-sm btn-outline-info me-2" title="Ver detalles">
+                    <button
+                      @click="viewDetails(item)"
+                      class="btn btn-sm btn-outline-info me-2"
+                      title="Ver detalles"
+                    >
                       <i class="bi bi-eye-fill"></i>
                     </button>
-                    <button @click="editVagonEnTren(item.id)" class="btn btn-sm btn-outline-warning me-2" title="Editar">
+                    <button
+                      @click="editVagonEnTren(item.id)"
+                      class="btn btn-sm btn-outline-warning me-2"
+                      title="Editar"
+                    >
                       <i class="bi bi-pencil-square"></i>
                     </button>
-                    <button @click="confirmDelete(item.id)" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                    <button
+                      @click="confirmDelete(item.id)"
+                      class="btn btn-sm btn-outline-danger"
+                      title="Eliminar"
+                    >
                       <i class="bi bi-trash"></i>
                     </button>
                   </div>
@@ -107,7 +138,7 @@
             </tbody>
           </table>
         </div>
-    
+
         <!-- Paginación mejorada -->
         <div class="d-flex justify-content-between align-items-center">
           <div class="text-muted small">
@@ -126,7 +157,10 @@
                   {{ Math.ceil(totalItems / itemsPerPage) }}
                 </span>
               </li>
-              <li class="page-item" :class="{ disabled: currentPage * itemsPerPage >= totalItems }">
+              <li
+                class="page-item"
+                :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
+              >
                 <button class="page-link" @click="nextPage">
                   <i class="bi bi-chevron-right"></i>
                 </button>
@@ -135,9 +169,13 @@
           </nav>
         </div>
         <!-- Termina la paginacion -->
-    
+
         <!-- Modal de detalles -->
-        <div v-if="mostrarModalDetalles" class="ps-modal-overlay" @click.self="cerrarModalDetalles()">
+        <div
+          v-if="mostrarModalDetalles"
+          class="ps-modal-overlay"
+          @click.self="cerrarModalDetalles()"
+        >
           <!-- Modal -->
           <div class="ps-modal">
             <!-- 1. Encabezado del Modal -->
@@ -161,7 +199,6 @@
             <!-- 2. Cuerpo del Modal -->
             <div class="ps-modal-body">
               <div class="ps-detail-grid">
-                
                 <!-- 2.1 Tarjeta - Información Básica -->
                 <div class="ps-detail-card">
                   <div class="ps-detail-card-header">
@@ -169,15 +206,17 @@
                     <h4>Información Básica</h4>
                   </div>
                   <div class="ps-detail-card-body">
-
                     <!-- 2.1.2 Item - Origen -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Locomotora:</span>
                       <span class="ps-detail-value">
-                        {{ vagonSeleccionado.numero_identificacion_locomotora || "N/A" }}
+                        {{
+                          vagonSeleccionado.numero_identificacion_locomotora ||
+                          "N/A"
+                        }}
                       </span>
                     </div>
-                    
+
                     <!-- 2.1.2 Item - Origen -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Origen:</span>
@@ -185,7 +224,7 @@
                         {{ vagonSeleccionado.origen || "N/A" }}
                       </span>
                     </div>
-                    
+
                     <!-- 2.1.3 Item - Tipo de Equipo -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Tipo de Equipo:</span>
@@ -203,25 +242,39 @@
                     <h4>Estado y Producto</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    
                     <!-- 2.2.1 Item - Estado -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Estado:</span>
                       <span class="ps-detail-value">
-                        <span :class="`ps-status ps-status-${getStatusClass(vagonSeleccionado.estado)}`">
+                        <span
+                          :class="`ps-status ps-status-${getStatusClass(
+                            vagonSeleccionado.estado
+                          )}`"
+                        >
                           {{ vagonSeleccionado.estado || "N/A" }}
                         </span>
                       </span>
                     </div>
-                    
+
                     <!-- 2.2.3 Item - Productos (lista) -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Productos:</span>
                       <span class="ps-detail-value">
-                        <template v-if="vagonSeleccionado.productos_info && vagonSeleccionado.productos_info.length > 0">
-                          <div v-for="producto in vagonSeleccionado.productos_info" :key="producto.id" class="producto-item">
+                        <template
+                          v-if="
+                            vagonSeleccionado.productos_info &&
+                            vagonSeleccionado.productos_info.length > 0
+                          "
+                        >
+                          <div
+                            v-for="producto in vagonSeleccionado.productos_info"
+                            :key="producto.id"
+                            class="producto-item"
+                          >
                             • {{ producto.nombre_producto }}
-                            <span v-if="producto.tipo_embalaje">({{ producto.tipo_embalaje }})</span>
+                            <span v-if="producto.tipo_embalaje"
+                              >({{ producto.tipo_embalaje }})</span
+                            >
                           </div>
                         </template>
                         <span v-else>N/A</span>
@@ -237,11 +290,12 @@
                     <h4>Cantidades</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    
                     <!-- 2.3.1 Item - Vagones -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Vagones:</span>
-                      <span class="ps-detail-value ps-highlight-value ps-badge-success">
+                      <span
+                        class="ps-detail-value ps-highlight-value ps-badge-success"
+                      >
                         {{ vagonSeleccionado.cantidad_vagones || "0" }}
                       </span>
                     </div>
@@ -253,12 +307,14 @@
                     <h4>Destinos</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    
                     <!-- 2.4.1 Item - Tipo Destino -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Tipo Destino:</span>
                       <span class="ps-detail-value">
-                        {{ getTipoOrigenText(vagonSeleccionado.tipo_destino) || "N/A" }}
+                        {{
+                          getTipoOrigenText(vagonSeleccionado.tipo_destino) ||
+                          "N/A"
+                        }}
                       </span>
                     </div>
                   </div>
@@ -279,11 +335,13 @@
                     <h4>Observaciones</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    
                     <!-- 2.4.1 Item - Observaciones -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-value">
-                        {{ vagonSeleccionado.observaciones || "Ninguna observación registrada" }}
+                        {{
+                          vagonSeleccionado.observaciones ||
+                          "Ninguna observación registrada"
+                        }}
                       </span>
                     </div>
                   </div>
@@ -296,12 +354,11 @@
                     <h4>Fecha de Creación</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    
                     <!-- 2.5.1 Item - Fecha y Hora -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Fecha y Hora:</span>
                       <span class="ps-detail-value">
-                        {{ vagonSeleccionado.fecha_registro}}
+                        {{ vagonSeleccionado.fecha_registro }}
                       </span>
                     </div>
                   </div>
@@ -311,247 +368,255 @@
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </template>
-  
-  <script>
-  import axios from "axios";
-  import Swal from "sweetalert2";
-  
-  export default {
-    name: "VagonesProductos",
-  
-    data() {
-      return {
-        enTrenes: [],
-        allRecords: [], // Copia completa de todos los registros para filtrado local
-        currentPage: 1,
-        itemsPerPage: 10,
-        totalItems: 0,
-        searchQuery: "",
-        debounceTimeout: null,
-        busqueda_existente: true,
-        userPermissions: [],
-        userGroups: [],
-        showContent: false,
-        mostrarModalDetalles: false,
-        vagonSeleccionado: null,
-        loading: false,
-        tipo_origen_options: [
-          { id: "puerto", text: "Puerto" },
-          { id: "ac_ccd", text: "Acceso Comercial/CCD" },
-        ],
-      };
+
+<script>
+import axios from "axios";
+import Swal from "sweetalert2";
+
+export default {
+  name: "VagonesProductos",
+
+  data() {
+    return {
+      enTrenes: [],
+      allRecords: [], // Copia completa de todos los registros para filtrado local
+      currentPage: 1,
+      itemsPerPage: 10,
+      totalItems: 0,
+      searchQuery: "",
+      debounceTimeout: null,
+      busqueda_existente: true,
+      userPermissions: [],
+      userGroups: [],
+      showContent: false,
+      mostrarModalDetalles: false,
+      vagonSeleccionado: null,
+      loading: false,
+      tipo_origen_options: [
+        { id: "puerto", text: "Puerto" },
+        { id: "ac_ccd", text: "Acceso Comercial/CCD" },
+      ],
+    };
+  },
+
+  async mounted() {
+    await this.getTrenes();
+    await this.fetchUserPermissionsAndGroups();
+  },
+
+  methods: {
+    getTipoOrigenText(id) {
+      const option = this.tipo_origen_options.find((o) => o.id === id);
+      return option ? option.text : id;
     },
-  
-    async mounted() {
-      await this.getVagonesProductos();
-      await this.fetchUserPermissionsAndGroups();
+    toggleContentVisibility() {
+      this.showContent = !this.showContent;
     },
-  
-    methods: {
-      getTipoOrigenText(id) {
-        const option = this.tipo_origen_options.find((o) => o.id === id);
-        return option ? option.text : id;
-      },
-      toggleContentVisibility() {
-        this.showContent = !this.showContent;
-      },
-	  
-      getNombresProductos(productos) {
-        if (!productos || !Array.isArray(productos)) return "-";
-        return productos
+
+    getNombresProductos(productos) {
+      if (!productos || !Array.isArray(productos)) return "-";
+      return productos
         .filter((p) => p && p.nombre_producto && p.codigo_producto)
         .map((p) => `${p.nombre_producto} (${p.codigo_producto})`)
         .join(", ");
-      },
+    },
 
-	  
-      hasGroup(group) {
-        return this.userGroups.some((g) => g.name === group);
-      },
-  
-      async fetchUserPermissionsAndGroups() {
-        try {
-          const userId = localStorage.getItem("userid");
-          if (userId) {
-            const response = await axios.get(
-              `/apiAdmin/user/${userId}/permissions-and-groups/`
-            );
-            this.userPermissions = response.data.permissions;
-            this.userGroups = response.data.groups;
-          }
-        } catch (error) {
-          console.error("Error al obtener permisos y grupos:", error);
+    hasGroup(group) {
+      return this.userGroups.some((g) => g.name === group);
+    },
+
+    async fetchUserPermissionsAndGroups() {
+      try {
+        const userId = localStorage.getItem("userid");
+        if (userId) {
+          const response = await axios.get(
+            `/apiAdmin/user/${userId}/permissions-and-groups/`
+          );
+          this.userPermissions = response.data.permissions;
+          this.userGroups = response.data.groups;
         }
-      },
+      } catch (error) {
+        console.error("Error al obtener permisos y grupos:", error);
+      }
+    },
 
-      getStatusClass(status) {
-        if (!status) return "default";
-        const statusLower = status.toLowerCase();
+    getStatusClass(status) {
+      if (!status) return "default";
+      const statusLower = status.toLowerCase();
 
-        if (statusLower.includes("activo")) return "success";
-        if (statusLower.includes("pendiente")) return "warning";
-        if (statusLower.includes("inactivo") || statusLower.includes("cancelado"))
-          return "danger";
+      if (statusLower.includes("activo")) return "success";
+      if (statusLower.includes("pendiente")) return "warning";
+      if (statusLower.includes("inactivo") || statusLower.includes("cancelado"))
+        return "danger";
 
-        return "info";
-      },
-    
-      async getVagonesProductos() {
-        this.loading = true;
-        try {
+      return "info";
+    },
+
+    async getTrenes() {
+      this.loading = true;
+      const today = new Date();
+      const fechaFormateada = `${today.getFullYear()}-${String(
+        today.getMonth() + 1
+      ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+      try {
+        const infoID = await axios.get(
+          `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
+        );
+        this.estado_parte = infoID.data.estado;
+        if (infoID.data.existe) {
           const response = await axios.get("/ufc/en-trenes/", {
             params: {
               page: this.currentPage,
               page_size: this.itemsPerPage,
+              informe: infoID.data.id,
             },
           });
-          
           this.enTrenes = response.data.results;
-          console.log("respuesta del server de vagones y productos",this.enTrenes);
-          this.allRecords = [...response.data.results]; // Guardar copia completa para filtrado
+          this.allRecords = response.data.results;
           this.totalItems = response.data.count;
-          this.busqueda_existente = true;
-        } catch (error) {
-          console.error("Error al obtener los vagones con productos:", error);
-          this.busqueda_existente = false;
-        } finally {
-          this.loading = false;
-        }
-      },
-  
-      handleSearchInput() {
-        clearTimeout(this.debounceTimeout);
-        this.debounceTimeout = setTimeout(() => {
-          if (!this.searchQuery.trim()) {
-            this.enTrenes = [...this.allRecords];
-            this.busqueda_existente = true;
-            return;
-          }
-  
-          const query = this.searchQuery.toLowerCase();
-          this.enTrenes = this.allRecords.filter((item) => {
-            const tipoEquipo = item.tipo_equipo_ferroviario_name?.toLowerCase() || "";
-            const tipoOrigen = item.origen?.toLowerCase() || "";
-            const productos = item.productos_list?.toLowerCase() || "";
-            
-            return (
-              tipoEquipo.includes(query) ||
-              tipoOrigen.includes(query) ||
-              productos.includes(query)
-            );
-          });
-          this.busqueda_existente = this.enTrenes.length > 0;
-        }, 300);
-      },
-  
-      // Métodos de paginación
-      previousPage() {
-        if (this.currentPage > 1) {
-          this.currentPage--;
-          this.getVagonesProductos();
-        }
-      },
-  
-      nextPage() {
-        if (this.currentPage * this.itemsPerPage < this.totalItems) {
-          this.currentPage++;
-          this.getVagonesProductos();
-        }
-      },
-  
-      goToPage(page) {
-        this.currentPage = page;
-        this.getVagonesProductos();
-      },
-  
-      async deleteVagon(id) {
-        try {
-          await axios.delete(`/ufc/en-trenes/${id}/`);
-          this.enTrenes = this.enTrenes.filter((objeto) => objeto.id !== id);
-          Swal.fire(
-            "Eliminado!",
-            "El registro ha sido eliminado exitosamente.",
-            "success"
-          );
-        } catch (error) {
-          console.error("Error al eliminar el registro:", error);
-          Swal.fire("Error", "un error al eliminar el registro.", "error");
-        }
-      },
-  
-      viewDetails(vagon) {
-        console.log(vagon);
-        this.vagonSeleccionado = vagon;
-        this.mostrarModalDetalles = true;
-      },
-  
-      cerrarModalDetalles() {
-        this.mostrarModalDetalles = false;
-        this.vagonSeleccionado = null;
-      },
-  
-      editVagonEnTren(id) {
-        // Aquí puedes implementar la navegación a la página de edición
-        this.$router.push({ name: 'EditarEnTren', params: { id: id } });
-      },
-
-      async delete_tren(id) {
-        try {
-          await axios.delete(`/ufc/en-trenes/${id}/`);
-          this.enTrenes = this.enTrenes.filter((tren) => tren.id !== id);
-          Swal.fire(
-            "Eliminado!",
-            "El producto ha sido eliminado exitosamente.",
-            "success"
-          );
-        } catch (error) {
-          console.error("Error al eliminar el producto:", error);
-          Swal.fire("Error", "un error al eliminar el producto.", "error");
-        }
-      },
-  
-      confirmDelete(id) {
-        Swal.fire({
-          title: "¿Estás seguro?",
-          text: "¡No podrás revertir esta acción!",
-          icon: "warning",
-          showCancelButton: true,
-          cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Cancelar',
-          cancelButtonColor: "#f1513f",
-          confirmButtonText: '<i class="bi bi-trash me-1"></i>Eliminar',
-          confirmButtonColor: "#007bff",
-          reverseButtons: true,
-        }).then((result) => {
-          if (result.isConfirmed) {
-            this.delete_tren(id);
-          }
-        });
-      },
-  
-      handleApiError(error, action) {
-        let errorMsg = `Error al ${action}`;
-        if (error.response) {
-          errorMsg += ` (${error.response.status})`;
-          if (error.response.data) {
-            errorMsg += `: ${JSON.stringify(error.response.data)}`;
-          }
         } else {
-          errorMsg += `: ${error.message}`;
+          return;
         }
-        console.error(errorMsg, error);
-        Swal.fire("Error", errorMsg, "error");
-      },
+      } catch (error) {
+        console.error("Error al obtener los trenes:", error);
+        this.showErrorToast("No se pudieron cargar los registros");
+      } finally {
+        this.loading = false;
+      }
     },
-  };
-  </script>
-  
+
+    handleSearchInput() {
+      clearTimeout(this.debounceTimeout);
+      this.debounceTimeout = setTimeout(() => {
+        if (!this.searchQuery.trim()) {
+          this.enTrenes = [...this.allRecords];
+          this.busqueda_existente = true;
+          return;
+        }
+
+        const query = this.searchQuery.toLowerCase();
+        this.enTrenes = this.allRecords.filter((item) => {
+          const tipoEquipo =
+            item.tipo_equipo_ferroviario_name?.toLowerCase() || "";
+          const tipoOrigen = item.origen?.toLowerCase() || "";
+          const productos = item.productos_list?.toLowerCase() || "";
+
+          return (
+            tipoEquipo.includes(query) ||
+            tipoOrigen.includes(query) ||
+            productos.includes(query)
+          );
+        });
+        this.busqueda_existente = this.enTrenes.length > 0;
+      }, 300);
+    },
+
+    // Métodos de paginación
+    previousPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+        this.getVagonesProductos();
+      }
+    },
+
+    nextPage() {
+      if (this.currentPage * this.itemsPerPage < this.totalItems) {
+        this.currentPage++;
+        this.getVagonesProductos();
+      }
+    },
+
+    goToPage(page) {
+      this.currentPage = page;
+      this.getVagonesProductos();
+    },
+
+    async deleteVagon(id) {
+      try {
+        await axios.delete(`/ufc/en-trenes/${id}/`);
+        this.enTrenes = this.enTrenes.filter((objeto) => objeto.id !== id);
+        Swal.fire(
+          "Eliminado!",
+          "El registro ha sido eliminado exitosamente.",
+          "success"
+        );
+      } catch (error) {
+        console.error("Error al eliminar el registro:", error);
+        Swal.fire("Error", "un error al eliminar el registro.", "error");
+      }
+    },
+
+    viewDetails(vagon) {
+      console.log(vagon);
+      this.vagonSeleccionado = vagon;
+      this.mostrarModalDetalles = true;
+    },
+
+    cerrarModalDetalles() {
+      this.mostrarModalDetalles = false;
+      this.vagonSeleccionado = null;
+    },
+
+    editVagonEnTren(id) {
+      // Aquí puedes implementar la navegación a la página de edición
+      this.$router.push({ name: "EditarEnTren", params: { id: id } });
+    },
+
+    async delete_tren(id) {
+      try {
+        await axios.delete(`/ufc/en-trenes/${id}/`);
+        this.enTrenes = this.enTrenes.filter((tren) => tren.id !== id);
+        Swal.fire(
+          "Eliminado!",
+          "El producto ha sido eliminado exitosamente.",
+          "success"
+        );
+      } catch (error) {
+        console.error("Error al eliminar el producto:", error);
+        Swal.fire("Error", "un error al eliminar el producto.", "error");
+      }
+    },
+
+    confirmDelete(id) {
+      Swal.fire({
+        title: "¿Estás seguro?",
+        text: "¡No podrás revertir esta acción!",
+        icon: "warning",
+        showCancelButton: true,
+        cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Cancelar',
+        cancelButtonColor: "#f1513f",
+        confirmButtonText: '<i class="bi bi-trash me-1"></i>Eliminar',
+        confirmButtonColor: "#007bff",
+        reverseButtons: true,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.delete_tren(id);
+        }
+      });
+    },
+
+    handleApiError(error, action) {
+      let errorMsg = `Error al ${action}`;
+      if (error.response) {
+        errorMsg += ` (${error.response.status})`;
+        if (error.response.data) {
+          errorMsg += `: ${JSON.stringify(error.response.data)}`;
+        }
+      } else {
+        errorMsg += `: ${error.message}`;
+      }
+      console.error(errorMsg, error);
+      Swal.fire("Error", errorMsg, "error");
+    },
+  },
+};
+</script>
+
 <style scoped>
-
-
 .card-header {
   background-color: #f8f9fa;
   border-bottom: 2px solid #e0e0e0 !important;
@@ -585,7 +650,6 @@
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
-
 
 @keyframes spin {
   to {
@@ -701,7 +765,7 @@
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-  border-radius:10px;
+  border-radius: 10px;
   animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   overflow: hidden;
 }
@@ -711,7 +775,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color:#0d6efd;
+  background-color: #0d6efd;
   color: white;
   position: relative;
 }
@@ -807,7 +871,7 @@
 
 .ps-detail-card-header {
   padding: 1rem;
-  background-color:#0d6efd;
+  background-color: #0d6efd;
   color: white;
   border-bottom: 1px solid var(--ps-light-gray);
   display: flex;
@@ -946,11 +1010,11 @@
   .card-body {
     padding: 1rem;
   }
-  
+
   .btn {
     width: 100%;
   }
-  
+
   .d-flex {
     flex-direction: column;
     gap: 0.5rem !important;

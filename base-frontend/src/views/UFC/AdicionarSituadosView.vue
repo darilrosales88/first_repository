@@ -40,12 +40,11 @@
                   v-model="formData.tipo_origen"
                   id="tipo_origen"
                   name="tipo_origen"
-                  required 
+                  required
                   oninvalid="this.setCustomValidity('Por favor, seleccione un tipo de origen')"
-                  oninput="this.setCustomValidity('')">
-                  :disabled="isSubmitting"
-                  @change="handleTipoOrigenChange"
+                  oninput="this.setCustomValidity('')"
                 >
+                  :disabled="isSubmitting" @change="handleTipoOrigenChange" >
                   <option value="" disabled>Seleccione un tipo</option>
                   <option
                     v-for="option in tipo_origen_options"
@@ -70,7 +69,8 @@
                   name="origen"
                   required
                   oninvalid="this.setCustomValidity('Por favor, seleccione un origen')"
-                  oninput="this.setCustomValidity('')">                  
+                  oninput="this.setCustomValidity('')"
+                >
                   :disabled="isSubmitting">
                   <option value="" disabled>Seleccione un origen</option>
                   <option
@@ -89,9 +89,9 @@
                   name="origen"
                   required
                   oninvalid="this.setCustomValidity('Por favor, seleccione un puerto')"
-                  oninput="this.setCustomValidity('')">    
-                  :disabled="isSubmitting"
+                  oninput="this.setCustomValidity('')"
                 >
+                  :disabled="isSubmitting" >
                   <option value="" disabled>Seleccione un puerto</option>
                   <option
                     v-for="puerto in puertos"
@@ -118,9 +118,10 @@
                   id="tipo_equipo"
                   name="tipo_equipo"
                   @change="buscarEquipos"
-                  required 
+                  required
                   oninvalid="this.setCustomValidity('Por favor, seleccione un tipo de equipo ferroviario')"
-                  oninput="this.setCustomValidity('')">    
+                  oninput="this.setCustomValidity('')"
+                >
                   :disabled="isSubmitting">
                   <option value="" disabled>Seleccione un tipo</option>
                   <option
@@ -160,7 +161,8 @@
                   name="estado"
                   required
                   oninvalid="this.setCustomValidity('Por favor, seleccione un estado')"
-                  oninput="this.setCustomValidity('')">    
+                  oninput="this.setCustomValidity('')"
+                >
                   :disabled="isSubmitting">
                   <option value="cargado">Cargado</option>
                   <option value="vacio">Vacio</option>
@@ -179,7 +181,8 @@
                   name="operacion"
                   required
                   oninvalid="this.setCustomValidity('Por favor, seleccione una operacion')"
-                  oninput="this.setCustomValidity('')">    
+                  oninput="this.setCustomValidity('')"
+                >
                   :disabled="isSubmitting">
                   <option value="" disabled>Seleccione una operación</option>
                   <option
@@ -680,7 +683,7 @@ export default {
       this.formData.situados = this.vagonesAsociados.length;
 
 
-      this.cerrarModalVagon();
+        this.cerrarModalVagon();
       }
     },
 
@@ -814,12 +817,9 @@ export default {
         return;
       }
 
-      // 2. Verificar que el informe no esté en estado "Aprobado"
-      const informeResponse = await axios.get(
-        `/ufc/informe-operativo/${this.informeOperativoId}/`
-      );
-      console.log("anijijijijiji", informeResponse.data.estado_parte);
-      if (informeResponse.data.estado_parte === "Aprobado") {
+      // 2. Verificar que el informe no esté aprobado
+      const informeNoAprobado = await this.verificarEstadoInforme();
+      if (!informeNoAprobado) {
         Swal.fire(
           "Error",
           "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
@@ -895,21 +895,6 @@ export default {
           });
           return;
         }
-        if (this.vagonesAgregados.length !== this.formData.situados) {
-          Swal.fire({
-            title: "Advertencia",
-            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad "Situados" (${this.formData.situados}). ¿Desea actualizar el campo "Situados" para que coincida?`,
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Sí, actualizar",
-            cancelButtonText: "No, corregir manualmente",
-          }).then((result) => {
-            if (result.isConfirmed) {
-              this.formData.situados = this.vagonesAgregados.length;
-            }
-          });
-          return;
-        }
 
         // Preparar datos para enviar
         const payload = {
@@ -924,20 +909,19 @@ export default {
           observaciones: this.formData.observaciones,
           informe_operativo: this.informeOperativoId,
 
-          equipo_vagon_detalle: this.vagonesAgregados.map((vagon) => ({
+          equipo_vagon: this.vagonesAgregados.map((vagon) => ({
             equipo_ferroviario: vagon.equipo_ferroviario.id, // ID del equipo
             cant_dias: vagon.cant_dias,
             // Otros campos necesarios para el vagon
           })),
         };
         console.log("Datos a enviar", payload);
-        console.log("Datos a enviar", payload);
 
         // Enviar datos al endpoint
         const response = await axios.post("/ufc/situados/", payload);
 
         // Mostrar mensaje de éxito
-        Swal.fire({
+        await Swal.fire({
           title: "¡Éxito!",
           text: "El registro ha sido creado correctamente",
           icon: "success",
@@ -954,10 +938,10 @@ export default {
           icon: "error",
         });
       } finally {
+        this.$router.push({ name: "InfoOperativo" });
         this.isSubmitting = false;
       }
     },
-
     resetForm() {
       this.formData = {
         tipo_origen: "",

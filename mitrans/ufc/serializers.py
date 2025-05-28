@@ -19,8 +19,14 @@ from rest_framework import status
 from django.db import transaction 
 import json
 from django.utils import timezone
-from .models import HistorialVagonCargadoDescargado, vagon_cargado_descargado, registro_vagones_cargados
-from nomencladores.models import nom_equipo_ferroviario,nom_tipo_equipo_ferroviario
+from .models import HistorialVagonCargadoDescargado, vagon_cargado_descargado, registro_vagones_cargados,vagones_dias
+from nomencladores.models import nom_equipo_ferroviario,nom_tipo_equipo_ferroviario,nom_provincia
+from Administracion.models import CustomUser
+
+#######Importamos serializadores externos para poder tener una lectura mas detallada
+from nomencladores.serializers import nom_equipo_ferroviario_serializer
+from Administracion.serializers import UserPermissionSerializer
+
 
 #para cada modelo del que deseemos realizar el filtrado debemos hacer un filtrado
 #nom_pais_filter es una clase que se implementa para definir sobre qué campos quiero filtrar los registros de mi API, 
@@ -29,19 +35,28 @@ from nomencladores.models import nom_equipo_ferroviario,nom_tipo_equipo_ferrovia
 
 
 #****************-------------------------********************--------------------***************-----------------********************************
-class ufc_informe_operativo_filter(filters.FilterSet):
-    fecha_operacion = filters.CharFilter(field_name='fecha_operacion',lookup_expr = 'exact')  
-    
-    class Meta:
-        model = ufc_informe_operativo
-        fields = '__all__' 
-        
-class ufc_informe_operativo_serializer(serializers.ModelSerializer):                      
-    
-    class Meta:
-        model = ufc_informe_operativo       
-        fields = '__all__'
-        filterset_class: ufc_informe_operativo_filter
+#Funcion para actualizar el estado de los vagones deberia estar global
+def actualizar_estado_equipo_ferroviario( equipo_o_id, nuevo_estado, id=None):
+        """
+        Método auxiliar para actualizar el estado de un equipo ferroviario
+        """
+        try:
+            from nomencladores.models import nom_equipo_ferroviario
+            if (id) is not None:
+                equipo = nom_equipo_ferroviario.objects.get(id=id)
+                equipo.estado_actual=nuevo_estado
+                equipo.save()
+                return True
+            if isinstance(equipo_o_id, nom_equipo_ferroviario):
+                equipo = equipo_o_id
+            else:
+                equipo = nom_equipo_ferroviario.objects.filter(numero_identificacion=equipo_o_id).first()
+            if equipo:
+                equipo.estado_actual = nuevo_estado
+                equipo.save()
+        except Exception as e:
+            # No romper el flujo principal si hay error al actualizar el estado
+            print(f"Error al actualizar estado del equipo: {str(e)}")    
         
 #****************-------------------------********************--------------------***************-----------------****
 class DateTimeToDateField(serializers.ReadOnlyField):
@@ -52,10 +67,34 @@ class DateTimeToDateField(serializers.ReadOnlyField):
         return None
 
 #****************-------------------------********************--------------------***************-----------------********************************
+
+#Serializador para Modelo dVagones por dias de situados, por situar, Arrastres
+class vagones_dias_serializer(serializers.ModelSerializer):
+    # Mantenemos los campos existentes para lectura
+    equipo_ferroviario_detalle = nom_equipo_ferroviario_serializer(
+        source="equipo_ferroviario", 
+        read_only=True
+    )
+    
+    # Cambiamos el campo equipo_ferroviario para manejar la estructura deseada
+    equipo_ferroviario = serializers.PrimaryKeyRelatedField(
+        queryset=nom_equipo_ferroviario.objects.all(), 
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    
+    class Meta:
+        model = vagones_dias
+        fields = '__all__'
+    
+    
+
+
 #serializador para el modelo vagones y productos
 class vagones_productos_filter(filters.FilterSet):
     origen_tipo_prod_tef = filters.CharFilter(method='filtrado_por_origen_tipo_prod_tef', lookup_expr='icontains')
-    
+    informe = filters.NumberFilter(field_name='informe_operativo__id')
     def filtrado_por_origen_tipo_prod_tef(self, queryset, name, value):        
         return queryset.filter(
             Q(tipo_equipo_ferroviario_name__icontains=value) | 
@@ -65,7 +104,7 @@ class vagones_productos_filter(filters.FilterSet):
     
     class Meta:
         model = vagones_productos
-        fields = ['origen_tipo_prod_tef']
+        fields = ['origen_tipo_prod_tef','informe']
 
 
 
@@ -280,7 +319,7 @@ class HistorialVagonesProductosSerializer(serializers.ModelSerializer):
 #serializador para el estado de vagones cargados/descargados
 class vagon_cargado_descargado_filter(filters.FilterSet):
     tef_prod_estado = filters.CharFilter(method='filtrado_por_tef_prod_estado', lookup_expr='icontains')
-    
+    informe = filters.NumberFilter(field_name='informe_operativo__id')
     def filtrado_por_tef_prod_estado(self, queryset, name, value):        
         return queryset.filter(
             Q(tipo_equipo_ferroviario_name__icontains=value) | 
@@ -290,7 +329,7 @@ class vagon_cargado_descargado_filter(filters.FilterSet):
     
     class Meta:
         model = vagon_cargado_descargado
-        fields = ['tef_prod_estado']
+        fields = ['tef_prod_estado','informe']
 
 
 
@@ -359,7 +398,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                     # Primero, liberar equipos ferroviarios de registros que se eliminarán
                     registros_a_eliminar = instance.registros_vagones.exclude(id__in=ids_nuevos)
                     for registro in registros_a_eliminar:
-                        self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
+                        actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
                     registros_a_eliminar.delete()
                     
                     # Actualizar o crear registros
@@ -377,7 +416,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                             instance.registros_vagones.add(registro)
                         
                         # Actualizar estado del equipo ferroviario
-                        self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Asignado al estado Cargado/Descargado')
+                        actualizar_estado_equipo_ferroviario(registro.no_id, 'Asignado al estado Cargado/Descargado')
                 
                 return instance
                 
@@ -404,11 +443,6 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 productos_ids = validated_data.pop('producto_ids', [])
                 registros_data = validated_data.pop('registros_vagones_data', [])
 
-                def validate(self, data):
-                    # Forzar el valor de causas_incumplimiento si viene vacío
-                    if 'causas_incumplimiento' in data and not data['causas_incumplimiento']:
-                        data['causas_incumplimiento'] = 'Sin causas especificadas'  # Valor por defecto
-
                 # Asegurar que real_carga_descarga no sea sobrescrito
                 if validated_data.get('real_carga_descarga', 0) == 0:
                     registros_data = validated_data.get('registros_vagones_data', [])
@@ -427,28 +461,14 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                     instance.registros_vagones.add(registro)
                     
                     # Actualizar estado del equipo ferroviario
-                    self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Asignado al estado Cargado/Descargado')
+                    actualizar_estado_equipo_ferroviario(registro.no_id, 'Asignado al estado Cargado/Descargado')
                 
                 return instance
                 
         except Exception as e:
             raise serializers.ValidationError(f"Error al crear el registro: {str(e)}")
     
-    def actualizar_estado_equipo_ferroviario(self, no_id, nuevo_estado):
-        """
-        Método auxiliar para actualizar el estado de un equipo ferroviario
-        """
-        try:
-            from nomencladores.models import nom_equipo_ferroviario
-            
-            equipo = nom_equipo_ferroviario.objects.filter(numero_identificacion=no_id).first()
-            if equipo:
-                equipo.estado_actual = nuevo_estado
-                equipo.save()
-        except Exception as e:
-            # No romper el flujo principal si hay error al actualizar el estado
-            print(f"Error al actualizar estado del equipo {no_id}: {str(e)}")        
-
+    
     def get_productos_list(self, obj):
         return ", ".join([
             p.producto.nombre_producto 
@@ -457,6 +477,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
         ])  
 
 #serializador para el historial de vagon_cargado_descargado**************************************************
+
 
 class HistorialVagonCargadoDescargadoSerializer(serializers.ModelSerializer):
     fecha_creacion = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S')
@@ -664,7 +685,7 @@ class registro_vagones_cargados_serializer(serializers.ModelSerializer):
 
 class en_trenes_filter(django_filters.FilterSet):
     search = filters.CharFilter(method='filtro_busqueda', lookup_expr='icontains')
-
+    informe = filters.NumberFilter(field_name='informe_operativo__id')
     def filtro_busqueda(self, queryset, name, value):
         return queryset.filter(
             Q(tipo_equipo__icontains=value) |
@@ -675,10 +696,11 @@ class en_trenes_filter(django_filters.FilterSet):
             Q(producto__codigo_producto__icontains=value)    # Busca por código de producto
         ).distinct()
     
+    
 
     class Meta:
         model = en_trenes
-        fields = ['search']  # Campos filtrables
+        fields = ['search','informe']  # Campos filtrables
 
 
 
@@ -731,6 +753,7 @@ class en_trenes_serializer(serializers.ModelSerializer):
             'producto_name',
             'cantidad_vagones',
             'observaciones',
+            'informe_operativo',
         )
         
     def get_productos_info(self, obj):
@@ -762,15 +785,52 @@ class en_trenes_serializer(serializers.ModelSerializer):
         instance = en_trenes.objects.create(**validated_data)
         instance.producto.set(productos_data)
         instance.equipo_vagon.set(equipo_vagon_data)
+        
+        for equipo in equipo_vagon_data:    
+        # Actualizar estado del equipo ferroviario
+            print("Este es el id a cambiar", equipo)
+            actualizar_estado_equipo_ferroviario(equipo.numero_identificacion, 'Asignado al estado En Trenes')
+        
         return instance
 
     def update(self, instance, validated_data):
         productos_data = validated_data.pop('producto', None)
         equipo_vagon_data=validated_data.pop('equipo_vagon',None)
-        instance = super().update(instance, validated_data)
-        instance.equipo_vagon.set(equipo_vagon_data)
+        print("###**Log: ",equipo_vagon_data)
+        #instance = super().update(instance, validated_data)
+        print("###**Log: ",productos_data)
         if productos_data is not None:
             instance.producto.set(productos_data)
+            
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            instance.save()
+            
+        if equipo_vagon_data:
+# Eliminar registros antiguos no incluidos
+            ids_nuevos = [equipo_id.id for equipo_id in equipo_vagon_data if equipo_id.id]
+            print("###**Log: ",ids_nuevos)
+            # Primero, liberar equipos ferroviarios de registros que se eliminarán
+            registros_a_eliminar = instance.equipo_vagon.all()
+            print("###**Log: ",registros_a_eliminar)
+            for registro in registros_a_eliminar:
+                actualizar_estado_equipo_ferroviario(registro, 'Disponible')
+            
+            
+            # Actualizar o crear registros
+            for registro_id in equipo_vagon_data:
+                
+                if registro_id:
+                    # Actualizar registro existente
+                    registro = nom_equipo_ferroviario.objects.get(id=registro_id.id)
+                    instance.equipo_vagon.add(registro)
+                
+                # Actualizar estado del equipo ferroviario
+                actualizar_estado_equipo_ferroviario(registro_id, 'Asignado al estado En Trenes')
+        
+        instance.equipo_vagon.set(equipo_vagon_data)
+        
+        
         return instance
 
         
@@ -797,50 +857,53 @@ class en_trenes_serializer(serializers.ModelSerializer):
 #serializador de productoUFC
 class producto_vagon_serializer(serializers.ModelSerializer):
    # tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
+   # estado_name = serializers.ReadOnlyField(source='get_estado_display')
    # tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
     producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
     producto_codigo = serializers.ReadOnlyField(source='producto.codigo_producto')
     tipo_embalaje_name=serializers.ReadOnlyField(source='tipo_embalaje.nombre_tipo_embalaje')
     unidad_medida_name=serializers.ReadOnlyField(source='unidad_medida.unidad_medida')
     estado_name=serializers.ReadOnlyField(source='get_estado_display')
-    contiene_name = serializers.ReadOnlyField(source = 'get_contiene_display')
     
     class Meta:
         model = producto_UFC
         fields = '__all__'
-        filterset_class=vagones_productos_filter
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        filterset_class=en_trenes_filter
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
         
   
     
 class SituadoCargaDescargaFilter(filters.FilterSet):
     tipo_equipo = filters.CharFilter(lookup_expr='icontains')  # Filtro exacto (puedes usar 'icontains' para parcial
-    
+    informe = filters.NumberFilter(field_name='informe_operativo__id')
     
     class Meta:
-        model = por_situar
-        fields = ['tipo_equipo']  # Campos filtrables
+        model = Situado_Carga_Descarga
+        fields = ['tipo_equipo','informe']  # Campos filtrables
         
         
 class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
     productos_info = serializers.SerializerMethodField()
     tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
-    tipo_equipo_name=serializers.ReadOnlyField(source='get_tipo_equipo_display')
+    tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
     producto = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=producto_UFC.objects.all(),
         required=False
     )
+    equipo_vagon = serializers.ListField(
+        child=serializers.DictField(),
+        write_only=True,
+        required=False
+    )
+    equipo_vagon_detalle=vagones_dias_serializer(many=True,source='equipo_vagon', read_only=True)
     situados = serializers.IntegerField()
     pendiente_proximo_dia = serializers.IntegerField()
     
     class Meta:
         model = Situado_Carga_Descarga
-        fields = ('id', 'tipo_origen' , 'tipo_origen_name', 'origen', 'tipo_equipo' , 'tipo_equipo_name', 'estado', 
-                 'operacion', 'producto', 'productos_info', 'situados', 
-                 'pendiente_proximo_dia', 'observaciones')
+        fields = '__all__'
         extra_kwargs = {
             'producto': {'required': False},
             'observaciones': {'required': False, 'allow_null': True}
@@ -875,6 +938,7 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
 
     def create(self, validated_data):
         productos_data = validated_data.pop('producto', [])
+        vagones_data = validated_data.pop('equipo_vagon', [])
         instance = super().create(validated_data)
         
         # Asociar productos MANUALMENTE después de crear la instancia
@@ -882,12 +946,42 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
             instance.producto.set(productos_data)
             instance.save()  # Guardar explícitamente
         
+        for vagon_data in vagones_data:
+            equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+            vagon = vagones_dias.objects.create(
+                equipo_ferroviario=equipo,
+                cant_dias=vagon_data['cant_dias']
+            )
+            
+            actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Situado")
+            instance.equipo_vagon.add(vagon)
+        
+        print(instance,validated_data)
         return instance
 
     def update(self, instance, validated_data):
-        productos_data = validated_data.pop('producto', None)
-        instance = super().update(instance, validated_data)
+        productos_data = validated_data.pop('producto', None)   
+        vagones_data = validated_data.pop('equipo_vagon', None)
         
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            instance.save()
+        
+        for equipo in instance.equipo_vagon.all():
+            equipo_id=equipo.equipo_ferroviario
+            actualizar_estado_equipo_ferroviario(equipo_id,"Disponible")
+        # Actualizar vagones si se proporcionan
+        if vagones_data is not None:
+            instance.equipo_vagon.clear()
+            for vagon_data in vagones_data:
+                equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+                actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Situado")
+                vagon = vagones_dias.objects.create(
+                    equipo_ferroviario=equipo,
+                    cant_dias=vagon_data['cant_dias']
+                )
+                instance.equipo_vagon.add(vagon)
+                
         if productos_data is not None:
             instance.producto.set(productos_data)
             instance.save()
@@ -898,10 +992,10 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
         
 class PorSituarCargaDescargaFilter(filters.FilterSet):
     tipo_equipo = filters.CharFilter(lookup_expr='icontains')  # Filtro exacto (puedes usar 'icontains' para parcial
-   
+    informe = filters.NumberFilter(field_name='informe_operativo__id')
     class Meta:
         model = por_situar
-        fields = ['tipo_equipo']  # Campos filtrables
+        fields = ['tipo_equipo','informe']  # Campos filtrables
 
 
 class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
@@ -913,12 +1007,19 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
     )
     productos_info = serializers.SerializerMethodField()
     tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
-    tipo_equipo_name=serializers.ReadOnlyField(source='get_tipo_equipo_display')
+    tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
     producto = serializers.PrimaryKeyRelatedField(
+        write_only=True,
         many=True,
         queryset=producto_UFC.objects.all(),
         required=False
     )
+    equipo_vagon = serializers.ListField(
+        child=serializers.DictField(),
+        write_only=True,
+        required=False
+    )
+    equipo_vagon_detalle=vagones_dias_serializer(many=True,source='equipo_vagon', read_only=True)
     
     class Meta:
         model = por_situar
@@ -942,25 +1043,70 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         } for p in productos]
 
     def create(self, validated_data):
+        # Extraer datos de vagones
+        vagones_data = validated_data.pop('equipo_vagon', [])
         productos_data = validated_data.pop('producto', [])
-        instance = por_situar.objects.create(**validated_data)
+        
+        # Crear instancia principal
+        instance = super().create(validated_data)
+        
+        # Crear registros de vagones_dias y asociarlos
+        for vagon_data in vagones_data:
+            equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+            vagon = vagones_dias.objects.create(
+                equipo_ferroviario=equipo,
+                cant_dias=vagon_data['cant_dias']
+            )
+            
+            actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Por Situar")
+            instance.equipo_vagon.add(vagon)
+        
+        # Asociar productos
         instance.producto.set(productos_data)
+        
         return instance
 
-    def update(self, instance, validated_data):
+###Tanke
+
+    def update(self, instance:por_situar, validated_data):
         productos_data = validated_data.pop('producto', None)
-        instance = super().update(instance, validated_data)
+        vagones_data = validated_data.pop('equipo_vagon', None)
+        
+        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            instance.save()
+        
+        for equipo in instance.equipo_vagon.all():
+            equipo_id=equipo.equipo_ferroviario
+            actualizar_estado_equipo_ferroviario(equipo_id,"Disponible")
+        # Actualizar vagones si se proporcionan
+        if vagones_data is not None:
+            instance.equipo_vagon.clear()
+            for vagon_data in vagones_data:
+                equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+                actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Por Situar")
+                vagon = vagones_dias.objects.create(
+                    equipo_ferroviario=equipo,
+                    cant_dias=vagon_data['cant_dias']
+                )
+                instance.equipo_vagon.add(vagon)
+        
+        # Actualizar productos si se proporcionan
         if productos_data is not None:
             instance.producto.set(productos_data)
+        
+        print(validated_data)
+        instance.save()
         return instance
 
 
 class PendienteArrastreFilter(filters.FilterSet):
     tipo_equipo = filters.CharFilter(lookup_expr='icontains')
-    
+    informe = filters.NumberFilter(field_name='informe_operativo__id')
     class Meta:
         model = arrastres
-        fields = ['tipo_equipo']
+        fields = ['tipo_equipo',"informe"]
 
 class PendienteArrastreSerializer(serializers.ModelSerializer):
     fecha_registro = serializers.DateTimeField(
@@ -969,13 +1115,19 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
         read_only=True,  # Solo lectura, no necesita write_only
         help_text="Fecha y hora en que se creó el registro (automático)"
     )
+    tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
     productos_info = serializers.SerializerMethodField()
     producto = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=producto_UFC.objects.all(),
         required=False
     )
-    
+    equipo_vagon = serializers.ListField(
+        child=serializers.DictField(),
+        write_only=True,
+        required=False
+    )
+    equipo_vagon_detalle=vagones_dias_serializer(many=True,source='equipo_vagon', read_only=True)
     class Meta:
         model = arrastres
         fields = '__all__'
@@ -995,17 +1147,66 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
         } for p in productos]
 
     def create(self, validated_data):
+        # Extraer datos de vagones
+        vagones_data = validated_data.pop('equipo_vagon', [])
         productos_data = validated_data.pop('producto', [])
-        instance = arrastres.objects.create(**validated_data)
+        
+        # Crear instancia principal
+        instance = super().create(validated_data)
+        
+        # Crear registros de vagones_dias y asociarlos
+        for vagon_data in vagones_data:
+            equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+            vagon = vagones_dias.objects.create(
+                equipo_ferroviario=equipo,
+                cant_dias=vagon_data['cant_dias']
+            )
+            
+            actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Pendiente a Arrastre")
+            instance.equipo_vagon.add(vagon)
+        
+        # Asociar productos
         instance.producto.set(productos_data)
+        
         return instance
 
-    def update(self, instance, validated_data):
+    def update(self, instance:arrastres, validated_data):
+        vagones_data = validated_data.pop('equipo_vagon', None)
         productos_data = validated_data.pop('producto', None)
-        instance = super().update(instance, validated_data)
+        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            instance.save()
+        
+        for equipo in instance.equipo_vagon.all():
+            equipo_id=equipo.equipo_ferroviario
+            actualizar_estado_equipo_ferroviario(equipo_id,"Disponible")
+        # Actualizar vagones si se proporcionan
+        if vagones_data is not None:
+            instance.equipo_vagon.clear()
+            for vagon_data in vagones_data:
+                equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
+                actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Pendiente a Arrastre")
+                vagon = vagones_dias.objects.create(
+                    equipo_ferroviario=equipo,
+                    cant_dias=vagon_data['cant_dias']
+                )
+                instance.equipo_vagon.add(vagon)
+        
+        # Actualizar productos si se proporcionan
         if productos_data is not None:
             instance.producto.set(productos_data)
+        
         return instance
+
+
+class rotacion_filter(django_filters.FilterSet):
+    informe = filters.NumberFilter(field_name='informe_operativo__id')
+    
+    
+    class Meta:
+        model = en_trenes
+        fields = ['informe']  # Campos filtrables
 
 
 class RotacionVagonesSerializer(serializers.ModelSerializer):
@@ -1019,7 +1220,7 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
     plan_carga = serializers.IntegerField(read_only=True)
     real_carga = serializers.IntegerField(read_only=True)
     plan_rotacion = serializers.FloatField(read_only=True)
-    real_rotacion = serializers.FloatField(read_only=True)
+    real_rotacion = serializers.FloatField(read_only=True,)
     tipo_carga_name= serializers.ReadOnlyField(source='tipo_equipo_ferroviario.get_tipo_carga_display')
     class Meta:
         model = rotacion_vagones
@@ -1028,12 +1229,13 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
             "tipo_equipo_ferroviario",
             "tipo_equipo_ferroviario_nombre",
             "tipo_carga_name",
+            "fecha_registro",
             "en_servicio",
             "plan_carga",
             "real_carga",
             "plan_rotacion",
             "real_rotacion",
-            "fecha_registro",
+            "informe_operativo",
         ]
         extra_kwargs = {
             "tipo_equipo_ferroviario": {"required": True},
@@ -1063,8 +1265,9 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
     def calculate_plan_carga(self,validated_data):
         """Calcula la sumatoria del plan diario de carga para la operación 'carga'."""
         hoy=timezone.now().date()
+        print(validated_data)
         return (
-            vagon_cargado_descargado.objects.filter(fecha__date=hoy,operacion="carga",tipo_equipo_ferroviario=validated_data["tipo_equipo_ferroviario"])
+            vagon_cargado_descargado.objects.filter(fecha__date=hoy,operacion="carga",tipo_equipo_ferroviario=validated_data["tipo_equipo_ferroviario"],informe_operativo=validated_data["informe_operativo"])
             .aggregate(total_plan_carga=Sum("plan_diario_carga_descarga"))
             .get("total_plan_carga", 0) or 0
         )
@@ -1073,7 +1276,7 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
         """Calcula la sumatoria del real de carga para la operación 'carga'."""
         hoy=timezone.now().date()
         return (
-            vagon_cargado_descargado.objects.filter(fecha__date=hoy,operacion="carga",tipo_equipo_ferroviario=validated_data["tipo_equipo_ferroviario"])
+            vagon_cargado_descargado.objects.filter(fecha__date=hoy,operacion="carga",tipo_equipo_ferroviario=validated_data["tipo_equipo_ferroviario"],informe_operativo=validated_data["informe_operativo"])
             .aggregate(total_real_carga=Sum("real_carga_descarga"))
             .get("total_real_carga", 0) or 0
         )
@@ -1082,13 +1285,13 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
         """Calcula el plan de rotación."""
         if en_servicio == 0:
             return 0
-        return plan_carga / en_servicio
+        return round(plan_carga / en_servicio,2)
 
     def calculate_real_rotacion(self, real_carga, en_servicio):
         """Calcula el real de rotación."""
         if en_servicio == 0:
             return 0
-        return real_carga / en_servicio
+        return round(real_carga / en_servicio,2)
 
     def create(self, validated_data):
         """Crea una nueva instancia de rotación de vagones."""
@@ -1114,8 +1317,8 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         """Actualiza una instancia existente de rotación de vagones."""
         # Calcular valores dinámicos
-        plan_carga = self.calculate_plan_carga()
-        real_carga = self.calculate_real_carga()
+        plan_carga = self.calculate_plan_carga(validated_data)
+        real_carga = self.calculate_real_carga(validated_data)
         en_servicio = validated_data.get("en_servicio", instance.en_servicio)
 
         # Calcular rotaciones
@@ -1136,3 +1339,115 @@ class RotacionVagonesSerializer(serializers.ModelSerializer):
         return instance
     
 
+class ufc_informe_operativo_filter(filters.FilterSet):
+    fecha_operacion = filters.CharFilter(field_name='fecha_operacion',lookup_expr = 'exact')  
+    
+    class Meta:
+        model = ufc_informe_operativo
+        fields = '__all__' 
+        
+class ufc_informe_operativo_serializer(serializers.ModelSerializer):                      
+    arrastres_list = serializers.SerializerMethodField()
+    en_trenes_list = serializers.SerializerMethodField()
+    vagones_cargados_descargados_list = serializers.SerializerMethodField()
+    situados_carga_descarga_list = serializers.SerializerMethodField()
+    por_situar_list = serializers.SerializerMethodField()
+    vagones_productos_list = serializers.SerializerMethodField()
+    rotacion_vagones_list = serializers.SerializerMethodField()
+    entidad_detalle=serializers.ReadOnlyField(source = 'entidad.nombre') 
+#    equipos_list=serializers.SerializerMethodField()
+    creado_por = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(), 
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    
+    aprobado_por = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(), 
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    
+    
+    creado_por_detalle=UserPermissionSerializer(source='creado_por', read_only=True)
+    aprobado_por_detalle=UserPermissionSerializer(source='aprobado_por', read_only=True)
+    class Meta:
+        model = ufc_informe_operativo       
+        fields = [
+            'id',
+            'fecha_operacion',
+            'plan_mensual_total',
+            'plan_diario_total_vagones_cargados',
+            'real_total_vagones_cargados',
+            'total_vagones_situados',
+            'estado_parte',
+            'entidad',
+            'entidad_detalle',
+            'creado_por',
+            'creado_por_detalle',
+            'aprobado_por',
+            'aprobado_por_detalle',
+            'arrastres_list',
+            'en_trenes_list',
+            'vagones_cargados_descargados_list',
+            'situados_carga_descarga_list',
+            'por_situar_list',
+            'vagones_productos_list',
+            'rotacion_vagones_list',
+        #    'equipos_list',
+        ]
+        filterset_class: ufc_informe_operativo_filter
+        
+    def get_arrastres_list(self, obj):
+        """Obtiene todos los arrastres asociados al informe operativo."""
+        arrastres_queryset = obj.arrastres.all()
+        return PendienteArrastreSerializer(arrastres_queryset, many=True).data
+
+    def get_en_trenes_list(self, obj):
+        """Obtiene todos los trenes asociados al informe operativo."""
+        en_trenes_queryset = obj.en_trenes.all()
+        return en_trenes_serializer(en_trenes_queryset, many=True).data
+
+    def get_vagones_cargados_descargados_list(self, obj):
+        """Obtiene todos los vagones cargados/descargados asociados al informe operativo."""
+        vagones_cargados_descargados_queryset = obj.vagones_cargados_descargados.all()
+        return vagon_cargado_descargado_serializer(vagones_cargados_descargados_queryset, many=True).data
+
+    def get_situados_carga_descarga_list(self, obj):
+        """Obtiene todos los situados de carga/descarga asociados al informe operativo."""
+        situados_carga_descarga_queryset = obj.situados.all()
+        return SituadoCargaDescargaSerializers(situados_carga_descarga_queryset, many=True).data
+
+    def get_por_situar_list(self, obj):
+        """Obtiene todos los registros por situar asociados al informe operativo."""
+        por_situar_queryset = obj.por_situar.all()
+        return PorSituarCargaDescargaSerializer(por_situar_queryset, many=True).data
+
+    def get_vagones_productos_list(self, obj):
+        """Obtiene todos los productos de vagones asociados al informe operativo."""
+        vagones_productos_queryset = obj.vagones_productos.all()
+        return vagones_productos_serializer(vagones_productos_queryset, many=True).data
+
+    def get_rotacion_vagones_list(self, obj):
+        """Obtiene todas las rotaciones de vagones asociadas al informe operativo."""
+        rotacion_vagones_queryset = obj.rotacion.all()
+        return RotacionVagonesSerializer(rotacion_vagones_queryset, many=True).data
+    
+    # def get_equipos_list(self, obj):
+    #     """Obtiene todos los equipos asociadas al informe operativo."""
+    #     en_trenes_queryset = obj.en_trenes.all()
+    #     por_situar_queryset = obj.por_situar.all()
+    #     en_trenes_queryset = obj.en_trenes.all()
+    #     en_trenes_queryset = obj.en_trenes.all()
+    #     en_trenes_queryset = obj.en_trenes.all()
+    #     equipos_list=[]
+    #     for tren in en_trenes_queryset:
+    #         equipos_list=tren.equipo_vagon.all()
+    #         print(type(equipos_list))
+        
+
+        
+    #     return nom_equipo_ferroviario_serializer(equipos_list, many=True).data
+    

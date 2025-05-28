@@ -23,9 +23,7 @@
                 v-model="searchQuery"
                 @input="handleSearchInput"
               />
-              <span
-                class="position-absolute top-50 start-0 translate-middle-y ps-2"
-              >
+              <span class="position-absolute top-50 start-0 translate-middle-y ps-2">
                 <i class="bi bi-search"></i>
               </span>
             </div>
@@ -46,11 +44,7 @@
                 <th scope="col">Por Situar</th>
                 <th scope="col">Acciones</th>
               </tr>
-              <tr
-                v-if="
-                  !busqueda_existente && porSituarCarga_Descarga.length != 0
-                "
-              >
+              <tr v-if="!busqueda_existente && porSituarCarga_Descarga.length != 0">
                 <td colspan="9" class="text-center text-muted py-4">
                   <i class="bi bi-exclamation-circle fs-4"></i>
                   <p class="mt-2">
@@ -169,11 +163,7 @@
           </nav>
 
           <!-- Modal Overlay - Fondo oscuro que se muestra cuando el modal está activo -->
-          <div
-            v-if="showDetailsModal"
-            class="ps-modal-overlay"
-            @click.self="closeModal"
-          >
+          <div v-if="showDetailsModal" class="ps-modal-overlay" @click.self="closeModal">
             <!-- Contenedor principal del modal -->
             <div class="ps-modal">
               <!-- Encabezado del modal -->
@@ -728,6 +718,7 @@ export default {
   overflow: auto;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
 }
+
 .pagination-container {
   margin-top: 20px;
   display: flex;

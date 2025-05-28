@@ -95,6 +95,7 @@ export default {
           title: "Partes",
           icon:"file-earmark-text",
           submenu: [
+            {title:"Informes Aprobados", route:'/ufc'},
             {title:"Informe Operativo", route:'/InfoOperativo'},
             {title:"CCD Producto", route:''},
           ],

@@ -1,119 +1,65 @@
 <template>
-  <div class="informes-operativos-container">
-    <!-- Header con título y acciones -->
-    <div class="io-header">
-      <h1 class="io-title">
-        <i class="bi bi-clipboard-data io-title-icon"></i>
-        Partes de Informes Operativos
-      </h1>
-
-      <div class="io-actions">
-        <!-- Buscador moderno -->
-        <div class="io-search-container">
-          <i class="bi bi-search io-search-icon"></i>
-          <input
-            type="search"
-            class="io-search-input"
-            placeholder="Buscar informes..."
-            v-model="searchQuery"
-            @input="handleSearchInput"
-          />
-          <div class="io-search-border"></div>
-        </div>
+  <div class="container py-3">
+    <div class="card border">
+      <!-- Header con título y acciones -->
+      <div class="card-header bg-light border-bottom">
+        <h6 class="mb-0 text-dark fw-semibold">
+          <i class="bi bi-clipboard-data me-2"></i>
+          Partes de Informes Operativos
+        </h6>
       </div>
-    </div>
 
-    <!-- Tarjeta contenedora de la tabla -->
-    <div class="io-card">
-      <!-- Tabla con diseño moderno -->
-      <div class="io-table-container">
-        <table class="io-table">
-          <thead>
-            <tr>
-              <th class="io-th">Fecha</th>
-              <th class="io-th">Hora</th>
-              <th class="io-th">Tipo de Parte</th>
-              <th class="io-th">Entidad</th>
-              <th class="io-th">Estado</th>
-              <th class="io-th">Creado por</th>
-              <th class="io-th">Aprobado por</th>
-              <th class="io-th io-th-actions">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
+      <!-- Tarjeta contenedora de la tabla -->
+      <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <table class="table table-sm table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th scope="col">Fecha</th>
+                <th scope="col">Hora</th>
+                <th scope="col">Tipo de Parte</th>
+                <th scope="col">Entidad</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Creado por</th>
+                <th scope="col">Aprobado por</th>
+                <th scope="col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
             <!-- Estado de carga -->
             <tr v-if="loading">
               <td colspan="8" class="io-loading-td">
-                <div class="io-loading">
-                  <div class="io-spinner"></div>
-                  <span>Cargando informes...</span>
-                </div>
+              <div class="io-loading">
+                <div class="io-spinner"></div>
+                <span>Cargando informes...</span>
+              </div>
               </td>
             </tr>
 
             <!-- Filas de datos -->
-            <tr
-              v-for="(informe, index) in filteredRecords"
-              :key="informe.id"
-              class="io-tr"
-            >
-              <td class="io-td">
-                {{ formatDate(informe.fecha_operacion) || "-" }}
+            <tr v-for="(informe, index) in filteredRecords" :key="informe.id" class="io-tr">
+              <td>{{ formatDate(informe.fecha_operacion) || "-" }}</td>
+              <td >{{ formatTime(informe.fecha_operacion) || "-" }}</td>
+              <td>Informe operativo</td>
+              <td>{{ informe.entidad_detalle || "-" }}</td>
+              <td><span :class="`io-status io-status-${getStatusClass(informe.estado_parte)}`">{{ informe.estado_parte || "-" }}</span>
               </td>
-              <td class="io-td">
-                {{ formatTime(informe.fecha_operacion) || "-" }}
-              </td>
-              <td class="io-td">Informe operativo</td>
-              <td class="io-td">
-                {{ informe.entidad_detalle || "-" }}
-              </td>
-              <td class="io-td">
-                <span
-                  :class="`io-status io-status-${getStatusClass(
-                    informe.estado_parte
-                  )}`"
-                >
-                  {{ informe.estado_parte || "-" }}
-                </span>
-              </td>
-              <td class="io-td">
-                {{ informe.creado_por_detalle?.first_name || "-" }}
-              </td>
-              <td class="io-td">
-                {{
-                  informe.aprobado_por_detalle
-                    ? informe.aprobado_por_detalle.first_name
-                    : "-"
-                }}<!-- Uso de operador ternario una talla -->
-              </td>
+              <td>{{ informe.creado_por_detalle?.first_name || "-" }}</td>
+              <td>{{informe.aprobado_por_detalle ? informe.aprobado_por_detalle.first_name: "-"}}<!-- Uso de operador ternario una talla --></td>
 
               <!-- Acciones -->
-              <td class="io-td io-td-actions">
+              <td>
                 <div class="d-flex">
-                  <button
-                    @click="viewDetails(informe)"
-                    class="btn btn-sm btn-outline-info me-2"
-                    title="Ver detalles"
-                  >
+                  <button @click="viewDetails(informe)"class="btn btn-sm btn-outline-info me-2" title="Ver detalles">
                     <i class="bi bi-eye-fill"></i>
                   </button>
-                  <!-- <router-link
-                    :to="{
-                      name: 'EditarInformeOperativo',
-                      params: { id: informe.id },
-                    }"
-                    class="btn btn-sm btn-outline-warning me-2"
-                    title="Editar"
-                    v-if="informe.estado_parte !== 'Aprobado'"
-                  >
+
+            <!-- <router-link :to="{ name: 'EditarInformeOperativo', params: { id: informe.id },}" class="btn btn-sm btn-outline-warning me-2" title="Editar"
+                  v-if="informe.estado_parte !== 'Aprobado'">
                     <i class="bi bi-pencil-square"></i>
                   </router-link> -->
-                  <button
-                    @click="confirmDelete(informe.id)"
-                    class="btn btn-sm btn-outline-danger"
-                    title="Eliminar"
-                    :disabled="loading || informe.estado_parte === 'Aprobado'"
-                  >
+
+                  <button @click="confirmDelete(informe.id)" class="btn btn-sm btn-outline-danger" title="Eliminar" :disabled="loading || informe.estado_parte === 'Aprobado'">
                     <i class="bi bi-trash"></i>
                   </button>
                 </div>
@@ -123,200 +69,58 @@
             <!-- Estado vacío -->
             <tr v-if="!loading && filteredRecords.length === 0">
               <td colspan="8" class="io-empty-td">
-                <div class="io-empty-state">
-                  <i class="bi bi-database-exclamation"></i>
-                  <h3>
-                    {{
-                      searchQuery ? "No hay coincidencias" : "No hay informes"
-                    }}
-                  </h3>
-                  <p>
-                    {{
-                      searchQuery
-                        ? `No encontramos resultados para "${searchQuery}"`
-                        : "No hay informes operativos registrados"
-                    }}
-                  </p>
-                </div>
+              <div class="io-empty-state">
+                <i class="bi bi-database-exclamation"></i>
+                <h3>
+                {{
+                  searchQuery ? "No hay coincidencias" : "No hay informes"
+                }}
+                </h3>
+                <p>
+                {{
+                  searchQuery
+                  ? `No encontramos resultados para "${searchQuery}"`
+                  : "No hay informes operativos registrados"
+                }}
+                </p>
+              </div>
               </td>
             </tr>
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
 
-    <!-- Paginación -->
-    <div class="io-pagination">
-      <div class="text-muted small">
+      <!-- Paginación -->
+      <div class="io-pagination">
+        <div class="text-muted small">
         Mostrando {{ filteredRecords.length }} de {{ totalItems }} registros
-      </div>
-      <nav aria-label="Page navigation">
+        </div>
+        <nav aria-label="Page navigation">
         <ul class="pagination pagination-sm mb-0">
           <li class="page-item" :class="{ disabled: currentPage === 1 }">
-            <button class="page-link" @click="previousPage">
-              <i class="bi bi-chevron-left"></i>
-            </button>
+          <button class="page-link" @click="previousPage">
+            <i class="bi bi-chevron-left"></i>
+          </button>
           </li>
           <li class="page-item disabled">
-            <span class="page-link">
-              Página {{ currentPage }} de
-              {{ Math.ceil(totalItems / itemsPerPage) }}
-            </span>
+          <span class="page-link">
+            Página {{ currentPage }} de
+            {{ Math.ceil(totalItems / itemsPerPage) }}
+          </span>
           </li>
           <li
-            class="page-item"
-            :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
+          class="page-item"
+          :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
           >
-            <button class="page-link" @click="nextPage">
-              <i class="bi bi-chevron-right"></i>
-            </button>
+          <button class="page-link" @click="nextPage">
+            <i class="bi bi-chevron-right"></i>
+          </button>
           </li>
         </ul>
-      </nav>
-    </div>
-
-    <!-- Modal de detalles -->
-    <div
-      v-if="showDetailsModal"
-      class="io-modal-overlay"
-      @click.self="closeDetailsModal"
-    >
-      <div class="io-modal">
-        <div class="io-modal-header">
-          <div class="io-modal-header-content">
-            <div class="io-modal-icon-container">
-              <i class="bi bi-clipboard-data io-modal-icon"></i>
-            </div>
-            <div>
-              <h2>Detalles del Informe Operativo</h2>
-              <p class="io-modal-subtitle">
-                Información completa del parte seleccionado
-              </p>
-            </div>
-          </div>
-          <button class="io-modal-close" @click="closeDetailsModal">
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </div>
-
-        <div class="io-modal-body">
-          <div class="io-detail-grid">
-            <div class="io-detail-card">
-              <div class="io-detail-card-header">
-                <i class="bi bi-calendar-date"></i>
-                <h4>Información General</h4>
-              </div>
-              <div class="io-detail-card-body">
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Fecha:</span>
-                  <span class="io-detail-value">{{
-                    formatFullDate(currentInforme.fecha_operacion) || "N/A"
-                  }}</span>
-                </div>
-
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Tipo de parte:</span>
-                  <span class="io-detail-value">Informe Operativo Diario</span>
-                </div>
-
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Estado:</span>
-                  <span class="io-detail-value">
-                    <span
-                      :class="`io-status io-status-${getStatusClass(
-                        currentInforme.estado_parte
-                      )}`"
-                    >
-                      {{ currentInforme.estado_parte || "N/A" }}
-                    </span>
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div class="io-detail-card">
-              <div class="io-detail-card-header">
-                <i class="bi bi-person-lines-fill"></i>
-                <h4>Responsables</h4>
-              </div>
-              <div class="io-detail-card-body">
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Creado por:</span>
-                  <span class="io-detail-value">{{
-                    currentInforme.creado_por_detalle?.first_name || "N/A"
-                  }}</span>
-                </div>
-
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Aprobado por:</span>
-                  <span class="io-detail-value">{{
-                    currentInforme.aprobado_por_detalle?.first_name || "N/A"
-                  }}</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="io-detail-card">
-              <div class="io-detail-card-header">
-                <i class="bi bi-geo-alt-fill"></i>
-                <h4>Ubicación</h4>
-              </div>
-              <div class="io-detail-card-body">
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Provincia:</span>
-                  <span class="io-detail-value">{{
-                    currentInforme?.creado_por_detalle?.provincia
-                      .nombre_provincia || "N/A"
-                  }}</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="io-detail-card io-detail-card-full">
-              <div class="io-detail-card-header">
-                <i class="bi bi-bar-chart-line-fill"></i>
-                <h4>Métricas</h4>
-              </div>
-              <div class="io-detail-card-body">
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Plan Mensual Total:</span>
-                  <span class="io-detail-value">{{
-                    currentInforme.plan_mensual_total || "0"
-                  }}</span>
-                </div>
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Vagones Cargados (Plan):</span>
-                  <span class="io-detail-value">{{
-                    currentInforme.plan_diario_total_vagones_cargados || "0"
-                  }}</span>
-                </div>
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Vagones Cargados (Real):</span>
-                  <span class="io-detail-value">{{
-                    currentInforme.real_total_vagones_cargados || "0"
-                  }}</span>
-                </div>
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Vagones Situados:</span>
-                  <span class="io-detail-value">{{
-                    currentInforme.total_vagones_situados || "0"
-                  }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="io-modal-footer">
-          <button
-            class="io-modal-btn io-modal-btn-secondary"
-            @click="closeDetailsModal"
-          >
-            <i class="bi bi-x-circle"></i> Cerrar
-          </button>
-        </div>
+        </nav>
       </div>
-    </div>
+    </div> 
   </div>
 </template>
 

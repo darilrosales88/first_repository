@@ -16,20 +16,41 @@
 
         <div class="card-body p-3">
           <form @submit.prevent="submitForm">
-            <!-- Fila 1 -->
-            <div class="row mb-3 g-2">        
+            <div class="row mb-3 g-2">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="fechaActual" class="form-label small fw-semibold text-secondary">
-                    <i class="bi bi-calendar-check me-2 text-primary"></i>Fecha Actual
+                  <label
+                    for="fechaActual"
+                    class="form-label small fw-semibold text-secondary">
+                    <i class="bi bi-calendar-check me-2 text-primary"></i>Fecha
+                    Actual
                   </label>
-                  <input 
-                    type="date" 
-                    class="form-control form-control-sm border-secondary" 
-                    id="fechaActual" 
+                  <input
+                    type="date"
+                    class="form-control form-control-sm border-secondary"
+                    id="fechaActual"
                     v-model="formData.fecha_actual"
                     required
-                    :disabled="isExistingRecord">
+                    :disabled="isExistingRecord"
+                  />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label
+                    for="fechaOperacion"
+                    class="form-label small fw-semibold text-secondary">
+                    <i class="bi bi-calendar-check me-2 text-primary"></i>Fecha
+                    Operación
+                  </label>
+                  <input
+                    type="date"
+                    class="form-control form-control-sm border-secondary"
+                    id="FechaOperacion"
+                    v-model="formData.fecha_operacion"
+                    required
+                    :disabled="isExistingRecord"
+                  />
                 </div>
               </div>
             </div>
@@ -87,7 +108,7 @@
   </div>
 
   <div style="margin-left: 16em; width: 80%">
-    <Inf-Operative :fechaActual="formData.fecha_actual" @record-status-changed="handleRecordStatusChange"/>    
+    <Inf-Operative :fechaActual="formData.fecha_actual" :fechaOperacion="formData.fecha_operacion" @record-status-changed="handleRecordStatusChange"/>    
   </div>
 
   <div style="margin-left: 16em; width: 80%">
@@ -146,6 +167,7 @@ export default {
       isExistingRecord: false,
       formData: {
         fecha_actual: localISOTime,
+        fecha_operacion: localISOTime,
       },
     };
   },

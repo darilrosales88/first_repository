@@ -9,9 +9,7 @@
     <div class="card border">
       <div class="card-header bg-light border-bottom">
         <h5 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-file-earmark-plus me-2"></i>Editar registro de
-          situados
-        </h5>
+          <i class="bi bi-file-earmark-plus me-2"></i>Editar registro de situados</h5>
       </div>
       <div class="card-body p-3">
         <form @submit.prevent="submitForm">
@@ -406,8 +404,6 @@ export default {
       },
       userGroups: [], // Inicializa como array vacío
       userPermissions: [], // Inicializa como array vacío
-      userGroups: [], // Inicializa como array vacío
-      userPermissions: [], // Inicializa como array vacío
       productoSearch: "",
       filteredProductos: [],
       showProductosDropdown: false,
@@ -425,20 +421,9 @@ export default {
         cant_dias: 1,
       },
 
-      mostrarModal: false,
-      equipos: [],
-      equipos_vagones: [],
-      mostrarModalVagon: false,
-      vagonesAgregados: [],
-      nuevoVagon: {
-        equipo_ferroviario: "",
-        cant_dias: 1,
-      },
-
       tipo_origen_options: [
         { id: "ac_ccd", text: "comercial/AccesoCCD" },
         { id: "puerto", text: "Puerto" },
-      ],
       ],
       t_operacion_options: [
         { id: "carga", text: "Carga" },
@@ -454,7 +439,6 @@ export default {
     this.getProductos();
     this.getEntidades();
     this.getPuertos();
-    this.getEquipos();
     this.getEquipos();
   },
 
@@ -491,15 +475,10 @@ export default {
       }
     },
     async getEquipos() {
-    async getEquipos() {
       try {
         const response = await axios.get("/api/tipo-e-f-no-locomotora/");
         this.equipos = response.data;
-        const response = await axios.get("/api/tipo-e-f-no-locomotora/");
-        this.equipos = response.data;
       } catch (error) {
-        console.error("Error al obtener los equipos:", error);
-        Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
         console.error("Error al obtener los equipos:", error);
         Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
       }
@@ -529,49 +508,7 @@ export default {
         }
 
         this.equipos_vagones = response.data;
-    async buscarEquipos() {
-      try {
-        let url = "/api/e-f-no-locomotora/";
-        if (!this.formData.tipo_equipo) {
-          return;
-        }
-
-        // al tipo de equipo específico lo añadimos como parámetro
-        url += `?tipo_equipo=${this.formData.tipo_equipo}`;
-        const response = await axios.get(url);
-
-        // en caso de que no exista EF para el tipo seleccionado en el componente padre
-        if (response.data.length === 0) {
-          Swal.fire({
-            title: "Error",
-            text: "No existen equipos ferroviarios para el tipo seleccionado.",
-            icon: "error",
-            willClose: () => {
-              this.cerrarModal();
-            },
-          });
-          return;
-        }
-
-        this.equipos_vagones = response.data;
       } catch (error) {
-        console.error("Error al obtener los equipos ferroviarios:", error);
-        Swal.fire({
-          title: "Error",
-          text: "Hubo un error al obtener los equipos ferroviarios.",
-          icon: "error",
-          willClose: () => {
-            this.cerrarModal();
-          },
-        });
-      }
-    },
-
-    async abrirModalVagon() {
-      this.mostrarModalVagon = true;
-
-      await this.buscarEquipos();
-    },
         console.error("Error al obtener los equipos ferroviarios:", error);
         Swal.fire({
           title: "Error",
@@ -622,40 +559,7 @@ export default {
     },
 
     eliminarVagon(index) {
-      this.nuevoVagon = {
-        equipo_ferroviario: "",
-        cant_dias: 1,
-      };
-    },
-    agregarNuevoVagon() {
-      if (!this.nuevoVagon.equipo_ferroviario || !this.nuevoVagon.cant_dias) {
-        Swal.fire("Error", "Debe completar todos los campos", "error");
-        return;
-      }
-
-      const equipoSeleccionado = this.equipos_vagones.find(
-        (e) => e.id === this.nuevoVagon.equipo_ferroviario
-      );
-
-      const vagonAgregado = {
-        equipo_ferroviario: equipoSeleccionado,
-        cant_dias: this.nuevoVagon.cant_dias,
-        // Agrega otros datos necesarios para mantener consistencia
-        datos: {
-          equipo_vagon: equipoSeleccionado.numero_identificacion,
-        },
-      };
-
-      this.vagonesAgregados.push(vagonAgregado);
-      this.cerrarModalVagon();
-
-      Swal.fire("Éxito", "Vagón agregado correctamente", "success");
-    },
-
-    eliminarVagon(index) {
       Swal.fire({
-        title: "¿Eliminar vagón?",
-        text: "Esta acción no se puede deshacer",
         title: "¿Eliminar vagón?",
         text: "Esta acción no se puede deshacer",
         icon: "warning",
@@ -664,14 +568,8 @@ export default {
         cancelButtonColor: "#6c757d",
         confirmButtonText: "Sí, eliminar",
         cancelButtonText: "Cancelar",
-        confirmButtonColor: "#002a68",
-        cancelButtonColor: "#6c757d",
-        confirmButtonText: "Sí, eliminar",
-        cancelButtonText: "Cancelar",
       }).then((result) => {
         if (result.isConfirmed) {
-          this.vagonesAgregados.splice(index, 1);
-          Swal.fire("Eliminado", "El vagón ha sido eliminado", "success");
           this.vagonesAgregados.splice(index, 1);
           Swal.fire("Eliminado", "El vagón ha sido eliminado", "success");
         }
@@ -770,19 +668,6 @@ export default {
           throw new Error(
             "Debe seleccionar al menos un producto cuando el estado es Cargado"
           );
-    async submitForm() {
-      if (this.loading) return;
-
-      this.loading = true;
-      try {
-        // Validación adicional
-        if (
-          this.formData.estado === "cargado" &&
-          this.formData.productos.length === 0
-        ) {
-          throw new Error(
-            "Debe seleccionar al menos un producto cuando el estado es Cargado"
-          );
         }
 
         const payload = {
@@ -793,21 +678,7 @@ export default {
           operacion: this.formData.operacion,
           producto: this.formData.productos, // Nota: el backend espera 'producto' no 'productos'
           pendiente_proximo_dia: this.formData.pendiente_proximo_dia.toString(),
-          producto: this.formData.productos, // Nota: el backend espera 'producto' no 'productos'
-          pendiente_proximo_dia: this.formData.pendiente_proximo_dia.toString(),
           observaciones: this.formData.observaciones,
-          informe_operativo: this.informeOperativoId,
-
-          equipo_vagon: this.vagonesAgregados.map((vagon) => ({
-            equipo_ferroviario: vagon.equipo_ferroviario.id, // ID del equipo
-            cant_dias: vagon.cant_dias,
-            // Otros campos necesarios para el vagon
-          })), // Enviar IDs de vagones asociados
-        };
-        console.log("Datos a enviar: ", payload);
-
-        const response = await axios.patch(
-          `/ufc/situados/${this.registroId}/`,
           informe_operativo: this.informeOperativoId,
 
           equipo_vagon: this.vagonesAgregados.map((vagon) => ({
@@ -831,14 +702,6 @@ export default {
         });
 
         this.$router.push({ name: "InfoOperativo" });
-        await Swal.fire({
-          title: "Éxito",
-          text: "Registro actualizado correctamente",
-          icon: "success",
-          confirmButtonColor: "#002a68",
-        });
-
-        this.$router.push({ name: "InfoOperativo" });
       } catch (error) {
         let errorMessage = "Error al actualizar el registro";
 
@@ -851,24 +714,9 @@ export default {
             errorMessage = "El registro no fue encontrado";
           }
         } else if (error.message) {
-        if (error.response) {
-          if (error.response.status === 400) {
-            // Manejar errores de validación del backend
-            const errors = error.response.data;
-            errorMessage = Object.values(errors).flat().join("\n");
-          } else if (error.response.status === 404) {
-            errorMessage = "El registro no fue encontrado";
-          }
-        } else if (error.message) {
           errorMessage = error.message;
         }
 
-        Swal.fire({
-          title: "Error",
-          text: errorMessage,
-          icon: "error",
-          confirmButtonColor: "#002a68",
-        });
         Swal.fire({
           title: "Error",
           text: errorMessage,
@@ -1020,35 +868,6 @@ export default {
   font-size: 0.85rem;
 }
 
-.ufc-table-container {
-  overflow-x: auto;
-  margin-bottom: 20px;
-}
-
-.ufc-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-}
-
-.ufc-table th {
-  background-color: #f8f9fa;
-  padding: 10px;
-  text-align: left;
-  border-bottom: 2px solid #ddd;
-  color: #555;
-}
-
-.ufc-table td {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  vertical-align: middle;
-}
-
-.ufc-table tr:hover {
-  background-color: #f5f5f5;
-}
-
 .ufc-vagones-table td {
   padding: 12px;
   border-bottom: 1px solid #eee;
@@ -1154,10 +973,7 @@ export default {
   min-height: 36px;
   display: flex;
   align-items: center;
-  border-color: rgba(
-    var(--bs-secondary-rgb),
-    var(--bs-border-opacity)
-  ) !important;
+  border-color: rgba(var(--bs-secondary-rgb),var(--bs-border-opacity)) !important;
 }
 
 .ufc-select-arrow {
@@ -1448,10 +1264,7 @@ export default {
   border: 1px solid #ddd;
   border-radius: 6px;
   overflow: hidden;
-  border-color: rgba(
-    var(--bs-secondary-rgb),
-    var(--bs-border-opacity)
-  ) !important;
+  border-color: rgba(var(--bs-secondary-rgb),var(--bs-border-opacity)) !important;
 }
 
 .ufc-por-situar-input {
@@ -1498,12 +1311,12 @@ export default {
 }
 
 .ufc-button.secondary {
-  background: rgb(241, 81, 63);
-  color: white;
+    background:rgb(241, 81, 63);
+    color: white;
 }
 
 .ufc-button.secondary:hover {
-  background: rgb(228, 56, 37);
+    background:rgb(228, 56, 37);
 }
 
 .btn-outline-danger {
@@ -1649,4 +1462,3 @@ button[type="submit"] {
   }
 }
 </style>
-

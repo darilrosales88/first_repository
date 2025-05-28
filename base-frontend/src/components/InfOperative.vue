@@ -9,71 +9,58 @@
 
       <div class="card-body p-3">
         <form @submit.prevent="submitForm">
-
-          <!-- Fila 2 -->
-          <div class="row mb-3 g-2">
-            <div class="col-md-3">
+          <!-- Fila 2 - Modificada para mejor responsividad -->
+          <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3 mb-4">
+            <div class="col">
               <div class="form-group">
-                <label
-                  for="planMensualTotal"
-                  class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-calendar-month me-2 text-primary"></i>Plan
-                  Mensual Total
+                <label for="planMensualTotal" class="form-label small fw-semibold text-secondary">
+                  <i class="bi bi-calendar-month me-2 text-primary"></i>Plan Mensual Total
                 </label>
                 <input 
                   type="number" 
-                  class="form-control form-control-sm border-secondary" style="margin-top: 19px;" 
+                  class="form-control form-control-sm border-secondary mt-2" 
                   id="planMensualTotal" 
                   v-model="formData.plan_mensual_total"
                   :disabled="isExistingRecord">
               </div>
             </div>
 
-            <div class="col-md-3">
+            <div class="col">
               <div class="form-group">
-                <label
-                  for="planDiarioTotal"
-                  class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-calendar-day me-2 text-primary"></i>Plan
-                  Diario Total Vagones Cargados
+                <label for="planDiarioTotal" class="form-label small fw-semibold text-secondary">
+                  <i class="bi bi-calendar-day me-2 text-primary"></i>Plan Diario Total
                 </label>
                 <input 
                   type="number" 
-                  class="form-control form-control-sm border-secondary" 
+                  class="form-control form-control-sm border-secondary mt-2" 
                   id="planDiarioTotal" 
                   v-model="formData.plan_diario_total_vagones_cargados"
                   :disabled="isExistingRecord">
               </div>
             </div>
 
-            <div class="col-md-3">
+            <div class="col">
               <div class="form-group">
-                <label
-                  for="realTotalVagones"
-                  class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-train-freight-front me-2 text-primary"></i
-                  >Real Total Vagones Cargados
+                <label for="realTotalVagones" class="form-label small fw-semibold text-secondary">
+                  <i class="bi bi-train-freight-front me-2 text-primary"></i>Real Total Vagones
                 </label>
                 <input 
                   type="number" 
-                  class="form-control form-control-sm border-secondary" style="margin-top: 19px;"
+                  class="form-control form-control-sm border-secondary mt-2"
                   id="realTotalVagones" 
                   v-model="formData.real_total_vagones_cargados"
                   :disabled="isExistingRecord">
               </div>
             </div>
 
-            <div class="col-md-3">
+            <div class="col">
               <div class="form-group">
-                <label
-                  for="totalVagonesSituados"
-                  class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-pin-map me-2 text-primary"></i>Total de
-                  Vagones Situados
+                <label for="totalVagonesSituados" class="form-label small fw-semibold text-secondary">
+                  <i class="bi bi-pin-map me-2 text-primary"></i>Total Vagones Situados
                 </label>
                 <input
                   type="number"
-                  class="form-control form-control-sm border-secondary" style="margin-top: 19px;"
+                  class="form-control form-control-sm border-secondary mt-2"
                   id="totalVagonesSituados"
                   v-model="formData.total_vagones_situados"
                   :disabled="isExistingRecord"/>
@@ -81,15 +68,12 @@
             </div>
           </div>
 
-          <!-- Fila 3 -->
-          <div class="row mb-4 g-2">
-            <div class="col-md-6">
+          <!-- Fila 3 - Modificada -->
+          <div class="row row-cols-1 row-cols-md-2 g-3 mb-4">
+            <div class="col">
               <div class="form-group">
-                <label
-                  for="planTotalAcumulado"
-                  class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-graph-up me-2 text-primary"></i>Plan Total
-                  Acumulado Actual
+                <label for="planTotalAcumulado" class="form-label small fw-semibold text-secondary">
+                  <i class="bi bi-graph-up me-2 text-primary"></i>Plan Total Acumulado
                 </label>
                 <input 
                   type="number" 
@@ -100,13 +84,10 @@
               </div>
             </div>
 
-            <div class="col-md-6">
+            <div class="col">
               <div class="form-group">
-                <label
-                  for="realTotalAcumulado"
-                  class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-graph-up-arrow me-2 text-primary"></i>Real
-                  Total Acumulado Actual
+                <label for="realTotalAcumulado" class="form-label small fw-semibold text-secondary">
+                  <i class="bi bi-graph-up-arrow me-2 text-primary"></i>Real Total Acumulado
                 </label>
                 <input 
                   type="number" 
@@ -124,7 +105,6 @@
               <i class="bi bi-save me-1"></i>Guardar
             </button>
           </div>
-
         </form>
       </div>
     </div>
@@ -310,3 +290,19 @@ export default {
   },
 };
 </script>
+<style scoped>
+/* Estilos responsivos adicionales */
+@media (max-width: 768px) {
+  .form-label {
+    font-size: 0.8rem;
+  }
+  
+  .form-control {
+    font-size: 0.9rem;
+  }
+  
+  .card-body {
+    padding: 1rem !important;
+  }
+}
+</style>

@@ -335,20 +335,22 @@ export default {
       this.indiceEdicion = null;
     },
 
-    /*  async verificarInformeOperativo() {
+    async verificarInformeOperativo() {
       try {
-        this.formData.fecha = new Date().toISOString();
         const today = new Date();
         const fechaFormateada = `${today.getFullYear()}-${String(
           today.getMonth() + 1
         ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-        const response = await axios.get("/ufc/verificar-informe-existente/", {
-          params: { fecha_operacion: fechaFormateada },
-        });
+        const informeResponse = await axios.get(
+          "/ufc/verificar-informe-existente/",
+          {
+            params: { fecha_operacion: fechaFormateada },
+          }
+        );
 
-        if (response.data.existe) {
-          this.informeOperativoId = response.data.id;
+        if (informeResponse.data.existe) {
+          this.informeOperativoId = informeResponse.data.id;
           return true;
         }
         return false;
@@ -356,9 +358,11 @@ export default {
         console.error("Error al verificar informe:", error);
         return false;
       }
-    }, */
-
+    },
+    
     async guardarRotacion() {
+      // 1. Verificar si existe informe operativo para la fecha actual
+      const existeInforme = await this.verificarInformeOperativo();
       if (0) {
         Swal.fire(
           "Error",
@@ -369,7 +373,11 @@ export default {
         return;
       }
 
-      if (!this.nuevaRotacion.tipoEquipo || this.nuevaRotacion.vagonesEnServicio <= 0) {
+      // 2. Validar campos obligatorios
+      if (
+        !this.nuevaRotacion.tipoEquipo ||
+        this.nuevaRotacion.vagonesEnServicio <= 0
+      ) {
         Swal.fire(
           "Campos incompletos",
           "Por favor, complete todos los campos obligatorios.",
@@ -379,20 +387,38 @@ export default {
       }
 
       try {
+        // 3. Hacer POST real a la API
         const response = await axios.post("/ufc/rotaciones/", {
           tipo_equipo_ferroviario: this.nuevaRotacion.tipoEquipo,
           en_servicio: this.nuevaRotacion.vagonesEnServicio,
+          informe_operativo: this.informeOperativoId,
+        });
+        console.log("Esto es lo que se envia", {
+          tipo_equipo_ferroviario: this.nuevaRotacion.tipoEquipo,
+          en_servicio: this.nuevaRotacion.vagonesEnServicio,
+          informe_operativo: this.informeOperativoId,
         });
         await this.get_rotaciones();
-        Swal.fire("Éxito", "La rotación ha sido guardada correctamente.", "success");
+        // 4. Actualizar la tabla local con el nuevo registro desde la respuesta del backend
+
+        // 5. Mostrar mensaje de éxito y cerrar el modal
+        Swal.fire(
+          "Éxito",
+          "La rotación ha sido guardada correctamente.",
+          "success"
+        );
         this.cerrarModal();
       } catch (error) {
         console.error("Error al guardar la rotación:", error);
+
         let mensajeError = "Hubo un problema al guardar la rotación.";
         if (error.response && error.response.data) {
           const errores = error.response.data;
-          mensajeError = Object.values(errores).flat().join(" ") || "Hubo un problema al guardar la rotación.";
+          mensajeError =
+            Object.values(errores).flat().join(" ") ||
+            "Hubo un problema al guardar la rotación.";
         }
+
         Swal.fire("Error", mensajeError, "error");
       }
     },

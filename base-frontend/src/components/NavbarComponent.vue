@@ -360,29 +360,4 @@ export default {
   text-decoration: none !important;
 }
 
-
-/* Responsive */
-@media (max-width: 992px) {
-  .navbar {
-    width: 80px;
-  }
-  
-  .company-name, .company-slogan {
-    display: none;
-  }
-  
-  .nav-link span:not(.dropdown-indicator),
-  .submenu-link span {
-    display: none;
-  }
-  
-  .nav-link i,
-  .submenu-link i {
-    margin-right: 0 !important;
-  }
-  
-  .dropdown-indicator {
-    display: none;
-  }
-}
 </style>

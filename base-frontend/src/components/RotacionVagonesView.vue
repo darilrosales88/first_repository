@@ -245,7 +245,6 @@ export default {
     this.getEquipos();
   },
   methods: {
-
     async get_rotaciones() {
       this.loading = true; // Activa el estado de carga
       const today = new Date();
@@ -314,7 +313,6 @@ export default {
         this.loading = false; // Desactiva el estado de carga
       }
     },
-
     async getEquipos() {
       try {
         const response = await axios.get("/api/tipo-e-f-no-locomotora/");
@@ -324,7 +322,6 @@ export default {
         Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
       }
     },
-
     cerrarModal() {
       this.mostrarModal = false;
       this.nuevaRotacion = {
@@ -359,7 +356,7 @@ export default {
         return false;
       }
     },
-    
+
     async guardarRotacion() {
       // 1. Verificar si existe informe operativo para la fecha actual
       const existeInforme = await this.verificarInformeOperativo();
@@ -422,7 +419,6 @@ export default {
         Swal.fire("Error", mensajeError, "error");
       }
     },
-
     async actualizarRotacion() {
       if (
         !this.nuevaRotacion.tipoEquipo ||
@@ -446,6 +442,7 @@ export default {
           planRotacion: 0,
           realRotacion: 0,
         };
+
         Swal.fire(
           "Éxito",
           "La rotación ha sido actualizada correctamente.",
@@ -461,31 +458,40 @@ export default {
         );
       }
     },
-
     async eliminarRotacion(id) {
       try {
         const result = await Swal.fire({
-          title: "¿Estás seguro?",
-          text: "¡No podrás revertir esta acción!",
+          title: "¿Está seguro?",
+          text: "Esta acción no se puede deshacer.",
           icon: "warning",
           showCancelButton: true,
-          cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Cancelar',
-          cancelButtonColor: "#f1513f",
-          confirmButtonText: '<i class="bi bi-trash me-1"></i>Eliminar',
-          confirmButtonColor: "#007bff",
-          reverseButtons: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Sí, eliminar",
+          cancelButtonText: "Cancelar",
         });
 
         if (result.isConfirmed) {
           await axios.delete(`/ufc/rotaciones/${id}/`);
-          await Swal.fire("Eliminado", "El registro ha sido eliminado correctamente.", "success");
+
+          await Swal.fire(
+            "Eliminado",
+            "El registro ha sido eliminado correctamente.",
+            "success"
+          );
+
+          // Actualizar los datos sin recargar la página
           await this.get_rotaciones();
         }
       } catch (error) {
         console.error("Error al eliminar la rotación:", error);
-        Swal.fire("Error", "Ocurrió un error al eliminar el registro.", "error");
+        Swal.fire(
+          "Error",
+          "Ocurrió un error al eliminar el registro.",
+          "error"
+        );
       }
-      },
+    },
   },
 };
 </script>

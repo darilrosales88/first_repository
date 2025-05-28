@@ -112,8 +112,8 @@
 </template>
 
 <script>
-import Swal from 'sweetalert2';
-import axios from 'axios';
+import Swal from "sweetalert2";
+import axios from "axios";
 
 export default {
   name: "InfOperative",
@@ -122,14 +122,20 @@ export default {
       type: Date,
       required: true,
     },
+    fechaOperacion: {
+      type: Date,
+      required: true,
+    },
   },
   data() {
     return {
       informeOperativoId: null,
       isExistingRecord: false,
-      informeOperativoId: null,
-      fecha_actual:this.fechaActual,
+      fecha_actual: this.fechaActual,
+      fecha_operacion: this.fechaOperacion,
       formData: {
+        fecha_actual: "",
+        fecha_operacion: "",
         plan_mensual_total: 0,
         plan_diario_total_vagones_cargados: 0,
         real_total_vagones_cargados: 0,
@@ -145,11 +151,8 @@ export default {
     };
   },
   async mounted() {
-    // Check for existing record on load
-    console.log(this.fecha_actual)
+    await this.obtenerUsername(); //Busca el nombre del usuario
     await this.checkExistingRecord();
-
-    // Configurar el intervalo para verificar cada 10 segundos
   },
 
   beforeUnmount() {
@@ -158,6 +161,7 @@ export default {
       clearInterval(this.checkInterval);
     }
   },
+  
   methods: {
     visualizarInforme() {
       if (this.informeOperativoId) {
@@ -173,7 +177,7 @@ export default {
       try {
         // Enviar la fecha ya ajustada a la vista para ver si existe el parte
         const response = await axios.get("/ufc/verificar-informe-existente/", {
-          params: { fecha_operacion: this.fechaActual },
+          params: { fecha_operacion: this.fecha_actual },
         });
 
         if (response.data.existe) {
@@ -191,7 +195,7 @@ export default {
 
           // Formatear la fecha para mostrar solo YYYY-MM-DD
           if (recordResponse.data.fecha_operacion) {
-            this.fecha_actual= recordResponse.data.fecha_operacion;
+            this.fecha_actual = recordResponse.data.fecha_operacion;
             const today = new Date();
             const fechaFormateada = `${today.getFullYear()}-${String(
               today.getMonth() + 1
@@ -250,8 +254,7 @@ export default {
           creado_por: this.formData.creado_por,
           aprobado_por: this.formData.aprobado_por,
         };
-        
-        console.log(dataToSend)
+
         const response = await axios.post(
           "/ufc/informe-operativo/",
           dataToSend

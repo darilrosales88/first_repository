@@ -104,6 +104,15 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
         
         # Filtrado por fecha de operación
         fecha_operacion = self.request.query_params.get('fecha_operacion')
+        search_term = self.request.query_params.get('search', None)
+        if search_term:
+           queryset = queryset.prefetch_related('entidad').filter(
+            Q(entidad_detalle__icontains=search_term) |
+            Q(estado_parte__icontains=search_term) 
+            
+).distinct()
+        return queryset
+            
         if fecha_operacion:
             try:
                 # Parsear la fecha ignorando la hora si está presente
@@ -307,7 +316,8 @@ def verificar_informe_existente(request):
             return Response({
                 "existe": True,
                 "id": informe.id,
-                "fecha_operacion": informe.fecha_operacion
+                "fecha_operacion": informe.fecha_operacion,
+                "estado":informe.estado_parte,
             })
         return Response({"existe": False})
     except ValueError:

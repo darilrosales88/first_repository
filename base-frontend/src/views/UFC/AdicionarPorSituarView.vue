@@ -34,7 +34,9 @@
                 <select
                   class="form-select form-select-sm border-secondary" style="padding: 8px 12px;"
                   v-model="formData.tipo_origen"
-                  required>
+                  required
+                  oninvalid="this.setCustomValidity('Por favor, seleccione un tipo origen')"
+                  oninput="this.setCustomValidity('')">
                   <option value="" disabled>Seleccione un tipo</option>
                   <option
                     v-for="item in tipo_origen_options"
@@ -52,7 +54,9 @@
                   v-if="formData.tipo_origen && formData.tipo_origen !== 'puerto'"
                   class="form-select form-select-sm border-secondary" style="padding: 8px 12px;"
                   v-model="formData.origen"
-                  required>
+                  required
+                  oninvalid="this.setCustomValidity('Por favor, seleccione un origen')"
+                  oninput="this.setCustomValidity('')">                  
                   <option value=""  disabled>Seleccione un origen</option>
                   <option
                     v-for="entidad in entidades"
@@ -66,7 +70,9 @@
                   v-else-if="formData.tipo_origen === 'puerto'"
                   class="form-select form-select-sm border-secondary" style="padding: 8px 12px;"
                   v-model="formData.origen"
-                  required>
+                  required
+                  oninvalid="this.setCustomValidity('Por favor, seleccione un puerto')"
+                  oninput="this.setCustomValidity('')">
                   <option value="" disabled>Seleccione un puerto</option>
                   <option
                     v-for="puerto in puertos"
@@ -88,7 +94,9 @@
                   class="form-select form-select-sm border-secondary" style="padding: 8px 12px;"
                   v-model="formData.tipo_equipo"
                   @change="buscarEquipos"
-                  required>
+                  required
+                  oninvalid="this.setCustomValidity('Por favor, seleccione un tipo de equipo ferroviario')"
+                  oninput="this.setCustomValidity('')">
                   <option value="" disabled>Seleccione un tipo</option>
                   <option
                     v-for="equipo in equipos"
@@ -122,7 +130,9 @@
                   class="form-select form-select-sm border-secondary" style="padding: 8px 12px;"
                   v-model="formData.estado"
                   @change="handleEstadoChange"
-                  required>
+                  required
+                  oninvalid="this.setCustomValidity('Por favor, seleccione un estado')"
+                  oninput="this.setCustomValidity('')">
                   <option value="cargado">Cargado</option>
                   <option value="vacio">Vacío</option>
                 </select>
@@ -134,7 +144,9 @@
                 <select
                   class="form-select form-select-sm border-secondary" style="padding: 8px 12px;"
                   v-model="formData.operacion"
-                  required>
+                  required
+                  oninvalid="this.setCustomValidity('Por favor, seleccione una operacion')"
+                  oninput="this.setCustomValidity('')">
                   <option value="" disabled>Seleccione una operación</option>
                   <option
                     v-for="option in t_operacion_options"
@@ -146,7 +158,7 @@
               </div>
 
               <div class="mb-3">
-                <label for="producto" class="form-label small fw-semibold text-secondary">Productos <span v-if="formData.estado === 'cargado'" class="required"></span></label>
+                <label for="producto" class="form-label small fw-semibold text-secondary">Productos <span v-if="formData.estado === 'cargado'"></span></label>
                 <div class="ufc-input-with-action">
                   <div class="ufc-custom-select" @click="toggleProductosDropdown">
                     <div class="ufc-select-display">
@@ -1383,5 +1395,15 @@ button[type="submit"] {
     opacity: 1;
     transform: translateY(0);
   }
+}
+.form-select:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+  outline: 0;
+}
+.form-control:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+  outline: 0;
 }
 </style>

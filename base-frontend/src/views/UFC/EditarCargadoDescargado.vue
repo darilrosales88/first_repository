@@ -35,7 +35,7 @@
                     <select v-if="formData.tipo_origen !== 'puerto' && formData.tipo_origen != ''" class="form-select form-select-sm border-secondary" style="width:230px; padding-top:8px;padding-bottom:8px;"  v-model="formData.origen" id="origen" name="origen" required
                       oninvalid="this.setCustomValidity('Por favor, seleccione un origen')"
                       oninput="this.setCustomValidity('')">
-                      
+                      <option value="" disabled>Seleccione un destino</option>
                       <option v-for="entidad in entidades" :key="entidad.id" :value="entidad.nombre">
                         {{ entidad.id }}-{{ entidad.nombre }}
                       </option>
@@ -53,7 +53,7 @@
                       v-if="formData.tipo_origen == '' "
                       class="form-select form-select-sm border-secondary" style="width:230px; padding-top:8px;padding-bottom:8px;"
                       disabled>
-                      <option value="">Seleccione un tipo de destino</option>
+                      <option value="">Seleccione un tipo de origen</option>
                     </select>
                   </div>
                 </div>
@@ -358,11 +358,15 @@ export default {
     await this.getProductos();
     await this.getNoLocomotoras();
     await this.getEntidades();
-    this.filteredProductos = this.lista_productos;
-    this.closeDropdownsOnClickOutside();
     await this.getPuertos();
     await this.loadVagonData();
   },
+
+  mounted() {
+    this.filteredProductos = this.formData.lista_productos;
+    this.closeDropdownsOnClickOutside();
+  },
+
   methods: {
     async loadVagonData() {
       /* this.loading = true; */
@@ -738,7 +742,33 @@ export default {
       }
     },
 
-        toggleProductosDropdown() {
+    async getProductos() {
+      try {
+        let allProductos = [];
+        let nextPage = "/ufc/producto-vagon/";
+
+        while (nextPage) {
+          const response = await axios.get(nextPage);
+          allProductos = [...allProductos, ...response.data.results];
+          nextPage = response.data.next;
+        }
+
+        this.productos = allProductos.map((p) => ({
+          ...p,
+          id: p.id?.toString() || "",
+        }));
+      } catch (error) {
+        console.error("Error al obtener los productos:", error);
+        Swal.fire("Error", "Hubo un error al obtener los productos.", "error");
+      }
+    },
+
+    // Navegación
+    goBack() {
+      this.$router.go(-1);
+    },
+    
+    toggleProductosDropdown() {
       this.showProductosDropdown = !this.showProductosDropdown;
       if (this.showProductosDropdown) {
         this.productoSearch = "";
@@ -759,7 +789,7 @@ export default {
           producto.id.toString().includes(searchTerm)
       );
     },
-
+    
     toggleProductoSelection(productoId) {
       const index = this.formData.lista_productos.indexOf(productoId);
       if (index === -1) {
@@ -789,31 +819,25 @@ export default {
         }
       });
     },
-
-    async getProductos() {
-      try {
-        let allProductos = [];
-        let nextPage = "/ufc/producto-vagon/";
-
-        while (nextPage) {
-          const response = await axios.get(nextPage);
-          allProductos = [...allProductos, ...response.data.results];
-          nextPage = response.data.next;
+    volver_principal() {
+      event.preventDefault();
+      event.stopPropagation();
+      Swal.fire({
+        title: "¿Volver a la página principal?",
+        text: "Los datos no guardados se perderán",
+        icon: "warning",
+        showCancelButton: true,
+        cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Continuar',
+        cancelButtonColor: "#f1513f",
+        confirmButtonText: '<i class="bi bi-box-arrow-right me-1"></i>Volver',
+        confirmButtonColor: "#007bff",
+        reverseButtons: true,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.resetForm();
+          this.$router.push({ name: "InfoOperativo" });
         }
-
-        this.productos = allProductos.map((p) => ({
-          ...p,
-          id: p.id?.toString() || "",
-        }));
-      } catch (error) {
-        console.error("Error al obtener los productos:", error);
-        Swal.fire("Error", "Hubo un error al obtener los productos.", "error");
-      }
-    },
-
-    // Navegación
-    goBack() {
-      this.$router.go(-1);
+      });
     },
   },
 };
@@ -1261,4 +1285,5 @@ button[type="submit"] {
   box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
   outline: 0;
 }
+
 </style>

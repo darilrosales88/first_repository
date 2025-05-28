@@ -49,7 +49,9 @@
                   v-model="formData.tipo_origen"
                   id="tipo_origen"
                   name="tipo_origen"
-                  required
+                  required 
+                  oninvalid="this.setCustomValidity('Por favor, seleccione un tipo de origen')"
+                  oninput="this.setCustomValidity('')">
                   :disabled="isSubmitting"
                   @change="handleTipoOrigenChange"
                 >
@@ -81,8 +83,9 @@
                   id="origen"
                   name="origen"
                   required
-                  :disabled="isSubmitting"
-                >
+                  oninvalid="this.setCustomValidity('Por favor, seleccione un origen')"
+                  oninput="this.setCustomValidity('')">                  
+                  :disabled="isSubmitting">
                   <option value="" disabled>Seleccione un origen</option>
                   <option
                     v-for="entidad in entidades"
@@ -101,6 +104,8 @@
                   id="origen"
                   name="origen"
                   required
+                  oninvalid="this.setCustomValidity('Por favor, seleccione un puerto')"
+                  oninput="this.setCustomValidity('')">    
                   :disabled="isSubmitting"
                 >
                   <option value="" disabled>Seleccione un puerto</option>
@@ -138,9 +143,10 @@
                   id="tipo_equipo"
                   name="tipo_equipo"
                   @change="buscarEquipos"
-                  required
-                  :disabled="isSubmitting"
-                >
+                  required 
+                  oninvalid="this.setCustomValidity('Por favor, seleccione un tipo de equipo ferroviario')"
+                  oninput="this.setCustomValidity('')">    
+                  :disabled="isSubmitting">
                   <option value="" disabled>Seleccione un tipo</option>
                   <option
                     v-for="equipo in equipos"
@@ -206,8 +212,9 @@
                   id="estado"
                   name="estado"
                   required
-                  :disabled="isSubmitting"
-                >
+                  oninvalid="this.setCustomValidity('Por favor, seleccione un estado')"
+                  oninput="this.setCustomValidity('')">    
+                  :disabled="isSubmitting">
                   <option value="cargado">Cargado</option>
                   <option value="vacio">Vacio</option>
                 </select>
@@ -229,8 +236,9 @@
                   id="operacion"
                   name="operacion"
                   required
-                  :disabled="isSubmitting"
-                >
+                  oninvalid="this.setCustomValidity('Por favor, seleccione una operacion')"
+                  oninput="this.setCustomValidity('')">    
+                  :disabled="isSubmitting">
                   <option value="" disabled>Seleccione una operación</option>
                   <option
                     v-for="option in t_operacion_options"
@@ -352,7 +360,6 @@
                     id="pendiente_proximo_dia"
                     name="pendiente_proximo_dia"
                     min="0"
-                    required
                     :disabled="isSubmitting"
                   />
                 </div>
@@ -785,6 +792,7 @@ export default {
       this.formData.situados = this.vagonesAsociados.length;
 
       this.cerrarModalVagon();
+      }
     },
 
     eliminarVagon(index) {
@@ -903,9 +911,12 @@ export default {
         return;
       }
 
-      // 2. Verificar que el informe no esté aprobado
-      const informeNoAprobado = await this.verificarEstadoInforme();
-      if (!informeNoAprobado) {
+      // 2. Verificar que el informe no esté en estado "Aprobado"
+      const informeResponse = await axios.get(
+        `/ufc/informe-operativo/${this.informeOperativoId}/`
+      );
+      console.log("anijijijijiji", informeResponse.data.estado_parte);
+      if (informeResponse.data.estado_parte === "Aprobado") {
         Swal.fire(
           "Error",
           "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
@@ -1805,5 +1816,15 @@ button[type="submit"] {
     opacity: 1;
     transform: translateY(0);
   }
+}
+.form-select:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+  outline: 0;
+}
+.form-control:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+  outline: 0;
 }
 </style>

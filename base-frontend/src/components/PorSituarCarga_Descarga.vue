@@ -9,15 +9,23 @@
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <router-link v-if="hasGroup('AdminUFC')" to="/AdicionarPorSituar">
-            <button class="btn  btn-sm btn-primary">
-              <i class="bi bi-plus-circle me-1"></i>Agregar nuevo registro por situar
+            <button class="btn btn-sm btn-primary">
+              <i class="bi bi-plus-circle me-1"></i>Agregar nuevo registro por
+              situar
             </button>
           </router-link>
           <form @submit.prevent="search_producto" class="search-container">
             <div class="input-group">
-              <input type="search" class="form-control" placeholder="Tipo Origen,Origen,Tipo equipo,..." v-model="searchQuery"
-                @input="handleSearchInput"/>
-              <span class="position-absolute top-50 start-0 translate-middle-y ps-2">
+              <input
+                type="search"
+                class="form-control"
+                placeholder="Tipo Origen,Origen,Tipo equipo,..."
+                v-model="searchQuery"
+                @input="handleSearchInput"
+              />
+              <span
+                class="position-absolute top-50 start-0 translate-middle-y ps-2"
+              >
                 <i class="bi bi-search"></i>
               </span>
             </div>
@@ -33,12 +41,16 @@
                 <th scope="col">Origen</th>
                 <th scope="col">Tipo Equipo</th>
                 <th scope="col">Estado</th>
-				        <th scope="col">Operación</th>
+                <th scope="col">Operación</th>
                 <th scope="col">Producto</th>
-				        <th scope="col">Por Situar</th>
+                <th scope="col">Por Situar</th>
                 <th scope="col">Acciones</th>
               </tr>
-              <tr v-if="!busqueda_existente && porSituarCarga_Descarga.length != 0 ">
+              <tr
+                v-if="
+                  !busqueda_existente && porSituarCarga_Descarga.length != 0
+                "
+              >
                 <td colspan="9" class="text-center text-muted py-4">
                   <i class="bi bi-exclamation-circle fs-4"></i>
                   <p class="mt-2">
@@ -54,48 +66,69 @@
                   </div>
                   <div v-else>
                     <i class="bi bi-database-exclamation fs-4"></i>
-                    <p class="mt-2">
-                      No hay registros
-                    </p>
+                    <p class="mt-2">No hay registros</p>
                     <router-link to="/AdicionarPorSituar">
                       <button class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-circle me-1"></i>Crear primer registro
+                        <i class="bi bi-plus-circle me-1"></i>Crear primer
+                        registro
                       </button>
                     </router-link>
                   </div>
                 </td>
-              </tr>           
+              </tr>
             </thead>
             <tbody>
-              <tr v-for="(item, index) in porSituarCarga_Descarga" :key="item.id" class="align-middle">
+              <tr
+                v-for="(item, index) in porSituarCarga_Descarga"
+                :key="item.id"
+                class="align-middle"
+              >
                 <th scope="row">{{ index + 1 }}</th>
                 <td>{{ item.tipo_origen_name }}</td>
-                <td>{{ item.origen  }}</td>
-				        <td>{{ item.tipo_equipo_name  }}</td>
-                  <td class="ps-td">
-                  <span :class="`ps-status ps-status-${getStatusClass(item.estado)}`">
+                <td>{{ item.origen }}</td>
+                <td>{{ item.tipo_equipo_name }}</td>
+                <td class="ps-td">
+                  <span
+                    :class="`ps-status ps-status-${getStatusClass(
+                      item.estado
+                    )}`"
+                  >
                     {{ item.estado }}
                   </span>
-			          </td>
+                </td>
                 <td>{{ item.operacion }}</td>
                 <td class="ps-td">
-                  <span v-if="item.productos_info && item.productos_info.length > 0">
+                  <span
+                    v-if="item.productos_info && item.productos_info.length > 0"
+                  >
                     {{ getNombresProductos(item.productos_info) }}
                   </span>
-					        <span v-else>-</span>
-				        </td>
+                  <span v-else>-</span>
+                </td>
                 <td>{{ item.por_situar }}</td>
                 <td v-if="hasGroup('AdminUFC')">
                   <div class="d-flex">
-                    <button @click="viewDetails(item)" class="btn btn-sm btn-outline-info me-2" title="Ver detalles">
+                    <button
+                      @click="viewDetails(item)"
+                      class="btn btn-sm btn-outline-info me-2"
+                      title="Ver detalles"
+                    >
                       <i class="bi bi-eye-fill"></i>
                     </button>
 
-                    <button @click="editRegistroPorSituar(item)" class="btn btn-sm btn-outline-warning me-2" title="Editar">
+                    <button
+                      @click="editRegistroPorSituar(item)"
+                      class="btn btn-sm btn-outline-warning me-2"
+                      title="Editar"
+                    >
                       <i class="bi bi-pencil-square"></i>
                     </button>
 
-                    <button @click="confirmDelete(item.id)" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                    <button
+                      @click="confirmDelete(item.id)"
+                      class="btn btn-sm btn-outline-danger"
+                      title="Eliminar"
+                    >
                       <i class="bi bi-trash"></i>
                     </button>
                   </div>
@@ -124,7 +157,10 @@
                   {{ Math.ceil(totalItems / itemsPerPage) }}
                 </span>
               </li>
-              <li class="page-item" :class="{ disabled: currentPage * itemsPerPage >= totalItems }">
+              <li
+                class="page-item"
+                :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
+              >
                 <button class="page-link" @click="nextPage">
                   <i class="bi bi-chevron-right"></i>
                 </button>
@@ -133,15 +169,16 @@
           </nav>
 
           <!-- Modal Overlay - Fondo oscuro que se muestra cuando el modal está activo -->
-          <div v-if="showDetailsModal" class="ps-modal-overlay" @click.self="closeModal">
-            
+          <div
+            v-if="showDetailsModal"
+            class="ps-modal-overlay"
+            @click.self="closeModal"
+          >
             <!-- Contenedor principal del modal -->
             <div class="ps-modal">
-              
               <!-- Encabezado del modal -->
               <div class="ps-modal-header">
                 <div class="ps-modal-header-content">
-
                   <div class="ps-modal-icon-container">
                     <i class="bi bi-info-circle-fill ps-modal-icon"></i>
                   </div>
@@ -159,10 +196,8 @@
 
               <!-- Cuerpo del modal -->
               <div class="ps-modal-body">
-                
                 <!-- Grid de tarjetas de detalles -->
                 <div class="ps-detail-grid">
-                  
                   <!-- Tarjeta 1: Información Básica -->
                   <div class="ps-detail-card">
                     <div class="ps-detail-card-header">
@@ -170,15 +205,18 @@
                       <h4>Información Básica</h4>
                     </div>
                     <div class="ps-detail-card-body">
-                      
                       <!-- Item 1.1: Tipo Origen -->
                       <div class="ps-detail-item">
                         <span class="ps-detail-label">Tipo Origen:</span>
                         <span class="ps-detail-value">
-                          {{ currentRecord.tipo_origen_name || currentRecord.tipo_origen || "N/A" }}
+                          {{
+                            currentRecord.tipo_origen_name ||
+                            currentRecord.tipo_origen ||
+                            "N/A"
+                          }}
                         </span>
                       </div>
-                      
+
                       <!-- Item 1.2: Origen -->
                       <div class="ps-detail-item">
                         <span class="ps-detail-label">Origen:</span>
@@ -186,7 +224,7 @@
                           {{ currentRecord.origen || "N/A" }}
                         </span>
                       </div>
-                      
+
                       <!-- Item 1.3: Tipo de Equipo -->
                       <div class="ps-detail-item">
                         <span class="ps-detail-label">Tipo de Equipo:</span>
@@ -204,17 +242,20 @@
                       <h4>Estado y Operación</h4>
                     </div>
                     <div class="ps-detail-card-body">
-                      
                       <!-- Item 2.1: Estado -->
                       <div class="ps-detail-item">
                         <span class="ps-detail-label">Estado:</span>
                         <span class="ps-detail-value">
-                          <span :class="`ps-status ps-status-${getStatusClass(currentRecord.estado)}`">
+                          <span
+                            :class="`ps-status ps-status-${getStatusClass(
+                              currentRecord.estado
+                            )}`"
+                          >
                             {{ currentRecord.estado || "N/A" }}
                           </span>
                         </span>
                       </div>
-                      
+
                       <!-- Item 2.2: Operación -->
                       <div class="ps-detail-item">
                         <span class="ps-detail-label">Operación:</span>
@@ -222,13 +263,20 @@
                           {{ currentRecord.operacion || "N/A" }}
                         </span>
                       </div>
-                      
+
                       <!-- Item 2.3: Producto -->
                       <div class="ps-detail-item">
                         <span class="ps-detail-label">Producto:</span>
                         <span class="ps-detail-value">
-                          <span v-if="currentRecord.productos_info && currentRecord.productos_info.length > 0">
-                            {{ getNombresProductos(currentRecord.productos_info) }}
+                          <span
+                            v-if="
+                              currentRecord.productos_info &&
+                              currentRecord.productos_info.length > 0
+                            "
+                          >
+                            {{
+                              getNombresProductos(currentRecord.productos_info)
+                            }}
                           </span>
                           <span v-else>N/A</span>
                         </span>
@@ -243,7 +291,6 @@
                       <h4>Cantidad</h4>
                     </div>
                     <div class="ps-detail-card-body">
-                      
                       <!-- Item 3.1: Por Situar -->
                       <div class="ps-detail-item">
                         <span class="ps-detail-label">Por Situar:</span>
@@ -261,11 +308,13 @@
                       <h4>Observaciones</h4>
                     </div>
                     <div class="ps-detail-card-body">
-                      
                       <!-- Item 4.1: Observaciones -->
                       <div class="ps-detail-item">
                         <span class="ps-detail-value">
-                          {{ currentRecord.observaciones || "Ninguna observación registrada" }}
+                          {{
+                            currentRecord.observaciones ||
+                            "Ninguna observación registrada"
+                          }}
                         </span>
                       </div>
                     </div>
@@ -278,7 +327,6 @@
                       <h4>Meta Información</h4>
                     </div>
                     <div class="ps-detail-card-body">
-                      
                       <!-- Item 5.1: Fecha Creación -->
                       <div class="ps-detail-item">
                         <span class="ps-detail-label">Fecha Creación:</span>
@@ -293,17 +341,18 @@
 
               <!-- Pie del modal -->
               <div class="ps-modal-footer">
-                <button class="ps-modal-btn ps-modal-btn-secondary" @click="closeModal">
+                <button
+                  class="ps-modal-btn ps-modal-btn-secondary"
+                  @click="closeModal"
+                >
                   <i class="bi bi-x-circle"></i> Cerrar
                 </button>
               </div>
             </div>
           </div>
-
-          
         </div>
       </div>
-    </div> 
+    </div>
   </div>
 </template>
 
@@ -335,8 +384,8 @@ export default {
   },
 
   async mounted() {
-    await this.getPorSituarCarga_Descargas();
-    console.log('Hola',this.porSituarCarga_Descarga)
+    await this.getPorSituar();
+    console.log("Hola", this.porSituarCarga_Descarga);
     await this.fetchUserPermissionsAndGroups();
   },
 
@@ -352,7 +401,7 @@ export default {
 
       return "info";
     },
-	  getNombresProductos(productos) {
+    getNombresProductos(productos) {
       if (!productos || !Array.isArray(productos)) return "-";
       return productos
         .filter((p) => p && p.nombre_producto)
@@ -407,7 +456,7 @@ export default {
       }
     },
 
-    async getPorSituarCarga_Descargas() {
+    /*     async getPorSituarCarga_Descargas() {
       this.loading = true;
       try {
         const response = await axios.get("ufc/por-situar-hoy/", {
@@ -427,6 +476,40 @@ export default {
           error
         );
         this.busqueda_existente = false;
+      } finally {
+        this.loading = false;
+      }
+    }, */
+    async getPorSituar() {
+      this.loading = true;
+      const today = new Date();
+      const fechaFormateada = `${today.getFullYear()}-${String(
+        today.getMonth() + 1
+      ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+      try {
+        const infoID = await axios.get(
+          `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
+        );
+        this.estado_parte = infoID.data.estado;
+        if (infoID.data.existe) {
+          //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
+          const response = await axios.get("/ufc/por-situar/", {
+            params: {
+              page: this.currentPage,
+              page_size: this.itemsPerPage,
+              informe: infoID.data.id,
+            },
+          });
+          this.porSituarCarga_Descarga = response.data.results;
+          this.totalItems = response.data.count;
+        } else {
+          this.showErrorToast(
+            "Debe iniciar Guardando un parte de Informe Operativo "
+          );
+        }
+      } catch (error) {
+        console.error("Error al obtener datos:", error);
       } finally {
         this.loading = false;
       }
@@ -482,7 +565,7 @@ export default {
 
     async delete_tren(id) {
       try {
-        await axios.delete(`/ufc/por-situar-hoy/${id}/`);
+        await axios.delete(`/ufc/por-situar/${id}/`);
         this.porSituarCarga_Descarga = this.porSituarCarga_Descarga.filter(
           (objeto) => objeto.id !== id
         );
@@ -522,7 +605,7 @@ export default {
         }
       });
     },
-    
+
     // Método para manejar errores (similar al del componente que funciona)
     handleApiError(error, action) {
       let errorMsg = `Error al ${action}`;
@@ -542,7 +625,6 @@ export default {
 </script>
 
 <style scoped>
-
 .card-header {
   background-color: #f8f9fa;
   border-bottom: 2px solid #e0e0e0 !important;
@@ -752,7 +834,7 @@ export default {
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-  border-radius:10px;
+  border-radius: 10px;
   animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   overflow: hidden;
 }
@@ -762,7 +844,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color:#0d6efd;
+  background-color: #0d6efd;
   color: white;
   position: relative;
 }
@@ -858,7 +940,7 @@ export default {
 
 .ps-detail-card-header {
   padding: 1rem;
-  background-color:#0d6efd;
+  background-color: #0d6efd;
   color: white;
   border-bottom: 1px solid var(--ps-light-gray);
   display: flex;
@@ -970,5 +1052,4 @@ export default {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
 }
-
 </style>

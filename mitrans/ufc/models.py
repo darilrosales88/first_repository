@@ -1059,45 +1059,6 @@ class HistorialRotacionVagones(models.Model):
 
 #####-------------------Aqui termina UFC-----------------------------
 
-class ufc_informe_ccd(models.Model):    
-
-    fecha_operacion = models.DateTimeField(
-        auto_now_add=True, verbose_name="Fecha de operación", unique=True
-    )
-    fecha_actual = models.DateTimeField(
-        auto_now=True, verbose_name="Fecha actual", unique=True
-    )
-    
-    estado_parte = models.CharField(default="Creado",max_length=14)
-    provincia=models.ForeignKey(nom_provincia,on_delete=models.CASCADE,blank=True, null=True, verbose_name="Provincia")
-    creado_por=models.ForeignKey(CustomUser,on_delete=models.CASCADE, blank=True, null=True, verbose_name="Creado por: ", related_name="informe_creador" )
-    aprobado_por=models.ForeignKey(CustomUser,on_delete=models.CASCADE, blank=True,null=True, verbose_name="Aprobado por: ", related_name="informe_aprobador")
-    entidad = models.ForeignKey(
-        nom_entidades,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        verbose_name="Entidad de donde proviene el parte"
-    )
-    class Meta:
-        permissions = [
-            ("puede_rechazar_informe", "Puede rechazar informes operativos"),
-            ("puede_aprobar_informe", "Puede aprobar informes operativos"),
-            ("puede_cambiar_a_listo", "Puede cambiar el estado del informe a listo"),
-        ]
-        verbose_name = "Parte informe operativo"
-        verbose_name_plural = "Parte informe operativo"
-        ordering = ["-fecha_operacion"]
-    
-    def save(self, *args, **kwargs):
-        # Asignar entidad del creador si no está establecida
-        if not self.entidad and self.creado_por:
-            self.entidad = self.creado_por.entidad
-        super().save(*args, **kwargs)
-    
-    def __str__(self):
-        return f"ID Parte {self.id} -- Fecha de operación {self.fecha_operacion}"
-
 #*************************************************************************************************************************
 
 
@@ -1148,6 +1109,61 @@ class ufc_informe_ccd(models.Model):
 #     @property
 #     def producto_display(self):
 #         return f"{self.producto.nombre_producto} - {self.embalaje_display}"
+
+class ufc_informe_ccd(models.Model):    
+
+    fecha_operacion = models.DateTimeField(
+        auto_now_add=True, verbose_name="Fecha de operación", unique=True
+    )
+    fecha_actual = models.DateTimeField(
+        auto_now=True, verbose_name="Fecha actual", unique=True
+    )
+    
+    estado_parte = models.CharField(default="Creado",max_length=14)
+    provincia=models.ForeignKey(nom_provincia,on_delete=models.CASCADE,blank=True, null=True, verbose_name="Provincia")
+    creado_por = models.ForeignKey(
+    CustomUser,
+    on_delete=models.CASCADE, 
+    blank=True, 
+    null=True, 
+    verbose_name="Creado por: ", 
+    related_name="informe_ccd_creador"  # Cambiado
+)
+    aprobado_por = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE, 
+        blank=True,
+        null=True, 
+        verbose_name="Aprobado por: ", 
+        related_name="informe_ccd_aprobador"  # Cambiado
+    )
+    entidad = models.ForeignKey(
+        nom_entidades,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Entidad de donde proviene el parte"
+    )
+    class Meta:
+        permissions = [
+            ("puede_rechazar_informe", "Puede rechazar informes operativos"),
+            ("puede_aprobar_informe", "Puede aprobar informes operativos"),
+            ("puede_cambiar_a_listo", "Puede cambiar el estado del informe a listo"),
+        ]
+        verbose_name = "Parte informe operativo"
+        verbose_name_plural = "Parte informe operativo"
+        ordering = ["-fecha_operacion"]
+    
+    def save(self, *args, **kwargs):
+        # Asignar entidad del creador si no está establecida
+        if not self.entidad and self.creado_por:
+            self.entidad = self.creado_por.entidad
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"ID Parte {self.id} -- Fecha de operación {self.fecha_operacion}"
+
+
 
 
 
@@ -1341,7 +1357,7 @@ class CCD_Situado_Carga_Descarga(models.Model):
         default=1,
         validators=[
             RegexValidator(
-                regex="^[0-9]+$",
+                regex=r"^-?\d+$",
                 message="Solo se permiten números positivos",
                 code="invalid_situados",
             )
@@ -1378,7 +1394,7 @@ class CCD_Situado_Carga_Descarga(models.Model):
     class Meta:
         verbose_name = "CCD Situado"
         verbose_name_plural = "CCD Situados"
-        ordering = ['tipo_origen', 'origen']
+        ordering = ['origen']
         
     def delete(self, *args, **kwargs):
         try:
@@ -1690,7 +1706,7 @@ class CCD_por_situar(models.Model):
     class Meta:
         verbose_name = "CCD Por situar"
         verbose_name_plural = "CCD Por situar"
-        ordering = ['tipo_origen', 'origen']
+        ordering = ['origen']
 
     def delete(self, *args, **kwargs):
         try:

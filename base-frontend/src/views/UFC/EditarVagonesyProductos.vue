@@ -1,322 +1,147 @@
-<template>    
+<template>
   <Navbar-Component />
+  <div class="container py-3" style="margin-left: 25em; width: 60%">
+    <div class="card border">
+      <div class="card-header bg-light border-bottom">
+        <h5 class="mb-0 text-dark fw-semibold">
+          <i class="bi bi-clipboard-data me-2"></i>Nuevo registro de vagón con productos
+        </h5>
+      </div>
+      <div class="card-body p-3">
+        <form @submit.prevent="submitForm">
+          <div class="row mb-3 g-2">
+            <!-- Columna 1 -->
+            <div class="col-md-6">
+              <!-- Campo:Fecha de registro -->
+              <div class="mb-3">
+                <label for="fecha_registro" class="form-label small fw-semibold text-secondary">Fecha de registro</label>
+                <input type="text" class="form-control form-control-sm border-secondary" :value="formattedFechaRegistro" id="fecha_registro" name="fecha_registro" readonly/>
+              </div>
+              <!-- Campo: tipo_origen -->
+              <div class="mb-3">
+                <label for="tipo_origen" class="form-label small fw-semibold text-secondary">Tipo de Origen</label>
+                <select class="form-select form-select-sm border-secondary" v-model="formData.tipo_origen" id="tipo_origen" name="tipo_origen" required>
+                  <option value="ac_ccd">Acceso Comercial</option>
+                  <option value="puerto">Puerto</option>
+                </select>
+              </div>
 
-  <div class="container mt-2 px-6" style="padding-left: 10%">
-    <div class="row mb-4">
-      <h2 class="mb-4">Editar registro de vagón con productos</h2>
-      <form @submit.prevent="submitForm">
-        <div class="row">
-          <!-- Columna 1 -->
-          <div class="col-md-6">
-            <!-- Campo:Fecha de registro -->
-            <div class="mb-3">
-              <label for="fecha_registro" class="form-label">Fecha de registro</label>
-              <input
-                type="text"
-                class="form-control"
-                :value="formattedFechaRegistro"
-                id="fecha_registro"
-                name="fecha_registro"
-                readonly
-              />
-            </div>
+              <!-- Campo: origen -->
+              <div class="mb-3">
+                <label for="origen" class="form-label small fw-semibold text-secondary">Origen</label>
+                <select v-if="formData.tipo_origen !== 'puerto'" class="form-select form-select-sm border-secondary" v-model="formData.origen" id="origen"name="origen" required>
+                  <option v-for="entidad in entidades" :key="entidad.id" :value="entidad.nombre">
+                    {{ entidad.id }}-{{ entidad.nombre }}
+                  </option>
+                </select>
 
-            <!-- Campo: tipo_origen -->
-            <div class="mb-3">
-              <label for="tipo_origen" class="form-label"
-                >Tipo de Origen <span style="color: red">*</span></label
-              >
-              <select
-                class="form-select"
-                v-model="formData.tipo_origen"
-                id="tipo_origen"
-                name="tipo_origen"
-                required
-                :class="{ 'is-invalid': errors.tipo_origen }"
-              >
-                <option value="ac_ccd">Acceso Comercial</option>
-                <option value="puerto">Puerto</option>
-              </select>
-              <div class="invalid-feedback" v-if="errors.tipo_origen">
-                {{ errors.tipo_origen }}
+                <select v-else class="form-select" v-model="formData.origen" id="origen" name="origen" required>
+                  <option v-for="puerto in puertos" :key="puerto.id" :value="puerto.nombre_puerto">
+                    {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Campo: tipo_producto -->
+              <div class="mb-3">
+                <label for="tipo_producto" class="form-label small fw-semibold text-secondary">Tipo de Producto</label>
+                <select class="form-select form-select-sm border-secondary" v-model="formData.tipo_producto" id="tipo_producto" name="tipo_producto">
+                  <option value="producto">Producto</option>
+                  <option value="contenedor">Contenedor</option>
+                  <option value="combustible">Combustible</option>
+                </select>
+              </div>
+
+              <!-- Campo: tipo_combustible -->
+              <div class="mb-3" v-if="mostrarCampoCombustible">
+                <label for="tipo_combustible" class="form-label small fw-semibold text-secondary">Tipo de Combustible</label>
+                <select class="form-select" v-model="formData.tipo_combustible" id="tipo_combustible" name="tipo_combustible">
+                  <option value="combustible_blanco">Combustible blanco</option>
+                  <option value="combustible_negro">Combustible negro</option>
+                  <option value="combustible_turbo">Combustible turbo</option>
+                </select>
+              </div>
+
+              <!-- Campo: TEF -->
+              <div class="mb-3" v-if="mostrarCampoCombustible">
+                <label for="tipo_equipo_ferroviario" class="form-label small fw-semibold text-secondary">Tipo de equipo ferroviario</label>
+                <select class="form-select" v-model="formData.tipo_equipo_ferroviario" id="tipo_equipo_ferroviario" name="tipo_equipo_ferroviario" required>
+                  <option v-for="tipo_equipo_ferroviario in tipos_equipos_ferroviarios":key="tipo_equipo_ferroviario.id":value="tipo_equipo_ferroviario.id">
+                    {{ tipo_equipo_ferroviario.id }}-{{
+                      tipo_equipo_ferroviario.tipo_equipo_name}}-{{ tipo_equipo_ferroviario.descripcion }}
+                  </option>
+                </select>
               </div>
             </div>
 
-            <!-- Campo: origen -->
-            <div class="mb-3">
-              <label for="origen" class="form-label"
-                >Origen <span style="color: red">*</span></label
-              >
-              <select
-                v-if="formData.tipo_origen !== 'puerto'"
-                class="form-select"
-                v-model="formData.origen"
-                id="origen"
-                name="origen"
-                required
-                :class="{ 'is-invalid': errors.origen }"
-              >
-                <option
-                  v-for="entidad in entidades"
-                  :key="entidad.id"
-                  :value="entidad.nombre"
-                >
-                  {{ entidad.id }}-{{ entidad.nombre }}
-                </option>
-              </select>
+            <!-- Columna 2 -->
+            <div class="col-md-6">
+              <!-- Campo: plan_mensual -->
+              <div class="mb-3">
+                <label for="plan_mensual" class="form-label small fw-semibold text-secondary" >Plan mensual</label>
+                <input type="number" class="form-control form-control-sm border-secondary" v-model="formData.plan_mensual" id="plan_mensual" name="plan_mensual" required/>
+              </div>
 
-              <select
-                v-else
-                class="form-select"
-                v-model="formData.origen"
-                id="origen"
-                name="origen"
-                required
-                :class="{ 'is-invalid': errors.origen }"
-              >
-                <option
-                  v-for="puerto in puertos"
-                  :key="puerto.id"
-                  :value="puerto.nombre_puerto"
-                >
-                  {{ puerto.id }}- {{ puerto.nombre_puerto }}
-                </option>
-              </select>
-              <div class="invalid-feedback" v-if="errors.origen">
-                {{ errors.origen }}
+              <!-- Campo: plan_anual -->
+              <div class="mb-3">
+                <label for="plan_anual" class="form-label small fw-semibold text-secondary">Plan anual
+                  <span style="color: red" v-if="esPlanAnualEditable">*</span></label>
+                <input type="number" class="form-control form-control-sm border-secondary" v-model="formData.plan_anual" id="plan_anual" name="plan_anual" :readonly="!esPlanAnualEditable" :required="esPlanAnualEditable"/>
+              </div>
+
+              <!-- Campo: plan_acumulado_dia_anterior -->
+              <div class="mb-3" v-if="mostrarCamposAcumulados">
+                <label for="plan_acumulado_dia_anterior" class="form-label small fw-semibold text-secondary">Plan acumulado día anterior</label>
+                <input type="number" class="form-control form-control-sm border-secondary" v-model="formData.plan_acumulado_dia_anterior" id="plan_acumulado_dia_anterior" name="plan_acumulado_dia_anterior" readonly/>
+              </div>
+
+              <!-- Campo: real_acumulado_dia_anterior -->
+              <div class="mb-3" v-if="mostrarCamposAcumulados">
+                <label for="real_acumulado_dia_anterior" class="form-label small fw-semibold text-secondary">Real acumulado día anterior</label>
+                <input type="number" class="form-control form-control-sm border-secondary" v-model="formData.real_acumulado_dia_anterior" id="real_acumulado_dia_anterior" name="real_acumulado_dia_anterior" readonly/>
+              </div>
+
+              <!-- Campo: producto -->
+              <div class="mb-3" v-if="mostrarCampoProducto">
+                <label for="producto" class="form-label small fw-semibold text-secondary">
+                  Productos
+                  <button class="create-button ms-2" @click="abrirModalAgregarProducto">
+                    <i class="bi bi-plus-circle large-icon"></i>
+                  </button>
+                </label>
+                <select class="form-select" v-model="formData.lista_productos" id="producto" name="producto" multiple size="4">
+                  <option v-for="producto in productos" :key="producto.id":value="producto.id">
+                    {{ producto.id }}-{{ producto.producto_name }} -
+                    {{ producto.producto_codigo }}-{{producto.tipo_embalaje_name}}
+                  </option>
+                </select>
+                <small class="text-muted">Mantén presionado Ctrl o Shift para seleccionar múltiplesproductos</small>
               </div>
             </div>
-
-            <!-- Campo: tipo_producto -->
-            <div class="mb-3">
-              <label for="tipo_producto" class="form-label"
-                >Tipo de Producto</label
-              >
-              <select
-                class="form-select"
-                v-model="formData.tipo_producto"
-                id="tipo_producto"
-                name="tipo_producto"
-                :class="{ 'is-invalid': errors.tipo_producto }"
-              >
-                <option value="producto">Producto</option>
-                <option value="contenedor">Contenedor</option>
-                <option value="combustible">Combustible</option>
-              </select>
-              <div class="invalid-feedback" v-if="errors.tipo_producto">
-                {{ errors.tipo_producto }}
-              </div>
-            </div>
-
-            <!-- Campo: tipo_combustible -->
-            <div class="mb-3" v-if="mostrarCampoCombustible">
-              <label for="tipo_combustible" class="form-label"
-                >Tipo de Combustible</label
-              >
-              <select
-                class="form-select"
-                v-model="formData.tipo_combustible"
-                id="tipo_combustible"
-                name="tipo_combustible"
-                :class="{ 'is-invalid': errors.tipo_combustible }"
-              >
-                <option value="combustible_blanco">Combustible blanco</option>
-                <option value="combustible_negro">Combustible negro</option>
-                <option value="combustible_turbo">Combustible turbo</option>
-              </select>
-              <div class="invalid-feedback" v-if="errors.tipo_combustible">
-                {{ errors.tipo_combustible }}
-              </div>
-            </div>
-
-            <!-- Campo: TEF -->
-            <div class="mb-3" v-if="mostrarCampoCombustible">
-              <label for="tipo_equipo_ferroviario" class="form-label"
-                >Tipo de equipo ferroviario <span style="color: red">*</span></label
-              >
-              <select
-                class="form-select"
-                v-model="formData.tipo_equipo_ferroviario"
-                id="tipo_equipo_ferroviario"
-                name="tipo_equipo_ferroviario"
-                required
-                :class="{ 'is-invalid': errors.tipo_equipo_ferroviario }"
-              >
-                <option
-                  v-for="tipo_equipo_ferroviario in tipos_equipos_ferroviarios"
-                  :key="tipo_equipo_ferroviario.id"
-                  :value="tipo_equipo_ferroviario.id"
-                >
-                  {{ tipo_equipo_ferroviario.id }}-{{
-                  tipo_equipo_ferroviario.tipo_equipo_name }} -
-                  {{ tipo_equipo_ferroviario.descripcion }}
-                </option>
-              </select>
-              <small v-if="!formData.tipo_equipo_ferroviario && formData.original_equipo" class="text-muted">
-                Valor actual: {{ formData.original_equipo }}
-              </small>
-              <div class="invalid-feedback" v-if="errors.tipo_equipo_ferroviario">
-                {{ errors.tipo_equipo_ferroviario }}
-              </div>
-            </div>  
-          </div>
-
-          <!-- Columna 2 -->
-          <div class="col-md-6">
-            <!-- Campo: plan_mensual -->
-            <div class="mb-3">
-              <label for="plan_mensual" class="form-label"
-                >Plan mensual <span style="color: red">*</span></label
-              >
-              <input
-                type="number"
-                class="form-control"
-                v-model="formData.plan_mensual"
-                id="plan_mensual"
-                name="plan_mensual"
-                required
-                :class="{ 'is-invalid': errors.plan_mensual }"
-              />
-              <div class="invalid-feedback" v-if="errors.plan_mensual">
-                {{ errors.plan_mensual }}
-              </div>
-            </div>
-
-            <!-- Campo: plan_anual -->
-            <div class="mb-3">
-              <label for="plan_anual" class="form-label"
-                >Plan anual <span style="color: red" v-if="esPlanAnualEditable">*</span></label
-              >
-              <input
-                type="number"
-                class="form-control"
-                v-model="formData.plan_anual"
-                id="plan_anual"
-                name="plan_anual"
-                :readonly="!esPlanAnualEditable"
-                :required="esPlanAnualEditable"
-                :class="{ 'is-invalid': errors.plan_anual }"
-              />
-              <div class="invalid-feedback" v-if="errors.plan_anual">
-                {{ errors.plan_anual }}
-              </div>
-            </div>
-
-            <!-- Campo: plan_acumulado_dia_anterior -->
-            <div class="mb-3" v-if="mostrarCamposAcumulados">
-              <label for="plan_acumulado_dia_anterior" class="form-label"
-                >Plan acumulado día anterior</label
-              >
-              <input
-                type="number"
-                class="form-control"
-                v-model="formData.plan_acumulado_dia_anterior"
-                id="plan_acumulado_dia_anterior"
-                name="plan_acumulado_dia_anterior"
-                readonly
-              />
-            </div>
-
-            <!-- Campo: real_acumulado_dia_anterior -->
-            <div class="mb-3" v-if="mostrarCamposAcumulados">
-              <label for="real_acumulado_dia_anterior" class="form-label"
-                >Real acumulado día anterior</label
-              >
-              <input
-                type="number"
-                class="form-control"
-                v-model="formData.real_acumulado_dia_anterior"
-                id="real_acumulado_dia_anterior"
-                name="real_acumulado_dia_anterior"
-                readonly
-              />
-            </div>
-
-            <!-- Campo: producto -->
-            <div class="mb-3" v-if="mostrarCampoProducto">
-              <label for="producto" class="form-label">
-                Productos
-                <button class="create-button ms-2" @click="abrirModalAgregarProducto">
-                  <i class="bi bi-plus-circle large-icon"></i>
-                </button>
-              </label>
-              <div v-if="productos.length === 0" class="alert alert-warning">
-                No se pudieron cargar los productos disponibles
-              </div>
-              <select
-                v-else
-                class="form-select"
-                v-model="formData.lista_productos"
-                id="producto"
-                name="producto"
-                multiple
-                size="4"
-              >
-                <option
-                  v-for="producto in productos"
-                  :key="producto.id"
-                  :value="producto.id"
-                >
-                  {{ producto.id }}-{{ producto.producto_name }} -
-                  {{ producto.producto_codigo }}-{{ producto.tipo_embalaje_name }}
-                </option>
-              </select>
-              <small class="text-muted">Mantén presionado Ctrl o Shift para seleccionar múltiples productos</small>
-              
-              <!-- Mostrar productos actuales si hay discrepancia -->
-              <div v-if="formData.original_productos.length > 0" class="mt-3">
-                <h6>Productos actualmente asociados:</h6>
-                <ul>
-                  <li v-for="(prod, index) in formData.original_productos" :key="index">
-                    {{ prod.id }} - {{ prod.producto_name || prod.nombre_producto || 'Producto sin nombre' }}
-                  </li>
-                </ul>
-              </div>
-            </div>
-
             <!-- Campo: observaciones -->
-            <div class="mb-3">
-              <label for="observaciones" class="form-label"
-                >Observaciones</label
-              >
-              <textarea
-                class="form-control"
-                v-model="formData.observaciones"
-                id="observaciones"
-                name="observaciones"
-                rows="3"
-                :class="{ 'is-invalid': errors.observaciones }"
-              ></textarea>
-              <div class="invalid-feedback" v-if="errors.observaciones">
-                {{ errors.observaciones }}
+              <div class="mb-3">
+                <label for="observaciones" class="form-label small text-secondary">Observaciones</label>
+                <textarea class="form-control form-control-sm border-secondary" v-model="formData.observaciones" id="observaciones" name="observaciones" rows="3"></textarea>
               </div>
+          </div>
+          <div class="modal-footer">
+            <div class=" d-flex justify-content-between align-items-center mb-4">
+              <button class="ufc-button secondary" @click="volver_principal">
+                <i class="bi bi-x-circle" me-1></i>Cancelar
+              </button>
+              <button type="submit" class=" ufc-button primary" >
+                <i class="bi bi-check-circle" me-1></i>Agregar
+              </button>
             </div>
           </div>
-        </div>
-
-        <!-- Botón de envío -->
-        <div class="text-center">
-          <button
-            type="submit"
-            class="btn btn-primary"
-            :disabled="loading"
-          >
-            <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            Guardar cambios
-          </button>
-          <button @click="volver_principal" class="btn btn-secondary">Volver</button>
-        </div>
-      </form>
+        </form>
+      </div>
+      
     </div>
-    <br>
   </div>
-
+  <br/>
   <!-- Modal para agregar producto -->
-  <ModalAgregarProductoVagonesProductos
-    v-if="mostrarModalProducto"
-    :visible="mostrarModalProducto"
-    @cerrar-modal="cerrarModalAddProducto"
-  />
+  <ModalAgregarProductoVagonesProductos v-if="mostrarModalProducto" :visible="mostrarModalProducto" @cerrar-modal="cerrarModalAddProducto"/>
 </template>
 
 <script>
@@ -583,7 +408,7 @@ export default {
           this.loading = false;
       }
     },
-
+    
     // Envío del formulario
     async submitForm() {
         this.loading = true;
@@ -642,6 +467,7 @@ export default {
             });
         } catch (error) {
           console.error("Error al guardar:", error.response);
+        
         
           // Manejar errores de validación del backend
           if (error.response?.status === 400) {
@@ -781,94 +607,105 @@ export default {
   },
 };
 </script>
-  
-  <style scoped>
-  .create-button {
-    text-decoration: none;
-    color: green;
-    margin-left: 940px;
-  }
-  
-  .form-container {
-    max-width: 300px;
-    margin: 50px;
-    padding: 20px;
-    background-color: f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  h2 {
-    font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
-    text-align: left;
-    margin-bottom: 20px;
-    font-size: 20px;
-  }
-  
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .form-group {
-    text-align: left;
-    display: flex;
-    width: 260px;
-    flex-direction: column;
-    gap: 5px;
-    font-size: 14px;
-  }
-  
-  label {
-    font-weight: bold;
-  }
-  
-  input,
-  select {
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  
-  .form-buttons {
-    display: flex;
-    justify-content: end;
-    font-size: 15px;
-  }
-  
-  button {
-    margin-left: 10px;
-    padding: 5px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-  }
-  
-  button[type="button"] {
-    background-color: #007bff;
+ <style scoped>
+
+.ufc-button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 1 rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ufc-button.primary:hover {
+  background: #003d8f;
+}
+
+.ufc-button.secondary {
+    background:rgb(241, 81, 63);
     color: white;
-  }
-  
-  button[type="submit"] {
-    margin-left: 15px;
-    background-color: #007bff;
-    color: white;
-  }
-  
-  /* Estilos para validación */
-  .is-invalid {
-    border-color: #dc3545;
-  }
-  
-  .invalid-feedback {
-    color: #dc3545;
-    font-size: 0.875em;
-  }
-  
-  /* Estilos para loading */
-  .spinner-border {
-    margin-right: 5px;
-  }
-  </style>
+}
+
+.ufc-button.secondary:hover {
+    background:rgb(228, 56, 37);
+}
+
+.create-button {
+  text-decoration: none;
+  color: green;
+  margin-left: 940px;
+}
+
+.form-container {
+  max-width: 300px;
+  margin: 50px;
+  padding: 20px;
+  background-color: f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  text-align: left;
+  margin-bottom: 20px;
+  font-size: 20px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  text-align: left;
+  display: flex;
+  width: 260px;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 14px;
+}
+
+label {
+  font-weight: bold;
+}
+
+input,
+select {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.form-buttons {
+  display: flex;
+  justify-content: end;
+  font-size: 15px;
+}
+
+button {
+  margin-left: 10px;
+  padding: 5px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button[type="button"] {
+  background-color: #007bff;
+  color: white;
+}
+
+button[type="submit"] {
+  margin-left: 15px;
+  background-color: #007bff;
+  color: white;
+}
+</style>

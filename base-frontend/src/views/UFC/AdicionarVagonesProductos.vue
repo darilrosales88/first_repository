@@ -1,251 +1,293 @@
 <template>
   <Navbar-Component />
-  <div class="container mt-2 px-6" style="padding-left: 10%">
-    <div class="row mb-4">
-      <h2 class="mb-4">Nuevo registro de vagón con productos</h2>
-      <form @submit.prevent="submitForm">
-        <div class="row">
-          <!-- Columna 1 -->
-          <div class="col-md-6">
-            <!-- Campo:Fecha de registro -->
-            <div class="mb-3">
-              <label for="fecha_registro" class="form-label"
-                >Fecha de registro</label
-              >
-              <input
-                type="text"
-                class="form-control"
-                :value="formattedFechaRegistro"
-                id="fecha_registro"
-                name="fecha_registro"
-                readonly
-              />
-            </div>
-            <!-- Campo: tipo_origen -->
-            <div class="mb-3">
-              <label for="tipo_origen" class="form-label"
-                >Tipo de Origen <span style="color: red">*</span></label
-              >
-              <select
-                class="form-select"
-                v-model="formData.tipo_origen"
-                id="tipo_origen"
-                name="tipo_origen"
-                required
-              >
-                <option value="ac_ccd">Acceso Comercial</option>
-                <option value="puerto">Puerto</option>
-              </select>
-            </div>
-
-            <!-- Campo: origen -->
-            <div class="mb-3">
-              <label for="origen" class="form-label"
-                >Origen <span style="color: red">*</span></label
-              >
-              <select
-                v-if="formData.tipo_origen !== 'puerto'"
-                class="form-select"
-                v-model="formData.origen"
-                id="origen"
-                name="origen"
-                required
-              >
-                <option
-                  v-for="entidad in entidades"
-                  :key="entidad.id"
-                  :value="entidad.nombre"
+  <div class="container py-3" style="margin-left: 25em; width: 60%">
+    <div class="card border">
+      <div class="card-header bg-light border-bottom">
+        <h5 class="mb-0 text-dark fw-semibold">
+          <i class="bi bi-clipboard-data me-2"></i>Nuevo registro de vagón con
+          productos
+        </h5>
+      </div>
+      <div class="card-body p-3">
+        <form @submit.prevent="submitForm">
+          <div class="row mb-3 g-2">
+            <!-- Columna 1 -->
+            <div class="col-md-6">
+              <!-- Campo:Fecha de registro -->
+              <div class="mb-3">
+                <label
+                  for="fecha_registro"
+                  class="form-label small fw-semibold text-secondary"
+                  >Fecha de registro</label
                 >
-                  {{ entidad.id }}-{{ entidad.nombre }}
-                </option>
-              </select>
-
-              <select
-                v-else
-                class="form-select"
-                v-model="formData.origen"
-                id="origen"
-                name="origen"
-                required
-              >
-                <option
-                  v-for="puerto in puertos"
-                  :key="puerto.id"
-                  :value="puerto.nombre_puerto"
+                <input
+                  type="text"
+                  class="form-control form-control-sm border-secondary"
+                  :value="formattedFechaRegistro"
+                  id="fecha_registro"
+                  name="fecha_registro"
+                  readonly
+                />
+              </div>
+              <!-- Campo: tipo_origen -->
+              <div class="mb-3">
+                <label
+                  for="tipo_origen"
+                  class="form-label small fw-semibold text-secondary"
+                  >Tipo de Origen</label
                 >
-                  {{ puerto.id }}- {{ puerto.nombre_puerto }}
-                </option>
-              </select>
-            </div>
-            <!-- Campo: tipo_producto -->
-            <div class="mb-3">
-              <label for="tipo_producto" class="form-label"
-                >Tipo de Producto</label
-              >
-              <select
-                class="form-select"
-                v-model="formData.tipo_producto"
-                id="tipo_producto"
-                name="tipo_producto"
-              >
-                <option value="producto">Producto</option>
-                <option value="contenedor">Contenedor</option>
-                <option value="combustible">Combustible</option>
-              </select>
-            </div>
-            <!-- Campo: tipo_combustible -->
-            <div class="mb-3" v-if="mostrarCampoCombustible">
-              <label for="tipo_combustible" class="form-label"
-                >Tipo de Combustible</label
-              >
-              <select
-                class="form-select"
-                v-model="formData.tipo_combustible"
-                id="tipo_combustible"
-                name="tipo_combustible"
-              >
-                <option value="combustible_blanco">Combustible blanco</option>
-                <option value="combustible_negro">Combustible negro</option>
-                <option value="combustible_turbo">Combustible turbo</option>
-              </select>
-            </div>
-            <!-- Campo: TEF -->
-            <div class="mb-3" v-if="mostrarCampoCombustible">
-              <label for="tipo_equipo_ferroviario" class="form-label"
-                >Tipo de equipo ferroviario
-                <span style="color: red">*</span></label
-              >
-              <select
-                class="form-select"
-                v-model="formData.tipo_equipo_ferroviario"
-                id="tipo_equipo_ferroviario"
-                name="tipo_equipo_ferroviario"
-                required
-              >
-                <option
-                  v-for="tipo_equipo_ferroviario in tipos_equipos_ferroviarios"
-                  :key="tipo_equipo_ferroviario.id"
-                  :value="tipo_equipo_ferroviario.id"
+                <select
+                  class="form-select form-select-sm border-secondary"
+                  v-model="formData.tipo_origen"
+                  id="tipo_origen"
+                  name="tipo_origen"
+                  required
                 >
-                  {{ tipo_equipo_ferroviario.id }}-{{
-                    tipo_equipo_ferroviario.tipo_equipo_name
-                  }}
-                  -
-                  {{ tipo_equipo_ferroviario.descripcion }}
-                </option>
-              </select>
-            </div>
-          </div>
+                  <option value="" disabled>Seleccione un tipo</option>
+                  <option value="ac_ccd">Acceso Comercial</option>
+                  <option value="puerto">Puerto</option>
+                </select>
+              </div>
 
-          <!-- Columna 2 -->
-          <div class="col-md-6">
-            <!-- Campo: plan_mensual -->
-            <div class="mb-3">
-              <label for="plan_mensual" class="form-label"
-                >Plan mensual <span style="color: red">*</span></label
-              >
-              <input
-                type="number"
-                class="form-control"
-                v-model="formData.plan_mensual"
-                id="plan_mensual"
-                name="plan_mensual"
-                required
-              />
-            </div>
-
-            <!-- Campo: plan_anual -->
-            <div class="mb-3">
-              <label for="plan_anual" class="form-label"
-                >Plan anual
-                <span style="color: red" v-if="esPlanAnualEditable"
-                  >*</span
-                ></label
-              >
-              <input
-                type="number"
-                class="form-control"
-                v-model="formData.plan_anual"
-                id="plan_anual"
-                name="plan_anual"
-                :readonly="!esPlanAnualEditable"
-                :required="esPlanAnualEditable"
-              />
-            </div>
-
-            <!-- Campo: plan_acumulado_dia_anterior -->
-            <div class="mb-3" v-if="mostrarCamposAcumulados">
-              <label for="plan_acumulado_dia_anterior" class="form-label"
-                >Plan acumulado día anterior</label
-              >
-              <input
-                type="number"
-                class="form-control"
-                v-model="formData.plan_acumulado_dia_anterior"
-                id="plan_acumulado_dia_anterior"
-                name="plan_acumulado_dia_anterior"
-                readonly
-              />
-            </div>
-
-            <!-- Campo: real_acumulado_dia_anterior -->
-            <div class="mb-3" v-if="mostrarCamposAcumulados">
-              <label for="real_acumulado_dia_anterior" class="form-label"
-                >Real acumulado día anterior</label
-              >
-              <input
-                type="number"
-                class="form-control"
-                v-model="formData.real_acumulado_dia_anterior"
-                id="real_acumulado_dia_anterior"
-                name="real_acumulado_dia_anterior"
-                readonly
-              />
-            </div>
-
-            <!-- Campo: producto -->
-            <div class="mb-3" v-if="mostrarCampoProducto">
-              <label for="producto" class="form-label">
-                Productos
-                <button
-                  class="create-button ms-2"
-                  @click="abrirModalAgregarProducto"
+              <!-- Campo: origen -->
+              <div class="mb-3">
+                <label
+                  for="origen"
+                  class="form-label small fw-semibold text-secondary"
+                  >Origen</label
                 >
-                  <i class="bi bi-plus-circle large-icon"></i>
-                </button>
-              </label>
-              <select
-                class="form-select"
-                v-model="formData.lista_productos"
-                id="producto"
-                name="producto"
-                multiple
-                size="4"
-              >
-                <option
-                  v-for="producto in productos"
-                  :key="producto.id"
-                  :value="producto.id"
+                <select
+                  v-if="
+                    formData.tipo_origen && formData.tipo_origen !== 'puerto'
+                  "
+                  class="form-select form-select-sm border-secondary"
+                  v-model="formData.origen"
+                  id="origen"
+                  name="origen"
+                  required
                 >
-                  {{ producto.id }}-{{ producto.producto_name }} -
-                  {{ producto.producto_codigo }}-{{
-                    producto.tipo_embalaje_name
-                  }}
-                </option>
-              </select>
-              <small class="text-muted"
-                >Mantén presionado Ctrl o Shift para seleccionar múltiples
-                productos</small
-              >
+                  <option value="" disabled>Seleccione un origen</option>
+                  <option
+                    v-for="entidad in entidades"
+                    :key="entidad.id"
+                    :value="entidad.nombre"
+                  >
+                    {{ entidad.id }}-{{ entidad.nombre }}
+                  </option>
+                </select>
+
+                <select
+                  v-else-if="formData.tipo_origen === 'puerto'"
+                  class="form-select form-select-sm border-secondary"
+                  v-model="formData.origen"
+                  id="origen"
+                  name="origen"
+                  required
+                >
+                  <option value="" disabled>Seleccione un puerto</option>
+                  <option
+                    v-for="puerto in puertos"
+                    :key="puerto.id"
+                    :value="puerto.nombre_puerto"
+                  >
+                    {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                  </option>
+                </select>
+
+                <select
+                  v-else
+                  class="form-select form-select-sm border-secondary"
+                  disabled
+                >
+                  <option value="">Seleccione primero el tipo de origen</option>
+                </select>
+              </div>
+
+              <!-- Campo: tipo_producto -->
+              <div class="mb-3">
+                <label
+                  for="tipo_producto"
+                  class="form-label small fw-semibold text-secondary"
+                  >Tipo de Producto</label
+                >
+                <select
+                  class="form-select form-select-sm border-secondary"
+                  v-model="formData.tipo_producto"
+                  id="tipo_producto"
+                  name="tipo_producto"
+                >
+                  <option value="producto">Producto</option>
+                  <option value="contenedor">Contenedor</option>
+                  <option value="combustible">Combustible</option>
+                </select>
+              </div>
+
+              <!-- Campo: tipo_combustible -->
+              <div class="mb-3" v-if="mostrarCampoCombustible">
+                <label
+                  for="tipo_combustible"
+                  class="form-label small fw-semibold text-secondary"
+                  >Tipo de Combustible</label
+                >
+                <select
+                  class="form-select"
+                  v-model="formData.tipo_combustible"
+                  id="tipo_combustible"
+                  name="tipo_combustible"
+                >
+                  <option value="combustible_blanco">Combustible blanco</option>
+                  <option value="combustible_negro">Combustible negro</option>
+                  <option value="combustible_turbo">Combustible turbo</option>
+                </select>
+              </div>
+
+              <!-- Campo: TEF -->
+              <div class="mb-3" v-if="mostrarCampoCombustible">
+                <label
+                  for="tipo_equipo_ferroviario"
+                  class="form-label small fw-semibold text-secondary"
+                  >Tipo de equipo ferroviario</label
+                >
+                <select
+                  class="form-select"
+                  v-model="formData.tipo_equipo_ferroviario"
+                  id="tipo_equipo_ferroviario"
+                  name="tipo_equipo_ferroviario"
+                  required
+                >
+                  <option
+                    v-for="tipo_equipo_ferroviario in tipos_equipos_ferroviarios"
+                    :key="tipo_equipo_ferroviario.id"
+                    :value="tipo_equipo_ferroviario.id"
+                  >
+                    {{ tipo_equipo_ferroviario.id }}-{{
+                      tipo_equipo_ferroviario.tipo_equipo_name
+                    }}-{{ tipo_equipo_ferroviario.descripcion }}
+                  </option>
+                </select>
+              </div>
             </div>
 
+            <!-- Columna 2 -->
+            <div class="col-md-6">
+              <!-- Campo: plan_mensual -->
+              <div class="mb-3">
+                <label
+                  for="plan_mensual"
+                  class="form-label small fw-semibold text-secondary"
+                  >Plan mensual</label
+                >
+                <input
+                  type="number"
+                  class="form-control form-control-sm border-secondary"
+                  v-model="formData.plan_mensual"
+                  id="plan_mensual"
+                  name="plan_mensual"
+                  required
+                />
+              </div>
+
+              <!-- Campo: plan_anual -->
+              <div class="mb-3">
+                <label
+                  for="plan_anual"
+                  class="form-label small fw-semibold text-secondary"
+                  >Plan anual
+                  <span style="color: red" v-if="esPlanAnualEditable"
+                    >*</span
+                  ></label
+                >
+                <input
+                  type="number"
+                  class="form-control form-control-sm border-secondary"
+                  v-model="formData.plan_anual"
+                  id="plan_anual"
+                  name="plan_anual"
+                  :readonly="!esPlanAnualEditable"
+                  :required="esPlanAnualEditable"
+                />
+              </div>
+
+              <!-- Campo: plan_acumulado_dia_anterior -->
+              <div class="mb-3" v-if="mostrarCamposAcumulados">
+                <label
+                  for="plan_acumulado_dia_anterior"
+                  class="form-label small fw-semibold text-secondary"
+                  >Plan acumulado día anterior</label
+                >
+                <input
+                  type="number"
+                  class="form-control form-control-sm border-secondary"
+                  v-model="formData.plan_acumulado_dia_anterior"
+                  id="plan_acumulado_dia_anterior"
+                  name="plan_acumulado_dia_anterior"
+                  readonly
+                />
+              </div>
+
+              <!-- Campo: real_acumulado_dia_anterior -->
+              <div class="mb-3" v-if="mostrarCamposAcumulados">
+                <label
+                  for="real_acumulado_dia_anterior"
+                  class="form-label small fw-semibold text-secondary"
+                  >Real acumulado día anterior</label
+                >
+                <input
+                  type="number"
+                  class="form-control form-control-sm border-secondary"
+                  v-model="formData.real_acumulado_dia_anterior"
+                  id="real_acumulado_dia_anterior"
+                  name="real_acumulado_dia_anterior"
+                  readonly
+                />
+              </div>
+
+              <!-- Campo: producto -->
+              <div class="mb-3" v-if="mostrarCampoProducto">
+                <label
+                  for="producto"
+                  class="form-label small fw-semibold text-secondary"
+                >
+                  Productos
+                  <button
+                    class="create-button ms-2"
+                    @click="abrirModalAgregarProducto"
+                  >
+                    <i class="bi bi-plus-circle large-icon"></i>
+                  </button>
+                </label>
+                <select
+                  class="form-select"
+                  v-model="formData.lista_productos"
+                  id="producto"
+                  name="producto"
+                  multiple
+                  size="4"
+                >
+                  <option
+                    v-for="producto in productos"
+                    :key="producto.id"
+                    :value="producto.id"
+                  >
+                    {{ producto.id }}-{{ producto.producto_name }} -
+                    {{ producto.producto_codigo }}-{{
+                      producto.tipo_embalaje_name
+                    }}
+                  </option>
+                </select>
+                <small class="text-muted"
+                  >Mantén presionado Ctrl o Shift para seleccionar
+                  múltiplesproductos</small
+                >
+              </div>
+            </div>
             <!-- Campo: observaciones -->
             <div class="mb-3">
-              <label for="observaciones" class="form-label"
+              <label for="observaciones" class="form-label small text-secondary"
                 >Observaciones</label
               >
               <textarea
-                class="form-control"
+                class="form-control form-control-sm border-secondary"
                 v-model="formData.observaciones"
                 id="observaciones"
                 name="observaciones"
@@ -253,21 +295,21 @@
               ></textarea>
             </div>
           </div>
-        </div>
-
-        <!-- Botón de envío -->
-        <div class="text-center">
-          <button type="submit" class="btn btn-primary">Guardar</button>
-          <button @click="volver_principal" class="btn btn-secondary">
-            Volver
-          </button>
-        </div>
-      </form>
+          <div class="modal-footer">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <button class="ufc-button secondary" @click="volver_principal">
+                <i class="bi bi-x-circle" me-1></i>Cancelar
+              </button>
+              <button type="submit" class="ufc-button primary">
+                <i class="bi bi-check-circle" me-1></i>Agregar
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
-
-    <br />
   </div>
-
+  <br />
   <!-- Modal para agregar producto -->
   <ModalAgregarProductoVagonesProductos
     v-if="mostrarModalProducto"
@@ -295,7 +337,7 @@ export default {
       mostrarModalProducto: false,
       formData: {
         tipo_equipo_ferroviario: "",
-        tipo_origen: "ac_ccd",
+        tipo_origen: "",
         origen: "",
         tipo_combustible: "",
         tipo_producto: "",
@@ -569,7 +611,24 @@ export default {
     },
 
     volver_principal() {
-      this.$router.push({ name: "InfoOperativo" });
+      event.preventDefault();
+      event.stopPropagation();
+      Swal.fire({
+        title: "¿Volver a la página principal?",
+        text: "Los datos no guardados se perderán",
+        icon: "warning",
+        showCancelButton: true,
+        cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Continuar',
+        cancelButtonColor: "#f1513f",
+        confirmButtonText: '<i class="bi bi-box-arrow-right me-1"></i>Volver',
+        confirmButtonColor: "#007bff",
+        reverseButtons: true,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.resetForm();
+          this.$router.push({ name: "InfoOperativo" });
+        }
+      });
     },
 
     // Método para verificar fecha y estado de informes
@@ -711,6 +770,32 @@ export default {
 </script>
 
 <style scoped>
+.ufc-button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 1 rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ufc-button.primary:hover {
+  background: #003d8f;
+}
+
+.ufc-button.secondary {
+  background: rgb(241, 81, 63);
+  color: white;
+}
+
+.ufc-button.secondary:hover {
+  background: rgb(228, 56, 37);
+}
+
 .create-button {
   text-decoration: none;
   color: green;

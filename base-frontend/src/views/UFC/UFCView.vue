@@ -1,35 +1,6 @@
 <template>
-  <div
-    style="
-      background-color: #002a68;
-      color: white;
-      text-align: right;
-      padding: 1px;
-    "
-  >
-    <h6>Bienvenido:</h6>
-  </div>
-  <br />
   <NavbarComponent />
-  <br />
-  <h3>Registro de partes de UFC</h3>
-  <br />
-  <br />
-
-  <router-link
-    style="margin-right: 1em"
-    to="/InfoOperativo"
-    class="btn btn-primary"
-    >Informe Operativo</router-link
-  >
-  <router-link
-    style="margin-right: 28em"
-    to="/CCD-Producto"
-    class="btn btn-primary"
-    
-    >CCD por producto</router-link
-  >
-  <div class="d-flex justify-content-center">
+  <div style="margin-left: 16em; width: 80%">
     <RegistrosPartesUFC />
   </div>
 </template>

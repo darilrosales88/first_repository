@@ -1,25 +1,73 @@
 <template>
-  <nav class="navbar navbar-expand d-flex flex-column align-items-start navbar-dark p-0" style="width: 250px;" role="navigation" aria-label="Main navigation">
+  <nav
+    class="navbar navbar-expand d-flex flex-column align-items-start navbar-dark p-0"
+    style="width: 250px"
+    role="navigation"
+    aria-label="Main navigation"
+  >
     <!-- Logo/Texto de la empresa -->
     <div class="logo-container">
       <h1 class="company-name">MITRANS</h1>
       <p class="company-slogan">Transporte y Logística</p>
     </div>
-    
+
     <!-- Contenedor principal del menú con scroll -->
     <div>
       <ul class="navbar-nav w-100 flex-column">
-        <li v-for="(item, index) in menuItems" :key="index" class="nav-item" @click="insertRouteMain(item.title)">
-          <a class="nav-link px-3 py-3 d-flex align-items-center" role="button" @click="toggleDropdown(index)" :aria-expanded="isOpen(index)" :aria-controls="'submenu-' + index">
-              <span><i style="margin-right:10px;":class="`bi bi-${item.icon} me-3 fs-5`"></i>{{ item.title }}
-                <span v-if="item.title != 'Home' && item.title != 'Reportes' && item.title != 'Cerrar sesión'" class="dropdown-indicator" aria-hidden="true">
-                  {{ isOpen(index) ? '↑' : '↓' }}
-                </span>
+        <li
+          v-for="(item, index) in menuItems"
+          :key="index"
+          class="nav-item"
+          @click="insertRouteMain(item.title)"
+        >
+          <a
+            class="nav-link px-3 py-3 d-flex align-items-center"
+            role="button"
+            @click="toggleDropdown(index)"
+            :aria-expanded="isOpen(index)"
+            :aria-controls="'submenu-' + index"
+          >
+            <span
+              ><i
+                style="margin-right: 10px"
+                :class="`bi bi-${item.icon} me-3 fs-5`"
+              ></i
+              >{{ item.title }}
+              <span
+                v-if="
+                  item.title != 'Home' &&
+                  item.title != 'Reportes' &&
+                  item.title != 'Cerrar sesión'
+                "
+                class="dropdown-indicator"
+                aria-hidden="true"
+              >
+                {{ isOpen(index) ? "↑" : "↓" }}
               </span>
+            </span>
           </a>
-          <ul :id="'submenu-' + index" class="submenu w-100 flex-column" v-show="isOpen(index)" role="menu">
-            <li v-for="(subitem, subindex) in item.submenu" :key="subindex" class="submenu-item" role="menuitem">
-              <a class="submenu-link px-3 py-3 d-flex align-items-center" role="button" @click="insertRoute(subitem.route)"><i style="margin-right:10px;":class="`bi bi-${subitem.icon} me-3 fs-5`"></i>  {{ subitem.title}} </a>
+          <ul
+            :id="'submenu-' + index"
+            class="submenu w-100 flex-column"
+            v-show="isOpen(index)"
+            role="menu"
+          >
+            <li
+              v-for="(subitem, subindex) in item.submenu"
+              :key="subindex"
+              class="submenu-item"
+              role="menuitem"
+            >
+              <a
+                class="submenu-link px-3 py-3 d-flex align-items-center"
+                role="button"
+                @click="insertRoute(subitem.route)"
+                ><i
+                  style="margin-right: 10px"
+                  :class="`bi bi-${subitem.icon} me-3 fs-5`"
+                ></i>
+                {{ subitem.title }}
+              </a>
             </li>
           </ul>
         </li>
@@ -32,9 +80,8 @@
         <div class="bubble bubble-5"></div>
       </div>
     </div>
-    
-    <!-- Contenedor de burbujas (fijo al final) -->
 
+    <!-- Contenedor de burbujas (fijo al final) -->
   </nav>
 </template>
 
@@ -58,55 +105,91 @@ export default {
           title: "Seguridad",
           icon: "shield-lock",
           submenu: [
-            {title:"Usuarios", route:'/Usuarios',icon:'person'},
-            {title:"Grupos",route:'/groups',icon:'people'},
-            {title:"Trazas",route:'/Trazas',icon:'list-check'},
+            { title: "Usuarios", route: "/Usuarios", icon: "person" },
+            { title: "Grupos", route: "/groups", icon: "people" },
+            { title: "Trazas", route: "/Trazas", icon: "list-check" },
           ],
         },
         {
           title: "Nomencladores",
-          icon:"list-task",
+          icon: "list-task",
           submenu: [
-            {title:'Atraques', route:'/Atraques',icon:'bounding-box'},
-            {title:"Cargos", route:'/Cargos',icon:'person-badge'},
-            {title:"Contenedores", route:'/contenedor',icon:'box-seam'},
-            {title:"Destinos", route:'/Destino',icon:'geo-alt'},
-            {title:"Embarcaciones", route:'/Embarcaciones',icon:'ship'},
-            {title:"Entidades", route:'/Entidades',icon:'building'},
-            {title:"Equipos ferroviarios", route:'/EquipoFerro',icon:'train-freight-front'},
-            {title:"Estados técnicos", route:'/EstadoTecnico',icon:'tools'},
-            {title:"Estructuras de ubicación", route:'/EstructuraUbicacion',icon:'layers'},
-            {title:"Incidencias", route:'/Incidencias',icon:'exclamation-triangle'},
-            {title:"OSDE/OACE u organismo", route:'/Organismos',icon:'building-gear'},
-            {title:"Países", route:'/Paises',icon:'globe-americas'},
-            {title:"Productos", route:'/Producto',icon:'box-seam'},
-            {title:"Provincias", route:'/Provincia',icon:'map'},
-            {title:"Puertos", route:'/Puertos',icon:'harbor'},
-            {title:"Terminales", route:'/Terminal',icon:'terminal'},
-            {title:"Territorios", route:'/Territorio',icon:'pin-map'},
-            {title:"Tipos de embalajes", route:'/TipoEmbalaje',icon:'box-seam'},
-            {title:"Tipos de equipos ferroviarios", route:'/TipoEquipoFerro',icon:'train-lightrail-front'},
-            {title:"Tipos de estructuras", route:'/TipoEstructuraUbicacion',icon:'layer-forward'},
-            {title:"Tipos de maniobras", route:'/TipoManiobra',icon:'arrow-left-right'},
-            {title:"Unidades de medida", route:'/UM',icon:'rulers'},
+            { title: "Atraques", route: "/Atraques", icon: "bounding-box" },
+            { title: "Cargos", route: "/Cargos", icon: "person-badge" },
+            { title: "Contenedores", route: "/contenedor", icon: "box-seam" },
+            { title: "Destinos", route: "/Destino", icon: "geo-alt" },
+            { title: "Embarcaciones", route: "/Embarcaciones", icon: "ship" },
+            { title: "Entidades", route: "/Entidades", icon: "building" },
+            {
+              title: "Equipos ferroviarios",
+              route: "/EquipoFerro",
+              icon: "train-freight-front",
+            },
+            {
+              title: "Estados técnicos",
+              route: "/EstadoTecnico",
+              icon: "tools",
+            },
+            {
+              title: "Estructuras de ubicación",
+              route: "/EstructuraUbicacion",
+              icon: "layers",
+            },
+            {
+              title: "Incidencias",
+              route: "/Incidencias",
+              icon: "exclamation-triangle",
+            },
+            {
+              title: "OSDE/OACE u organismo",
+              route: "/Organismos",
+              icon: "building-gear",
+            },
+            { title: "Países", route: "/Paises", icon: "globe-americas" },
+            { title: "Productos", route: "/Producto", icon: "box-seam" },
+            { title: "Provincias", route: "/Provincia", icon: "map" },
+            { title: "Puertos", route: "/Puertos", icon: "harbor" },
+            { title: "Terminales", route: "/Terminal", icon: "terminal" },
+            { title: "Territorios", route: "/Territorio", icon: "pin-map" },
+            {
+              title: "Tipos de embalajes",
+              route: "/TipoEmbalaje",
+              icon: "box-seam",
+            },
+            {
+              title: "Tipos de equipos ferroviarios",
+              route: "/TipoEquipoFerro",
+              icon: "train-lightrail-front",
+            },
+            {
+              title: "Tipos de estructuras",
+              route: "/TipoEstructuraUbicacion",
+              icon: "layer-forward",
+            },
+            {
+              title: "Tipos de maniobras",
+              route: "/TipoManiobra",
+              icon: "arrow-left-right",
+            },
+            { title: "Unidades de medida", route: "/UM", icon: "rulers" },
           ],
         },
         {
           title: "Partes",
-          icon:"file-earmark-text",
+          icon: "file-earmark-text",
           submenu: [
-            {title:"Informes Aprobados", route:'/ufc'},
-            {title:"Informe Operativo", route:'/InfoOperativo'},
-            {title:"CCD Producto", route:''},
+            { title: "Registro de Informes", route: "/ufc" },
+            { title: "Informe Operativo", route: "/InfoOperativo" },
+            { title: "CCD Producto", route: "" },
           ],
         },
         {
           title: "Reportes",
-          icon:"file-earmark-bar-graph",
+          icon: "file-earmark-bar-graph",
         },
         {
           title: "Cerrar sesión",
-          icon:"box-arrow-right",
+          icon: "box-arrow-right",
         },
       ],
     };
@@ -125,19 +208,17 @@ export default {
     isOpen(index) {
       return this.openIndexes == index;
     },
-    insertRouteMain(title){
-      if(title == 'Home'){
-        this.$router.push('/home');
-      }
-      else if(title == 'Reportes'){
-        this.$router.push('/reportes');
-      }
-      else if(title == 'Cerrar sesión'){
+    insertRouteMain(title) {
+      if (title == "Home") {
+        this.$router.push("/home");
+      } else if (title == "Reportes") {
+        this.$router.push("/reportes");
+      } else if (title == "Cerrar sesión") {
         this.logout();
       }
     },
-    insertRoute(route){
-      console.log(route)
+    insertRoute(route) {
+      console.log(route);
       this.$router.push(route);
     },
     hasPermission(permission) {
@@ -169,7 +250,7 @@ export default {
         localStorage.removeItem("username");
         localStorage.removeItem("userid");
         this.$store.commit("removeToken");
-        this.$store.commit('setAuthentication', false);
+        this.$store.commit("setAuthentication", false);
         this.$router.push("/");
       } catch (error) {
         console.log(JSON.stringify(error));
@@ -242,8 +323,6 @@ export default {
   color: white;
   letter-spacing: 1px;
 }
-
-
 
 /* Contenedor de burbujas (fijo al final) */
 .bubbles-container {
@@ -360,5 +439,4 @@ export default {
   border-radius: 5px;
   text-decoration: none !important;
 }
-
 </style>

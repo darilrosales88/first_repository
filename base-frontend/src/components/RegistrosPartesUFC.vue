@@ -96,13 +96,23 @@
                 <!-- Acciones -->
                 <td>
                   <div class="d-flex">
-                    <button
+                    <router-link
+                      :to="{
+                        name: 'VisualizarInfoOperative',
+                        params: { id: informe.id },
+                      }"
+                      class="btn btn-sm btn-outline-info me-2"
+                      title="Editar"
+                    >
+                      <i class="bi bi-eye-fill"></i>
+                    </router-link>
+                    <!-- <button
                       @click="viewDetails(informe)"
                       class="btn btn-sm btn-outline-info me-2"
                       title="Ver detalles"
                     >
                       <i class="bi bi-eye-fill"></i>
-                    </button>
+                    </button> -->
 
                     <!-- <router-link :to="{ name: 'EditarInformeOperativo', params: { id: informe.id },}" class="btn btn-sm btn-outline-warning me-2" title="Editar"
                     v-if="informe.estado_parte !== 'Aprobado'">
@@ -442,7 +452,7 @@ export default {
 
     async viewDetails(informe) {
       this.loading = true;
-      try {
+      /*       try {
         const response = await axios.get(
           `/ufc/informe-operativo/${informe.id}/`
         );
@@ -453,7 +463,7 @@ export default {
         this.showErrorToast("No se pudieron cargar los detalles completos");
       } finally {
         this.loading = false;
-      }
+      } */
     },
 
     closeDetailsModal() {

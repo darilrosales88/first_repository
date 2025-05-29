@@ -315,6 +315,7 @@ export default {
 
     async fetchUserPermissionsAndGroups() {
       this.loadingPermissions = true;
+      console.log("Este es el id del informe operativo", this.$route.params.id);
       try {
         const userId = localStorage.getItem("userid");
         if (userId) {

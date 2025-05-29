@@ -1,14 +1,14 @@
 # Validación de Permisos y Grupos de Usuarios
 
-## Requisitos funcionales pinchando en talla
+## Arreglo de Endpoints en el front
 
-- Vagones y Productos
-- Registros Por Situar
-- Registros Situados
-- Cargados 2 +2
-- Registros Pendientes
-- Registros en trenes
-- Listo pal cliente casi
+- Entrenes (check)
+- Por situar (Check)
+- carga/descarga (+- Falta corregir el editar para que se guarde una cantidad variable de vagones y no solamente la cantidad que fue creado)
+- Arrastre (check)
+- situados (check)
+- vagones productos ()
+- rotacion ()
 
 ## Notas de Revision Antes de la Reunion Viernes 9 de Mayo
 

@@ -202,7 +202,8 @@ export default {
         localStorage.setItem("token", token);
         localStorage.setItem("username", username);
         axios.defaults.headers.common["Authorization"] = "Token " + token;
-        this.$store.commit("setAuthentication", true);
+        this.$store.commit('setAuthentication', true);
+
         const userResponse = await axios.get("/api/v1/users/me/");
         localStorage.setItem("userid", userResponse.data.id);
 

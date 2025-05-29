@@ -1,224 +1,87 @@
 <template>
-  <nav class="navbar">
-    <!-- Burbujas animadas de fondo -->
-    <div class="bubbles">
-      <div class="bubble bubble-1"></div>
-      <div class="bubble bubble-2"></div>
-      <div class="bubble bubble-3"></div>
-      <div class="bubble bubble-4"></div>
-      <div class="bubble bubble-5"></div>
-    </div>
-
+  <nav
+    class="navbar navbar-expand d-flex flex-column align-items-start navbar-dark p-0"
+    style="width: 250px"
+    role="navigation"
+    aria-label="Main navigation"
+  >
     <!-- Logo/Texto de la empresa -->
     <div class="logo-container">
       <h1 class="company-name">MITRANS</h1>
       <p class="company-slogan">Transporte y Logística</p>
     </div>
 
-    <!-- Lista de elementos del menú -->
-    <ul class="navbar-nav">
-      <li class="nav-item home-item">
-        <router-link to="/home" class="nav-link">
-          <i class="bi bi-houses-fill"></i>
-          <span>Inicio</span>
-        </router-link>
-      </li>
-
-      <!-- Elemento Seguridad -->
-      <li class="nav-item dropdown" v-if="hasGroup('Admin')">
-        <div class="nav-link" @click="toggleDropdown('Seguridad')">
-          <i class="bi bi-shield-lock"></i>
-          <span>Seguridad</span>
-          <i class="bi bi-chevron-right dropdown-arrow"></i>
-        </div>
-        <div class="submenu" v-if="activeDropdown === 'Seguridad'">
-          <h3 class="submenu-title">Seguridad</h3>
-          <ul class="submenu-items">
-            <li>
-              <router-link to="/Usuarios" class="submenu-link"
-                >Usuarios</router-link
+    <!-- Contenedor principal del menú con scroll -->
+    <div>
+      <ul class="navbar-nav w-100 flex-column">
+        <li
+          v-for="(item, index) in menuItems"
+          :key="index"
+          class="nav-item"
+          @click="insertRouteMain(item.title)"
+        >
+          <a
+            class="nav-link px-3 py-3 d-flex align-items-center"
+            role="button"
+            @click="toggleDropdown(index)"
+            :aria-expanded="isOpen(index)"
+            :aria-controls="'submenu-' + index"
+          >
+            <span
+              ><i
+                style="margin-right: 10px"
+                :class="`bi bi-${item.icon} me-3 fs-5`"
+              ></i
+              >{{ item.title }}
+              <span
+                v-if="
+                  item.title != 'Home' &&
+                  item.title != 'Reportes' &&
+                  item.title != 'Cerrar sesión'
+                "
+                class="dropdown-indicator"
+                aria-hidden="true"
               >
-            </li>
-            <li>
-              <router-link to="/groups" class="submenu-link"
-                >Grupos</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/Trazas" class="submenu-link"
-                >Trazas</router-link
-              >
+                {{ isOpen(index) ? "↑" : "↓" }}
+              </span>
+            </span>
+          </a>
+          <ul
+            :id="'submenu-' + index"
+            class="submenu w-100 flex-column"
+            v-show="isOpen(index)"
+            role="menu"
+          >
+            <li
+              v-for="(subitem, subindex) in item.submenu"
+              :key="subindex"
+              class="submenu-item"
+              role="menuitem"
+            >
+              <a
+                class="submenu-link px-3 py-3 d-flex align-items-center"
+                role="button"
+                @click="insertRoute(subitem.route)"
+                ><i
+                  style="margin-right: 10px"
+                  :class="`bi bi-${subitem.icon} me-3 fs-5`"
+                ></i>
+                {{ subitem.title }}
+              </a>
             </li>
           </ul>
-        </div>
-      </li>
-
-      <!-- Elemento Nomencladores -->
-      <li class="nav-item dropdown">
-        <div class="nav-link" @click="toggleDropdown('Nomencladores')">
-          <i class="bi bi-list-task"></i>
-          <span>Nomencladores</span>
-          <i class="bi bi-chevron-right dropdown-arrow"></i>
-        </div>
-        <div class="submenu" v-if="activeDropdown === 'Nomencladores'">
-          <h3 class="submenu-title">Nomencladores</h3>
-          <ul class="submenu-items scrollable-menu">
-            <li>
-              <router-link to="/Atraques" class="submenu-link"
-                >Atraques</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/Cargos" class="submenu-link"
-                >Cargos</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/contenedor" class="submenu-link"
-                >Contenedores</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/Destino" class="submenu-link"
-                >Destinos</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/Embarcaciones" class="submenu-link"
-                >Embarcaciones</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/Entidades" class="submenu-link"
-                >Entidades</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/EquipoFerro" class="submenu-link"
-                >Equipos ferroviarios</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/EstadoTecnico" class="submenu-link"
-                >Estados técnicos</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/EstructuraUbicacion" class="submenu-link"
-                >Estructuras de ubicación</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/Incidencias" class="submenu-link"
-                >Incidencias</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/Organismos" class="submenu-link"
-                >OSDE/OACE u organismo</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/Paises" class="submenu-link"
-                >Países</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/Producto" class="submenu-link"
-                >Productos</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/Provincia" class="submenu-link"
-                >Provincias</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/Puertos" class="submenu-link"
-                >Puertos</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/Terminal" class="submenu-link"
-                >Terminales</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/Territorio" class="submenu-link"
-                >Territorios</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/TipoEmbalaje" class="submenu-link"
-                >Tipos de embalajes</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/TipoEquipoFerro" class="submenu-link"
-                >Tipos de equipos ferroviarios</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/TipoEstructuraUbicacion" class="submenu-link"
-                >Tipos de estructuras de ubicacion</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/TipoManiobra" class="submenu-link"
-                >Tipos de maniobras</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/UM" class="submenu-link"
-                >Unidades de medida</router-link
-              >
-            </li>
-          </ul>
-        </div>
-      </li>
-
-      <!-- Elemento Partes -->
-      <li class="nav-item dropdown">
-        <div class="nav-link" @click="toggleDropdown('Partes')">
-          <i class="bi bi-file-earmark-text"></i>
-          <span>Partes</span>
-          <i class="bi bi-chevron-right dropdown-arrow"></i>
-        </div>
-        <div class="submenu" v-if="activeDropdown === 'Partes'">
-          <h3 class="submenu-title">Partes</h3>
-          <ul class="submenu-items scrollable-menu">
-            <li><a class="submenu-link" href="#">GEMAR</a></li>
-            <li><a class="submenu-link" href="#">EMCARGA</a></li>
-            <li><a class="submenu-link" href="#">ETAG</a></li>
-            <li><a class="submenu-link" href="#">ENOC</a></li>
-            <li>
-              <router-link to="/ufc" class="submenu-link">UFC</router-link>
-            </li>
-            <li><a class="submenu-link" href="#">GEA</a></li>
-            <li><a class="submenu-link" href="#">MINCIN</a></li>
-            <li><a class="submenu-link" href="#">GEIA</a></li>
-            <li><a class="submenu-link" href="#">AZCUBA</a></li>
-            <li><a class="submenu-link" href="#">GECEM</a></li>
-          </ul>
-        </div>
-      </li>
-
-      <!-- Elemento Reportes -->
-      <li class="nav-item">
-        <a class="nav-link">
-          <i class="bi bi-file-earmark-bar-graph"></i>
-          <span>Reportes</span>
-        </a>
-      </li>
-    </ul>
-
-    <!-- Botón de cerrar sesión -->
-    <div class="logout-container" @click="logout">
-      <div class="logout-content">
-        <i class="bi bi-box-arrow-right"></i>
-        <span class="logout-text">Cerrar sesión</span>
+        </li>
+      </ul>
+      <div class="bubbles-container">
+        <div class="bubble bubble-1"></div>
+        <div class="bubble bubble-2"></div>
+        <div class="bubble bubble-3"></div>
+        <div class="bubble bubble-4"></div>
+        <div class="bubble bubble-5"></div>
       </div>
     </div>
+
+    <!-- Contenedor de burbujas (fijo al final) -->
   </nav>
 </template>
 
@@ -231,14 +94,133 @@ export default {
     return {
       userPermissions: [],
       userGroups: [],
-      activeDropdown: null,
-      username: localStorage.getItem("username") || "Usuario",
+      openIndexes: -1,
+      iconName: "house",
+      menuItems: [
+        {
+          title: "Home",
+          icon: "houses-fill",
+        },
+        {
+          title: "Seguridad",
+          icon: "shield-lock",
+          submenu: [
+            { title: "Usuarios", route: "/Usuarios", icon: "person" },
+            { title: "Grupos", route: "/groups", icon: "people" },
+            { title: "Trazas", route: "/Trazas", icon: "list-check" },
+          ],
+        },
+        {
+          title: "Nomencladores",
+          icon: "list-task",
+          submenu: [
+            { title: "Atraques", route: "/Atraques", icon: "bounding-box" },
+            { title: "Cargos", route: "/Cargos", icon: "person-badge" },
+            { title: "Contenedores", route: "/contenedor", icon: "box-seam" },
+            { title: "Destinos", route: "/Destino", icon: "geo-alt" },
+            { title: "Embarcaciones", route: "/Embarcaciones", icon: "ship" },
+            { title: "Entidades", route: "/Entidades", icon: "building" },
+            {
+              title: "Equipos ferroviarios",
+              route: "/EquipoFerro",
+              icon: "train-freight-front",
+            },
+            {
+              title: "Estados técnicos",
+              route: "/EstadoTecnico",
+              icon: "tools",
+            },
+            {
+              title: "Estructuras de ubicación",
+              route: "/EstructuraUbicacion",
+              icon: "layers",
+            },
+            {
+              title: "Incidencias",
+              route: "/Incidencias",
+              icon: "exclamation-triangle",
+            },
+            {
+              title: "OSDE/OACE u organismo",
+              route: "/Organismos",
+              icon: "building-gear",
+            },
+            { title: "Países", route: "/Paises", icon: "globe-americas" },
+            { title: "Productos", route: "/Producto", icon: "box-seam" },
+            { title: "Provincias", route: "/Provincia", icon: "map" },
+            { title: "Puertos", route: "/Puertos", icon: "harbor" },
+            { title: "Terminales", route: "/Terminal", icon: "terminal" },
+            { title: "Territorios", route: "/Territorio", icon: "pin-map" },
+            {
+              title: "Tipos de embalajes",
+              route: "/TipoEmbalaje",
+              icon: "box-seam",
+            },
+            {
+              title: "Tipos de equipos ferroviarios",
+              route: "/TipoEquipoFerro",
+              icon: "train-lightrail-front",
+            },
+            {
+              title: "Tipos de estructuras",
+              route: "/TipoEstructuraUbicacion",
+              icon: "layer-forward",
+            },
+            {
+              title: "Tipos de maniobras",
+              route: "/TipoManiobra",
+              icon: "arrow-left-right",
+            },
+            { title: "Unidades de medida", route: "/UM", icon: "rulers" },
+          ],
+        },
+        {
+          title: "Partes",
+          icon: "file-earmark-text",
+          submenu: [
+            { title: "Registro de Informes", route: "/ufc" },
+            { title: "Informe Operativo", route: "/InfoOperativo" },
+            { title: "CCD Producto", route: "" },
+          ],
+        },
+        {
+          title: "Reportes",
+          icon: "file-earmark-bar-graph",
+        },
+        {
+          title: "Cerrar sesión",
+          icon: "box-arrow-right",
+        },
+      ],
     };
   },
   async created() {
     await this.fetchUserPermissionsAndGroups();
   },
   methods: {
+    toggleDropdown(index) {
+      if (this.isOpen(index)) {
+        this.openIndexes = -1;
+      } else {
+        this.openIndexes = index;
+      }
+    },
+    isOpen(index) {
+      return this.openIndexes == index;
+    },
+    insertRouteMain(title) {
+      if (title == "Home") {
+        this.$router.push("/home");
+      } else if (title == "Reportes") {
+        this.$router.push("/reportes");
+      } else if (title == "Cerrar sesión") {
+        this.logout();
+      }
+    },
+    insertRoute(route) {
+      console.log(route);
+      this.$router.push(route);
+    },
     hasPermission(permission) {
       return this.userPermissions.some((p) => p.name === permission);
     },
@@ -258,9 +240,6 @@ export default {
       } catch (error) {
         console.error("Error al obtener permisos y grupos:", error);
       }
-    },
-    toggleDropdown(menu) {
-      this.activeDropdown = this.activeDropdown === menu ? null : menu;
     },
     async logout() {
       try {
@@ -282,44 +261,75 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos base */
-:root {
-  --primary-color: #002a69; /* Azul oscuro principal */
-  --primary-light: #003580; /* Azul un poco más claro para hover */
-  --primary-dark: #001f54; /* Azul más oscuro para submenús */
-  --accent-color: #ff8c42; /* Naranja para acentos */
-  --text-color: #ffffff; /* Texto blanco */
-  --text-secondary: #eeeeee; /* Texto secundario gris claro */
-  --hover-color: #ff6b1a; /* Naranja más intenso para hover */
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* Estilos para la barra de navegación */
+/* Estructura principal */
 .navbar {
-  width: 250px;
-  height: 100vh;
+  max-height: 100%;
+  overflow-y: auto;
   position: fixed;
   top: 0;
-  left: 0;
-  background-color: #002a68;
-  color: var(--text-color);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  z-index: 1000;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  left: 0%;
+  padding: 0;
+  background-color: #002d69;
+  transition: width 0.3s ease;
+
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
+
+  /* Safari/Chrome/Edge (WebKit) */
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+    transition: background-color 0.3s ease;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.7);
+  }
 }
 
-/* Animación de burbujas */
-.bubbles {
-  position: absolute;
-  width: 100%;
-  height: 100%;
+/* Logo */
+.logo-container {
+  padding: 20px;
+  text-align: center;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.company-name {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  color: white;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.company-slogan {
+  font-size: 0.8rem;
+  color: white;
+  letter-spacing: 1px;
+}
+
+/* Contenedor de burbujas (fijo al final) */
+.bubbles-container {
+  height: 150px;
+  width: 240px;
+  position: relative;
+  flex-shrink: 0;
   overflow: hidden;
   z-index: 0;
 }
@@ -327,7 +337,7 @@ export default {
 .bubble {
   position: absolute;
   bottom: -100px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.46);
   border-radius: 50%;
   animation: rise 15s infinite ease-in;
 }
@@ -381,219 +391,52 @@ export default {
     transform: translateX(20px);
   }
   100% {
-    bottom: 100vh;
+    bottom: 150px;
     transform: translateX(0);
     opacity: 0;
   }
 }
 
-/* Logo y nombre de la empresa */
-.logo-container {
-  padding: 20px;
-  text-align: center;
-  position: relative;
-  z-index: 1;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.company-name {
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: 2px;
-  margin-bottom: 5px;
-  text-transform: uppercase;
-  color: white;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-}
-
-.company-slogan {
-  font-size: 0.8rem;
-  color: white;
-  letter-spacing: 1px;
-}
-
-/* Lista de navegación */
-.navbar-nav {
-  list-style: none;
-  padding: 20px 0;
-  flex-grow: 1;
-  overflow-y: auto;
-  position: relative;
-  z-index: 1;
-}
-
+/* Estilos del menú */
 .nav-item {
   position: relative;
-  margin-bottom: 5px;
+  text-decoration: none !important;
 }
 
-.nav-link {
-  display: flex;
-  align-items: center;
-  padding: 12px 20px;
-  color: white;
-  text-decoration: none;
-  font-size: 0.95rem;
-  font-weight: 500;
+.navbar-nav .nav-link {
+  color: #eeeded;
+  font-weight: bold;
   transition: all 0.3s ease;
-  cursor: pointer;
+  text-decoration: none !important;
 }
 
-.nav-link:hover {
-  background-color: var(--primary-light);
-  color: var(--accent-color);
+.navbar-nav .nav-link:hover {
+  background-color: #eeeded;
+  color: #002d69 !important;
+  border-radius: 5px;
+  text-decoration: none !important;
 }
 
-.nav-link i {
-  margin-right: 15px;
-  font-size: 1.1rem;
+.navbar-nav .nav-link:hover .bi {
+  color: #002d69 !important;
 }
 
-.nav-link .dropdown-arrow {
-  margin-left: auto;
-  transition: transform 0.3s ease;
-}
-
-.nav-item.dropdown.active .dropdown-arrow {
-  transform: rotate(90deg);
-}
-
-.home-item {
-  margin-top: 10px;
-}
-
-/* Submenús */
 .submenu {
-  position: fixed;
-  left: 250px;
-  top: 0;
-  width: 250px;
-  height: 100vh;
-  background-color: #002a68;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
-  z-index: 999;
-  transform: translateX(0);
-  transition: transform 0.3s ease;
+  padding-left: 20px;
+  text-decoration: none !important;
 }
 
-.submenu-title {
-  padding: 20px;
-  font-size: 1.2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  color: black;
-}
-
-.submenu-items {
-  list-style: none;
-  padding: 10px 0;
-  height: calc(100vh - 70px);
-  overflow-y: auto;
-}
-
-.submenu-link {
-  display: block;
-  padding: 12px 20px;
-  color: white;
-  text-decoration: none;
-  font-size: 0.9rem;
+.submenu .submenu-link {
+  color: #eeeded;
+  font-weight: bold;
   transition: all 0.3s ease;
-  background-color: var(--primary-dark);
+  text-decoration: none !important;
 }
 
-.submenu-link:hover {
-  background-color: var(--primary-light);
-  color: var(--accent-color);
-  padding-left: 25px;
-}
-
-/* Scroll personalizado */
-.scrollable-menu::-webkit-scrollbar {
-  width: 6px;
-}
-
-.scrollable-menu::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
-}
-
-.scrollable-menu::-webkit-scrollbar-track {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-/* Cerrar sesión */
-.logout-container {
-  position: relative;
-  padding: 15px 20px;
-  background-color: rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 1;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.logout-container:hover {
-  background-color: rgba(0, 0, 0, 0.3);
-}
-
-.logout-content {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.logout-content i {
-  margin-right: 15px;
-  font-size: 1.2rem;
-  color: white;
-}
-
-.logout-text {
-  font-weight: 500;
-  font-size: 0.95rem;
-  color: white;
-}
-
-.logout-user {
-  display: flex;
-  align-items: center;
-  font-size: 0.85rem;
-  color: white;
-}
-
-.logout-user i {
-  margin-right: 10px;
-}
-
-/* Responsive */
-@media (max-width: 992px) {
-  .navbar {
-    width: 70px;
-  }
-
-  .company-name,
-  .company-slogan,
-  .nav-link span,
-  .logout-text,
-  .logout-user {
-    display: none;
-  }
-
-  .nav-link {
-    justify-content: center;
-    padding: 15px 0;
-  }
-
-  .nav-link i {
-    margin-right: 0;
-    font-size: 1.3rem;
-  }
-
-  .submenu {
-    left: 70px;
-  }
-
-  .logo-container {
-    padding: 15px 0;
-  }
+.submenu .submenu-link:hover {
+  background-color: #eeeded;
+  color: #002d69 !important;
+  border-radius: 5px;
+  text-decoration: none !important;
 }
 </style>

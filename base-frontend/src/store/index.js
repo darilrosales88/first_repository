@@ -34,9 +34,11 @@ export default createStore({
     setAuthentication(state, value) {
       state.isAuthenticated = value;
     },
-    setIsLoading(state, status) {
-      /*cambiando el estado de carga */
-      state.isLoading = status;
+    setAuthentication(state, value) {
+      state.isAuthenticated = value;
+    },
+    setIsLoading(state, status) {/*cambiando el estado de carga */
+      state.isLoading = status
     },
     setToken(state, token) {
       /*funcion para modificar el token, cuando se está autenticado */

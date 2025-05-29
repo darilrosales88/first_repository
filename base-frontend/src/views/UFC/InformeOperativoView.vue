@@ -4,23 +4,72 @@
       background-color: #002a68;
       color: white;
       text-align: right;
-      padding: 20px;
+      padding: 10px;
     "
   >
     <h6>Informe Operativo</h6>
   </div>
 
   <Navbar-Component /><br />
-  <div style="margin-left: 17em; width: 73%">
-    <Inf-Operative />
+
+  <div style="margin-left: 25em; width: 60%">
+    <div class="container py-3">
+      <div class="card border">
+        <div class="card-header bg-light border-bottom">
+          <h5 class="mb-0 text-dark fw-semibold">
+            <i class="bi bi-clipboard-data me-2"></i>Fechas de operaciones - UFC
+          </h5>
+        </div>
+
+        <div class="card-body p-3">
+          <form @submit.prevent="submitForm">
+            <div class="row mb-3 g-2">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label
+                    for="fechaActual"
+                    class="form-label small fw-semibold text-secondary"
+                  >
+                    <i class="bi bi-calendar-check me-2 text-primary"></i>Fecha
+                    Actual
+                  </label>
+                  <input
+                    type="date"
+                    class="form-control form-control-sm border-secondary"
+                    id="fechaActual"
+                    v-model="formData.fecha_actual"
+                    required
+                    :disabled="isExistingRecord"
+                  />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label
+                    for="fechaOperacion"
+                    class="form-label small fw-semibold text-secondary"
+                  >
+                    <i class="bi bi-calendar-check me-2 text-primary"></i>Fecha
+                    Operación
+                  </label>
+                  <input
+                    type="date"
+                    class="form-control form-control-sm border-secondary"
+                    id="FechaOperacion"
+                    v-model="formData.fecha_operacion"
+                    required
+                    :disabled="isExistingRecord"
+                  />
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div style="margin-left: 15em">
-    <h4>Transportación de las cargas</h4>
-    <!-- Se centro este componente para una mejor visualizacion -->
-    <div>
-      <Vagones_productos />
-    </div>
+  <div style="margin-left: 16em; width: 80%">
     <!-- Navbar con enlaces -->
     <nav>
       <ul>
@@ -76,8 +125,26 @@
     <div>
       <component :is="currentComponent" />
     </div>
+  </div>
+
+  <div style="margin-left: 16em; width: 80%">
+    <Vagones_productos />
+  </div>
+
+  <div style="margin-left: 16em; width: 80%">
     <!-- Componente de Rotacion de vagones -->
     <ConsultaRotacionVagones />
+  </div>
+
+  <div style="margin-left: 16em; width: 80%">
+    <Inf-Operative
+      :fechaActual="formData.fecha_actual"
+      :fechaOperacion="formData.fecha_operacion"
+      @record-status-changed="handleRecordStatusChange"
+    />
+  </div>
+
+  <div style="margin-left: 16em; width: 80%">
     <div class="action-buttons">
       <button class="action-btn reject" @click="rechazar">
         <i class="bi bi-x-circle"></i> Rechazar
@@ -91,143 +158,6 @@
     </div>
   </div>
 </template>
-
-<style scoped>
-/* Estilos mejorados para los botones de acción */
-.action-buttons {
-  display: flex;
-  gap: 15px;
-  margin: 30px auto; /* Centrado vertical y horizontal */
-  justify-content: center; /* Centra los botones horizontalmente */
-  padding: 20px 0;
-  width: 100%;
-}
-
-.action-btn {
-  padding: 12px 25px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 120px;
-}
-
-.action-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-}
-
-.action-btn:active {
-  transform: translateY(1px);
-}
-
-/* Estilos específicos para cada botón */
-.approve {
-  background-color: #28a745;
-  color: white;
-}
-
-.approve:hover {
-  background-color: #218838;
-}
-
-.reject {
-  background-color: #dc3545;
-  color: white;
-}
-
-.reject:hover {
-  background-color: #c82333;
-}
-
-.ready {
-  background-color: #17a2b8;
-  color: white;
-}
-
-.ready:hover {
-  background-color: #138496;
-}
-
-.action-btn i {
-  margin-right: 8px;
-  font-size: 18px;
-}
-
-/* Estilos generales del navbar */
-nav ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 15px;
-  background-color: #f8f9fa; /* Fondo claro para el navbar */
-  padding: 10px;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
-}
-
-nav ul li {
-  display: inline;
-}
-
-/* Estilos base de los enlaces */
-a {
-  text-decoration: none;
-  color: #333; /* Color de texto oscuro */
-  cursor: pointer;
-  padding: 10px 20px;
-  border-radius: 5px;
-  transition: all 0.3s ease;
-  font-weight: 500;
-  display: inline-block;
-}
-
-/* Estilo cuando el usuario pasa el mouse sobre el enlace */
-a:hover {
-  background-color: #e9ecef; /* Gris muy claro */
-  color: #000; /* Color del texto */
-  transform: translateY(-2px); /* Efecto de levantar */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada */
-}
-
-/* Estilo para el enlace seleccionado */
-a.active {
-  background-color: #007bff; /* Azul */
-  color: #fff; /* Texto blanco */
-  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3); /* Sombra azul */
-  transform: translateY(-2px); /* Efecto de levantar */
-}
-
-/* Efecto al hacer clic */
-a:active {
-  transform: translateY(0); /* Vuelve a su posición original */
-}
-</style>
-
-<style scoped>
-nav ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 10px;
-}
-
-nav ul li {
-  display: inline;
-}
-
-a {
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-}
-</style>
 
 <script>
 import Swal from "sweetalert2";
@@ -244,7 +174,7 @@ import AdicionarVagonProducto from "@/views/UFC/AdicionarVagonesProductos.vue";
 import ConsultaRotacionVagones from "@/components/RotacionVagonesView.vue";
 
 export default {
-  name: "InfoOperativo",
+  name: "UFCView",
   components: {
     NavbarComponent,
     PorSituarCarga_Descarga,
@@ -258,12 +188,20 @@ export default {
     ConsultaRotacionVagones,
   },
   data() {
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000; // offset en milisegundos
+    const localISOTime = new Date(now - offset).toISOString().split("T")[0];
     return {
       userPermissions: [],
       userGroups: [],
       currentComponent: "PorSituarCarga_Descarga",
       informeOperativoId: null,
       loadingPermissions: false,
+      isExistingRecord: false,
+      formData: {
+        fecha_actual: localISOTime,
+        fecha_operacion: localISOTime,
+      },
     };
   },
 
@@ -324,40 +262,7 @@ export default {
 
       // Si el usuario confirma, proceder con la aprobación
       if (result.isConfirmed) {
-        const userId = localStorage.getItem("userid");
-        const existeInforme = await this.verificarInformeOperativo();
-        if (!existeInforme || !this.informeOperativoId) {
-          await Swal.fire({
-            icon: "error",
-            title: "Acceso denegado",
-            text: "No hay ningun Informe Operativo para esta fecha. ",
-            confirmButtonColor: "#002a68",
-          });
-        }
-        try {
-          const response = await axios.put(
-            `/ufc/informe-operativo/${this.informeOperativoId}/`,
-            { estado_parte: "Aprobado", aprobado_por: userId },
-            { headers: { "Content-Type": "application/json" } }
-          );
-          if (response.status == 200) {
-            await Swal.fire({
-              icon: "success",
-              title: "Éxito",
-              text: `Estado actualizado a "Aprobado" correctamente.`,
-              confirmButtonColor: "#002a68",
-            });
-            this.$forceUpdate();
-          }
-        } catch (error) {
-          console.error(error);
-          await Swal.fire({
-            icon: "error",
-            title: "Acceso denegado",
-            text: "No tienes permiso para cambiar el estado a Aprobado.",
-            confirmButtonColor: "#002a68",
-          });
-        }
+        await this.CambiarEstado("Aprobado");
       }
     },
     async listo() {
@@ -446,9 +351,9 @@ export default {
           });
           return;
         }
+
         const response = await axios.patch(
           `/ufc/informe-operativo/${this.informeOperativoId}/`,
-
           { estado_parte: NuevoEstado },
           { headers: { "Content-Type": "application/json" } }
         );
@@ -499,6 +404,136 @@ export default {
         return false;
       }
     },
+    handleRecordStatusChange(payload) {
+      this.isExistingRecord = payload.isExisting;
+      // Opcional: Mostrar feedback
+      console.log("Estado actualizado:", payload);
+    },
   },
 };
 </script>
+<style scoped>
+/* Estilos mejorados para los botones de acción */
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  margin: 30px auto; /* Centrado vertical y horizontal */
+  justify-content: center; /* Centra los botones horizontalmente */
+  padding: 20px 0;
+  width: 100%;
+}
+
+.action-btn {
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+}
+
+/* Estilos específicos para cada botón */
+.approve {
+  background-color: #28a745;
+  color: white;
+}
+
+.approve:hover {
+  background-color: #218838;
+}
+
+.reject {
+  background-color: #dc3545;
+  color: white;
+}
+
+.reject:hover {
+  background-color: #c82333;
+}
+
+.ready {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.ready:hover {
+  background-color: #138496;
+}
+
+.action-btn i {
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+/* Estilos generales del navbar */
+nav ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 15px;
+  background-color: #f8f9fa; /* Fondo claro para el navbar */
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+nav ul li {
+  display: inline;
+}
+
+/* Estilos base de los enlaces */
+a {
+  text-decoration: none;
+  color: #333; /* Color de texto oscuro */
+  cursor: pointer;
+  padding: 10px 20px;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  display: inline-block;
+}
+
+/* Estilo cuando el usuario pasa el mouse sobre el enlace */
+nav a:hover {
+  background-color: #e9ecef; /* Gris muy claro */
+  color: #000; /* Color del texto */
+  transform: translateY(-2px); /* Efecto de levantar */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada */
+}
+
+/* Estilo para el enlace seleccionado */
+nav a.active {
+  background-color: #007bff; /* Azul */
+  color: #fff; /* Texto blanco */
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3); /* Sombra azul */
+  transform: translateY(-2px); /* Efecto de levantar */
+}
+
+/* Efecto al hacer clic */
+nav a:active {
+  transform: translateY(0); /* Vuelve a su posición original */
+}
+
+nav ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 10px;
+}
+
+nav ul li {
+  display: inline;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+</style>

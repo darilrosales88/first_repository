@@ -20,7 +20,9 @@
                 v-model="searchQuery"
                 @input="handleSearchInput"
               />
-              <span class="position-absolute top-50 start-0 translate-middle-y ps-2">
+              <span
+                class="position-absolute top-50 start-0 translate-middle-y ps-2"
+              >
                 <i class="bi bi-search"></i>
               </span>
             </div>
@@ -47,13 +49,17 @@
                   </div>
                   <div v-else>
                     <i class="bi bi-database-exclamation fs-4"></i>
-                    <p class="mt-2">{{searchQuery ? "No hay coincidencias" : "No hay informes"}}</p>               
+                    <p class="mt-2">
+                      {{
+                        searchQuery ? "No hay coincidencias" : "No hay informes"
+                      }}
+                    </p>
                     <p>
-                    {{
-                      searchQuery
-                      ? `No encontramos resultados para "${searchQuery}"`
-                      : "No hay informes operativos registrados"
-                    }}
+                      {{
+                        searchQuery
+                          ? `No encontramos resultados para "${searchQuery}"`
+                          : "No hay informes operativos registrados"
+                      }}
                     </p>
                   </div>
                 </td>
@@ -61,29 +67,54 @@
             </thead>
             <tbody>
               <!-- Filas de datos -->
-              <tr v-for="(informe, index) in filteredRecords" :key="informe.id" class="io-tr">
+              <tr
+                v-for="(informe, index) in filteredRecords"
+                :key="informe.id"
+                class="io-tr"
+              >
                 <td>{{ formatDate(informe.fecha_operacion) || "-" }}</td>
-                <td >{{ formatTime(informe.fecha_operacion) || "-" }}</td>
+                <td>{{ formatTime(informe.fecha_operacion) || "-" }}</td>
                 <td>Informe operativo</td>
                 <td>{{ informe.entidad_detalle || "-" }}</td>
-                <td><span :class="`io-status io-status-${getStatusClass(informe.estado_parte)}`">{{ informe.estado_parte || "-" }}</span>
+                <td>
+                  <span
+                    :class="`io-status io-status-${getStatusClass(
+                      informe.estado_parte
+                    )}`"
+                    >{{ informe.estado_parte || "-" }}</span
+                  >
                 </td>
                 <td>{{ informe.creado_por_detalle?.first_name || "-" }}</td>
-                <td>{{informe.aprobado_por_detalle ? informe.aprobado_por_detalle.first_name: "-"}}<!-- Uso de operador ternario una talla --></td>
+                <td>
+                  {{
+                    informe.aprobado_por_detalle
+                      ? informe.aprobado_por_detalle.first_name
+                      : "-"
+                  }}<!-- Uso de operador ternario una talla -->
+                </td>
 
                 <!-- Acciones -->
                 <td>
                   <div class="d-flex">
-                    <button @click="viewDetails(informe)"class="btn btn-sm btn-outline-info me-2" title="Ver detalles">
+                    <button
+                      @click="viewDetails(informe)"
+                      class="btn btn-sm btn-outline-info me-2"
+                      title="Ver detalles"
+                    >
                       <i class="bi bi-eye-fill"></i>
                     </button>
 
-              <!-- <router-link :to="{ name: 'EditarInformeOperativo', params: { id: informe.id },}" class="btn btn-sm btn-outline-warning me-2" title="Editar"
+                    <!-- <router-link :to="{ name: 'EditarInformeOperativo', params: { id: informe.id },}" class="btn btn-sm btn-outline-warning me-2" title="Editar"
                     v-if="informe.estado_parte !== 'Aprobado'">
                       <i class="bi bi-pencil-square"></i>
                     </router-link> -->
 
-                    <button @click="confirmDelete(informe.id)" class="btn btn-sm btn-outline-danger" title="Eliminar" :disabled="loading || informe.estado_parte === 'Aprobado'">
+                    <button
+                      @click="confirmDelete(informe.id)"
+                      class="btn btn-sm btn-outline-danger"
+                      title="Eliminar"
+                      :disabled="loading || informe.estado_parte === 'Aprobado'"
+                    >
                       <i class="bi bi-trash"></i>
                     </button>
                   </div>
@@ -97,36 +128,39 @@
       <!-- Paginación -->
       <div class="io-pagination">
         <div class="text-muted small">
-        Mostrando {{ filteredRecords.length }} de {{ totalItems }} registros
+          Mostrando {{ filteredRecords.length }} de {{ totalItems }} registros
         </div>
         <nav aria-label="Page navigation">
-        <ul class="pagination pagination-sm mb-0">
-          <li class="page-item" :class="{ disabled: currentPage === 1 }">
-          <button class="page-link" @click="previousPage">
-            <i class="bi bi-chevron-left"></i>
-          </button>
-          </li>
-          <li class="page-item disabled">
-          <span class="page-link">
-            Página {{ currentPage }} de
-            {{ Math.ceil(totalItems / itemsPerPage) }}
-          </span>
-          </li>
-          <li
-          class="page-item"
-          :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
-          >
-          <button class="page-link" @click="nextPage">
-            <i class="bi bi-chevron-right"></i>
-          </button>
-          </li>
-        </ul>
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" :class="{ disabled: currentPage === 1 }">
+              <button class="page-link" @click="previousPage">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+            </li>
+            <li class="page-item disabled">
+              <span class="page-link">
+                Página {{ currentPage }} de
+                {{ Math.ceil(totalItems / itemsPerPage) }}
+              </span>
+            </li>
+            <li
+              class="page-item"
+              :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
+            >
+              <button class="page-link" @click="nextPage">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
         </nav>
       </div>
 
-      
       <!-- Modal de detalles -->
-      <div v-if="showDetailsModal" class="io-modal-overlay" @click.self="closeDetailsModal"> 
+      <div
+        v-if="showDetailsModal"
+        class="io-modal-overlay"
+        @click.self="closeDetailsModal"
+      >
         <div class="io-modal">
           <div class="io-modal-header">
             <div class="io-modal-header-content">
@@ -161,7 +195,9 @@
 
                   <div class="io-detail-item">
                     <span class="io-detail-label">Tipo de parte:</span>
-                    <span class="io-detail-value">Informe Operativo Diario</span>
+                    <span class="io-detail-value"
+                      >Informe Operativo Diario</span
+                    >
                   </div>
 
                   <div class="io-detail-item">
@@ -230,13 +266,17 @@
                     }}</span>
                   </div>
                   <div class="io-detail-item">
-                    <span class="io-detail-label">Vagones Cargados (Plan):</span>
+                    <span class="io-detail-label"
+                      >Vagones Cargados (Plan):</span
+                    >
                     <span class="io-detail-value">{{
                       currentInforme.plan_diario_total_vagones_cargados || "0"
                     }}</span>
                   </div>
                   <div class="io-detail-item">
-                    <span class="io-detail-label">Vagones Cargados (Real):</span>
+                    <span class="io-detail-label"
+                      >Vagones Cargados (Real):</span
+                    >
                     <span class="io-detail-value">{{
                       currentInforme.real_total_vagones_cargados || "0"
                     }}</span>
@@ -253,7 +293,7 @@
           </div>
         </div>
       </div>
-    </div> 
+    </div>
   </div>
 </template>
 
@@ -374,7 +414,6 @@ export default {
         this.totalItems = response.data.count;
       } catch (error) {
         console.error("Error al buscar informes", error);
-        this.showErrorToast("Error al buscar informes");
       } finally {
         this.loading = false;
       }

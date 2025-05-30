@@ -1,13 +1,13 @@
-from django.db import models
+from django.db import models, transaction
+from django.db.models import UniqueConstraint
+from django.core.validators import RegexValidator
+
+from Administracion.models import CustomUser
 from nomencladores.models import( nom_tipo_equipo_ferroviario,nom_producto,
                                  nom_tipo_embalaje,nom_unidad_medida,
                                  nom_equipo_ferroviario,nom_provincia,
                                  nom_entidades   
                                  )
-from Administracion.models import CustomUser
-from django.core.validators import RegexValidator
-# Usamos un delay para asegurar que las relaciones ManyToMany estén establecidas 
-from django.db import transaction
 
 
 
@@ -1010,7 +1010,7 @@ class HistorialArrastres(models.Model):
     
     
 class rotacion_vagones(models.Model):
-    tipo_equipo_ferroviario = models.ForeignKey(
+    tipo_equipo_ferroviario = models.OneToOneField(
         nom_tipo_equipo_ferroviario,
         on_delete=models.CASCADE,
         related_name="tipo_equipo_rotacion",

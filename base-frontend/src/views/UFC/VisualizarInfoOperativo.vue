@@ -351,9 +351,10 @@ export default {
 
     async CambiarEstado(NuevoEstado) {
       try {
-        const response = await axios.patch(
+        const userId = localStorage.getItem("userid");
+        const response = await axios.put(
           `/ufc/informe-operativo/${this.$route.params.id}/`,
-          { estado_parte: NuevoEstado },
+          { estado_parte: NuevoEstado, aprobado_por: userId },
           { headers: { "Content-Type": "application/json" } }
         );
 

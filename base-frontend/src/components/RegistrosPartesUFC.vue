@@ -38,7 +38,7 @@
                 <th scope="col">Entidad</th>
                 <th scope="col">Estado</th>
                 <th scope="col">Creado por</th>
-                <th scope="col">Aprobado por</th>
+                <th scope="col">Revisado por</th>
                 <th scope="col">Acciones</th>
               </tr>
               <tr v-if="filteredRecords.length == 0">

@@ -208,7 +208,8 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
             
         serializer = self.get_serializer(
             instance, 
-            data={'estado_parte': request.data['estado_parte']}, 
+            data={'estado_parte': request.data['estado_parte']
+                  }, 
             partial=True
         )
         

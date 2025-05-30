@@ -351,20 +351,8 @@ export default {
 
     async CambiarEstado(NuevoEstado) {
       try {
-        const existeInforme = await this.verificarInformeOperativo();
-
-        if (!existeInforme || !this.informeOperativoId) {
-          await Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: "No existe un informe operativo para la fecha actual.",
-            confirmButtonColor: "#002a68",
-          });
-          return;
-        }
-
         const response = await axios.patch(
-          `/ufc/informe-operativo/${this.informeOperativoId}/`,
+          `/ufc/informe-operativo/${this.$route.params.id}/`,
           { estado_parte: NuevoEstado },
           { headers: { "Content-Type": "application/json" } }
         );

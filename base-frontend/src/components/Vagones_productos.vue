@@ -430,19 +430,20 @@ export default {
         const infoID = await axios.get(
           `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
         );
+        if (infoID.data.id) {
+          const response = await axios.get("/ufc/vagones-productos/", {
+            params: {
+              page: this.currentPage,
+              page_size: this.itemsPerPage,
+              informe: infoID.data.id,
+            },
+          });
 
-        const response = await axios.get("/ufc/vagones-productos/", {
-          params: {
-            page: this.currentPage,
-            page_size: this.itemsPerPage,
-            informe: infoID.data.id,
-          },
-        });
-
-        this.vagones_productos = response.data.results;
-        this.allRecords = [...response.data.results]; // Guardar copia completa para filtrado
-        this.totalItems = response.data.count;
-        this.busqueda_existente = true;
+          this.vagones_productos = response.data.results;
+          this.allRecords = [...response.data.results]; // Guardar copia completa para filtrado
+          this.totalItems = response.data.count;
+          this.busqueda_existente = true;
+        }
       } catch (error) {
         console.error("Error al obtener los vagones con productos:", error);
         this.busqueda_existente = false;

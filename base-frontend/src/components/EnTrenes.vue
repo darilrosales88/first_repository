@@ -378,7 +378,12 @@ import Swal from "sweetalert2";
 
 export default {
   name: "VagonesProductos",
-
+  props: {
+    infoID: {
+      type: Number,
+      required: true,
+    },
+  },
   data() {
     return {
       enTrenes: [],

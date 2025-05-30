@@ -116,8 +116,7 @@
           <a
             href="#"
             @click.prevent="
-              (currentComponent = 'EnTrenes'),
-                { informeID: this.$route.params.id }
+              loadComponent('EnTrenes', { informeID: $route.params.id })
             "
             :class="{ active: currentComponent === 'EnTrenes' }"
           >
@@ -129,7 +128,7 @@
 
     <!-- Contenedor para las tablas -->
     <div>
-      <component :is="currentComponent" />
+      <component :is="currentComponent" v-bind="componentProps" />
     </div>
   </div>
 
@@ -208,6 +207,7 @@ export default {
         fecha_actual: localISOTime,
         fecha_operacion: localISOTime,
       },
+      componentProps: {},
     };
   },
 
@@ -216,6 +216,10 @@ export default {
   },
 
   methods: {
+    loadComponent(componentName, props = {}) {
+      this.currentComponent = componentName;
+      this.componentProps = props;
+    },
     async rechazar() {
       if (!this.hasGroup("RevisorUFC")) {
         await Swal.fire({

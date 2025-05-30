@@ -1,7 +1,7 @@
 <template>
   <nav
     class="navbar navbar-expand d-flex flex-column align-items-start navbar-dark p-0"
-    style="width: 250px"
+    style="width: 250px; height: 100vh"
     role="navigation"
     aria-label="Main navigation"
   >

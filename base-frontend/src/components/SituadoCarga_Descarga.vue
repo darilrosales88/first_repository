@@ -349,7 +349,12 @@ import Swal from "sweetalert2";
 
 export default {
   name: "RegistrosSituados",
-
+  props: {
+    informeID: {
+      type: Number,
+      required: false,
+    },
+  },
   data() {
     return {
       registroSituado: [],
@@ -470,7 +475,7 @@ export default {
           `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
         );
         this.estado_parte = infoID.data.estado;
-        if (infoID.data.existe) {
+        if (infoID.data.existe && !this.informeID) {
           //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
           const response = await axios.get("/ufc/situados/", {
             params: {
@@ -502,6 +507,39 @@ export default {
 
             this.registroSituado = [...this.allRecords];
           }
+        } else if (this.informeID) {
+          const response = await axios.get("/ufc/situados/", {
+            params: {
+              page: this.currentPage,
+              page_size: this.itemsPerPage,
+              informe: this.informeID,
+            },
+          });
+          this.totalItems = response.data.count;
+
+          if (
+            response.data &&
+            Array.isArray(response.data.results || response.data)
+          ) {
+            const data = response.data.results || response.data;
+            this.allRecords = data.map((item) => ({
+              id: item.id,
+              tipo_origen_name: item.tipo_origen_name || "",
+              origen: item.origen || "",
+              tipo_equipo_name: item.tipo_equipo_name || "",
+              estado: item.estado || "",
+              operacion: item.operacion || "",
+              productos_info: item.productos_info || [],
+              situados: parseInt(item.situados) || 0, // Convertir a número
+              pendiente_proximo_dia: parseInt(item.pendiente_proximo_dia) || 0, // Convertir a número
+              observaciones: item.observaciones || "",
+              created_at: item.created_at || null,
+            }));
+
+            this.registroSituado = [...this.allRecords];
+          }
+        } else {
+          this.showErrorToast("No hay Id para presentar");
         }
       } catch (error) {
         console.error("Error al obtener los Situados:", error);

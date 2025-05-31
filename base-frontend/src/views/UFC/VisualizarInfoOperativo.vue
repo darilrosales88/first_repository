@@ -77,8 +77,9 @@
           <a
             href="#"
             @click.prevent="
-              (currentComponent = 'PorSituarCarga_Descarga'),
-                { informeID: this.$route.params.id }
+              loadComponent('PorSituarCarga_Descarga', {
+                informeID: $route.params.id,
+              })
             "
             :class="{ active: currentComponent === 'PorSituarCarga_Descarga' }"
           >
@@ -88,7 +89,11 @@
         <li>
           <a
             href="#"
-            @click.prevent="currentComponent = 'SituadoCarga_Descarga'"
+            @click.prevent="
+              loadComponent('SituadoCarga_Descarga', {
+                informeID: $route.params.id,
+              })
+            "
             :class="{ active: currentComponent === 'SituadoCarga_Descarga' }"
           >
             Situado Carga/Descarga
@@ -97,7 +102,11 @@
         <li>
           <a
             href="#"
-            @click.prevent="currentComponent = 'Cargados_Descargados'"
+            @click.prevent="
+              loadComponent('Cargados_Descargados', {
+                informeID: $route.params.id,
+              })
+            "
             :class="{ active: currentComponent === 'Cargados_Descargados' }"
           >
             Cargados
@@ -106,7 +115,11 @@
         <li>
           <a
             href="#"
-            @click.prevent="currentComponent = 'PendientesArrastre'"
+            @click.prevent="
+              loadComponent('PendientesArrastre', {
+                informeID: $route.params.id,
+              })
+            "
             :class="{ active: currentComponent === 'PendientesArrastre' }"
           >
             Pendientes

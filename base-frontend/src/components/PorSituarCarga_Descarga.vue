@@ -362,7 +362,12 @@ import Swal from "sweetalert2";
 
 export default {
   name: "PorSituarCargaDescarga",
-
+  props: {
+    informeID: {
+      type: Number,
+      required: false,
+    },
+  },
   data() {
     return {
       porSituarCarga_Descarga: [],
@@ -492,7 +497,7 @@ export default {
           `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
         );
         this.estado_parte = infoID.data.estado;
-        if (infoID.data.existe) {
+        if (infoID.data.existe && !this.informeID) {
           //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
           const response = await axios.get("/ufc/por-situar/", {
             params: {
@@ -503,10 +508,18 @@ export default {
           });
           this.porSituarCarga_Descarga = response.data.results;
           this.totalItems = response.data.count;
+        } else if (this.informeID) {
+          const response = await axios.get("/ufc/por-situar/", {
+            params: {
+              page: this.currentPage,
+              page_size: this.itemsPerPage,
+              informe: this.informeID,
+            },
+          });
+          this.porSituarCarga_Descarga = response.data.results;
+          this.totalItems = response.data.count;
         } else {
-          this.showErrorToast(
-            "Debe iniciar Guardando un parte de Informe Operativo "
-          );
+          this.showErrorToast("No hay Id para presentar");
         }
       } catch (error) {
         console.error("Error al obtener datos:", error);

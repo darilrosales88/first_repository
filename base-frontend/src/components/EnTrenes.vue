@@ -377,11 +377,11 @@ import axios from "axios";
 import Swal from "sweetalert2";
 
 export default {
-  name: "VagonesProductos",
+  name: "EnTrenes",
   props: {
     informeID: {
       type: Number,
-      required: true,
+      required: false,
     },
   },
   data() {
@@ -472,7 +472,7 @@ export default {
           `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
         );
         this.estado_parte = infoID.data.estado;
-        if (infoID.data.existe) {
+        if (infoID.data.existe && !this.informeID) {
           const response = await axios.get("/ufc/en-trenes/", {
             params: {
               page: this.currentPage,

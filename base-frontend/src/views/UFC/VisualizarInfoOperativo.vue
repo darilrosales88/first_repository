@@ -212,7 +212,7 @@ export default {
     return {
       userPermissions: [],
       userGroups: [],
-      currentComponent: "PorSituarCarga_Descarga",
+      currentComponent: "",
       informeOperativoId: null,
       loadingPermissions: false,
       isExistingRecord: false,

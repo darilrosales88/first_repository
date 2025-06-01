@@ -77,8 +77,9 @@
           <a
             href="#"
             @click.prevent="
-              (currentComponent = 'PorSituarCarga_Descarga'),
-                { informeID: this.$route.params.id }
+              loadComponent('PorSituarCarga_Descarga', {
+                informeID: $route.params.id,
+              })
             "
             :class="{ active: currentComponent === 'PorSituarCarga_Descarga' }"
           >
@@ -88,7 +89,11 @@
         <li>
           <a
             href="#"
-            @click.prevent="currentComponent = 'SituadoCarga_Descarga'"
+            @click.prevent="
+              loadComponent('SituadoCarga_Descarga', {
+                informeID: $route.params.id,
+              })
+            "
             :class="{ active: currentComponent === 'SituadoCarga_Descarga' }"
           >
             Situado Carga/Descarga
@@ -97,7 +102,11 @@
         <li>
           <a
             href="#"
-            @click.prevent="currentComponent = 'Cargados_Descargados'"
+            @click.prevent="
+              loadComponent('Cargados_Descargados', {
+                informeID: $route.params.id,
+              })
+            "
             :class="{ active: currentComponent === 'Cargados_Descargados' }"
           >
             Cargados
@@ -106,7 +115,11 @@
         <li>
           <a
             href="#"
-            @click.prevent="currentComponent = 'PendientesArrastre'"
+            @click.prevent="
+              loadComponent('PendientesArrastre', {
+                informeID: $route.params.id,
+              })
+            "
             :class="{ active: currentComponent === 'PendientesArrastre' }"
           >
             Pendientes
@@ -133,18 +146,19 @@
   </div>
 
   <div style="margin-left: 16em; width: 80%">
-    <Vagones_productos />
+    <Vagones_productos :informeID="$route.params.id" />
   </div>
 
   <div style="margin-left: 16em; width: 80%">
     <!-- Componente de Rotacion de vagones -->
-    <ConsultaRotacionVagones />
+    <ConsultaRotacionVagones :informeID="$route.params.id" />
   </div>
 
   <div style="margin-left: 16em; width: 80%">
     <Inf-Operative
       :fechaActual="formData.fecha_actual"
       :fechaOperacion="formData.fecha_operacion"
+      :informeID="$route.params.id"
       @record-status-changed="handleRecordStatusChange"
     />
   </div>
@@ -199,7 +213,7 @@ export default {
     return {
       userPermissions: [],
       userGroups: [],
-      currentComponent: "PorSituarCarga_Descarga",
+      currentComponent: "",
       informeOperativoId: null,
       loadingPermissions: false,
       isExistingRecord: false,
@@ -354,7 +368,10 @@ export default {
         const userId = localStorage.getItem("userid");
         const response = await axios.put(
           `/ufc/informe-operativo/${this.$route.params.id}/`,
-          { estado_parte: NuevoEstado, aprobado_por: userId },
+          {
+            estado_parte: NuevoEstado,
+            ...(NuevoEstado !== "Listo" ? { aprobado_por: userId } : {}),
+          },
           { headers: { "Content-Type": "application/json" } }
         );
 

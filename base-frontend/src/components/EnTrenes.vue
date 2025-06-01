@@ -377,11 +377,11 @@ import axios from "axios";
 import Swal from "sweetalert2";
 
 export default {
-  name: "VagonesProductos",
+  name: "EnTrenes",
   props: {
     informeID: {
       type: Number,
-      required: true,
+      required: false,
     },
   },
   data() {
@@ -472,30 +472,20 @@ export default {
           `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
         );
         this.estado_parte = infoID.data.estado;
-        if (infoID.data.existe) {
+        //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
+        if (this.informeID || infoID.data.id) {
           const response = await axios.get("/ufc/en-trenes/", {
             params: {
               page: this.currentPage,
               page_size: this.itemsPerPage,
-              informe: infoID.data.id,
-            },
-          });
-          this.enTrenes = response.data.results;
-          this.allRecords = response.data.results;
-          this.totalItems = response.data.count;
-        } else if (this.informeID) {
-          const response = await axios.get("/ufc/en-trenes/", {
-            params: {
-              page: this.currentPage,
-              page_size: this.itemsPerPage,
-              informe: this.informeID,
+              informe: this.informeID ? this.informeID : infoID.data.id,
             },
           });
           this.enTrenes = response.data.results;
           this.allRecords = response.data.results;
           this.totalItems = response.data.count;
         } else {
-          this.showErrorToast("No hay Id para presentar");
+          this.showErrorToast("No hay ID para cargar");
         }
       } catch (error) {
         console.error("Error al obtener los trenes:", error);

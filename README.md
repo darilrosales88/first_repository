@@ -54,6 +54,9 @@
 - Arrastres (check)
 - Carga Descarga (check)
 
-### Problema al pasar a disponible los registros de Situados. Hay unas llamadas de mas
+### Problemas detectados
 
-- Revisar views, serializer, funcion submit, y signals dependientes de este
+- Fecha de operacion y Actual siempre iguales
+- Hay que hacer que se vea solo los estados de los partes asociados.
+- Se carga en PorSituar un registro fantasma en el cual pertenece al informe Operativo del dia que se esta trabajando
+-

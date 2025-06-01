@@ -349,7 +349,12 @@ import Swal from "sweetalert2";
 
 export default {
   name: "RegistrosSituados",
-
+  props: {
+    informeID: {
+      type: Number,
+      required: false,
+    },
+  },
   data() {
     return {
       registroSituado: [],
@@ -470,13 +475,14 @@ export default {
           `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
         );
         this.estado_parte = infoID.data.estado;
-        if (infoID.data.existe) {
-          //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
+
+        //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
+        if (this.informeID || infoID.data.id) {
           const response = await axios.get("/ufc/situados/", {
             params: {
               page: this.currentPage,
               page_size: this.itemsPerPage,
-              informe: infoID.data.id,
+              informe: this.informeID ? this.informeID : infoID.data.id,
             },
           });
           this.totalItems = response.data.count;
@@ -502,6 +508,8 @@ export default {
 
             this.registroSituado = [...this.allRecords];
           }
+        } else {
+          this.showErrorToast("No hay ID para cargar");
         }
       } catch (error) {
         console.error("Error al obtener los Situados:", error);

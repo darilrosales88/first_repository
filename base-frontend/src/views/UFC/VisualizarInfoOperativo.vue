@@ -158,6 +158,7 @@
     <Inf-Operative
       :fechaActual="formData.fecha_actual"
       :fechaOperacion="formData.fecha_operacion"
+      :informeID="$route.params.id"
       @record-status-changed="handleRecordStatusChange"
     />
   </div>
@@ -367,7 +368,10 @@ export default {
         const userId = localStorage.getItem("userid");
         const response = await axios.put(
           `/ufc/informe-operativo/${this.$route.params.id}/`,
-          { estado_parte: NuevoEstado, aprobado_por: userId },
+          {
+            estado_parte: NuevoEstado,
+            ...(NuevoEstado !== "Listo" ? { aprobado_por: userId } : {}),
+          },
           { headers: { "Content-Type": "application/json" } }
         );
 

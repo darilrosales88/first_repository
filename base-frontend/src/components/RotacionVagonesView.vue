@@ -303,7 +303,7 @@ export default {
         const infoID = await axios.get(
           `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
         );
-        if (infoID.data.existe) {
+        if (infoID.data.existe || this.informeID) {
           //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
           // Bucle para manejar paginación (si aplica)
           while (nextPage) {

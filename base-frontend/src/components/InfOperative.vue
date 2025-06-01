@@ -161,6 +161,10 @@ export default {
       type: Date,
       required: true,
     },
+    informeID: {
+      type: Number,
+      required: false,
+    },
   },
   data() {
     return {
@@ -225,7 +229,9 @@ export default {
 
           // Cargar datos del informe creado
           const recordResponse = await axios.get(
-            `/ufc/informe-operativo/${this.informeOperativoId}/`
+            `/ufc/informe-operativo/${
+              this.informeID ? this.informeID : this.informeOperativoId
+            }/`
           );
 
           // Formatear la fecha para mostrar solo YYYY-MM-DD

@@ -137,7 +137,7 @@
               class="btn btn-sm btn-primary"
               :disabled="isExistingRecord || isLoading"
             >
-              <i class="bi bi-save me-1"></i>Guardar
+              <i class="bi bi-save me-1"></i>Crear Informe
             </button>
           </div>
         </form>

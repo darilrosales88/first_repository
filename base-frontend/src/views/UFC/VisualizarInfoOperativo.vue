@@ -146,12 +146,12 @@
   </div>
 
   <div style="margin-left: 16em; width: 80%">
-    <Vagones_productos />
+    <Vagones_productos :informeID="$route.params.id" />
   </div>
 
   <div style="margin-left: 16em; width: 80%">
     <!-- Componente de Rotacion de vagones -->
-    <ConsultaRotacionVagones />
+    <ConsultaRotacionVagones :informeID="$route.params.id" />
   </div>
 
   <div style="margin-left: 16em; width: 80%">

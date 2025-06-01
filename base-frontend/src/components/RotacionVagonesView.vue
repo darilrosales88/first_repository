@@ -11,13 +11,12 @@
 
       <!-- Cuerpo -->
       <div class="card-body p-3">
-
         <!-- Registro de rotación por tipo de equipo -->
         <div class="mt-4">
           <h6
             class="d-flex justify-content-between align-items-center text-secondary fw-semibold mb-3"
-            style="padding: 0.5rem 1rem">
-            
+            style="padding: 0.5rem 1rem"
+          >
             <!-- Texto centrado -->
             <span class="d-flex align-items-center">
               <i class="bi bi-list-ul me-2"></i>
@@ -57,7 +56,8 @@
                 <td>
                   <button
                     class="btn btn-sm btn-outline-danger"
-                    @click="eliminarRotacion(equipo.id)">
+                    @click="eliminarRotacion(equipo.id)"
+                  >
                     <i class="bi bi-trash"></i>
                   </button>
                 </td>
@@ -112,9 +112,8 @@
                     {{ resumen.totalVagonesEnServicio }}
                   </p>
                 </div>
-              </div>             
+              </div>
             </div>
-            
           </div>
 
           <div class="row g-3 mt-1">
@@ -149,9 +148,16 @@
     </div>
 
     <!-- Modal para adicionar/editar rotación de vagones -->
-    <div class="modal fade ufc-modal-overlay" :class="{ show: mostrarModal }" tabindex="-1" role="dialog" style="display: block; " v-if="mostrarModal">
-      <div class="modal-dialog modal-dialog-centered" role="document" >
-        <div class="modal-content" >
+    <div
+      class="modal fade ufc-modal-overlay"
+      :class="{ show: mostrarModal }"
+      tabindex="-1"
+      role="dialog"
+      style="display: block"
+      v-if="mostrarModal"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
           <div class="ufc-modal-header">
             <h3 class="modal-title">
               {{
@@ -160,44 +166,84 @@
                   : "Adicionar rotación de vagones"
               }}
             </h3>
-            <button class="ufc-modal-close" @click="cerrarModal"><i class="bi bi-x"></i></button>
+            <button class="ufc-modal-close" @click="cerrarModal">
+              <i class="bi bi-x"></i>
+            </button>
           </div>
           <div class="ufc-modal-body">
-            
-              <form @submit.prevent="modoEdicion ? actualizarRotacion() : guardarRotacion()">
-                <div class="ufc-form-grid">
-                  <!-- Tipo de equipo ferroviario -->
-                  <div class="ufc-input-group">
-                    <label for="tipoEquipo" class="form-label small fw-semibold text-secondary">
-                      Tipo de equipo ferroviario
-                    </label>
+            <form
+              @submit.prevent="
+                modoEdicion ? actualizarRotacion() : guardarRotacion()
+              "
+            >
+              <div class="ufc-form-grid">
+                <!-- Tipo de equipo ferroviario -->
+                <div class="ufc-input-group">
+                  <label
+                    for="tipoEquipo"
+                    class="form-label small fw-semibold text-secondary"
+                  >
+                    Tipo de equipo ferroviario
+                  </label>
 
-                    <select class="form-select form-select-sm" style="width:280px; padding: 8px 12px;" id="tipoEquipo" v-model="nuevaRotacion.tipoEquipo" required>
-                      <option value="" disabled>
-                        Seleccione un tipo de equipo
-                      </option>
-                      <option v-for="equipo in tiposEquiposFerroviarios":key="equipo.id" :value="equipo.id"> {{ equipo.tipo_equipo_name }}--{{equipo.tipo_carga_name}}
-                      </option>
-                    </select>
-                  </div>
-
-                  <!-- Vagones en servicio -->
-                  <div class="ufc-input-group">
-                    <label for="vagonesEnServicio" class="form-label small fw-semibold text-secondary" >
-                      Vagones en servicio
-                    </label>
-                    <input type="number" class="form-control form-control-sm" style="width:165px; padding: 8px 12px;" id="vagonesEnServicio" v-model.number="nuevaRotacion.vagonesEnServicio" min="0" required/>
-                  </div>
+                  <select
+                    class="form-select form-select-sm"
+                    style="width: 280px; padding: 8px 12px"
+                    id="tipoEquipo"
+                    v-model="nuevaRotacion.tipoEquipo"
+                    required
+                  >
+                    <option value="" disabled>
+                      Seleccione un tipo de equipo
+                    </option>
+                    <option
+                      v-for="equipo in tiposEquiposFerroviarios"
+                      :key="equipo.id"
+                      :value="equipo.id"
+                    >
+                      {{ equipo.tipo_equipo_name }}--{{
+                        equipo.tipo_carga_name
+                      }}
+                    </option>
+                  </select>
                 </div>
-              </form>
-            
+
+                <!-- Vagones en servicio -->
+                <div class="ufc-input-group">
+                  <label
+                    for="vagonesEnServicio"
+                    class="form-label small fw-semibold text-secondary"
+                  >
+                    Vagones en servicio
+                  </label>
+                  <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    style="width: 165px; padding: 8px 12px"
+                    id="vagonesEnServicio"
+                    v-model.number="nuevaRotacion.vagonesEnServicio"
+                    min="0"
+                    required
+                  />
+                </div>
+              </div>
+            </form>
           </div>
           <div class="ufc-form-actions">
-            <button type="button" class="ufc-button secondary" @click="cerrarModal">
+            <button
+              type="button"
+              class="ufc-button secondary"
+              @click="cerrarModal"
+            >
               <i class="bi bi-x-circle"></i>Cancelar
             </button>
-            <button type="button" class="ufc-button primary" @click="modoEdicion ? actualizarRotacion() : guardarRotacion()">
-              <i class="bi bi-check-circle"></i>{{ modoEdicion ? "Actualizar" : "Aceptar" }}
+            <button
+              type="button"
+              class="ufc-button primary"
+              @click="modoEdicion ? actualizarRotacion() : guardarRotacion()"
+            >
+              <i class="bi bi-check-circle"></i
+              >{{ modoEdicion ? "Actualizar" : "Aceptar" }}
             </button>
           </div>
         </div>
@@ -211,6 +257,12 @@ import axios from "axios";
 import Swal from "sweetalert2";
 export default {
   name: "ConsultaRotacionVagones",
+  props: {
+    informeID: {
+      type: Number,
+      required: false,
+    },
+  },
   data() {
     return {
       resumen: {
@@ -231,13 +283,6 @@ export default {
       modoEdicion: false, // Indica si estamos editando o agregando un registro
       indiceEdicion: null, // Guarda el índice del registro que se está editando
     };
-  },
-
-  props: {
-    informeId: {
-      type: [String, Number],
-      required: true,
-    },
   },
 
   mounted() {
@@ -266,7 +311,7 @@ export default {
               params: {
                 page: this.currentPage,
                 page_size: this.itemsPerPage,
-                informe: infoID.data.id,
+                informe: this.informeID ? this.informeID : infoID.data.id, // Usa el ID del informe operativo
               },
             });
             allRotaciones = [...allRotaciones, ...response.data.results]; // Agrega los resultados
@@ -497,7 +542,6 @@ export default {
 </script>
 
 <style scoped>
-
 /* Estilos para el modal */
 .ufc-modal-overlay {
   position: fixed;
@@ -529,7 +573,6 @@ export default {
   align-items: center;
   gap: 10px;
 }
-
 
 .ufc-modal-close {
   background: transparent;
@@ -586,7 +629,7 @@ export default {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
- 
+
   border-top: 1px solid #eee;
 }
 .ufc-button {
@@ -612,12 +655,12 @@ export default {
 }
 
 .ufc-button.secondary {
-    background:rgb(241, 81, 63);
-    color: white;
+  background: rgb(241, 81, 63);
+  color: white;
 }
 
 .ufc-button.secondary:hover {
-    background:rgb(228, 56, 37);
+  background: rgb(228, 56, 37);
 }
 
 .create-button {

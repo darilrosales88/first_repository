@@ -473,17 +473,20 @@ export default {
         );
         this.estado_parte = infoID.data.estado;
         //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
-
-        const response = await axios.get("/ufc/en-trenes/", {
-          params: {
-            page: this.currentPage,
-            page_size: this.itemsPerPage,
-            informe: this.informeID ? this.informeID : infoID.data.id,
-          },
-        });
-        this.enTrenes = response.data.results;
-        this.allRecords = response.data.results;
-        this.totalItems = response.data.count;
+        if (this.informeID || infoID.data.id) {
+          const response = await axios.get("/ufc/en-trenes/", {
+            params: {
+              page: this.currentPage,
+              page_size: this.itemsPerPage,
+              informe: this.informeID ? this.informeID : infoID.data.id,
+            },
+          });
+          this.enTrenes = response.data.results;
+          this.allRecords = response.data.results;
+          this.totalItems = response.data.count;
+        } else {
+          this.showErrorToast("No hay ID para cargar");
+        }
       } catch (error) {
         console.error("Error al obtener los trenes:", error);
         this.showErrorToast("No se pudieron cargar los registros");

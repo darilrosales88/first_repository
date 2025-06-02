@@ -8,16 +8,27 @@
       </div>
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <router-link v-if="hasGroup('AdminUFC')" to="AdicionarVagonCargadoDescargado">
-            <button class="btn  btn-sm btn-primary">
-              <i class="bi bi-plus-circle me-1"></i>Agregar nuevo vagón cargado/descargado
+          <router-link
+            v-if="hasGroup('AdminUFC')"
+            to="AdicionarVagonCargadoDescargado"
+          >
+            <button class="btn btn-sm btn-primary">
+              <i class="bi bi-plus-circle me-1"></i>Agregar nuevo vagón
+              cargado/descargado
             </button>
           </router-link>
           <form @submit.prevent="search_producto" class="search-container">
             <div class="input-group">
-              <input type="search" class="form-control" placeholder="TEF, Origen, Destino, Estado,..." v-model="searchQuery"
-                @input="handleSearchInput"/>
-              <span class="position-absolute top-50 start-0 translate-middle-y ps-2">
+              <input
+                type="search"
+                class="form-control"
+                placeholder="TEF, Origen, Destino, Estado,..."
+                v-model="searchQuery"
+                @input="handleSearchInput"
+              />
+              <span
+                class="position-absolute top-50 start-0 translate-middle-y ps-2"
+              >
                 <i class="bi bi-search"></i>
               </span>
             </div>
@@ -36,7 +47,9 @@
                 <th scope="col">Productos</th>
                 <th scope="col">Acciones</th>
               </tr>
-              <tr v-if="!busqueda_existente && cargados_descargados.length != 0">
+              <tr
+                v-if="!busqueda_existente && cargados_descargados.length != 0"
+              >
                 <td colspan="8" class="text-center text-muted py-4">
                   <i class="bi bi-exclamation-circle fs-4"></i>
                   <p class="mt-2">
@@ -57,10 +70,14 @@
                     </p>
                   </div>
                 </td>
-              </tr>       
+              </tr>
             </thead>
             <tbody>
-              <tr v-for="(vagon, index) in cargados_descargados" :key="vagon.id" class="align-middle">
+              <tr
+                v-for="(vagon, index) in cargados_descargados"
+                :key="vagon.id"
+                class="align-middle"
+              >
                 <th scope="row">{{ index + 1 }}</th>
                 <td>{{ vagon.tipo_equipo_ferroviario_name }}</td>
                 <td>{{ vagon.origen }}</td>
@@ -73,14 +90,26 @@
                 <td>{{ vagon.productos_list }}</td>
                 <td v-if="hasGroup('AdminUFC')">
                   <div class="d-flex">
-                    <button @click="viewDetails(vagon)" class="btn btn-sm btn-outline-info me-2" title="Ver detalles">
+                    <button
+                      @click="viewDetails(vagon)"
+                      class="btn btn-sm btn-outline-info me-2"
+                      title="Ver detalles"
+                    >
                       <i class="bi bi-eye-fill"></i>
                     </button>
 
-                    <button @click="editVagon(vagon)" class="btn btn-sm btn-outline-warning me-2" title="Editar">
+                    <button
+                      @click="editVagon(vagon)"
+                      class="btn btn-sm btn-outline-warning me-2"
+                      title="Editar"
+                    >
                       <i class="bi bi-pencil-square"></i>
                     </button>
-                    <button @click="confirmDelete(vagon.id)" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                    <button
+                      @click="confirmDelete(vagon.id)"
+                      class="btn btn-sm btn-outline-danger"
+                      title="Eliminar"
+                    >
                       <i class="bi bi-trash"></i>
                     </button>
                   </div>
@@ -91,7 +120,11 @@
         </div>
 
         <!-- Modal de detalles -->
-        <div v-if="mostrarModalDetalles" class="ps-modal-overlay" @click.self="cerrarModalDetalles()">
+        <div
+          v-if="mostrarModalDetalles"
+          class="ps-modal-overlay"
+          @click.self="cerrarModalDetalles()"
+        >
           <!-- Modal -->
           <div class="ps-modal">
             <!-- 1. Encabezado del Modal -->
@@ -115,7 +148,6 @@
             <!-- 2. Cuerpo del Modal -->
             <div class="ps-modal-body">
               <div class="ps-detail-grid">
-                
                 <!-- 2.1 Tarjeta - Información Básica -->
                 <div class="ps-detail-card">
                   <div class="ps-detail-card-header">
@@ -123,7 +155,6 @@
                     <h4>Información Básica</h4>
                   </div>
                   <div class="ps-detail-card-body">
-
                     <!-- 2.1.2 Item - Origen -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Tipo Origen:</span>
@@ -131,7 +162,7 @@
                         {{ vagonSeleccionado.tipo_origen_name || "N/A" }}
                       </span>
                     </div>
-                    
+
                     <!-- 2.1.2 Item - Origen -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Origen:</span>
@@ -149,12 +180,15 @@
                     <h4>Estado,Operación y Producto</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    
                     <!-- 2.2.1 Item - Estado -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Estado:</span>
                       <span class="ps-detail-value">
-                        <span :class="`ps-status ps-status-${getStatusClass(vagonSeleccionado.estado)}`">
+                        <span
+                          :class="`ps-status ps-status-${getStatusClass(
+                            vagonSeleccionado.estado
+                          )}`"
+                        >
                           {{ vagonSeleccionado.estado || "N/A" }}
                         </span>
                       </span>
@@ -166,15 +200,18 @@
                       <span class="ps-detail-value">
                         {{ vagonSeleccionado.operacion || "N/A" }}
                       </span>
-                    </div>                    
-                    
+                    </div>
+
                     <!-- 2.2.3 Item - Productos (lista) -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Productos:</span>
                       <span class="ps-detail-value">
-                        <template v-if="stringArray && stringArray .length > 0">
-                          <div v-for="producto in stringArray " class="producto-item">
-                            • {{ producto}}
+                        <template v-if="stringArray && stringArray.length > 0">
+                          <div
+                            v-for="producto in stringArray"
+                            class="producto-item"
+                          >
+                            • {{ producto }}
                           </div>
                         </template>
                         <span v-else>N/A</span>
@@ -190,12 +227,13 @@
                     <h4>Cantidades</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    
                     <!-- 2.3.1 Item - Vagones -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Real Carga/Descarga:</span>
-                      <span class="ps-detail-value ps-highlight-value ps-badge-success">
-                        {{ vagonSeleccionado.real_carga_descarga|| "0" }}
+                      <span
+                        class="ps-detail-value ps-highlight-value ps-badge-success"
+                      >
+                        {{ vagonSeleccionado.real_carga_descarga || "0" }}
                       </span>
                     </div>
                   </div>
@@ -206,12 +244,14 @@
                     <h4>Destinos</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    
                     <!-- 2.4.1 Item - Tipo Destino -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Tipo Destino:</span>
                       <span class="ps-detail-value">
-                        {{ getTipoOrigenText(vagonSeleccionado.tipo_destino) || "N/A" }}
+                        {{
+                          getTipoOrigenText(vagonSeleccionado.tipo_destino) ||
+                          "N/A"
+                        }}
                       </span>
                     </div>
                   </div>
@@ -232,11 +272,13 @@
                     <h4>Causas de Incumplimiento</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    
                     <!-- 2.4.1 Item - Observaciones -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-value">
-                        {{ vagonSeleccionado.causas_incumplimiento || "Ninguna causa de incumplimiento registrada" }}
+                        {{
+                          vagonSeleccionado.causas_incumplimiento ||
+                          "Ninguna causa de incumplimiento registrada"
+                        }}
                       </span>
                     </div>
                   </div>
@@ -249,12 +291,11 @@
                     <h4>Fecha de Creación</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    
                     <!-- 2.5.1 Item - Fecha y Hora -->
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Fecha y Hora:</span>
                       <span class="ps-detail-value">
-                        {{ vagonSeleccionado.fecha_registro}}
+                        {{ vagonSeleccionado.fecha_registro }}
                       </span>
                     </div>
                   </div>
@@ -283,7 +324,10 @@
                   {{ Math.ceil(totalItems / itemsPerPage) }}
                 </span>
               </li>
-              <li class="page-item" :class="{ disabled: currentPage * itemsPerPage >= totalItems }">
+              <li
+                class="page-item"
+                :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
+              >
                 <button class="page-link" @click="nextPage">
                   <i class="bi bi-chevron-right"></i>
                 </button>
@@ -292,7 +336,7 @@
           </nav>
         </div>
       </div>
-    </div> 
+    </div>
   </div>
 </template>
 
@@ -302,7 +346,12 @@ import Swal from "sweetalert2";
 
 export default {
   name: "CargadosDescargados",
-
+  props: {
+    informeID: {
+      type: Number,
+      required: false,
+    },
+  },
   data() {
     return {
       cargados_descargados: [], // Lista de vagones
@@ -367,30 +416,33 @@ export default {
 
     convertCharsToStrings(item) {
       // Convertir el string en arreglo de caracteres, manteniendo espacios
-      this.charArray = item.productos_list.split('');
-      
-      let currentWord = '';
+      this.charArray = item.productos_list.split("");
+
+      let currentWord = "";
       this.stringArray = [];
-      
+
       for (const char of this.charArray) {
-        if (char === ',') {
+        if (char === ",") {
           // Al encontrar coma, guardar la palabra actual (incluso si está vacía)
           this.stringArray.push(currentWord);
-          currentWord = '';
+          currentWord = "";
         } else {
           // Agregar el carácter a la palabra actual (incluyendo espacios)
           currentWord += char;
         }
       }
-      
+
       // Añadir la última palabra si existe (puede ser vacía)
-      if (currentWord !== '' || this.charArray[this.charArray.length - 1] === ',') {
+      if (
+        currentWord !== "" ||
+        this.charArray[this.charArray.length - 1] === ","
+      ) {
         this.stringArray.push(currentWord);
       }
-      
+
       // Opcional: eliminar espacios en blanco al inicio/final de cada palabra
-      this.stringArray = this.stringArray.map(word => word.trim());
-      
+      this.stringArray = this.stringArray.map((word) => word.trim());
+
       // Opcional: filtrar palabras vacías si no se desean
       // this.stringArray = this.stringArray.filter(word => word !== '');
     },
@@ -420,15 +472,17 @@ export default {
         const infoID = await axios.get(
           `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
         );
-        if (infoID.data.existe) {
-          //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
+        this.estado_parte = infoID.data.estado;
+
+        //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
+        if (this.informeID || infoID.data.id) {
           const response = await axios.get(
             "/ufc/vagones-cargados-descargados/",
             {
               params: {
                 page: this.currentPage,
                 page_size: this.itemsPerPage,
-                informe: infoID.data.id,
+                informe: this.informeID ? this.informeID : infoID.data.id,
               },
             }
           );
@@ -437,6 +491,8 @@ export default {
           this.allRecords = [...response.data.results]; // Guardar copia completa para filtrado
           this.totalItems = response.data.count;
           this.busqueda_existente = true;
+        } else {
+          this.showErrorToast("No hay ID para cargar");
         }
       } catch (error) {
         console.error(
@@ -602,7 +658,6 @@ export default {
 </script>
 
 <style scoped>
-
 .card-header {
   background-color: #f8f9fa;
   border-bottom: 2px solid #e0e0e0 !important;
@@ -1077,7 +1132,7 @@ export default {
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-  border-radius:10px;
+  border-radius: 10px;
   animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   overflow: hidden;
 }
@@ -1087,7 +1142,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color:#0d6efd;
+  background-color: #0d6efd;
   color: white;
   position: relative;
 }
@@ -1183,7 +1238,7 @@ export default {
 
 .ps-detail-card-header {
   padding: 1rem;
-  background-color:#0d6efd;
+  background-color: #0d6efd;
   color: white;
   border-bottom: 1px solid var(--ps-light-gray);
   display: flex;
@@ -1322,11 +1377,11 @@ export default {
   .card-body {
     padding: 1rem;
   }
-  
+
   .btn {
     width: 100%;
   }
-  
+
   .d-flex {
     flex-direction: column;
     gap: 0.5rem !important;

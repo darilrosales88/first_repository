@@ -3,7 +3,8 @@
     <div class="card border">
       <div class="card-header bg-light border-bottom">
         <h5 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-clipboard-data me-2"></i>Registros de operaciones - UFC
+          <i class="bi bi-clipboard-data me-2"></i>Registros de operaciones -
+          UFC
         </h5>
       </div>
 
@@ -13,57 +14,77 @@
           <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3 mb-4">
             <div class="col">
               <div class="form-group">
-                <label for="planMensualTotal" class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-calendar-month me-2 text-primary"></i>Plan Mensual Total
+                <label
+                  for="planMensualTotal"
+                  class="form-label small fw-semibold text-secondary"
+                >
+                  <i class="bi bi-calendar-month me-2 text-primary"></i>Plan
+                  Mensual Total
                 </label>
-                <input 
-                  type="number" 
-                  class="form-control form-control-sm border-secondary mt-2" 
-                  id="planMensualTotal" 
-                  v-model="formData.plan_mensual_total"
-                  :disabled="isExistingRecord">
-              </div>
-            </div>
-
-            <div class="col">
-              <div class="form-group">
-                <label for="planDiarioTotal" class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-calendar-day me-2 text-primary"></i>Plan Diario Total
-                </label>
-                <input 
-                  type="number" 
-                  class="form-control form-control-sm border-secondary mt-2" 
-                  id="planDiarioTotal" 
-                  v-model="formData.plan_diario_total_vagones_cargados"
-                  :disabled="isExistingRecord">
-              </div>
-            </div>
-
-            <div class="col">
-              <div class="form-group">
-                <label for="realTotalVagones" class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-train-freight-front me-2 text-primary"></i>Real Total Vagones
-                </label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   class="form-control form-control-sm border-secondary mt-2"
-                  id="realTotalVagones" 
-                  v-model="formData.real_total_vagones_cargados"
-                  :disabled="isExistingRecord">
+                  id="planMensualTotal"
+                  v-model="formData.plan_mensual_total"
+                  :disabled="isExistingRecord"
+                />
               </div>
             </div>
 
             <div class="col">
               <div class="form-group">
-                <label for="totalVagonesSituados" class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-pin-map me-2 text-primary"></i>Total Vagones Situados
+                <label
+                  for="planDiarioTotal"
+                  class="form-label small fw-semibold text-secondary"
+                >
+                  <i class="bi bi-calendar-day me-2 text-primary"></i>Plan
+                  Diario Total
+                </label>
+                <input
+                  type="number"
+                  class="form-control form-control-sm border-secondary mt-2"
+                  id="planDiarioTotal"
+                  v-model="formData.plan_diario_total_vagones_cargados"
+                  :disabled="isExistingRecord"
+                />
+              </div>
+            </div>
+
+            <div class="col">
+              <div class="form-group">
+                <label
+                  for="realTotalVagones"
+                  class="form-label small fw-semibold text-secondary"
+                >
+                  <i class="bi bi-train-freight-front me-2 text-primary"></i
+                  >Real Total Vagones
+                </label>
+                <input
+                  type="number"
+                  class="form-control form-control-sm border-secondary mt-2"
+                  id="realTotalVagones"
+                  v-model="formData.real_total_vagones_cargados"
+                  :disabled="isExistingRecord"
+                />
+              </div>
+            </div>
+
+            <div class="col">
+              <div class="form-group">
+                <label
+                  for="totalVagonesSituados"
+                  class="form-label small fw-semibold text-secondary"
+                >
+                  <i class="bi bi-pin-map me-2 text-primary"></i>Total Vagones
+                  Situados
                 </label>
                 <input
                   type="number"
                   class="form-control form-control-sm border-secondary mt-2"
                   id="totalVagonesSituados"
                   v-model="formData.total_vagones_situados"
-                  :disabled="isExistingRecord"/>
+                  :disabled="isExistingRecord"
+                />
               </div>
             </div>
           </div>
@@ -72,37 +93,51 @@
           <div class="row row-cols-1 row-cols-md-2 g-3 mb-4">
             <div class="col">
               <div class="form-group">
-                <label for="planTotalAcumulado" class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-graph-up me-2 text-primary"></i>Plan Total Acumulado
+                <label
+                  for="planTotalAcumulado"
+                  class="form-label small fw-semibold text-secondary"
+                >
+                  <i class="bi bi-graph-up me-2 text-primary"></i>Plan Total
+                  Acumulado
                 </label>
-                <input 
-                  type="number" 
-                  class="form-control form-control-sm border-secondary" 
-                  id="planTotalAcumulado" 
+                <input
+                  type="number"
+                  class="form-control form-control-sm border-secondary"
+                  id="planTotalAcumulado"
                   v-model="formData.plan_total_acumulado_actual"
-                  :disabled="isExistingRecord">
+                  :disabled="isExistingRecord"
+                />
               </div>
             </div>
 
             <div class="col">
               <div class="form-group">
-                <label for="realTotalAcumulado" class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-graph-up-arrow me-2 text-primary"></i>Real Total Acumulado
+                <label
+                  for="realTotalAcumulado"
+                  class="form-label small fw-semibold text-secondary"
+                >
+                  <i class="bi bi-graph-up-arrow me-2 text-primary"></i>Real
+                  Total Acumulado
                 </label>
-                <input 
-                  type="number" 
-                  class="form-control form-control-sm border-secondary" 
-                  id="realTotalAcumulado" 
+                <input
+                  type="number"
+                  class="form-control form-control-sm border-secondary"
+                  id="realTotalAcumulado"
                   v-model="formData.real_total_acumulado_actual"
-                  :disabled="isExistingRecord">
+                  :disabled="isExistingRecord"
+                />
               </div>
             </div>
           </div>
 
           <!-- Botones -->
-          <div class="d-flex justify-content-end gap-2 mt-4">            
-            <button type="submit" class="btn btn-sm btn-primary" :disabled="isExistingRecord || isLoading">
-              <i class="bi bi-save me-1"></i>Guardar
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button
+              type="submit"
+              class="btn btn-sm btn-primary"
+              :disabled="isExistingRecord || isLoading"
+            >
+              <i class="bi bi-save me-1"></i>Crear Informe
             </button>
           </div>
         </form>
@@ -125,6 +160,10 @@ export default {
     fechaOperacion: {
       type: Date,
       required: true,
+    },
+    informeID: {
+      type: Number,
+      required: false,
     },
   },
   data() {
@@ -161,7 +200,7 @@ export default {
       clearInterval(this.checkInterval);
     }
   },
-  
+
   methods: {
     visualizarInforme() {
       if (this.informeOperativoId) {
@@ -184,13 +223,15 @@ export default {
           this.informeOperativoId = response.data.id;
           this.isExistingRecord = true;
 
-          this.$emit('record-status-changed', {
+          this.$emit("record-status-changed", {
             isExisting: true,
           });
 
           // Cargar datos del informe creado
           const recordResponse = await axios.get(
-            `/ufc/informe-operativo/${this.informeOperativoId}/`
+            `/ufc/informe-operativo/${
+              this.informeID ? this.informeID : this.informeOperativoId
+            }/`
           );
 
           // Formatear la fecha para mostrar solo YYYY-MM-DD
@@ -262,7 +303,7 @@ export default {
         this.informeOperativoId = response.data.id;
         this.isExistingRecord = true;
 
-        this.$emit('record-status-changed', {
+        this.$emit("record-status-changed", {
           isExisting: true,
         });
 
@@ -299,11 +340,11 @@ export default {
   .form-label {
     font-size: 0.8rem;
   }
-  
+
   .form-control {
     font-size: 0.9rem;
   }
-  
+
   .card-body {
     padding: 1rem !important;
   }

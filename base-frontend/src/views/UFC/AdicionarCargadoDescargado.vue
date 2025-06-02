@@ -41,7 +41,7 @@
                     <select v-if="formData.tipo_origen !== 'puerto' && formData.tipo_origen != ''" class="form-select form-select-sm border-secondary" style="width:230px; padding-top:8px;padding-bottom:8px;"  v-model="formData.origen" id="origen" name="origen" required
                       oninvalid="this.setCustomValidity('Por favor, seleccione un origen')"
                       oninput="this.setCustomValidity('')">
-                      
+                      <option value="" disabled>Seleccione un destino</option>
                       <option v-for="entidad in entidades" :key="entidad.id" :value="entidad.nombre">
                         {{ entidad.id }}-{{ entidad.nombre }}
                       </option>

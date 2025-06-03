@@ -2,16 +2,15 @@
   <div class="container py-3">
     <div class="card border">
       <div class="card-header bg-light border-bottom">
-        <h5 class="mb-0 text-dark fw-semibold">
+        <h6 class="mb-0 text-dark fw-semibold">
           <i class="bi bi-clipboard-data me-2"></i>Vagones Cargados/descargados
-        </h5>
+        </h6>
       </div>
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <router-link
-            v-if="hasGroup('AdminUFC')"
-            to="AdicionarVagonCargadoDescargado"
-          >
+            v-if="hasGroup('AdminUFC') && this.habilitado"
+            to="AdicionarVagonCargadoDescargado">
             <button class="btn btn-sm btn-primary">
               <i class="bi bi-plus-circle me-1"></i>Agregar nuevo vagón
               cargado/descargado
@@ -22,13 +21,11 @@
               <input
                 type="search"
                 class="form-control"
-                placeholder="TEF, Origen, Destino, Estado,..."
+                placeholder="Buscar en registros"
                 v-model="searchQuery"
                 @input="handleSearchInput"
               />
-              <span
-                class="position-absolute top-50 start-0 translate-middle-y ps-2"
-              >
+              <span class="position-absolute top-50 start-0 translate-middle-y ps-2">
                 <i class="bi bi-search"></i>
               </span>
             </div>
@@ -47,9 +44,7 @@
                 <th scope="col">Productos</th>
                 <th scope="col">Acciones</th>
               </tr>
-              <tr
-                v-if="!busqueda_existente && cargados_descargados.length != 0"
-              >
+              <tr v-if="!busqueda_existente && cargados_descargados.length != 0">
                 <td colspan="8" class="text-center text-muted py-4">
                   <i class="bi bi-exclamation-circle fs-4"></i>
                   <p class="mt-2">
@@ -73,11 +68,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr
-                v-for="(vagon, index) in cargados_descargados"
-                :key="vagon.id"
-                class="align-middle"
-              >
+              <tr v-for="(vagon, index) in cargados_descargados" :key="vagon.id" class="align-middle">
                 <th scope="row">{{ index + 1 }}</th>
                 <td>{{ vagon.tipo_equipo_ferroviario_name }}</td>
                 <td>{{ vagon.origen }}</td>
@@ -86,30 +77,35 @@
                     {{ vagon.destino }}
                   </span>
                 </td>
-                <td>{{ vagon.estado }}</td>
+                <td>
+                  <span
+                    :class="`ps-status ps-status-${getStatusClass(
+                      vagon.estado
+                    )}`">
+                    {{ vagon.estado }}
+                  </span>
+                </td>
                 <td>{{ vagon.productos_list }}</td>
                 <td v-if="hasGroup('AdminUFC')">
                   <div class="d-flex">
                     <button
                       @click="viewDetails(vagon)"
                       class="btn btn-sm btn-outline-info me-2"
-                      title="Ver detalles"
-                    >
+                      title="Ver detalles">
                       <i class="bi bi-eye-fill"></i>
                     </button>
 
-                    <button
+                    <button v-if="this.habilitado"
                       @click="editVagon(vagon)"
                       class="btn btn-sm btn-outline-warning me-2"
-                      title="Editar"
-                    >
+                      title="Editar">
                       <i class="bi bi-pencil-square"></i>
                     </button>
-                    <button
+
+                    <button v-if="this.habilitado"
                       @click="confirmDelete(vagon.id)"
                       class="btn btn-sm btn-outline-danger"
-                      title="Eliminar"
-                    >
+                      title="Eliminar">
                       <i class="bi bi-trash"></i>
                     </button>
                   </div>
@@ -187,8 +183,7 @@
                         <span
                           :class="`ps-status ps-status-${getStatusClass(
                             vagonSeleccionado.estado
-                          )}`"
-                        >
+                          )}`">
                           {{ vagonSeleccionado.estado || "N/A" }}
                         </span>
                       </span>
@@ -356,6 +351,7 @@ export default {
     return {
       cargados_descargados: [], // Lista de vagones
       allRecords: [], // Copia completa de todos los registros para filtrado local
+      habilitado: true,
       currentPage: 1,
       itemsPerPage: 10,
       totalItems: 0,
@@ -386,15 +382,12 @@ export default {
       const option = this.tipo_origen_options.find((o) => o.id === id);
       return option ? option.text : id;
     },
+
     getStatusClass(status) {
       if (!status) return "default";
       const statusLower = status.toLowerCase();
-
-      if (statusLower.includes("activo")) return "success";
-      if (statusLower.includes("pendiente")) return "warning";
-      if (statusLower.includes("inactivo") || statusLower.includes("cancelado"))
-        return "danger";
-
+      if (statusLower.includes("cargado")) return "success";
+      if (statusLower.includes("vacio")) return "danger";
       return "info";
     },
 
@@ -487,6 +480,10 @@ export default {
             }
           );
 
+          if(this.informeID){
+            this.habilitado = false;
+          }
+
           this.cargados_descargados = response.data.results;
           this.allRecords = [...response.data.results]; // Guardar copia completa para filtrado
           this.totalItems = response.data.count;
@@ -503,17 +500,6 @@ export default {
       } finally {
         this.loading = false;
       }
-    },
-    getStatusClass(status) {
-      if (!status) return "default";
-      const statusLower = status.toLowerCase();
-
-      if (statusLower.includes("activo")) return "success";
-      if (statusLower.includes("pendiente")) return "warning";
-      if (statusLower.includes("inactivo") || statusLower.includes("cancelado"))
-        return "danger";
-
-      return "info";
     },
 
     // Nuevo método de búsqueda adaptado del componente que funciona
@@ -652,6 +638,49 @@ export default {
       }
       console.error(errorMsg, error);
       Swal.fire("Error", errorMsg, "error");
+    },
+        showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
+      });
     },
   },
 };

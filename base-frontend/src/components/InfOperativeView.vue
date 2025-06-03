@@ -1,9 +1,9 @@
 <template>
   <div class="card border">
     <div class="card-header bg-light border-bottom">
-      <h5 class="mb-0 text-dark fw-semibold">
+      <h6 class="mb-0 text-dark fw-semibold">
         <i class="bi bi-clipboard-data me-2"></i>Registros de operaciones UFC
-      </h5>
+      </h6>
     </div>
 
     <div class="card-body p-3">

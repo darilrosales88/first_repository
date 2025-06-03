@@ -28,8 +28,7 @@
                 <div class="form-group">
                   <label
                     for="fechaActual"
-                    class="form-label small fw-semibold text-secondary"
-                  >
+                    class="form-label small fw-semibold text-secondary">
                     <i class="bi bi-calendar-check me-2 text-primary"></i>Fecha
                     Actual
                   </label>
@@ -47,8 +46,7 @@
                 <div class="form-group">
                   <label
                     for="fechaOperacion"
-                    class="form-label small fw-semibold text-secondary"
-                  >
+                    class="form-label small fw-semibold text-secondary">
                     <i class="bi bi-calendar-check me-2 text-primary"></i>Fecha
                     Operación
                   </label>
@@ -77,12 +75,8 @@
           <a
             href="#"
             @click.prevent="
-              loadComponent('PorSituarCarga_Descarga', {
-                informeID: $route.params.id,
-              })
-            "
-            :class="{ active: currentComponent === 'PorSituarCarga_Descarga' }"
-          >
+              loadComponent('PorSituarCarga_Descarga', {informeID: $route.params.id,})"
+            :class="{ active: currentComponent === 'PorSituarCarga_Descarga' }">
             Por Situar Carga/Descarga
           </a>
         </li>
@@ -90,12 +84,8 @@
           <a
             href="#"
             @click.prevent="
-              loadComponent('SituadoCarga_Descarga', {
-                informeID: $route.params.id,
-              })
-            "
-            :class="{ active: currentComponent === 'SituadoCarga_Descarga' }"
-          >
+              loadComponent('SituadoCarga_Descarga', {informeID: $route.params.id,})"
+            :class="{ active: currentComponent === 'SituadoCarga_Descarga' }">
             Situado Carga/Descarga
           </a>
         </li>
@@ -103,12 +93,8 @@
           <a
             href="#"
             @click.prevent="
-              loadComponent('Cargados_Descargados', {
-                informeID: $route.params.id,
-              })
-            "
-            :class="{ active: currentComponent === 'Cargados_Descargados' }"
-          >
+              loadComponent('Cargados_Descargados', {informeID: $route.params.id,})"
+            :class="{ active: currentComponent === 'Cargados_Descargados' }">
             Cargados
           </a>
         </li>
@@ -116,12 +102,8 @@
           <a
             href="#"
             @click.prevent="
-              loadComponent('PendientesArrastre', {
-                informeID: $route.params.id,
-              })
-            "
-            :class="{ active: currentComponent === 'PendientesArrastre' }"
-          >
+              loadComponent('PendientesArrastre', {informeID: $route.params.id,})"
+            :class="{ active: currentComponent === 'PendientesArrastre' }">
             Pendientes
           </a>
         </li>
@@ -129,10 +111,8 @@
           <a
             href="#"
             @click.prevent="
-              loadComponent('EnTrenes', { informeID: $route.params.id })
-            "
-            :class="{ active: currentComponent === 'EnTrenes' }"
-          >
+              loadComponent('EnTrenes', { informeID: $route.params.id })"
+            :class="{ active: currentComponent === 'EnTrenes' }">
             En Trenes
           </a>
         </li>
@@ -206,6 +186,7 @@ export default {
     AdicionarVagonProducto,
     ConsultaRotacionVagones,
   },
+
   data() {
     const now = new Date();
     const offset = now.getTimezoneOffset() * 60000; // offset en milisegundos
@@ -213,7 +194,8 @@ export default {
     return {
       userPermissions: [],
       userGroups: [],
-      currentComponent: "",
+      currentComponent: "PorSituarCarga_Descarga", // Cargar este componente por defecto
+      componentProps: {},
       informeOperativoId: null,
       loadingPermissions: false,
       isExistingRecord: false,
@@ -227,6 +209,8 @@ export default {
 
   async created() {
     await this.fetchUserPermissionsAndGroups();
+    // Inicializar los props del componente después de obtener los permisos
+    this.componentProps = { informeID: this.$route.params.id };
   },
 
   methods: {

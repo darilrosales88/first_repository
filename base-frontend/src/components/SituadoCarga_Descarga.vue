@@ -2,13 +2,13 @@
   <div class="container py-3">
     <div class="card border">
       <div class="card-header bg-light border-bottom">
-        <h5 class="mb-0 text-dark fw-semibold">
+        <h6 class="mb-0 text-dark fw-semibold">
           <i class="bi bi-check2-square me-2"></i>Registros Situados
-        </h5>
+        </h6>
       </div>
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <router-link v-if="hasGroup('AdminUFC')" to="/AdicionarSituados">
+          <router-link v-if="hasGroup('AdminUFC') && this.habilitado" to="/AdicionarSituados" >
             <button class="btn btn-sm btn-primary">
               <i class="bi bi-plus-circle me-1"></i>Agregar nuevo registro
               situado
@@ -19,13 +19,11 @@
               <input
                 type="search"
                 class="form-control"
-                placeholder="Tipo Origen,Origen,Tipo equipo,..."
+                placeholder="Buscar en registros"
                 v-model="searchQuery"
-                @input="handleSearchInput"
-              />
+                @input="handleSearchInput"/>
               <span
-                class="position-absolute top-50 start-0 translate-middle-y ps-2"
-              >
+                class="position-absolute top-50 start-0 translate-middle-y ps-2">
                 <i class="bi bi-search"></i>
               </span>
             </div>
@@ -69,11 +67,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr
-                v-for="(item, index) in registroSituado"
-                :key="item.id"
-                class="align-middle"
-              >
+              <tr v-for="(item, index) in registroSituado" :key="item.id" class="align-middle">
                 <th scope="row">{{ index + 1 }}</th>
                 <td>{{ item.tipo_origen_name }}</td>
                 <td>{{ item.origen }}</td>
@@ -82,16 +76,14 @@
                   <span
                     :class="`ps-status ps-status-${getStatusClass(
                       item.estado
-                    )}`"
-                  >
+                    )}`">
                     {{ item.estado }}
                   </span>
                 </td>
                 <td>{{ item.operacion }}</td>
                 <td class="ps-td">
                   <span
-                    v-if="item.productos_info && item.productos_info.length > 0"
-                  >
+                    v-if="item.productos_info && item.productos_info.length > 0">
                     {{ getNombresProductos(item.productos_info) }}
                   </span>
                   <span v-else>-</span>
@@ -111,23 +103,21 @@
                     <button
                       @click="viewDetails(item)"
                       class="btn btn-sm btn-outline-info me-2"
-                      title="Ver detalles"
-                    >
+                      title="Ver detalles">
                       <i class="bi bi-eye-fill"></i>
                     </button>
 
-                    <button
+                    <button v-if="this.habilitado"
                       @click="editRegistroSituado(item)"
                       class="btn btn-sm btn-outline-warning me-2"
-                      title="Editar"
-                    >
+                      title="Editar">
                       <i class="bi bi-pencil-square"></i>
                     </button>
-                    <button
+
+                    <button v-if="this.habilitado"
                       @click="confirmDelete(item.id)"
                       class="btn btn-sm btn-outline-danger"
-                      title="Eliminar"
-                    >
+                      title="Eliminar">
                       <i class="bi bi-trash"></i>
                     </button>
                   </div>
@@ -239,10 +229,7 @@
                       <span class="ps-detail-label">Estado:</span>
                       <span class="ps-detail-value">
                         <span
-                          :class="`ps-status ps-status-${getStatusClass(
-                            currentRecord.estado
-                          )}`"
-                        >
+                          :class="`ps-status ps-status-${getStatusClass(currentRecord.estado)}`">
                           {{ currentRecord.estado || "N/A" }}
                         </span>
                       </span>
@@ -353,6 +340,7 @@ export default {
     return {
       registroSituado: [],
       allRecords: [], // Copia completa de todos los registros para filtrado local
+      habilitado: true,
       currentPage: 1,
       itemsPerPage: 10,
       totalItems: 0,
@@ -398,10 +386,8 @@ export default {
       if (!status) return "default";
       const statusLower = status.toLowerCase();
 
-      if (statusLower.includes("activo")) return "success";
-      if (statusLower.includes("pendiente")) return "warning";
-      if (statusLower.includes("inactivo") || statusLower.includes("cancelado"))
-        return "danger";
+      if (statusLower.includes("cargado")) return "success";
+      if (statusLower.includes("vacio")) return "danger";
 
       return "info";
     },
@@ -433,7 +419,7 @@ export default {
       }
     },
 
-    /*     async getVagonesCargadosDescargados() {
+  /*async getVagonesCargadosDescargados() {
       this.loading = true;
       try {
         const response = await axios.get("/ufc/situados-hoy/", {
@@ -479,11 +465,15 @@ export default {
               informe: this.informeID ? this.informeID : infoID.data.id,
             },
           });
+
+          if(this.informeID){
+            this.habilitado = false;
+          }
+
           this.totalItems = response.data.count;
 
           if (
-            response.data &&
-            Array.isArray(response.data.results || response.data)
+            response.data && Array.isArray(response.data.results || response.data)
           ) {
             const data = response.data.results || response.data;
             this.allRecords = data.map((item) => ({
@@ -621,6 +611,49 @@ export default {
       }
       console.error(errorMsg, error);
       Swal.fire("Error", errorMsg, "error");
+    },
+    showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
+      });
     },
   },
 };
@@ -1024,5 +1057,32 @@ export default {
   background: var(--ps-primary-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+}
+
+.ps-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.ps-status-success {
+  background: rgba(76, 201, 240, 0.1);
+  color: #06d6a0;
+  border: 1px solid rgba(6, 214, 160, 0.2);
+}
+
+
+.ps-status-danger {
+  background: rgba(247, 37, 133, 0.1);
+  color: #f72585;
+  border: 1px solid rgba(247, 37, 133, 0.2);
+}
+
+.ps-status-default {
+  background: rgba(108, 117, 125, 0.1);
+  color: var(--io-gray);
+  border: 1px solid rgba(108, 117, 125, 0.2);
 }
 </style>

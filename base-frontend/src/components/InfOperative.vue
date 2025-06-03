@@ -2,10 +2,10 @@
   <div class="container py-3">
     <div class="card border">
       <div class="card-header bg-light border-bottom">
-        <h5 class="mb-0 text-dark fw-semibold">
+        <h6 class="mb-0 text-dark fw-semibold">
           <i class="bi bi-clipboard-data me-2"></i>Registros de operaciones -
           UFC
-        </h5>
+        </h6>
       </div>
 
       <div class="card-body p-3">
@@ -22,11 +22,11 @@
                   Mensual Total
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   class="form-control form-control-sm border-secondary mt-2"
                   id="planMensualTotal"
                   v-model="formData.plan_mensual_total"
-                  :disabled="isExistingRecord"
+                  :disabled="isExistingRecord" readonly
                 />
               </div>
             </div>
@@ -41,11 +41,11 @@
                   Diario Total
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   class="form-control form-control-sm border-secondary mt-2"
                   id="planDiarioTotal"
                   v-model="formData.plan_diario_total_vagones_cargados"
-                  :disabled="isExistingRecord"
+                  :disabled="isExistingRecord" readonly
                 />
               </div>
             </div>
@@ -60,11 +60,11 @@
                   >Real Total Vagones
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   class="form-control form-control-sm border-secondary mt-2"
                   id="realTotalVagones"
                   v-model="formData.real_total_vagones_cargados"
-                  :disabled="isExistingRecord"
+                  :disabled="isExistingRecord" readonly
                 />
               </div>
             </div>
@@ -79,11 +79,11 @@
                   Situados
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   class="form-control form-control-sm border-secondary mt-2"
                   id="totalVagonesSituados"
                   v-model="formData.total_vagones_situados"
-                  :disabled="isExistingRecord"
+                  :disabled="isExistingRecord" readonly
                 />
               </div>
             </div>
@@ -101,11 +101,11 @@
                   Acumulado
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   class="form-control form-control-sm border-secondary"
                   id="planTotalAcumulado"
                   v-model="formData.plan_total_acumulado_actual"
-                  :disabled="isExistingRecord"
+                  :disabled="isExistingRecord" readonly
                 />
               </div>
             </div>
@@ -120,11 +120,11 @@
                   Total Acumulado
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   class="form-control form-control-sm border-secondary"
                   id="realTotalAcumulado"
                   v-model="formData.real_total_acumulado_actual"
-                  :disabled="isExistingRecord"
+                  :disabled="isExistingRecord" readonly
                 />
               </div>
             </div>

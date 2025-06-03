@@ -8,7 +8,7 @@
       </div>
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <router-link to="/AdicionarVagon">
+          <router-link v-if="hasGroup('AdminUFC') && this.habilitado" to="/AdicionarVagon">
             <button class="btn btn-sm btn-primary">
               <i class="bi bi-plus-circle me-1"></i>Agregar nuevo vagón en tren
             </button>
@@ -108,22 +108,21 @@
                     <button
                       @click="viewDetails(item)"
                       class="btn btn-sm btn-outline-info me-2"
-                      title="Ver detalles"
-                    >
+                      title="Ver detalles">
                       <i class="bi bi-eye-fill"></i>
                     </button>
-                    <button
+
+                    <button v-if="this.habilitado"
                       @click="editVagonEnTren(item.id)"
                       class="btn btn-sm btn-outline-warning me-2"
-                      title="Editar"
-                    >
+                      title="Editar">
                       <i class="bi bi-pencil-square"></i>
                     </button>
-                    <button
+
+                    <button v-if="this.habilitado"
                       @click="confirmDelete(item.id)"
                       class="btn btn-sm btn-outline-danger"
-                      title="Eliminar"
-                    >
+                      title="Eliminar">
                       <i class="bi bi-trash"></i>
                     </button>
                   </div>
@@ -382,6 +381,7 @@ export default {
     return {
       enTrenes: [],
       allRecords: [], // Copia completa de todos los registros para filtrado local
+      habilitado: true,
       currentPage: 1,
       itemsPerPage: 10,
       totalItems: 0,
@@ -475,6 +475,11 @@ export default {
               informe: this.informeID ? this.informeID : infoID.data.id,
             },
           });
+                    
+          if(this.informeID){
+            this.habilitado = false;
+          }
+
           this.enTrenes = response.data.results;
           this.allRecords = response.data.results;
           this.totalItems = response.data.count;
@@ -611,6 +616,49 @@ export default {
       }
       console.error(errorMsg, error);
       Swal.fire("Error", errorMsg, "error");
+    },
+        showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
+      });
     },
   },
 };

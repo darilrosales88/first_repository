@@ -1,6 +1,6 @@
 from datetime import date
 from django.db import models 
-from django.db.models.signals import pre_save, post_save, post_delete
+from django.db.models.signals import pre_save, post_save, post_delete,pre_delete
 from django.db.models import Sum, Prefetch,Subquery, OuterRef
 from django.db.models.functions import TruncDate
 from django.db import transaction
@@ -56,15 +56,18 @@ from ufc.serializers import actualizar_estado_equipo_ferroviario
 
 
 @receiver(post_save, sender=ufc_informe_operativo)
+@receiver(pre_delete, sender=ufc_informe_operativo)
 def actualizar_estado_vagones(sender, instance:ufc_informe_operativo, **kwargs):
     """
     Signal que actualiza el estado de los vagones asociados cuando cambia estado_parte
     del informe operativo, considerando todas las relaciones posibles.
     """
+    print(kwargs,sender)
     # Solo ejecutar si es una actualización y estado_parte está en los campos actualizados
-    if kwargs.get('created', False) or instance.estado_parte=="Creado":
-        return
-
+    if(not kwargs.get('origin')):
+        if kwargs.get('created', False) or instance.estado_parte=="Creado":
+            return
+    print(kwargs,sender)
     with transaction.atomic():
         # Bloquear el informe para evitar condiciones de carrera
         informe = ufc_informe_operativo.objects.select_for_update().get(pk=instance.pk)

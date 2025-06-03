@@ -18,7 +18,7 @@
               <input
                 type="search"
                 class="form-control"
-                placeholder="Cod Locomotora, Tipo Equipo,..."
+                placeholder="Buscar en registros"
                 v-model="searchQuery"
                 @input="handleSearchInput"
               />

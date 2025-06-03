@@ -24,8 +24,7 @@
                 @input="handleSearchInput"
               />
               <span
-                class="position-absolute top-50 start-0 translate-middle-y ps-2"
-              >
+                class="position-absolute top-50 start-0 translate-middle-y ps-2">
                 <i class="bi bi-search"></i>
               </span>
             </div>
@@ -586,6 +585,50 @@ export default {
       }
       console.error(errorMsg, error);
       Swal.fire("Error", errorMsg, "error");
+    },
+
+        showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
+      });
     },
   },
 };

@@ -598,7 +598,7 @@ export default {
       console.error(errorMsg, error);
       Swal.fire("Error", errorMsg, "error");
     },
-        showSuccessToast(message) {
+    showSuccessToast(message) {
       const Toast = Swal.mixin({
         toast: true,
         position: "top-end",

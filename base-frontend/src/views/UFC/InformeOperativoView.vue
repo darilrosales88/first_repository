@@ -63,6 +63,16 @@
                 </div>
               </div>
             </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <button
+                type="submit"
+                class="btn btn-primary"
+                @click="crearInforme"
+                :disabled="isExistingRecord">
+                <i class="bi bi-save me-2"></i>Crear informe operativo
+              </button>
+            </div>
           </form>
         </div>
       </div>
@@ -138,6 +148,7 @@
 
   <div style="margin-left: 16em; width: 80%">
     <Inf-Operative
+      ref="infOperative"
       :fechaActual="formData.fecha_actual"
       :fechaOperacion="formData.fecha_operacion"
       @record-status-changed="handleRecordStatusChange"
@@ -174,7 +185,7 @@ import AdicionarVagonProducto from "@/views/UFC/AdicionarVagonesProductos.vue";
 import ConsultaRotacionVagones from "@/components/RotacionVagonesView.vue";
 
 export default {
-  name: "UFCView",
+  name: "InfoOperativeView",
   components: {
     NavbarComponent,
     PorSituarCarga_Descarga,
@@ -211,6 +222,12 @@ export default {
   },
 
   methods: {
+    async crearInforme() {
+      if (this.$refs.infOperative) {
+        await this.$refs.infOperative.submitForm();
+      }
+    },
+
     async rechazar() {
       if (!this.hasGroup("RevisorUFC")) {
         await Swal.fire({

@@ -1,7 +1,7 @@
 <template>
   <nav
     class="navbar navbar-expand d-flex flex-column align-items-start navbar-dark p-0"
-    style="width: 250px; height: 100vh"
+    style="width: 250px; height: 100vh;"
     role="navigation"
     aria-label="Main navigation"
   >
@@ -141,7 +141,7 @@ export default {
               icon: "exclamation-triangle",
             },
             {
-              title: "OSDE/OACE u organismo",
+              title: "OSDE/OACE",
               route: "/Organismos",
               icon: "building-gear",
             },

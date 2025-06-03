@@ -65,13 +65,9 @@
                   </div>
                   <div v-else>
                     <i class="bi bi-database-exclamation fs-4"></i>
-                    <p class="mt-2">No hay registros</p>
-                    <router-link to="AdicionarVagonCargadoDescargado">
-                      <button class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-circle me-1"></i>Crear primer
-                        registro
-                      </button>
-                    </router-link>
+                    <p class="mt-2">
+                      No hay registros
+                    </p>
                   </div>
                 </td>
               </tr>

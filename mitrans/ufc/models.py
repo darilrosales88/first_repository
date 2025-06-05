@@ -645,6 +645,16 @@ class en_trenes(models.Model):
     class Meta:
         verbose_name = "Tren"
         verbose_name_plural="Trenes"
+
+        constraints = models.UniqueConstraint(
+            fields = [
+                "tipo_equipo",
+                "estado",
+                "origen",
+                "destino",
+            ],
+            name="unique_train_register",
+        )
          
     def delete(self, *args, **kwargs):
         try:
@@ -1010,7 +1020,7 @@ class HistorialArrastres(models.Model):
     
     
 class rotacion_vagones(models.Model):
-    tipo_equipo_ferroviario = models.OneToOneField(
+    tipo_equipo_ferroviario = models.ForeignKey(
         nom_tipo_equipo_ferroviario,
         on_delete=models.CASCADE,
         related_name="tipo_equipo_rotacion",
@@ -1039,6 +1049,14 @@ class rotacion_vagones(models.Model):
         verbose_name = "Registro de rotación"
         verbose_name_plural = "Registros de rotación"
         ordering = ["-fecha"]
+
+        constraints = UniqueConstraint(
+            fields = [
+                "tipo_equipo_ferroviario",
+                "informe_operativo",
+            ],
+            name="unique_train_rotation"
+        )
 
     def __str__(self):
         return (

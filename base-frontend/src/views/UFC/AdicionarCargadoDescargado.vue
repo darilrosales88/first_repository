@@ -373,13 +373,13 @@ export default {
     },
 
     "formData.lista_productos": {
-    handler(newVal, oldVal) {
-      if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
-        this.calcularRealCargaDescarga();
-      }
-    },
-    deep: true
-  }
+      handler(newVal, oldVal) {
+        if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
+          this.calcularRealCargaDescarga();
+        }
+      },
+      deep: true
+    }
   },
   async created() {
     await this.fetchUserPermissionsAndGroups(); // Espera a que se carguen los permisos
@@ -442,8 +442,23 @@ export default {
           return;
         }
 
+        const informeNoAprobado = await this.verificarEstadoInforme();
+        if (!informeNoAprobado) {
+          Swal.fire(
+            "Error",
+            "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
+            "error"
+          );
+          return;
+        }
+
         if (this.registros_vagones_temporales.length === 0) {
           Swal.fire("Error", "Debe agregar al menos un vagón", "error");
+          return;
+        }
+
+        if (this.formData.estado === "cargado" && this.formData.lista_productos.length === 0) {
+          this.showErrorToast("Debe seleccionar al menos un producto cuando el estado es Cargado");
           return;
         }
 
@@ -481,19 +496,14 @@ export default {
         const response = await axios.post("/ufc/vagones-cargados-descargados/", datosEnvio);
         
         // Mostrar mensaje de éxito
-        Swal.fire({
-          title: "¡Éxito!",
-          text: "El registro ha sido creado correctamente",
-          icon: "success",
-          confirmButtonText: "OK",
-        })
+        this.showSuccessToast("El registro ha sido creado correctamente");
         this.resetForm();
         this.$router.push({ name: "InfoOperativo" });
         
       } catch (error) {
         console.error("Error detallado:", error.response?.data);
         let errorMsg = "Error al guardar el registro";
-        
+        this.showErrorToast("Error al guardar el registro");
         if (error.response?.data) {
           if (typeof error.response.data === 'object') {
             errorMsg += ": " + JSON.stringify(error.response.data);
@@ -953,6 +963,62 @@ export default {
           htmlContainer: "custom-swal-html",
         },
       });
+    },
+        showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
+      });
+    },
+    async verificarEstadoInforme() {
+      try {
+        if (!this.informeOperativoId) return false;
+
+        const response = await axios.get(
+          `/ufc/informe-operativo/${this.informeOperativoId}/`
+        );
+        return response.data.estado_parte !== "Aprobado";
+      } catch (error) {
+        console.error("Error al verificar estado del informe:", error);
+        return false;
+      }
     },
   },
 };

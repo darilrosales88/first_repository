@@ -465,33 +465,12 @@ export default {
               informe: this.informeID ? this.informeID : infoID.data.id,
             },
           });
-
+          
           if(this.informeID){
             this.habilitado = false;
           }
-
+          this.registroSituado = response.data.results;
           this.totalItems = response.data.count;
-
-          if (
-            response.data && Array.isArray(response.data.results || response.data)
-          ) {
-            const data = response.data.results || response.data;
-            this.allRecords = data.map((item) => ({
-              id: item.id,
-              tipo_origen_name: item.tipo_origen_name || "",
-              origen: item.origen || "",
-              tipo_equipo_name: item.tipo_equipo_name || "",
-              estado: item.estado || "",
-              operacion: item.operacion || "",
-              productos_info: item.productos_info || [],
-              situados: parseInt(item.situados) || 0, // Convertir a número
-              pendiente_proximo_dia: parseInt(item.pendiente_proximo_dia) || 0, // Convertir a número
-              observaciones: item.observaciones || "",
-              created_at: item.created_at || null,
-            }));
-
-            this.registroSituado = [...this.allRecords];
-          }
         } else {
           this.showErrorToast("No hay ID para cargar");
         }
@@ -557,19 +536,11 @@ export default {
         this.registroSituado = this.registroSituado.filter(
           (objeto) => objeto.id !== id
         );
-        Swal.fire(
-          "Eliminado!",
-          "El producto ha sido eliminado exitosamente.",
-          "success"
-        );
+        this.showSuccessToast("El registro ha sido elimiando correctamente");
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
         Swal.fire("Error", "Hubo un error al eliminar el producto.", "error");
       }
-    },
-
-    cerrarModal() {
-      this.mostrarModal = false;
     },
 
     editRegistroSituado(vagon) {
@@ -578,6 +549,7 @@ export default {
         name: "EditarSituados",
         params: { id: vagon.id },
       });
+      console.log(vagon);
     },
 
     confirmDelete(id) {

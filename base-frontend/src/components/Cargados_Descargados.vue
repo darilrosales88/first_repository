@@ -596,14 +596,10 @@ export default {
         this.cargados_descargados = this.cargados_descargados.filter(
           (objeto) => objeto.id !== id
         );
-        Swal.fire(
-          "Eliminado!",
-          "El producto ha sido eliminado exitosamente.",
-          "success"
-        );
+        this.showSuccessToast("El registro ha sido eliminado exitosamente.");
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
-        Swal.fire("Error", "Hubo un error al eliminar el producto.", "error");
+        this.showErrorToast("Hubo un error al eliminar el producto.");
       }
     },
 
@@ -639,7 +635,7 @@ export default {
       console.error(errorMsg, error);
       Swal.fire("Error", errorMsg, "error");
     },
-        showSuccessToast(message) {
+    showSuccessToast(message) {
       const Toast = Swal.mixin({
         toast: true,
         position: "top-end",

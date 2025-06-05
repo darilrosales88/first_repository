@@ -209,10 +209,7 @@
                 <select
                   class="form-select form-select-sm border-secondary" style="padding: 8px 12px;"
                   v-model="formData.estado"
-                  @change="handleEstadoChange"
-                  required
-                  oninvalid="this.setCustomValidity('Por favor, seleccione un estado')"
-                  oninput="this.setCustomValidity('')">
+                  @change="handleEstadoChange">
                   <option value="cargado">Cargado</option>
                   <option value="vacio">Vacío</option>
                 </select>
@@ -221,20 +218,7 @@
               <!-- Campo: operacion -->
               <div class="mb-3">
                 <label for="operacion" class="form-label small fw-semibold text-secondary">Operación</label>
-                <select
-                  class="form-select form-select-sm border-secondary" style="padding: 8px 12px;"
-                  v-model="formData.operacion"
-                  required
-                  oninvalid="this.setCustomValidity('Por favor, seleccione una operación')"
-                  oninput="this.setCustomValidity('')">
-                  <option value="" disabled>Seleccione una operación</option>
-                  <option
-                    v-for="option in t_operacion_options"
-                    :key="option.id"
-                    :value="option.id">
-                    {{ option.text }}
-                  </option>
-                </select>
+                <input type="text" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.operacion" id="operacion" name="operacion" readonly/>
               </div>
 
  
@@ -356,8 +340,7 @@
           <button
             type="button"
             class="ufc-button primary"
-            @click="agregarNuevoVagon"
-            :disabled="!nuevoVagon.equipo_ferroviario || !nuevoVagon.cant_dias">
+            @click="agregarNuevoVagon">
             <i class="bi bi-check-circle"></i> Agregar
           </button>
         </div>
@@ -376,7 +359,7 @@
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <button class="btn btn-primary" @click="abrirModalVagon()">
-            <i class="bi bi-plus-circle"></i> Agregar Vagon
+            <i class="bi bi-plus-circle"></i> Agregar Vagón
           </button>
         </div>
         <!-- Tabla responsive con mejoras -->
@@ -480,13 +463,10 @@ export default {
         { id: "ac_ccd", text: "comercial/AccesoCCD" },
         { id: "puerto", text: "Puerto" },
       ],
+
       tipo_destino_options: [
         { id: "ac_ccd", text: "comercial/AccesoCCD" },
         { id: "puerto", text: "Puerto" },
-      ],
-      t_operacion_options: [
-        { id: "carga", text: "Carga" },
-        { id: "descarga", text: "Descarga" },
       ],
     };
   },
@@ -497,6 +477,18 @@ export default {
     this.getEquipos();
     this.filteredProductos = this.productos;
     this.closeDropdownsOnClickOutside();
+  },
+  watch: {
+    "formData.estado": {
+      immediate: true,
+      handler(newVal) {
+        if (newVal === "vacio") {
+          this.formData.operacion = "carga";
+        } else if (newVal === "cargado") {
+          this.formData.operacion = "descarga";
+        }
+      },
+    },
   },
   computed: {
     formattedFechaRegistro() {
@@ -555,20 +547,6 @@ export default {
       }
     },
 
-    async verificarEstadoInforme() {
-      try {
-        if (!this.informeOperativoId) return false;
-
-        const response = await axios.get(
-          `/ufc/informe-operativo/${this.informeOperativoId}/`
-        );
-        return response.data.estado_parte !== "Aprobado";
-      } catch (error) {
-        console.error("Error al verificar estado del informe:", error);
-        return false;
-      }
-    },
-
     async abrirModalVagon() {
       if (this.equipos_vagones.length==0) {
         Swal.fire({
@@ -608,21 +586,16 @@ export default {
       }
     },
     agregarNuevoVagon() {
-      if (!this.nuevoVagon.equipo_ferroviario || !this.nuevoVagon.cant_dias) {
-        Swal.fire("Error", "Debe completar todos los campos", "error");
+      if (this.nuevoVagon.equipo_ferroviario == '') {
+        this.showErrorToast("Debe completar todos los campos");
         return;
       }
 
       const equipoSeleccionado = this.equipos_vagones.find((e) => e.id === this.nuevoVagon.equipo_ferroviario);
-
       const yaExistente = this.vagonesAgregados.some((vagon) => vagon.equipo_ferroviario.id === this.nuevoVagon.equipo_ferroviario);
 
       if (yaExistente) {
-        Swal.fire({
-          title: "Error",
-          text: "Este vagón ya ha sido agregado a la lista",
-          icon: "error",
-        });
+        this.showErrorToast("Este vagón ya ha sido agregado a la lista");
         return;
       }
 
@@ -634,13 +607,11 @@ export default {
           equipo_vagon: equipoSeleccionado.numero_identificacion,
         },
       };
-
       this.vagonesAgregados.push(vagonAgregado);
-      this.formData.cantidad_vagones = this.vagonesAgregados.length;
       this.cerrarModalVagon();
-
-      Swal.fire("Éxito", "Vagón agregado correctamente", "success");
+      this.showSuccessToast("Vagón agregado correctamente");
     },
+
     async getEquipos() {
       try {
         const response = await axios.get("/api/tipo-e-f-no-locomotora/");
@@ -752,8 +723,17 @@ export default {
 
     async submitForm() {
       try {
+        const informeNoAprobado = await this.verificarEstadoInforme();
+        if (!informeNoAprobado) {
+          Swal.fire(
+            "Error",
+            "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
+            "error"
+          );
+          return;
+        }
+        
         const existeInforme = await this.verificarInformeOperativo();
-
         if (!existeInforme) {
           Swal.fire(
             "Error",
@@ -765,7 +745,15 @@ export default {
         }
 
         if (this.vagonesAgregados.length==0) {
-          Swal.fire({title: "Error",text: "Debe añadir al menos un vagón",icon: "error",});
+          Swal.fire({ 
+            title: "Error",
+            text: "Debe añadir al menos un vagón",
+            icon: "error",});
+          return;
+        }
+
+        if (this.formData.estado === "cargado" && this.formData.productos.length === 0) {
+          this.showErrorToast("Debe seleccionar al menos un producto cuando el estado es Cargado");
           return;
         }
 
@@ -775,13 +763,19 @@ export default {
         }
 
 
-        const informeNoAprobado = await this.verificarEstadoInforme();
-        if (!informeNoAprobado) {
-          Swal.fire(
-            "Error",
-            "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
-            "error"
-          );
+        if (this.vagonesAgregados.length !== this.formData.cantidad_vagones) {
+          Swal.fire({
+            title: "Advertencia",
+            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de "Por Situar" (${this.formData.cantidad_vagones}). ¿Desea actualizar el campo "Situados" para que coincida?`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, actualizar",
+            cancelButtonText: "No, corregir manualmente",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.formData.cantidad_vagones = this.vagonesAgregados.length;
+            }
+          });
           return;
         }
 
@@ -809,18 +803,13 @@ export default {
         const response = await axios.post("/ufc/pendiente-arrastre/", payload);
 
         // Mostrar mensaje de éxito
-        Swal.fire({
-          title: "¡Éxito!",
-          text: "El registro ha sido creado correctamente",
-          icon: "success",
-          confirmButtonText: "OK",
-        })
+        this.showSuccessToast("El registro ha sido creado correctamente");
         this.resetForm();
         this.$router.push({ name: "InfoOperativo" });
         
       } catch (error) {
         console.error("Error al enviar el formulario:", error);
-
+        this.showErrorToast(error.message);
         let errorMessage = "Hubo un error al enviar el formulario";
         if (error.response) {
           // Error de respuesta del servidor
@@ -924,15 +913,14 @@ export default {
         }
       });
     },
+
     eliminarVagon(index) {
       this.vagonesAgregados.splice(index, 1);
-      this.formData.cantidad_vagones = this.vagonesAgregados.length;
-      Swal.fire({
-        title: "Éxito",
-        text: "Vagón eliminado correctamente.",
-        icon: "success",
-        confirmButtonText: "Aceptar",
-      });
+      localStorage.setItem(
+        "vagonesAgregados",
+        JSON.stringify(this.vagonesAgregados)
+      );
+      this.showSuccessToast("Vagón eliminado correctamente.");
     },
 
     volver_principal() {
@@ -954,6 +942,62 @@ export default {
           this.$router.push({ name: "InfoOperativo" });
         }
       });
+    },
+    showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
+      });
+    },
+    async verificarEstadoInforme() {
+      try {
+        if (!this.informeOperativoId) return false;
+
+        const response = await axios.get(
+          `/ufc/informe-operativo/${this.informeOperativoId}/`
+        );
+        return response.data.estado_parte !== "Aprobado";
+      } catch (error) {
+        console.error("Error al verificar estado del informe:", error);
+        return false;
+      }
     },
   },
 };

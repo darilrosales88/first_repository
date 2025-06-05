@@ -561,14 +561,10 @@ export default {
         this.arrastresPendientes = this.arrastresPendientes.filter(
           (objeto) => objeto.id !== id
         );
-        Swal.fire(
-          "Eliminado!",
-          "El producto ha sido eliminado exitosamente.",
-          "success"
-        );
+        this.showErrorToast("El registro ha sido eliminado exitosamente.");
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
-        Swal.fire("Error", "Hubo un error al eliminar el producto.", "error");
+        this.showErrorToast("Hubo un error al eliminar el registro.");
       }
     },
 
@@ -582,6 +578,7 @@ export default {
         name: "EditarArrastre",
         params: { id: vagon.id },
       });
+      console.log(vagon);
     },
 
     confirmDelete(id) {

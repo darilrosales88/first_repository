@@ -53,7 +53,7 @@
                   oninvalid="this.setCustomValidity('Por favor, seleccione un tipo de origen')"
                   oninput="this.setCustomValidity('')"
                 >
-                  :disabled="isSubmitting" @change="handleTipoOrigenChange" >
+                  @change="handleTipoOrigenChange" >
                   <option value="" disabled>Seleccione un tipo</option>
                   <option
                     v-for="option in tipo_origen_options"
@@ -85,7 +85,7 @@
                   oninvalid="this.setCustomValidity('Por favor, seleccione un origen')"
                   oninput="this.setCustomValidity('')"
                 >
-                  :disabled="isSubmitting">
+                  
                   <option value="" disabled>Seleccione un origen</option>
                   <option
                     v-for="entidad in entidades"
@@ -107,7 +107,6 @@
                   oninvalid="this.setCustomValidity('Por favor, seleccione un puerto')"
                   oninput="this.setCustomValidity('')"
                 >
-                  :disabled="isSubmitting" >
                   <option value="" disabled>Seleccione un puerto</option>
                   <option
                     v-for="puerto in puertos"
@@ -147,7 +146,6 @@
                   oninvalid="this.setCustomValidity('Por favor, seleccione un tipo de equipo ferroviario')"
                   oninput="this.setCustomValidity('')"
                 >
-                  :disabled="isSubmitting">
                   <option value="" disabled>Seleccione un tipo</option>
                   <option
                     v-for="equipo in equipos"
@@ -209,48 +207,16 @@
                 <select
                   class="form-select form-select-sm border-secondary"
                   style="padding: 8px 12px"
-                  v-model="formData.estado"
-                  id="estado"
-                  name="estado"
-                  required
-                  oninvalid="this.setCustomValidity('Por favor, seleccione un estado')"
-                  oninput="this.setCustomValidity('')"
-                >
-                  :disabled="isSubmitting">
+                  v-model="formData.estado">
                   <option value="cargado">Cargado</option>
                   <option value="vacio">Vacio</option>
                 </select>
               </div>
 
               <!-- Campo: operacion -->
-              <div class="ufc-input-group">
-                <label
-                  for="operacion"
-                  class="form-label small fw-semibold text-secondary"
-                  style="margin-top: 17px"
-                >
-                  Operación
-                </label>
-                <select
-                  class="form-select form-select-sm border-secondary"
-                  style="padding: 8px 12px"
-                  v-model="formData.operacion"
-                  id="operacion"
-                  name="operacion"
-                  required
-                  oninvalid="this.setCustomValidity('Por favor, seleccione una operacion')"
-                  oninput="this.setCustomValidity('')"
-                >
-                  :disabled="isSubmitting">
-                  <option value="" disabled>Seleccione una operación</option>
-                  <option
-                    v-for="option in t_operacion_options"
-                    :key="option.id"
-                    :value="option.id"
-                  >
-                    {{ option.text }}
-                  </option>
-                </select>
+              <div class="mb-3">
+                <label for="operacion" class="form-label small fw-semibold text-secondary">Operación</label>
+                <input type="text" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.operacion" id="operacion" name="operacion" readonly/>
               </div>
 
               <!-- Campo: producto -->
@@ -347,7 +313,6 @@
                     id="pendiente_proximo_dia"
                     name="pendiente_proximo_dia"
                     min="0"
-                    :disabled="isSubmitting"
                   />
                 </div>
               </div>
@@ -365,7 +330,6 @@
                   id="observaciones"
                   name="observaciones"
                   rows="3"
-                  :disabled="isSubmitting"
                 ></textarea>
               </div>
             </div>
@@ -435,16 +399,13 @@
           <button
             type="button"
             class="ufc-button secondary"
-            @click="cerrarModalVagon"
-          >
+            @click="cerrarModalVagon">
             <i class="bi bi-x-circle"></i> Cancelar
           </button>
           <button
             type="button"
             class="ufc-button primary"
-            @click="agregarNuevoVagon()"
-            :disabled="!nuevoVagon.equipo_ferroviario || !nuevoVagon.cant_dias"
-          >
+            @click="agregarNuevoVagon()">
             <i class="bi bi-check-circle"></i> Agregar
           </button>
         </div>
@@ -461,7 +422,7 @@
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <button class="btn btn-primary" @click="abrirModalVagon()">
-            <i class="bi bi-plus-circle"></i> Agregar Vagon
+            <i class="bi bi-plus-circle"></i> Agregar Vagón
           </button>
         </div>
         <!-- Tabla responsive con mejoras -->
@@ -549,7 +510,6 @@ export default {
         pendiente_proximo_dia: 0,
         observaciones: "",
         equipos_vagones: [],
-        equipos_vagones: [],
       },
       isDisable: true,
       userGroups: [], // Inicializa como array vacío
@@ -574,25 +534,27 @@ export default {
         equipo_ferroviario: "",
         cant_dias: 1,
       },
-      equipos: [],
-      equipos_vagones: [],
-      mostrarModalVagon: false,
-      vagonesAgregados: [],
-      nuevoVagon: {
-        equipo_ferroviario: "",
-        cant_dias: 1,
-      },
 
       tipo_origen_options: [
         { id: "ac_ccd", text: "comercial/AccesoCCD" },
         { id: "puerto", text: "Puerto" },
       ],
-      t_operacion_options: [
-        { id: "carga", text: "Carga" },
-        { id: "descarga", text: "Descarga" },
-      ],
     };
   },
+
+  watch: {
+    "formData.estado": {
+      immediate: true,
+      handler(newVal) {
+        if (newVal === "vacio") {
+          this.formData.operacion = "carga";
+        } else if (newVal === "cargado") {
+          this.formData.operacion = "descarga";
+        }
+      },
+    },
+  },
+
   mounted() {
     this.getProductos();
     this.getEntidades();
@@ -601,6 +563,7 @@ export default {
     this.filteredProductos = this.productos;
     this.closeDropdownsOnClickOutside();
   },
+
   computed: {
     formattedFechaRegistro() {
       if (this.formData.fecha) {
@@ -611,6 +574,7 @@ export default {
       return new Date().toLocaleString("es-ES");
     },
   },
+  
   methods: {
     async verificarInformeOperativo() {
       try {
@@ -634,6 +598,7 @@ export default {
         return false;
       }
     },
+
     async abrirModalVagon() {
       if (this.equipos_vagones.length == 0) {
         Swal.fire({
@@ -653,6 +618,7 @@ export default {
       }
       this.mostrarModalVagon = true;
     },
+
     cerrarModalVagon() {
       this.mostrarModalVagon = false;
       this.nuevoVagon = {
@@ -672,26 +638,18 @@ export default {
     },
 
     agregarNuevoVagon() {
-      if (!this.nuevoVagon.equipo_ferroviario || !this.nuevoVagon.cant_dias) {
-        Swal.fire("Error", "Debe completar todos los campos", "error");
+      
+      if (this.nuevoVagon.equipo_ferroviario == '') {
+        this.showErrorToast("Debe completar todos los campos");
         return;
       }
-
-      const equipoSeleccionado = this.equipos_vagones.find(
-        (e) => e.id === this.nuevoVagon.equipo_ferroviario
-      );
-
+      const equipoSeleccionado = this.equipos_vagones.find((e) => e.id === this.nuevoVagon.equipo_ferroviario);
       const yaExistente = this.vagonesAgregados.some(
-        (vagon) =>
-          vagon.equipo_ferroviario.id === this.nuevoVagon.equipo_ferroviario
+        (vagon) => vagon.equipo_ferroviario.id === this.nuevoVagon.equipo_ferroviario
       );
 
       if (yaExistente) {
-        Swal.fire({
-          title: "Error",
-          text: "Este vagón ya ha sido agregado a la lista",
-          icon: "error",
-        });
+        this.showErrorToast("Este vagón ya ha sido agregado a la lista");
         return;
       }
 
@@ -706,9 +664,9 @@ export default {
 
       this.vagonesAgregados.push(vagonAgregado);
       this.cerrarModalVagon();
-
-      Swal.fire("Éxito", "Vagón agregado correctamente", "success");
+      this.showSuccessToast("Vagón agregado correctamente");
     },
+
     async getEquipos() {
       try {
         const response = await axios.get("/api/tipo-e-f-no-locomotora/");
@@ -718,6 +676,7 @@ export default {
         Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
       }
     },
+
     async buscarEquipos() {
       try {
         let url = "/api/e-f-no-locomotora/";
@@ -756,78 +715,15 @@ export default {
       }
     },
 
-    guardarVagon() {
-      // Validación
-      if (
-        !this.vagonForm.equipo_ferroviario ||
-        !this.vagonForm.dias ||
-        this.vagonForm.dias < 1
-      ) {
-        Swal.fire("Error", "Complete todos los campos correctamente", "error");
-        if (
-          !this.vagonForm.equipo_ferroviario ||
-          !this.vagonForm.dias ||
-          this.vagonForm.dias < 1
-        ) {
-          Swal.fire(
-            "Error",
-            "Complete todos los campos correctamente",
-            "error"
-          );
-          return;
-        }
-
-        // Buscar el equipo seleccionado para obtener su nombre
-        const equipoSeleccionado = this.equiposFerroviarios.find(
-          (e) => e.id === this.vagonForm.equipo_ferroviario
-        );
-
-        const vagonData = {
-          equipo_ferroviario: this.vagonForm.equipo_ferroviario,
-          equipo_ferroviario_nombre: equipoSeleccionado
-            ? `${equipoSeleccionado.numero_identificacion} - ${equipoSeleccionado.tipo_equipo.tipo_equipo}`
-            : "Equipo no encontrado",
-          dias: this.vagonForm.dias,
-        };
-
-        if (this.modoEdicionVagon) {
-          // Editar existente
-          this.vagonesAsociados[this.vagonEditIndex] = vagonData;
-          Swal.fire("Actualizado", "El vagón ha sido actualizado", "success");
-          Swal.fire("Actualizado", "El vagón ha sido actualizado", "success");
-        } else {
-          // Agregar nuevo
-          this.vagonesAsociados.push(vagonData);
-          Swal.fire("Agregado", "El vagón ha sido agregado", "success");
-          Swal.fire("Agregado", "El vagón ha sido agregado", "success");
-        }
-
-        // Actualizar el campo situados automáticamente
-        this.formData.situados = this.vagonesAsociados.length;
-
-        this.cerrarModalVagon();
-      }
-    },
-
     eliminarVagon(index) {
       this.vagonesAgregados.splice(index, 1);
       localStorage.setItem(
         "vagonesAgregados",
         JSON.stringify(this.vagonesAgregados)
       );
-      Swal.fire({
-        title: "Éxito",
-        text: "Vagón eliminado correctamente.",
-        icon: "success",
-        confirmButtonText: "Aceptar",
-      });
+      this.showSuccessToast("Vagón eliminado correctamente.");
     },
 
-    cerrarModalVagon() {
-      this.mostrarModalVagon = false;
-      this.vagonEditIndex = null;
-      this.modoEdicionVagon = false;
-    },
 
     cerrarModalVagon() {
       this.mostrarModalVagon = false;
@@ -927,76 +823,47 @@ export default {
     },
 
     async submitForm() {
-      // 1. Verifificar que el informe operativo existe ya para la fecha creada
-      const existeInforme = await this.verificarInformeOperativo();
-      if (!existeInforme) {
-        Swal.fire(
-          "Error",
-          "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
-          "error"
-        );
-        this.$router.push({ name: "InfoOperativo" });
-        return;
-      }
-
-      // 2. Verificar que el informe no esté aprobado
-
-      this.isSubmitting = true;
       try {
-        // Validación mejorada
-        const errors = [];
 
-        if (
-          !this.formData.tipo_origen ||
-          !this.tipo_origen_options.some(
-            (opt) => opt.id === this.formData.tipo_origen
-          )
-        ) {
-          errors.push("Seleccione un tipo de origen válido");
-        }
-
-        if (!this.formData.origen) {
-          errors.push("El campo Origen es requerido");
-        }
-
-        if (!this.formData.tipo_equipo) {
-          errors.push("El campo Tipo de Equipo es requerido");
-        }
-
-        if (!this.formData.operacion) {
-          errors.push("El campo Operación es requerido");
-        }
-
-        if (
-          this.formData.estado === "cargado" &&
-          this.formData.productos.length === 0
-        ) {
-          throw new Error(
-            "Debe seleccionar al menos un producto cuando el estado es Cargado"
+        const informeNoAprobado = await this.verificarEstadoInforme();
+        if (!informeNoAprobado) {
+          Swal.fire(
+            "Error",
+            "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
+            "error"
           );
+          return;
         }
 
-        if (this.formData.situados === null || this.formData.situados < 1) {
-          errors.push("La cantidad de situados debe ser al menos 1");
-        }
-
-        if (
-          this.formData.pendiente_proximo_dia === null ||
-          this.formData.pendiente_proximo_dia < 0
-        ) {
-          errors.push(
-            "Los pendientes al próximo día deben ser un número positivo"
+        const existeInforme = await this.verificarInformeOperativo();
+        if (!existeInforme) {
+          Swal.fire(
+            "Error",
+            "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+            "error"
           );
+          return;
         }
 
-        if (errors.length > 0) {
-          throw new Error(errors.join("\n"));
+        if (this.vagonesAgregados.length==0) {
+          Swal.fire({
+            title: "Error",
+            text: "Debe añadir al menos un vagón",
+            icon: "error",
+          });
+          return;
         }
+
+        if (this.formData.estado === "cargado" && this.formData.productos.length === 0) {
+          this.showErrorToast("Debe seleccionar al menos un producto cuando el estado es Cargado");
+          return;
+        }
+
 
         if (this.vagonesAgregados.length !== this.formData.situados) {
           Swal.fire({
             title: "Advertencia",
-            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad "Situados" (${this.formData.situados}). ¿Desea actualizar el campo "Situados" para que coincida?`,
+            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de "Situados" (${this.formData.situados}). ¿Desea actualizar el campo "Situados" para que coincida?`,
             icon: "warning",
             showCancelButton: true,
             confirmButtonText: "Sí, actualizar",
@@ -1034,25 +901,13 @@ export default {
         const response = await axios.post("/ufc/situados/", payload);
 
         // Mostrar mensaje de éxito
-        await Swal.fire({
-          title: "¡Éxito!",
-          text: "El registro ha sido creado correctamente",
-          icon: "success",
-          confirmButtonText: "OK",
-        });
+        this.showSuccessToast("El registro ha sido creado correctamente");
         this.resetForm();
         this.$router.push({ name: "InfoOperativo" });
       } catch (error) {
         console.error("Error al enviar el formulario:", error);
-        Swal.fire({
-          title: "Error",
-          text: error.message || "Ocurrió un error al procesar la solicitud",
-          icon: "error",
-        });
-      } finally {
-        this.$router.push({ name: "InfoOperativo" });
-        this.isSubmitting = false;
-      }
+        this.showErrorToast(error.message);
+      } 
     },
     resetForm() {
       this.formData = {
@@ -1165,6 +1020,62 @@ export default {
           this.$router.push({ name: "InfoOperativo" });
         }
       });
+    },
+    showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
+      });
+    },
+    async verificarEstadoInforme() {
+      try {
+        if (!this.informeOperativoId) return false;
+
+        const response = await axios.get(
+          `/ufc/informe-operativo/${this.informeOperativoId}/`
+        );
+        return response.data.estado_parte !== "Aprobado";
+      } catch (error) {
+        console.error("Error al verificar estado del informe:", error);
+        return false;
+      }
     },
   },
 };

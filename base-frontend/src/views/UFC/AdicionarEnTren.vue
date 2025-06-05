@@ -511,13 +511,12 @@
               <tr v-for="(vagon, index) in vagonesAgregados" :key="index">
                 <td>{{ index + 1 }}</td>
                 <td>
-                  {{ vagon["datos"]["equipo_vagon"] }}
+                  {{ vagon.vagon_codigo}}
                 </td>
                 <td>
                   <button
                     class="btn btn-sm btn-outline-danger"
-                    @click="eliminarVagon(index)"
-                  >
+                    @click="eliminarVagon(index)">
                     <i class="bi bi-trash"></i>
                   </button>
                 </td>
@@ -691,17 +690,23 @@ export default {
           return;
         }
 
-        const today = new Date();
-        const fechaFormateada = `${today.getFullYear()}-${String(
-          today.getMonth() + 1
-        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+        if (this.vagonesAgregados.length==0) {
+          Swal.fire({ 
+            title: "Error",
+            text: "Debe añadir al menos un vagón",
+            icon: "error",});
+          return;
+        }
 
-        const informeResponse = await axios.get(
-          "/ufc/verificar-informe-existente/",
-          {
-            params: { fecha_operacion: fechaFormateada },
-          }
-        );
+        if (this.formData.estado === "cargado" && this.formData.producto.length === 0) {
+          this.showErrorToast("Debe seleccionar al menos un producto cuando el estado es Cargado");
+          return;
+        }
+
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+        const informeResponse = await axios.get("/ufc/verificar-informe-existente/",{params: { fecha_operacion: fechaFormateada },});
 
         if (!informeResponse.data.existe) {
           Swal.fire(
@@ -713,9 +718,7 @@ export default {
           return;
         }
 
-        const informeDetalleResponse = await axios.get(
-          `/ufc/informe-operativo/${informeResponse.data.id}/`
-        );
+        const informeDetalleResponse = await axios.get(`/ufc/informe-operativo/${informeResponse.data.id}/`);
         if (informeDetalleResponse.data.estado_parte === "Aprobado") {
           Swal.fire(
             "Error",
@@ -734,6 +737,22 @@ export default {
           return;
         }
 
+        if (this.vagonesAgregados.length !== this.formData.cantidad_vagones) {
+          Swal.fire({
+            title: "Advertencia",
+            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de "Por Situar" (${this.formData.cantidad_vagones}). ¿Desea actualizar el campo "Situados" para que coincida?`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, actualizar",
+            cancelButtonText: "No, corregir manualmente",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.formData.cantidad_vagones = this.vagonesAgregados.length;
+            }
+          });
+          return;
+        }
+
         const vagones = JSON.parse(vagonesJson);
         this.formData.equipo_vagon = vagones.map((vagon) => vagon.vagon_id);
         this.formData.informe_operativo = informeResponse.data.id; // Añadir el ID del informe operativo
@@ -742,17 +761,12 @@ export default {
 
         await axios.post("/ufc/en-trenes/", this.formData);
 
-        Swal.fire({
-          title: "¡Éxito!",
-          text: "El registro ha sido creado correctamente",
-          icon: "success",
-          confirmButtonText: "OK",
-        });
+        this.showSuccessToast("El registro ha sido creado correctamente");
         this.resetForm();
         this.$router.push({ name: "InfoOperativo" });
-      } catch (error) {
-        console.error("Error al enviar el formulario:", error);
 
+      } catch (error) {
+        this.showErrorToast(error.message);
         let errorMessage = "Hubo un error al enviar el formulario";
         if (error.response) {
           if (error.response.data) {
@@ -947,6 +961,7 @@ export default {
     },
 
     agregarVagon() {
+      console.log(this.equipos_vagones);
       if (this.equipos_vagones.length == 0) {
         Swal.fire({
           title: "Error",
@@ -956,6 +971,7 @@ export default {
         return;
       }
 
+      console.log(this.formData.equipo_vagon);
       if (this.formData.equipo_vagon.length == 0) {
         Swal.fire({
           title: "Error",
@@ -965,15 +981,17 @@ export default {
         return;
       }
 
+      const equipoSeleccionado = this.equipos_vagones.find((e) => e.id === this.formData.equipo_vagon);
+      console.log(equipoSeleccionado );
       const datosVagon = JSON.parse(JSON.stringify(this.formData));
+      
       const nuevoVagon = {
         vagon_id: this.formData.equipo_vagon,
+        vagon_codigo: equipoSeleccionado.numero_identificacion,
         datos: datosVagon,
       };
-
-      const yaExistente = this.vagonesAgregados.some(
-        (vagon) => vagon.vagon_id === datosVagon.equipo_vagon
-      );
+      console.log(nuevoVagon);
+      const yaExistente = this.vagonesAgregados.some((vagon) => vagon.vagon_id === datosVagon.equipo_vagon); 
 
       if (yaExistente) {
         Swal.fire({
@@ -985,7 +1003,6 @@ export default {
       }
 
       this.vagonesAgregados.push(nuevoVagon);
-      console.log(this.vagonesAgregados);
       Swal.fire({
         title: "Éxito",
         text: "Vagón agregado correctamente.",
@@ -1062,6 +1079,49 @@ export default {
         if (!e.target.closest(".ufc-custom-select")) {
           this.showProductosDropdown = false;
         }
+      });
+    },
+    showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
       });
     },
   },

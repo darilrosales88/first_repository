@@ -575,14 +575,10 @@ export default {
       try {
         await axios.delete(`/ufc/en-trenes/${id}/`);
         this.enTrenes = this.enTrenes.filter((tren) => tren.id !== id);
-        Swal.fire(
-          "Eliminado!",
-          "El producto ha sido eliminado exitosamente.",
-          "success"
-        );
+        this.showSuccessToast("El registro ha sido eliminado exitosamente.");
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
-        Swal.fire("Error", "un error al eliminar el producto.", "error");
+        this.showErrorToast("Hubo un error al eliminar el registro.");
       }
     },
 
@@ -617,7 +613,7 @@ export default {
       console.error(errorMsg, error);
       Swal.fire("Error", errorMsg, "error");
     },
-        showSuccessToast(message) {
+    showSuccessToast(message) {
       const Toast = Swal.mixin({
         toast: true,
         position: "top-end",

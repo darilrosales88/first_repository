@@ -547,18 +547,15 @@ export default {
         this.porSituarCarga_Descarga = this.porSituarCarga_Descarga.filter(
           (objeto) => objeto.id !== id
         );
-        Swal.fire(
-          "Eliminado!",
-          "El producto ha sido eliminado exitosamente.",
-          "success"
-        );
+        this.showSuccessToast("El registro ha sido eliminado correctamente");
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
-        Swal.fire("Error", "Hubo un error al eliminar el producto.", "error");
+        this.showErrorToast("Hubo un error al eliminar el producto.");
       }
     },
 
     editRegistroPorSituar(item) {
+      console.log(item)
       // Aquí puedes implementar la navegación a la página de edición
       this.$router.push({
         name: "EditarPorSituar",
@@ -1073,5 +1070,32 @@ export default {
   background: var(--ps-primary-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+}
+
+.ps-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.ps-status-success {
+  background: rgba(76, 201, 240, 0.1);
+  color: #06d6a0;
+  border: 1px solid rgba(6, 214, 160, 0.2);
+}
+
+
+.ps-status-danger {
+  background: rgba(247, 37, 133, 0.1);
+  color: #f72585;
+  border: 1px solid rgba(247, 37, 133, 0.2);
+}
+
+.ps-status-default {
+  background: rgba(108, 117, 125, 0.1);
+  color: var(--io-gray);
+  border: 1px solid rgba(108, 117, 125, 0.2);
 }
 </style>

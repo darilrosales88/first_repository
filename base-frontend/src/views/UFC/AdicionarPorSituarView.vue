@@ -122,17 +122,14 @@
 
             <!-- Columna Derecha -->
             <div class="col-md-6">
+
               <!-- Campo: estado -->
               <div class="mb-3">
                 <label for="estado" class="form-label small fw-semibold text-secondary"
                   >Estado</label>
                 <select
                   class="form-select form-select-sm border-secondary" style="padding: 8px 12px;"
-                  v-model="formData.estado"
-                  @change="handleEstadoChange"
-                  required
-                  oninvalid="this.setCustomValidity('Por favor, seleccione un estado')"
-                  oninput="this.setCustomValidity('')">
+                  v-model="formData.estado">
                   <option value="cargado">Cargado</option>
                   <option value="vacio">Vacío</option>
                 </select>
@@ -141,20 +138,7 @@
               <!-- Campo: operacion -->
               <div class="mb-3">
                 <label for="operacion" class="form-label small fw-semibold text-secondary">Operación</label>
-                <select
-                  class="form-select form-select-sm border-secondary" style="padding: 8px 12px;"
-                  v-model="formData.operacion"
-                  required
-                  oninvalid="this.setCustomValidity('Por favor, seleccione una operacion')"
-                  oninput="this.setCustomValidity('')">
-                  <option value="" disabled>Seleccione una operación</option>
-                  <option
-                    v-for="option in t_operacion_options"
-                    :key="option.id"
-                    :value="option.id">
-                    {{ option.text }}
-                  </option>
-                </select>
+                <input type="text" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.operacion" id="operacion" name="operacion" readonly/>
               </div>
 
               <div class="mb-3">
@@ -236,7 +220,7 @@
         <div class="ufc-form-grid">
           <!-- Campo: Equipo Ferroviario -->
           <div class="ufc-input-group">
-            <label for="equipo_ferroviario">Equipo Ferroviario <span class="required">*</span></label>
+            <label for="equipo_ferroviario">Equipo Ferroviario</label>
             <select class="ufc-select" v-model="nuevoVagon.equipo_ferroviario" required>
               <option value="" disabled>Seleccione un equipo</option>
               <option v-for="equipo in equipos_vagones" :key="equipo.id" :value="equipo.id">
@@ -248,7 +232,7 @@
 
           <!-- Campo: Cantidad de días -->
           <div class="ufc-input-group">
-            <label for="cant_dias">Cantidad de días <span class="required">*</span></label>
+            <label for="cant_dias">Cantidad de días</label>
             <input
               type="number"
               class="ufc-input"
@@ -270,8 +254,7 @@
           <button
             type="button"
             class="ufc-button primary"
-            @click="agregarNuevoVagon()"
-            :disabled="!nuevoVagon.equipo_ferroviario || !nuevoVagon.cant_dias">
+            @click="agregarNuevoVagon()">
             <i class="bi bi-check-circle"></i> Agregar
           </button>
         </div>
@@ -289,7 +272,7 @@
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <button class="btn btn-primary" @click="abrirModalVagon()">
-            <i class="bi bi-plus-circle"></i> Agregar Vagon
+            <i class="bi bi-plus-circle"></i> Agregar Vagón
           </button>
         </div>
         <!-- Tabla responsive con mejoras -->
@@ -390,10 +373,6 @@ export default {
         { id: "ac_ccd", text: "comercial/AccesoCCD" },
         { id: "puerto", text: "Puerto" },
       ],
-      t_operacion_options: [
-        { id: "carga", text: "Carga" },
-        { id: "descarga", text: "Descarga" },
-      ],
     };
   },
   mounted() {
@@ -415,6 +394,20 @@ export default {
   async created() {
     await this.fetchUserPermissionsAndGroups();
   },
+
+  watch: {
+    "formData.estado": {
+      immediate: true,
+      handler(newVal) {
+        if (newVal === "vacio") {
+          this.formData.operacion = "carga";
+        } else if (newVal === "cargado") {
+          this.formData.operacion = "descarga";
+        }
+      },
+    },
+  },
+
   methods: {
     // Verifica si el usuario pertenece a un grupo específico
     hasGroup(group) {
@@ -498,23 +491,18 @@ export default {
     },
 
     agregarNuevoVagon() {
-      if (!this.nuevoVagon.equipo_ferroviario || !this.nuevoVagon.cant_dias) {
-        Swal.fire("Error", "Debe completar todos los campos", "error");
+      
+      if (this.nuevoVagon.equipo_ferroviario == '') {
+        this.showErrorToast("Debe completar todos los campos");
         return;
       }
-
       const equipoSeleccionado = this.equipos_vagones.find((e) => e.id === this.nuevoVagon.equipo_ferroviario);
-
       const yaExistente = this.vagonesAgregados.some(
         (vagon) => vagon.equipo_ferroviario.id === this.nuevoVagon.equipo_ferroviario
       );
 
       if (yaExistente) {
-        Swal.fire({
-          title: "Error",
-          text: "Este vagón ya ha sido agregado a la lista",
-          icon: "error",
-        });
+        this.showErrorToast("Este vagón ya ha sido agregado a la lista");
         return;
       }
 
@@ -529,8 +517,7 @@ export default {
 
       this.vagonesAgregados.push(vagonAgregado);
       this.cerrarModalVagon();
-
-      Swal.fire("Éxito", "Vagón agregado correctamente", "success");
+      this.showSuccessToast("Vagón agregado correctamente");
     },
 
     async getEquipos() {
@@ -660,14 +647,9 @@ export default {
       this.getProductos();
     },
 
-    handleEstadoChange() {
-      // Eliminamos la lógica que vaciaba los productos
-      // Ahora este método no hace nada con los productos
-    },
-
     async submitForm() {
       try {
-        // 1. Verificar que exista un informe operativo
+
         const existeInforme = await this.verificarInformeOperativo();
         if (!existeInforme) {
           Swal.fire(
@@ -676,6 +658,16 @@ export default {
             "error"
           );
           this.$router.push({ name: "InfoOperativo" });
+          return;
+        }
+        
+        const informeNoAprobado = await this.verificarEstadoInforme();
+        if (!informeNoAprobado) {
+          Swal.fire(
+            "Error",
+            "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
+            "error"
+          );
           return;
         }
 
@@ -688,45 +680,25 @@ export default {
           return;
         }
 
-        // 2. Verificar que el informe no esté aprobado
-        const informeNoAprobado = await this.verificarEstadoInforme();
-        if (!informeNoAprobado) {
-          Swal.fire(
-            "Error",
-            "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
-            "error"
-          );
+        if (this.formData.estado === "cargado" && this.formData.productos.length === 0) {
+          this.showErrorToast("Debe seleccionar al menos un producto cuando el estado es Cargado");
           return;
         }
 
-        // Validación de campos requeridos
-        if (!this.formData.tipo_origen) {
-          throw new Error("El campo Tipo de Origen es requerido");
-        }
-
-        if (!this.formData.origen) {
-          throw new Error("El campo Origen es requerido");
-        }
-
-        if (!this.formData.tipo_equipo) {
-          throw new Error("El campo Tipo de Equipo Ferroviario es requerido");
-        }
-
-        if (!this.formData.operacion) {
-          throw new Error("El campo Operación es requerido");
-        }
-
-        if (
-          this.formData.estado === "cargado" &&
-          this.formData.productos.length === 0
-        ) {
-          throw new Error(
-            "Debe seleccionar al menos un producto cuando el estado es Cargado"
-          );
-        }
-
-        if (!this.formData.por_situar || this.formData.por_situar < 1) {
-          throw new Error("La cantidad por situar debe ser al menos 1");
+        if (this.vagonesAgregados.length !== this.formData.por_situar) {
+          Swal.fire({
+            title: "Advertencia",
+            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de "Por Situar" (${this.formData.por_situar}). ¿Desea actualizar el campo "Situados" para que coincida?`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, actualizar",
+            cancelButtonText: "No, corregir manualmente",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.formData.por_situar = this.vagonesAgregados.length;
+            }
+          });
+          return;
         }
 
         // Preparar los datos para enviar
@@ -754,12 +726,7 @@ export default {
         const response = await axios.post("/ufc/por-situar/", payload);
 
         // Mostrar mensaje de éxito
-        Swal.fire({
-          title: "¡Éxito!",
-          text: "El registro ha sido creado correctamente",
-          icon: "success",
-          confirmButtonText: "OK",
-        })
+        this.showSuccessToast("El registro ha sido creado correctamente");
         this.resetForm();
         this.$router.push({ name: "InfoOperativo" });
         
@@ -776,25 +743,7 @@ export default {
           // Error de validación
           errorMessage = error.message;
         }
-
-        Swal.fire({
-          title: "Error",
-          text: errorMessage,
-          icon: "error",
-          confirmButtonText: "Entendido",
-        });
-      }
-    },
-
-    async verificarEstadoInforme() {
-      try {
-        if (!this.informeOperativoId) return false;
-        
-        const response = await axios.get(`/ufc/informe-operativo/${this.informeOperativoId}/`);
-        return response.data.estado_parte !== "Aprobado";
-      } catch (error) {
-        console.error("Error al verificar estado del informe:", error);
-        return false;
+        this.showErrorToast(errorMessage);
       }
     },
 
@@ -809,22 +758,6 @@ export default {
         por_situar: 1,
         observaciones: "",
       };
-    },
-
-    confirmCancel() {
-      Swal.fire({
-        title: "¿Cancelar operación?",
-        text: "Los datos no guardados se perderán",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Sí, cancelar",
-        cancelButtonText: "No, continuar",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.resetForm();
-          this.$router.push({ name: "InfoOperativo" });
-        }
-      });
     },
 
     toggleProductosDropdown() {
@@ -878,48 +811,71 @@ export default {
         }
       });
     },
-    agregarVagon() {
-      if (this.vagonesAgregados.length >= this.formData.por_situar) {
-        Swal.fire({
-          title: "Error",
-          text: "Ya has agregado la cantidad máxima de vagones permitida.",
-          icon: "error",
-          confirmButtonText: "Entendido",
-        });
-        return;
-      }
 
-      const datosVagon = JSON.parse(JSON.stringify(this.formData));
-      const nuevoVagon = {
-        vagon_id: this.formData.equipo_vagon,
-        datos: datosVagon,
-      };
-
-      this.vagonesAgregados.push(nuevoVagon);
-      Swal.fire({
-        title: "Éxito",
-        text: "Vagón agregado correctamente.",
-        icon: "success",
-        confirmButtonText: "Aceptar",
-      });
-      localStorage.setItem(
-        "vagonesAgregados",
-        JSON.stringify(this.vagonesAgregados)
-      );
-    },
-    
     eliminarVagon(index) {
       this.vagonesAgregados.splice(index, 1);
       localStorage.setItem(
         "vagonesAgregados",
         JSON.stringify(this.vagonesAgregados)
       );
-      Swal.fire({
-        title: "Éxito",
-        text: "Vagón eliminado correctamente.",
-        icon: "success",
-        confirmButtonText: "Aceptar",
+      this.showSuccessToast("Vagón eliminado correctamente.");
+    },
+    
+    showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
       });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
+      });
+    },
+    async verificarEstadoInforme() {
+      try {
+        if (!this.informeOperativoId) return false;
+
+        const response = await axios.get(
+          `/ufc/informe-operativo/${this.informeOperativoId}/`
+        );
+        return response.data.estado_parte !== "Aprobado";
+      } catch (error) {
+        console.error("Error al verificar estado del informe:", error);
+        return false;
+      }
     },
   },
 };

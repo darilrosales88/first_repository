@@ -454,6 +454,13 @@ export default {
         const response = await axios.get(`/ufc/situados/${this.registroId}/`);
         const registro = response.data;
 
+        for(let i = 0; i < registro.equipo_vagon_detalle.length; i++) {
+          let vagon = {
+              equipo_ferroviario: registro.equipo_vagon_detalle[i].equipo_ferroviario_detalle,
+              cant_dias: registro.equipo_vagon_detalle[i].cant_dias,
+          };
+          this.vagonesAgregados.push(vagon);
+        }
         this.formData = {
           id: registro.id,
           tipo_origen: registro.tipo_origen,
@@ -462,10 +469,11 @@ export default {
           estado: registro.estado,
           operacion: registro.operacion,
           productos: registro.productos_info?.map((p) => p.id) || [],
-          situados: parseInt(registro.situados) || 0,
+          situados: registro.situados,
           pendiente_proximo_dia: parseInt(registro.pendiente_proximo_dia) || 0,
           observaciones: registro.observaciones || "",
         };
+        this.buscarEquipos();
       } catch (error) {
         console.error("Error al cargar el registro:", error);
         Swal.fire("Error", "No se pudo cargar el registro", "error");

@@ -646,15 +646,15 @@ class en_trenes(models.Model):
         verbose_name = "Tren"
         verbose_name_plural="Trenes"
 
-        # constraints = [models.UniqueConstraint(
-        #     fields = [
-        #         "tipo_equipo",
-        #         "estado",
-        #         "origen",
-        #         "destino",
-        #     ],
-        #     name="unique_train_register",
-        # )]
+        constraints = [models.UniqueConstraint(
+            fields = [
+                "tipo_equipo",
+                "estado",
+                "origen",
+                "destino",
+            ],
+            name="unique_train_register",
+        )]
 
     def delete(self, *args, **kwargs):
         try:

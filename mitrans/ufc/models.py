@@ -646,16 +646,16 @@ class en_trenes(models.Model):
         verbose_name = "Tren"
         verbose_name_plural="Trenes"
 
-        constraints = models.UniqueConstraint(
-            fields = [
-                "tipo_equipo",
-                "estado",
-                "origen",
-                "destino",
-            ],
-            name="unique_train_register",
-        )
-         
+        # constraints = [models.UniqueConstraint(
+        #     fields = [
+        #         "tipo_equipo",
+        #         "estado",
+        #         "origen",
+        #         "destino",
+        #     ],
+        #     name="unique_train_register",
+        # )]
+
     def delete(self, *args, **kwargs):
         try:
             # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
@@ -1050,13 +1050,13 @@ class rotacion_vagones(models.Model):
         verbose_name_plural = "Registros de rotación"
         ordering = ["-fecha"]
 
-        constraints = UniqueConstraint(
+        constraints = [models.UniqueConstraint(
             fields = [
                 "tipo_equipo_ferroviario",
                 "informe_operativo",
             ],
             name="unique_train_rotation"
-        )
+        )]
 
     def __str__(self):
         return (

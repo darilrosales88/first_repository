@@ -207,6 +207,7 @@ export default {
 
   async created() {
     await this.fetchUserPermissionsAndGroups();
+    await this.verificarInformeOperativo();
   },
 
   methods: {
@@ -397,6 +398,18 @@ export default {
         if (response.data.existe) {
           this.informeOperativoId = response.data.id;
           return true;
+        } else {
+          this.informeOperativoId = null;
+          this.isExistingRecord = false; // No hay informe existente
+          console.log("No existe un informe operativo para la fecha actual.");
+          // Opcional: Mostrar mensaje al usuario
+          Swal.fire({
+            icon: "info",
+            title: "Informe no encontrado",
+            text: "No existe un informe operativo para la fecha actual.",
+            confirmButtonColor: "#002a68",
+          });
+          this.$emit("record-status-changed", { isExisting: false });
         }
         return false;
       } catch (error) {

@@ -61,12 +61,6 @@
                   <div v-else>
                     <i class="bi bi-database-exclamation fs-4"></i>
                     <p class="mt-2">No hay registros</p>
-                    <router-link to="AdicionarVagonProducto">
-                      <button class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-circle me-1"></i>Crear primer
-                        registro
-                      </button>
-                    </router-link>
                   </div>
                 </td>
               </tr>
@@ -367,7 +361,12 @@ import Swal from "sweetalert2";
 
 export default {
   name: "VagonesProductos",
-
+  props: {
+    informeID: {
+      type: Number,
+      required: false,
+    },
+  },
   data() {
     return {
       vagones_productos: [], // Lista de vagones con productos
@@ -431,18 +430,22 @@ export default {
           `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
         );
 
-        const response = await axios.get("/ufc/vagones-productos/", {
-          params: {
-            page: this.currentPage,
-            page_size: this.itemsPerPage,
-            informe: infoID.data.id,
-          },
-        });
+        if (infoID.data.id || this.informeID) {
+          const response = await axios.get("/ufc/vagones-productos/", {
+            params: {
+              page: this.currentPage,
+              page_size: this.itemsPerPage,
+              informe: this.informeID ? this.informeID : infoID.data.id,
+            },
+          });
 
-        this.vagones_productos = response.data.results;
-        this.allRecords = [...response.data.results]; // Guardar copia completa para filtrado
-        this.totalItems = response.data.count;
-        this.busqueda_existente = true;
+          this.vagones_productos = response.data.results;
+          this.allRecords = [...response.data.results]; // Guardar copia completa para filtrado
+          this.totalItems = response.data.count;
+          this.busqueda_existente = true;
+        } else {
+          this.showErrorToast("No hay ID para cargar");
+        }
       } catch (error) {
         console.error("Error al obtener los vagones con productos:", error);
         this.busqueda_existente = false;

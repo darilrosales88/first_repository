@@ -137,7 +137,7 @@
               class="btn btn-sm btn-primary"
               :disabled="isExistingRecord || isLoading"
             >
-              <i class="bi bi-save me-1"></i>Guardar
+              <i class="bi bi-save me-1"></i>Crear Informe
             </button>
           </div>
         </form>
@@ -160,6 +160,10 @@ export default {
     fechaOperacion: {
       type: Date,
       required: true,
+    },
+    informeID: {
+      type: Number,
+      required: false,
     },
   },
   data() {
@@ -225,7 +229,9 @@ export default {
 
           // Cargar datos del informe creado
           const recordResponse = await axios.get(
-            `/ufc/informe-operativo/${this.informeOperativoId}/`
+            `/ufc/informe-operativo/${
+              this.informeID ? this.informeID : this.informeOperativoId
+            }/`
           );
 
           // Formatear la fecha para mostrar solo YYYY-MM-DD

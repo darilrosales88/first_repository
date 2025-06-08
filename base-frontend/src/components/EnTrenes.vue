@@ -69,12 +69,6 @@
                   <div v-else>
                     <i class="bi bi-database-exclamation fs-4"></i>
                     <p class="mt-2">No hay registros</p>
-                    <router-link to="/AdicionarVagon">
-                      <button class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-circle me-1"></i>Crear primer
-                        registro
-                      </button>
-                    </router-link>
                   </div>
                 </td>
               </tr>
@@ -377,8 +371,13 @@ import axios from "axios";
 import Swal from "sweetalert2";
 
 export default {
-  name: "VagonesProductos",
-
+  name: "EnTrenes",
+  props: {
+    informeID: {
+      type: Number,
+      required: false,
+    },
+  },
   data() {
     return {
       enTrenes: [],
@@ -461,25 +460,26 @@ export default {
       const fechaFormateada = `${today.getFullYear()}-${String(
         today.getMonth() + 1
       ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-
+      console.log("Ahora si: ", this.informeID);
       try {
         const infoID = await axios.get(
           `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
         );
         this.estado_parte = infoID.data.estado;
-        if (infoID.data.existe) {
+        //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
+        if (this.informeID || infoID.data.id) {
           const response = await axios.get("/ufc/en-trenes/", {
             params: {
               page: this.currentPage,
               page_size: this.itemsPerPage,
-              informe: infoID.data.id,
+              informe: this.informeID ? this.informeID : infoID.data.id,
             },
           });
           this.enTrenes = response.data.results;
           this.allRecords = response.data.results;
           this.totalItems = response.data.count;
         } else {
-          return;
+          this.showErrorToast("No hay ID para cargar");
         }
       } catch (error) {
         console.error("Error al obtener los trenes:", error);

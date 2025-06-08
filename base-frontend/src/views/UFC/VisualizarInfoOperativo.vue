@@ -1,153 +1,238 @@
 <template>
-  <div>
-    <div
-      style="
-        background-color: #002a68;
-        color: white;
-        text-align: right;
-        padding: 10px;
-      "
-    >
-      <h6>Informe Operativo</h6>
-    </div>
+  <div
+    style="
+      background-color: #002a68;
+      color: white;
+      text-align: right;
+      padding: 10px;
+    "
+  >
+    <h6>Informe Operativo</h6>
+  </div>
 
-    <NavbarComponent />
+  <Navbar-Component /><br />
 
-    <!-- Mostrar datos principales del informe -->
-    <div style="margin-left: 17em; width: 73%">
-      <InfOperativeView :informeId="informeId" />
-    </div>
+  <div style="margin-left: 25em; width: 60%">
+    <div class="container py-3">
+      <div class="card border">
+        <div class="card-header bg-light border-bottom">
+          <h5 class="mb-0 text-dark fw-semibold">
+            <i class="bi bi-clipboard-data me-2"></i>Fechas de operaciones - UFC
+          </h5>
+        </div>
 
-    <!-- Mostrar el resto de componentes relacionados -->
-    <div style="margin-left: 12em">
-      <h4>Transportación de las cargas</h4>
-      <Vagones_productos :informeId="informeId" />
-
-      <nav>
-        <ul>
-          <li>
-            <a
-              href="#"
-              @click.prevent="currentComponent = 'PorSituarCarga_Descarga'"
-              :class="{
-                active: currentComponent === 'PorSituarCarga_Descarga',
-              }"
-            >
-              Por Situar Carga/Descarga
-            </a>
-          </li>
-          <li>
-            <a
-              href="#"
-              @click.prevent="currentComponent = 'SituadoCarga_Descarga'"
-              :class="{ active: currentComponent === 'SituadoCarga_Descarga' }"
-            >
-              Situado Carga/Descarga
-            </a>
-          </li>
-          <li>
-            <a
-              href="#"
-              @click.prevent="currentComponent = 'Cargados_Descargados'"
-              :class="{ active: currentComponent === 'Cargados_Descargados' }"
-            >
-              Cargados
-            </a>
-          </li>
-          <li>
-            <a
-              href="#"
-              @click.prevent="currentComponent = 'PendientesArrastre'"
-              :class="{ active: currentComponent === 'PendientesArrastre' }"
-            >
-              Pendientes
-            </a>
-          </li>
-          <li>
-            <a
-              href="#"
-              @click.prevent="currentComponent = 'EnTrenes'"
-              :class="{ active: currentComponent === 'EnTrenes' }"
-            >
-              En Trenes
-            </a>
-          </li>
-        </ul>
-      </nav>
-
-      <!-- Componente dinámico -->
-      <component :is="currentComponent" :informeId="informeId" />
-
-      <ConsultaRotacionVagones :informeId="informeId" />
-
-      <div class="action-buttons">
-        <button class="action-btn reject" @click="rechazar">
-          <i class="bi bi-x-circle"></i> Rechazar
-        </button>
-        <button class="action-btn ready" @click="listo">
-          <i class="bi bi-check-circle"></i> Listo
-        </button>
-        <button class="action-btn approve" @click="aprobar">
-          <i class="bi bi-check2-circle"></i> Aprobar
-        </button>
+        <div class="card-body p-3">
+          <form @submit.prevent="submitForm">
+            <div class="row mb-3 g-2">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label
+                    for="fechaActual"
+                    class="form-label small fw-semibold text-secondary"
+                  >
+                    <i class="bi bi-calendar-check me-2 text-primary"></i>Fecha
+                    Actual
+                  </label>
+                  <input
+                    type="date"
+                    class="form-control form-control-sm border-secondary"
+                    id="fechaActual"
+                    v-model="formData.fecha_actual"
+                    required
+                    :disabled="isExistingRecord"
+                  />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label
+                    for="fechaOperacion"
+                    class="form-label small fw-semibold text-secondary"
+                  >
+                    <i class="bi bi-calendar-check me-2 text-primary"></i>Fecha
+                    Operación
+                  </label>
+                  <input
+                    type="date"
+                    class="form-control form-control-sm border-secondary"
+                    id="FechaOperacion"
+                    v-model="formData.fecha_operacion"
+                    required
+                    :disabled="isExistingRecord"
+                  />
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
       </div>
+    </div>
+  </div>
+
+  <div style="margin-left: 16em; width: 80%">
+    <!-- Navbar con enlaces -->
+    <nav>
+      <ul>
+        <li>
+          <a
+            href="#"
+            @click.prevent="
+              loadComponent('PorSituarCarga_Descarga', {
+                informeID: $route.params.id,
+              })
+            "
+            :class="{ active: currentComponent === 'PorSituarCarga_Descarga' }"
+          >
+            Por Situar Carga/Descarga
+          </a>
+        </li>
+        <li>
+          <a
+            href="#"
+            @click.prevent="
+              loadComponent('SituadoCarga_Descarga', {
+                informeID: $route.params.id,
+              })
+            "
+            :class="{ active: currentComponent === 'SituadoCarga_Descarga' }"
+          >
+            Situado Carga/Descarga
+          </a>
+        </li>
+        <li>
+          <a
+            href="#"
+            @click.prevent="
+              loadComponent('Cargados_Descargados', {
+                informeID: $route.params.id,
+              })
+            "
+            :class="{ active: currentComponent === 'Cargados_Descargados' }"
+          >
+            Cargados
+          </a>
+        </li>
+        <li>
+          <a
+            href="#"
+            @click.prevent="
+              loadComponent('PendientesArrastre', {
+                informeID: $route.params.id,
+              })
+            "
+            :class="{ active: currentComponent === 'PendientesArrastre' }"
+          >
+            Pendientes
+          </a>
+        </li>
+        <li>
+          <a
+            href="#"
+            @click.prevent="
+              loadComponent('EnTrenes', { informeID: $route.params.id })
+            "
+            :class="{ active: currentComponent === 'EnTrenes' }"
+          >
+            En Trenes
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Contenedor para las tablas -->
+    <div>
+      <component :is="currentComponent" v-bind="componentProps" />
+    </div>
+  </div>
+
+  <div style="margin-left: 16em; width: 80%">
+    <Vagones_productos :informeID="$route.params.id" />
+  </div>
+
+  <div style="margin-left: 16em; width: 80%">
+    <!-- Componente de Rotacion de vagones -->
+    <ConsultaRotacionVagones :informeID="$route.params.id" />
+  </div>
+
+  <div style="margin-left: 16em; width: 80%">
+    <Inf-Operative
+      :fechaActual="formData.fecha_actual"
+      :fechaOperacion="formData.fecha_operacion"
+      :informeID="$route.params.id"
+      @record-status-changed="handleRecordStatusChange"
+    />
+  </div>
+
+  <div style="margin-left: 16em; width: 80%">
+    <div class="action-buttons">
+      <button class="action-btn reject" @click="rechazar">
+        <i class="bi bi-x-circle"></i> Rechazar
+      </button>
+      <button class="action-btn ready" @click="listo">
+        <i class="bi bi-check-circle"></i> Listo
+      </button>
+      <button class="action-btn approve" @click="aprobar">
+        <i class="bi bi-check2-circle"></i> Aprobar
+      </button>
     </div>
   </div>
 </template>
 
 <script>
+import Swal from "sweetalert2";
+import axios from "axios";
 import NavbarComponent from "@/components/NavbarComponent.vue";
-import Vagones_productos from "@/components/Vagones_productos.vue";
 import PorSituarCarga_Descarga from "@/components/PorSituarCarga_Descarga.vue";
 import SituadoCarga_Descarga from "@/components/SituadoCarga_Descarga.vue";
 import Cargados_Descargados from "@/components/Cargados_Descargados.vue";
 import PendientesArrastre from "@/components/PendientesArrastre.vue";
 import EnTrenes from "@/components/EnTrenes.vue";
+import InfOperative from "@/components/InfOperative.vue";
+import Vagones_productos from "@/components/Vagones_productos.vue";
+import AdicionarVagonProducto from "@/views/UFC/AdicionarVagonesProductos.vue";
 import ConsultaRotacionVagones from "@/components/RotacionVagonesView.vue";
-import Swal from "sweetalert2";
-import axios from "axios";
 
 export default {
-  name: "VisualizarInformeOperativo",
+  name: "UFCView",
   components: {
     NavbarComponent,
-    Vagones_productos,
     PorSituarCarga_Descarga,
     SituadoCarga_Descarga,
     Cargados_Descargados,
     PendientesArrastre,
     EnTrenes,
+    InfOperative,
+    Vagones_productos,
+    AdicionarVagonProducto,
     ConsultaRotacionVagones,
   },
   data() {
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000; // offset en milisegundos
+    const localISOTime = new Date(now - offset).toISOString().split("T")[0];
     return {
-      informeId: null,
-      currentComponent: "PorSituarCarga_Descarga",
       userPermissions: [],
       userGroups: [],
+      currentComponent: "",
+      informeOperativoId: null,
+      loadingPermissions: false,
+      isExistingRecord: false,
+      formData: {
+        fecha_actual: localISOTime,
+        fecha_operacion: localISOTime,
+      },
+      componentProps: {},
     };
   },
-  created() {
-    this.informeId = this.$route.params.id;
-    this.fetchUserPermissionsAndGroups();
+
+  async created() {
+    await this.fetchUserPermissionsAndGroups();
   },
+
   methods: {
-    async fetchUserPermissionsAndGroups() {
-      try {
-        const userId = localStorage.getItem("userid");
-        if (userId) {
-          const response = await axios.get(
-            `/apiAdmin/user/${userId}/permissions-and-groups/`
-          );
-          this.userPermissions = response.data.permissions;
-          this.userGroups = response.data.groups;
-        }
-      } catch (error) {
-        console.error("Error al obtener permisos y grupos:", error);
-      }
-    },
-    hasGroup(group) {
-      return this.userGroups.some((g) => g.name === group);
+    loadComponent(componentName, props = {}) {
+      this.currentComponent = componentName;
+      this.componentProps = props;
     },
     async rechazar() {
       if (!this.hasGroup("RevisorUFC")) {
@@ -159,7 +244,6 @@ export default {
         });
         return;
       }
-
       const result = await Swal.fire({
         title: "¿Estás seguro?",
         text: "Está seguro que desea rechazar este informe operativo?",
@@ -171,10 +255,12 @@ export default {
         cancelButtonText: "Cancelar",
       });
 
+      // Si el usuario confirma, proceder con la aprobación
       if (result.isConfirmed) {
-        await this.cambiarEstado("Rechazado");
+        await this.CambiarEstado("Rechazado");
       }
     },
+
     async aprobar() {
       if (!this.hasGroup("RevisorUFC")) {
         await Swal.fire({
@@ -186,6 +272,7 @@ export default {
         return;
       }
 
+      // Mostrar confirmación antes de aprobar
       const result = await Swal.fire({
         title: "¿Estás seguro?",
         text: "Está seguro que desea aprobar este informe operativo?",
@@ -197,8 +284,9 @@ export default {
         cancelButtonText: "Cancelar",
       });
 
+      // Si el usuario confirma, proceder con la aprobación
       if (result.isConfirmed) {
-        await this.cambiarEstado("Aprobado");
+        await this.CambiarEstado("Aprobado");
       }
     },
     async listo() {
@@ -211,7 +299,6 @@ export default {
         });
         return;
       }
-
       const result = await Swal.fire({
         title: "¿Estás seguro?",
         text: "Está seguro que desea poner a 'Listo' este informe operativo?",
@@ -223,31 +310,86 @@ export default {
         cancelButtonText: "Cancelar",
       });
 
+      // Si el usuario confirma, proceder con la aprobación
       if (result.isConfirmed) {
-        await this.cambiarEstado("Listo");
+        await this.CambiarEstado("Listo");
       }
     },
-    async cambiarEstado(nuevoEstado) {
+
+    hasPermission(permission) {
+      if (!this.userPermissions || !Array.isArray(this.userPermissions)) {
+        console.warn("userPermissions no está disponible o no es un array");
+        return false;
+      }
+      return this.userPermissions.some((p) => p.codename === permission);
+    },
+
+    hasGroup(group) {
+      if (!this.userGroups || !Array.isArray(this.userGroups)) {
+        return false;
+      }
+      return this.userGroups.some((g) => g.name === group);
+    },
+
+    async fetchUserPermissionsAndGroups() {
+      this.loadingPermissions = true;
+      console.log("Este es el id del informe operativo", this.$route.params.id);
       try {
         const userId = localStorage.getItem("userid");
-        const response = await axios.patch(
-          `/ufc/informe-operativo/${this.informeId}/`,
+        if (userId) {
+          const response = await axios.get(
+            `/apiAdmin/user/${userId}/permissions-and-groups/`
+          );
+
+          // Verificación profunda de la respuesta
+          console.log("Respuesta completa de permisos:", {
+            permissions: response.data?.permissions,
+            groups: response.data?.groups,
+          });
+
+          this.userPermissions = response.data?.permissions || [];
+          this.userGroups = response.data?.groups || [];
+        }
+      } catch (error) {
+        console.error("Error al obtener permisos:", {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        });
+        this.userPermissions = [];
+        this.userGroups = [];
+      } finally {
+        this.loadingPermissions = false;
+      }
+    },
+
+    async CambiarEstado(NuevoEstado) {
+      try {
+        const userId = localStorage.getItem("userid");
+        const response = await axios.put(
+          `/ufc/informe-operativo/${this.$route.params.id}/`,
           {
-            estado_parte: nuevoEstado,
-            aprobado_por: nuevoEstado === "Aprobado" ? userId : null,
-          }
+            estado_parte: NuevoEstado,
+            ...(NuevoEstado !== "Listo" ? { aprobado_por: userId } : {}),
+          },
+          { headers: { "Content-Type": "application/json" } }
         );
 
         if (response.status === 200) {
           await Swal.fire({
             icon: "success",
             title: "Éxito",
-            text: `Estado actualizado a "${nuevoEstado}" correctamente.`,
+            text: `Estado actualizado a "${NuevoEstado}" correctamente.`,
             confirmButtonColor: "#002a68",
           });
+          this.$forceUpdate();
         }
       } catch (error) {
-        console.error("Error al cambiar estado:", error);
+        console.error("Error al cambiar estado:", {
+          url: error.config?.url,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
         await Swal.fire({
           icon: "error",
           title: "Error",
@@ -257,10 +399,158 @@ export default {
         });
       }
     },
+
+    async verificarInformeOperativo() {
+      try {
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(
+          today.getMonth() + 1
+        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+        const response = await axios.get("/ufc/verificar-informe-existente/", {
+          params: { fecha_operacion: fechaFormateada },
+        });
+
+        if (response.data.existe) {
+          this.informeOperativoId = response.data.id;
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error("Error al verificar informe:", error);
+        return false;
+      }
+    },
+    handleRecordStatusChange(payload) {
+      this.isExistingRecord = payload.isExisting;
+      // Opcional: Mostrar feedback
+      console.log("Estado actualizado:", payload);
+    },
   },
 };
 </script>
-
 <style scoped>
-/* Tus estilos existentes */
+/* Estilos mejorados para los botones de acción */
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  margin: 30px auto; /* Centrado vertical y horizontal */
+  justify-content: center; /* Centra los botones horizontalmente */
+  padding: 20px 0;
+  width: 100%;
+}
+
+.action-btn {
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+}
+
+/* Estilos específicos para cada botón */
+.approve {
+  background-color: #28a745;
+  color: white;
+}
+
+.approve:hover {
+  background-color: #218838;
+}
+
+.reject {
+  background-color: #dc3545;
+  color: white;
+}
+
+.reject:hover {
+  background-color: #c82333;
+}
+
+.ready {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.ready:hover {
+  background-color: #138496;
+}
+
+.action-btn i {
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+/* Estilos generales del navbar */
+nav ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 15px;
+  background-color: #f8f9fa; /* Fondo claro para el navbar */
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+nav ul li {
+  display: inline;
+}
+
+/* Estilos base de los enlaces */
+a {
+  text-decoration: none;
+  color: #333; /* Color de texto oscuro */
+  cursor: pointer;
+  padding: 10px 20px;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  display: inline-block;
+}
+
+/* Estilo cuando el usuario pasa el mouse sobre el enlace */
+nav a:hover {
+  background-color: #e9ecef; /* Gris muy claro */
+  color: #000; /* Color del texto */
+  transform: translateY(-2px); /* Efecto de levantar */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada */
+}
+
+/* Estilo para el enlace seleccionado */
+nav a.active {
+  background-color: #007bff; /* Azul */
+  color: #fff; /* Texto blanco */
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3); /* Sombra azul */
+  transform: translateY(-2px); /* Efecto de levantar */
+}
+
+/* Efecto al hacer clic */
+nav a:active {
+  transform: translateY(0); /* Vuelve a su posición original */
+}
+
+nav ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 10px;
+}
+
+nav ul li {
+  display: inline;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
 </style>

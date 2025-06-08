@@ -6,8 +6,6 @@ from rest_framework.pagination import PageNumberPagination
 from .models import vagon_cargado_descargado,producto_UFC,en_trenes
 from .models import registro_vagones_cargados,vagones_productos,HistorialVagonesProductos
 from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones,ufc_informe_operativo,vagones_dias
-from .models import (CCD_registro_vagones_cargados,CCD_en_trenes, CCD_Situado_Carga_Descarga, CCD_por_situar, CCD_arrastres,CCD_vagon_cargado_descargado)
-from .models import CCD_HistorialVagonCargadoDescargado
 #importacion de serializadores asociados a los modelos
 from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descargado_serializer, 
                         producto_vagon_serializer, en_trenes_serializer,PorSituarCargaDescargaSerializer, SituadoCargaDescargaSerializers, 
@@ -16,10 +14,7 @@ from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descarg
                         vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer,PorSituarCargaDescargaFilter,
                         ufc_informe_operativo_serializer,ufc_informe_operativo_filter,
                         HistorialVagonCargadoDescargado,HistorialVagonCargadoDescargadoSerializer,
-                        HistorialVagonesProductosSerializer,vagones_dias_serializer, rotacion_filter,PendienteArrastreFilter,
-
-                        CCD_registro_vagones_cargados_serializer,CCD_en_trenes_serializer,CCD_SituadoCargaDescargaSerializers,
-                        CCD_PorSituarCargaDescargaSerializer,CCD_PendienteArrastreSerializer
+                        HistorialVagonesProductosSerializer,vagones_dias_serializer, rotacion_filter,PendienteArrastreFilter
                         )
 from django.core.cache import cache
 from Administracion.models import Auditoria
@@ -38,7 +33,7 @@ from django.utils import timezone
 #para usar el or
 
 #Actualizando el ModelViewSet para usar diferentes permisos según la acción
-from .permissions import IsAdminUFCPermission,IsVisualizadorUFCPermission
+from .permissions import IsAdminUFCPermission,IsVisualizadorUFCPermission,IsRevisorUFCPermission
 
 from rest_framework.decorators import action,api_view  # Importa el decorador action
 
@@ -68,7 +63,7 @@ class IsUFCPermission(permissions.BasePermission):
             permission_classes = [IsAdminUFCPermission]
         else:  # Para list y retrieve
             # Permitir tanto a AdminUFC como a VisualizadorUFC ver los registros
-            permission_classes = [IsAdminUFCPermission | IsVisualizadorUFCPermission]
+            permission_classes = [IsAdminUFCPermission | IsVisualizadorUFCPermission | IsRevisorUFCPermission]
         return [permission() for permission in permission_classes]
 
 #Funcion para actualizar el estado de los vagones deberia estar global
@@ -101,8 +96,8 @@ def actualizar_estado_equipo_ferroviario( equipo_o_id, nuevo_estado, id=None):
 class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
     queryset = ufc_informe_operativo.objects.all().order_by('-id')
     serializer_class = ufc_informe_operativo_serializer
+    permission_classes= [IsUFCPermission]
 
-    
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -213,7 +208,8 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
             
         serializer = self.get_serializer(
             instance, 
-            data={'estado_parte': request.data['estado_parte']}, 
+            data={'estado_parte': request.data['estado_parte']
+                  }, 
             partial=True
         )
         
@@ -383,6 +379,7 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
     queryset = vagones_productos.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = vagones_productos_serializer
     filter_class = vagones_productos_filter
+    permission_classes= [IsUFCPermission]
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -568,7 +565,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
     queryset = vagon_cargado_descargado.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = vagon_cargado_descargado_serializer
     filter_class = vagon_cargado_descargado_filter
-    
+    permission_classes= [IsUFCPermission]
     def get_queryset(self):
         queryset = super().get_queryset()
         informe_id = self.request.query_params.get('informe')
@@ -970,7 +967,7 @@ class en_trenes_view_set(viewsets.ModelViewSet):
     serializer_class = en_trenes_serializer
     filter_backends = [DjangoFilterBackend]
     filter_class = en_trenes_filter
-
+    permission_classes= [IsUFCPermission]
     ordering_fields = ['id'] 
     ordering = ['-id']  # Orden por defecto (descendente por id)    
 
@@ -1249,7 +1246,7 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
     queryset = por_situar.objects.all().order_by("-id")
     serializer_class = PorSituarCargaDescargaSerializer
     filter_backends = [DjangoFilterBackend]
-    
+    permission_classes= [IsUFCPermission]
     def get_queryset(self):
         queryset = super().get_queryset()
         tipo_equipo = self.request.query_params.get("tipo_equipo")
@@ -1683,9 +1680,9 @@ class PendienteArrastre_hoy_Viewset(viewsets.ModelViewSet):
 #*************Registro de vagones Dia*******************
 class VagonesDiasViewSet(viewsets.ModelViewSet):
     queryset=vagones_dias.objects.all()
-    serializer_class=vagones_dias_serializer    
-    
-    
+    serializer_class=vagones_dias_serializer
+    permission_classes = [IsUFCPermission]
+
 #*************Empieza View Rotacion de Vagones **********************
 class RotacionVagonesViewSet(viewsets.ModelViewSet):
     """
@@ -1798,816 +1795,3 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
     
 #*************Termina View Rotacion de Vagones **********************
-
-
-
-
-
-# Views para CCD
-class CCD_vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
-    queryset = CCD_vagon_cargado_descargado.objects.all().order_by('-id')
-    serializer_class = CCD_registro_vagones_cargados_serializer
-    permission_classes = [IsUFCPermission]
-    
-    def perform_destroy(self, instance):
-        registros_asociados = instance.registros_vagones.all()
-        
-        for registro in registros_asociados:
-            actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
-        
-        registros_asociados.delete()
-        instance.delete()
-
-    def create(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        objeto_vagon_cargado_descargado = serializer.save()
-
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Insertar CCD vagón cargado/descargado: {objeto_vagon_cargado_descargado.id}",
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def update(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        objeto_vagon_cargado_descargado = serializer.save()
-
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Modificar CCD vagón cargado/descargado: {objeto_vagon_cargado_descargado.id}",
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
-    def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        try:
-            instance = self.get_object()
-            id_objeto_vagon_cargado_descargado = instance.id
-            
-            navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-            direccion_ip = request.META.get('REMOTE_ADDR')
-            
-            Auditoria.objects.create(
-                usuario=request.user if request.user.is_authenticated else None,
-                direccion_ip=direccion_ip,
-                accion=f"Eliminar CCD vagón cargado/descargado y sus registros asociados: {id_objeto_vagon_cargado_descargado}",
-                navegador=navegador,
-            )
-            
-            instance.delete()
-            
-            return Response(status=status.HTTP_204_NO_CONTENT)
-            
-        except Exception as e:
-            return Response(
-                {"error": f"No se pudo eliminar el registro: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de CCD vagones cargados/descargados",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return super().list(request, *args, **kwargs)
-    
-    @action(detail=True, methods=['get'], url_path='registros-vagones')
-    def obtener_registros_vagones(self, request, pk=None):
-        try:
-            instance = self.get_object()
-            registros_vagones = instance.registros_vagones.all()
-            serializer = CCD_registro_vagones_cargados_serializer(registros_vagones, many=True)
-            return Response(serializer.data)
-        
-        except Exception as e:
-            return Response(
-                {"error": f"No se pudieron obtener los registros de vagones: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    @action(detail=True, methods=['get'], url_path='registros-completos')
-    def obtener_registros_completos(self, request, pk=None):
-        try:
-            instance = self.get_object()
-            registros_vagones = instance.registros_vagones.all().values(
-                'id',
-                'no_id',
-                'fecha_despacho',
-                'tipo_origen',
-                'origen',
-                'fecha_llegada',
-                'observaciones'
-            )            
-            return Response(list(registros_vagones))
-        
-        except Exception as e:
-            return Response(
-                {"error": f"No se pudieron obtener los registros completos: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-class CCD_vagon_cargado_descargado_hoy_view_set(viewsets.ModelViewSet):
-    queryset = CCD_vagon_cargado_descargado.objects.all()
-    serializer_class = CCD_registro_vagones_cargados_serializer
-    
-    def get_queryset(self):
-        hoy = timezone.now().date()
-        return self.queryset.annotate(
-            fecha_dia=TruncDate('fecha', output_field=DateField())
-        ).filter(fecha_dia=hoy).order_by('-fecha')
-        
-    def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de CCD vagones cargados/descargados hoy",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        
-        return super().list(request, *args, **kwargs)
-
-
-
-
-
-class CCD_registro_vagones_cargados_view_set(viewsets.ModelViewSet):
-    queryset = CCD_registro_vagones_cargados.objects.all().order_by('-id')
-    serializer_class = CCD_registro_vagones_cargados_serializer    
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        search = self.request.query_params.get('no_id_origen', None)
-
-        if search is not None:
-            queryset = queryset.filter(Q(no_id__icontains=search) | Q(origen__icontains=search))
-        return queryset
-
-    def create(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        objeto_registro_vagones_cargados = serializer.save()
-
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Insertar CCD vagón a estado cargado/descargado: {objeto_registro_vagones_cargados.id}",
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def update(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        objeto_registro_vagones_cargados = serializer.save()
-
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Modificar CCD vagón del estado cargado/descargado: {objeto_registro_vagones_cargados.id}",
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
-    def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        instance = self.get_object()
-        id_objeto_registro_vagones_cargados = instance.id
-
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Eliminar CCD vagón del estado cargado/descargado: {id_objeto_registro_vagones_cargados}",
-            navegador=navegador,
-        )
-
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de CCD vagones del estado cargado/descargado",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return super().list(request, *args, **kwargs)
-
-
-class CCD_en_trenes_view_set(viewsets.ModelViewSet):
-    queryset = CCD_en_trenes.objects.all().order_by('-id')
-    serializer_class = CCD_en_trenes_serializer
-    filter_backends = [DjangoFilterBackend]
-    ordering_fields = ['id'] 
-    ordering = ['-id']
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        search_term = self.request.query_params.get('search', None)
-
-        if search_term:
-            queryset = queryset.prefetch_related('equipo_vagon','producto').filter(
-                Q(origen__icontains=search_term) |
-                Q(destino__icontains=search_term) |
-                Q(producto__producto__nombre_producto__icontains=search_term) |
-                Q(producto__producto__codigo_producto__icontains=search_term) |
-                Q(numero_identificacion_locomotora__icontains=search_term)
-            ).distinct()
-        return queryset
-
-    def create(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        objeto_en_trenes = serializer.save()
-
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Insertado CCD formulario en trenes: {objeto_en_trenes.id}",
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def update(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        objeto_en_trenes = serializer.save()
-
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Modificar CCD formulario en trenes: {objeto_en_trenes.id}",
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
-    def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        instance = self.get_object()
-        id_objeto_en_trenes = instance.id
-        
-        equipos_asociados = instance.equipo_vagon.all()
-        
-        for equipo in equipos_asociados:
-            try:
-                actualizar_estado_equipo_ferroviario(equipo, "Disponible")
-            except Exception as e:
-                print(f"Error al actualizar equipo {equipo.id}: {str(e)}")
-                continue
-        
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Eliminar CCD formulario en trenes {id_objeto_en_trenes}",
-            navegador=navegador,
-        )
-
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists() and not request.user.groups.filter(name='VisualizadorUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de CCD formularios en trenes",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return super().list(request, *args, **kwargs)
-
-
-class CCD_en_trenes_hoy_viewset(viewsets.ModelViewSet):
-    queryset = CCD_en_trenes.objects.all()
-    serializer_class = CCD_en_trenes_serializer
-    
-    def get_queryset(self):
-        hoy = timezone.now().date()
-        return self.queryset.annotate(
-            fecha_dia=TruncDate('fecha', output_field=DateField())
-        ).filter(fecha_dia=hoy).order_by('-fecha')
-    
-    def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de CCD vagones pendientes de arrastre hoy",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        
-        return super().list(request, *args, **kwargs)
-
-
-class CCD_SituadoCargaDescargaViewset(viewsets.ModelViewSet):
-    queryset = CCD_Situado_Carga_Descarga.objects.all().order_by("-id")
-    serializer_class = CCD_SituadoCargaDescargaSerializers
-    filter_backends = [DjangoFilterBackend]
-    permission_classes = [IsUFCPermission] 
-    
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        tipo_equipo = self.request.query_params.get("tipo_equipo")
-        if tipo_equipo:
-            if "," in tipo_equipo:
-                tipos = tipo_equipo.split(",")
-                queryset = queryset.filter(tipo_equipo__in=tipos)
-        return queryset.prefetch_related('producto')
-    
-    def create(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        objeto_situado = serializer.save()
-
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Insertado CCD formulario en Situado carga o descarga: {objeto_situado.id}",
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def update(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        objeto_situado = serializer.save()
-
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Modificar CCD formulario Situado: {objeto_situado.id}",
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
-    def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        instance = self.get_object()
-        id_objeto_situado = instance.id
-
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Eliminar CCD formulario Situado carga y Descarga {id_objeto_situado}",
-            navegador=navegador,
-        )
-
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de CCD formularios Situados",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return super().list(request, *args, **kwargs)
-
-
-class CCD_SituadoCargaDescarga_hoy_Viewset(viewsets.ModelViewSet):
-    queryset = CCD_Situado_Carga_Descarga.objects.all()
-    serializer_class = CCD_SituadoCargaDescargaSerializers
-    
-    def get_queryset(self):
-        hoy = timezone.now().date()
-        return self.queryset.annotate(
-            fecha_dia=TruncDate('fecha', output_field=DateField())
-        ).filter(fecha_dia=hoy).order_by('-fecha')
-    
-    def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de CCD vagones situados hoy",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        
-        return super().list(request, *args, **kwargs)
-
-
-class CCD_PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
-    queryset = CCD_por_situar.objects.all().order_by("-id")
-    serializer_class = CCD_PorSituarCargaDescargaSerializer
-    filter_backends = [DjangoFilterBackend]
-    permission_classes = [IsUFCPermission]
-    
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        tipo_equipo = self.request.query_params.get("tipo_equipo")
-        if tipo_equipo:
-            if "," in tipo_equipo:
-                tipos = tipo_equipo.split(",")
-                queryset = queryset.filter(tipo_equipo__in=tipos)
-        return queryset.prefetch_related('producto')
-    
-    def create(self, request, *args, **kwargs):
-        try:
-            if not request.user.groups.filter(name='AdminUFC').exists():
-                return Response(
-                    {"detail": "No tiene permiso para realizar esta acción."},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            objeto_por_situar = serializer.save()
-
-            navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-            direccion_ip = request.META.get('REMOTE_ADDR')
-            Auditoria.objects.create(
-                usuario=request.user if request.user.is_authenticated else None,
-                direccion_ip=direccion_ip,
-                accion=f"Insertado CCD formulario en Por Situar carga o descarga: {objeto_por_situar.id}",
-                navegador=navegador,
-            )
-
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    def update(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        objeto_por_situar = serializer.save()
-
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Modificar CCD formulario Por situar carga o descarga: {objeto_por_situar.id}",
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
-    def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        instance = self.get_object()
-        id_objeto_por_situar = instance.id
-
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Eliminar CCD formulario Por Situar carga y Descarga {id_objeto_por_situar}",
-            navegador=navegador,
-        )
-
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de CCD formularios Por Situar",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return super().list(request, *args, **kwargs)
-
-
-class CCD_PorSituarCargaDescarga_hoy_ViewSet(viewsets.ModelViewSet):
-    queryset = CCD_por_situar.objects.all()
-    serializer_class = CCD_PorSituarCargaDescargaSerializer
-    
-    def get_queryset(self):
-        hoy = timezone.now().date()
-        return self.queryset.annotate(
-            fecha_dia=TruncDate('fecha', output_field=DateField())
-        ).filter(fecha_dia=hoy).order_by('-fecha')
-    
-    def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de CCD vagones por situar hoy",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        
-        return super().list(request, *args, **kwargs)
-
-
-class CCD_PendienteArrastreViewset(viewsets.ModelViewSet):
-    queryset = CCD_arrastres.objects.all()
-    serializer_class = CCD_PendienteArrastreSerializer
-    permission_classes = [IsUFCPermission] 
-    
-    def create(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        objeto_pendiente = serializer.save()
-
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Insertado CCD formulario en Pendiente Arrastre: {objeto_pendiente.id}",
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def update(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        objeto_pendiente = serializer.save()
-
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Modificar CCD formulario Pendiente Arrastre: {objeto_pendiente.id}",
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
-    def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        instance = self.get_object()
-        id_objeto_pediente = instance.id
-
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Eliminar CCD formulario Pendiente Arrastre {id_objeto_pediente}",
-            navegador=navegador,
-        )
-
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de CCD Rotacion de Vagones",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return super().list(request, *args, **kwargs)
-
-
-class CCD_PendienteArrastre_hoy_Viewset(viewsets.ModelViewSet):
-    queryset = CCD_arrastres.objects.all()
-    serializer_class = CCD_PendienteArrastreSerializer
-    
-    def get_queryset(self):
-        hoy = timezone.now().date()
-        return self.queryset.annotate(
-            fecha_dia=TruncDate('fecha', output_field=DateField())
-        ).filter(fecha_dia=hoy).order_by('-fecha')
-    
-    def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de CCD vagones pendientes de arrastre hoy",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        
-        return super().list(request, *args, **kwargs)

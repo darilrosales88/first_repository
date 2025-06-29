@@ -67,7 +67,35 @@ class DateTimeToDateField(serializers.ReadOnlyField):
         return None
 
 #****************-------------------------********************--------------------***************-----------------********************************
-
+#******************-Producto UFC en vagones-*********************************#
+class producto_vagon_filter(filters.FilterSet):
+    tipo_equipo= filters.NumberFilter(field_name='tipo_equipo__id')
+    tipo_equipo_nombre = filters.CharFilter(
+        field_name='tipo_equipo__tipo_equipo', 
+        lookup_expr='icontains'
+    )
+    class Meta:
+        model = producto_UFC
+        fields = ['tipo_equipo']                 
+                
+#serializador de productoUFC
+class producto_vagon_serializer(serializers.ModelSerializer):
+   # tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
+   # estado_name = serializers.ReadOnlyField(source='get_estado_display')
+   # tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
+    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
+    producto_codigo = serializers.ReadOnlyField(source='producto.codigo_producto')
+    tipo_embalaje_name=serializers.ReadOnlyField(source='tipo_embalaje.nombre_tipo_embalaje')
+    unidad_medida_name=serializers.ReadOnlyField(source='unidad_medida.unidad_medida')
+    estado_name=serializers.ReadOnlyField(source='get_estado_display')
+    tipo_equipo_nombre = serializers.CharField(source='tipo_equipo.tipo_equipo', read_only=True)
+    class Meta:
+        model = producto_UFC
+        fields = '__all__'
+        filterset_class=producto_vagon_filter
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+        
 #Serializador para Modelo dVagones por dias de situados, por situar, Arrastres
 class vagones_dias_serializer(serializers.ModelSerializer):
     # Mantenemos los campos existentes para lectura
@@ -95,6 +123,7 @@ class vagones_dias_serializer(serializers.ModelSerializer):
 class vagones_productos_filter(filters.FilterSet):
     origen_tipo_prod_tef = filters.CharFilter(method='filtrado_por_origen_tipo_prod_tef', lookup_expr='icontains')
     informe = filters.NumberFilter(field_name='informe_operativo__id')
+    
     def filtrado_por_origen_tipo_prod_tef(self, queryset, name, value):        
         return queryset.filter(
             Q(tipo_equipo_ferroviario_name__icontains=value) | 
@@ -345,16 +374,12 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
     estado_name = serializers.ReadOnlyField(source='get_estado_display')
     operacion_name = serializers.ReadOnlyField(source='get_operacion_display')
     tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
-    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
-    productos_list = serializers.SerializerMethodField()  # Campo custom para nombres
-
-    producto_ids = serializers.PrimaryKeyRelatedField(
-        many=True,
+    producto = serializers.PrimaryKeyRelatedField(
+        many=False,
         queryset=producto_UFC.objects.all(),
-        source='producto',  # Esto mapea al campo ManyToManyField
-        write_only=True,
         required=False
     )
+    producto_detalle=producto_vagon_serializer(many=False,source='producto', read_only=True)
     
     registros_vagones_data = serializers.ListField(
         child=serializers.DictField(),
@@ -718,13 +743,16 @@ class en_trenes_serializer(serializers.ModelSerializer):
     producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')
     tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
    # equipo_vagon_id=serializers.ReadOnlyField(source='equipo_vagon.numero_identificacion')
-    productos_info = serializers.SerializerMethodField()
+    # productos_info = serializers.SerializerMethodField()
     vagones_info=serializers.SerializerMethodField()
+    
     producto = serializers.PrimaryKeyRelatedField(
-        many=True,
+        many=False,
         queryset=producto_UFC.objects.all(),
         required=False
     )
+    producto_detalle=producto_vagon_serializer(many=False,source='producto', read_only=True)
+    
 
     equipo_vagon = serializers.PrimaryKeyRelatedField(
         many=True,
@@ -749,25 +777,24 @@ class en_trenes_serializer(serializers.ModelSerializer):
             'tipo_destino',  
             'destino', 
             'producto', 
-            'productos_info',
             'producto_name',
             'cantidad_vagones',
             'observaciones',
             'informe_operativo',
         )
         
-    def get_productos_info(self, obj):
-        productos = obj.producto.all()
-        return [{
-            'id': p.id,
-            'nombre_producto': p.producto.nombre_producto,
-            'codigo_producto': p.producto.codigo_producto,
-            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
-            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
-            'cantidad': p.cantidad,
-            'estado': p.estado,
-            'contiene': p.contiene
-        } for p in productos]
+    # def get_productos_info(self, obj):
+    #     p = obj.producto
+    #     return {
+    #         'id': p.id,
+    #         'nombre_producto': p.producto.nombre_producto,
+    #         'codigo_producto': p.producto.codigo_producto,
+    #         'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
+    #         'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
+    #         'cantidad': p.cantidad,
+    #         'estado': p.estado,
+    #         'contiene': p.contiene
+    #     }
         
     def get_vagones_info(self, obj):
         equipo_vagon = obj.equipo_vagon.all()
@@ -854,25 +881,9 @@ class en_trenes_serializer(serializers.ModelSerializer):
        #         raise serializers.ValidationError("La combinación de tipo de equipo y número de identificación de locomotora ya existe.")
                 
                 
-#serializador de productoUFC
-class producto_vagon_serializer(serializers.ModelSerializer):
-   # tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
-   # estado_name = serializers.ReadOnlyField(source='get_estado_display')
-   # tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
-    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
-    producto_codigo = serializers.ReadOnlyField(source='producto.codigo_producto')
-    tipo_embalaje_name=serializers.ReadOnlyField(source='tipo_embalaje.nombre_tipo_embalaje')
-    unidad_medida_name=serializers.ReadOnlyField(source='unidad_medida.unidad_medida')
-    estado_name=serializers.ReadOnlyField(source='get_estado_display')
-    
-    class Meta:
-        model = producto_UFC
-        fields = '__all__'
-        filterset_class=en_trenes_filter
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-        
-  
+                
+                
+
     
 class SituadoCargaDescargaFilter(filters.FilterSet):
     tipo_equipo = filters.CharFilter(lookup_expr='icontains')  # Filtro exacto (puedes usar 'icontains' para parcial
@@ -884,14 +895,16 @@ class SituadoCargaDescargaFilter(filters.FilterSet):
         
         
 class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
-    productos_info = serializers.SerializerMethodField()
+   # productos_info = serializers.SerializerMethodField()
     tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
     tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
     producto = serializers.PrimaryKeyRelatedField(
-        many=True,
+        many=False,
         queryset=producto_UFC.objects.all(),
         required=False
     )
+    producto_detalle=producto_vagon_serializer(many=False,source='producto', read_only=True)
+    
     equipo_vagon = serializers.ListField(
         child=serializers.DictField(),
         write_only=True,
@@ -909,18 +922,18 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
             'observaciones': {'required': False, 'allow_null': True}
         }
 
-    def get_productos_info(self, obj):
-        productos = obj.producto.all()
-        return [{
-            'id': p.id,
-            'nombre_producto': p.producto.nombre_producto,
-            'codigo_producto': p.producto.codigo_producto,
-            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
-            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
-            'cantidad': p.cantidad,
-            'estado': p.estado,
-            'contiene': p.contiene
-        } for p in productos] # (truco) Esta bueno este truquito para evitar errores si el objeto no tiene el atributo
+    # def get_productos_info(self, obj):
+    #     p = obj.producto
+    #     return {
+    #         'id': p.id,
+    #         'nombre_producto': p.producto.nombre_producto,
+    #         'codigo_producto': p.producto.codigo_producto,
+    #         'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
+    #         'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
+    #         'cantidad': p.cantidad,
+    #         'estado': p.estado,
+    #         'contiene': p.contiene
+    #     }  # (truco) Esta bueno este truquito para evitar errores si el objeto no tiene el atributo
         
     def to_internal_value(self, data):
         # Convertir los valores de string a integer antes de la validación
@@ -1005,15 +1018,18 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         read_only=True,  # Solo lectura, no necesita write_only
         help_text="Fecha y hora en que se creó el registro (automático)"
     )
-    productos_info = serializers.SerializerMethodField()
+   # productos_info = serializers.PrimaryKeyRelatedField(,many=True)
     tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
     tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
+    
     producto = serializers.PrimaryKeyRelatedField(
-        write_only=True,
-        many=True,
+        many=False,
         queryset=producto_UFC.objects.all(),
         required=False
     )
+    producto_detalle=producto_vagon_serializer(many=False,source='producto', read_only=True)
+    #-#
+    
     equipo_vagon = serializers.ListField(
         child=serializers.DictField(),
         write_only=True,
@@ -1029,23 +1045,10 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
             'observaciones': {'required': False, 'allow_null': True}
         }
 
-    def get_productos_info(self, obj):
-        productos = obj.producto.all()
-        return [{
-            'id': p.id,
-            'nombre_producto': p.producto.nombre_producto,
-            'codigo_producto': p.producto.codigo_producto,
-            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
-            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
-            'cantidad': p.cantidad,
-            'estado': p.estado,
-            'contiene': p.contiene
-        } for p in productos]
 
     def create(self, validated_data):
         # Extraer datos de vagones
         vagones_data = validated_data.pop('equipo_vagon', [])
-        productos_data = validated_data.pop('producto', [])
         
         # Crear instancia principal
         instance = super().create(validated_data)
@@ -1062,7 +1065,6 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
             instance.equipo_vagon.add(vagon)
         
         # Asociar productos
-        instance.producto.set(productos_data)
         
         return instance
 
@@ -1116,12 +1118,15 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
         help_text="Fecha y hora en que se creó el registro (automático)"
     )
     tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
-    productos_info = serializers.SerializerMethodField()
+    # productos_info = serializers.SerializerMethodField()
+    
     producto = serializers.PrimaryKeyRelatedField(
-        many=True,
+        many=False,
         queryset=producto_UFC.objects.all(),
         required=False
     )
+    producto_detalle=producto_vagon_serializer(many=False,source='producto', read_only=True)
+    
     equipo_vagon = serializers.ListField(
         child=serializers.DictField(),
         write_only=True,
@@ -1133,18 +1138,18 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
         fields = '__all__'
         filterset_class = PendienteArrastreFilter
 
-    def get_productos_info(self, obj):
-        productos = obj.producto.all()
-        return [{
-           'id': p.id,
-            'nombre_producto': p.producto.nombre_producto,
-            'codigo_producto': p.producto.codigo_producto,
-            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
-            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
-            'cantidad': p.cantidad,
-            'estado': p.estado,
-            'contiene': p.contiene
-        } for p in productos]
+    # def get_productos_info(self, obj):
+    #     p = obj.producto
+    #     return {
+    #        'id': p.id,
+    #         'nombre_producto': p.producto.nombre_producto,
+    #         'codigo_producto': p.producto.codigo_producto,
+    #         'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
+    #         'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
+    #         'cantidad': p.cantidad,
+    #         'estado': p.estado,
+    #         'contiene': p.contiene
+    #     }
 
     def create(self, validated_data):
         # Extraer datos de vagones

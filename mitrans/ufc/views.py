@@ -10,7 +10,7 @@ from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones
 from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descargado_serializer, 
                         producto_vagon_serializer, en_trenes_serializer,PorSituarCargaDescargaSerializer, SituadoCargaDescargaSerializers, 
                         PendienteArrastreSerializer, registro_vagones_cargados_serializer,
-                        registro_vagones_cargados_filter, vagones_productos_filter, 
+                        registro_vagones_cargados_filter, vagones_productos_filter, producto_vagon_filter,
                         vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer,PorSituarCargaDescargaFilter,
                         ufc_informe_operativo_serializer,ufc_informe_operativo_filter,
                         HistorialVagonCargadoDescargado,HistorialVagonCargadoDescargadoSerializer,
@@ -1134,21 +1134,12 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
     queryset = producto_UFC.objects.all().order_by('-id') # Definir el queryset
     serializer_class = producto_vagon_serializer
     permission_classes = [IsUFCPermission]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = producto_vagon_filter
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        search_term = self.request.query_params.get('buscar_producto', None)
-
-        if search_term:
-            # Filtra por coincidencia en cualquiera de los campos
-            queryset = queryset.select_related('producto').filter(
-            Q(id__icontains=search_term) |
-            Q(tpo_embalaje__icontains=search_term)|
-            Q(producto__nombre_producto__icontains=search_term)|
-            Q(producto___codigo_producto__icontains=search_term)
-            
-)
-        return queryset
+    search_fields=[
+        'tipo_equipo__tipo_equipo'
+    ]
 
     def create(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='AdminUFC').exists():

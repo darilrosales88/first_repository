@@ -472,7 +472,7 @@ export default {
           this.registroSituado = response.data.results;
           this.totalItems = response.data.count;
         } else {
-          this.showErrorToast("No hay ID para cargar");
+          // this.showErrorToast("No hay ID para cargar");
         }
       } catch (error) {
         console.error("Error al obtener los Situados:", error);

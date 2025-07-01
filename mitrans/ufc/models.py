@@ -1,13 +1,13 @@
-from django.db import models
+from django.db import models, transaction
+from django.db.models import UniqueConstraint
+from django.core.validators import RegexValidator
+
+from Administracion.models import CustomUser
 from nomencladores.models import( nom_tipo_equipo_ferroviario,nom_producto,
                                  nom_tipo_embalaje,nom_unidad_medida,
                                  nom_equipo_ferroviario,nom_provincia,
                                  nom_entidades   
                                  )
-from Administracion.models import CustomUser
-from django.core.validators import RegexValidator
-# Usamos un delay para asegurar que las relaciones ManyToMany estén establecidas 
-from django.db import transaction
 
 
 
@@ -81,6 +81,9 @@ class producto_UFC(models.Model):
     producto = models.ForeignKey(nom_producto, on_delete=models.CASCADE)
     tipo_embalaje = models.ForeignKey(nom_tipo_embalaje, on_delete=models.CASCADE)
     unidad_medida = models.ForeignKey(nom_unidad_medida, on_delete=models.CASCADE)
+    
+    tipo_equipo=models.ForeignKey(nom_tipo_equipo_ferroviario,on_delete=models.CASCADE,null=True,blank=True)
+    
     cantidad = models.IntegerField()
     estado = models.CharField(
         choices=ESTADO_CHOICES, null=True, blank=True, max_length=20
@@ -203,8 +206,8 @@ class vagon_cargado_descargado(models.Model):
         null=False, blank=True, default="", max_length=100
     )
     # Cambiamos ForeignKey a ManyToManyField, es posible que un vagon tenga mas de un producto
-    producto = models.ManyToManyField(
-        producto_UFC, blank=True, related_name="vagones_cargados"
+    producto = models.ForeignKey(
+        producto_UFC, blank=True, related_name="vagones_cargados", on_delete=models.SET_NULL,null=True
     )
 
     registros_vagones = models.ManyToManyField(
@@ -326,17 +329,12 @@ class Situado_Carga_Descarga(models.Model):
     )
     
     operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion", blank=True, null=True)
-    fecha = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de registro", editable=False)
-    producto = models.ManyToManyField(
-        producto_UFC,
-        blank=True,
-        null=True,
-    )
+
     fecha = models.DateTimeField(
         auto_now_add=True, verbose_name="Fecha de registro", editable=False
     )
-    producto = models.ManyToManyField(
-        producto_UFC, blank=True, related_name="situados", verbose_name="Productos"
+    producto = models.ForeignKey(
+        producto_UFC, blank=True, related_name="situados", verbose_name="Productos situados a la carga/descarga",on_delete=models.SET_NULL,null=True
     )
 
     situados = models.CharField(
@@ -597,8 +595,8 @@ class en_trenes(models.Model):
         nom_tipo_equipo_ferroviario, on_delete=models.CASCADE, default="", max_length=50
     )
     estado = models.CharField(default="", choices=ESTADO_CHOICES, max_length=50)
-    producto = models.ManyToManyField(
-        producto_UFC, blank=True, related_name="en_trenes", verbose_name="Productos"
+    producto = models.ForeignKey(
+        producto_UFC, blank=True, related_name="en_trenes", verbose_name="Productos en Trenes",on_delete=models.SET_NULL,null=True
     )
 
     tipo_origen = models.CharField(
@@ -645,7 +643,17 @@ class en_trenes(models.Model):
     class Meta:
         verbose_name = "Tren"
         verbose_name_plural="Trenes"
-         
+
+        constraints = [models.UniqueConstraint(
+            fields = [
+                "tipo_equipo",
+                "estado",
+                "origen",
+                "destino",
+            ],
+            name="unique_train_register",
+        )]
+
     def delete(self, *args, **kwargs):
         try:
             # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
@@ -739,8 +747,8 @@ class por_situar(models.Model):
     fecha = models.DateTimeField(
         auto_now_add=True, verbose_name="Fecha de registro", editable=False
     )
-    producto = models.ManyToManyField(
-        producto_UFC, blank=True, related_name="por_situar", verbose_name="Productos"
+    producto = models.ForeignKey(
+        producto_UFC, blank=True, related_name="por_situar", verbose_name="Productos por Situar", on_delete=models.SET_NULL, null=True
     )
 
     por_situar = models.CharField(
@@ -905,8 +913,8 @@ class arrastres(models.Model):
         null=True,
     )
 
-    producto = models.ManyToManyField(
-        producto_UFC, blank=True, related_name="arrastres", verbose_name="Productos_UFC"
+    producto = models.ForeignKey(
+        producto_UFC, blank=True, related_name="arrastres", verbose_name="Productos Arrastres", on_delete=models.SET_NULL,null=True
     )
     cantidad_vagones = models.CharField(
         max_length=10,
@@ -1039,6 +1047,14 @@ class rotacion_vagones(models.Model):
         verbose_name = "Registro de rotación"
         verbose_name_plural = "Registros de rotación"
         ordering = ["-fecha"]
+
+        constraints = [models.UniqueConstraint(
+            fields = [
+                "tipo_equipo_ferroviario",
+                "informe_operativo",
+            ],
+            name="unique_train_rotation"
+        )]
 
     def __str__(self):
         return (

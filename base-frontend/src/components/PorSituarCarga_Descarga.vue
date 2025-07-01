@@ -81,10 +81,9 @@
                 </td>
                 <td>{{ item.operacion }}</td>
                 <td class="ps-td">
-                  <span
-                    v-if="item.productos_info && item.productos_info.length > 0"
-                  >
-                    {{ getNombresProductos(item.productos_info) }}
+                  <span v-if="item.producto">
+                    {{ item.producto_detalle.producto_name
+                    }}<!-- Aqui hay que actualizar tambien esto mismo en los demas estados @BZ-theFanG #-#-->
                   </span>
                   <span v-else>-</span>
                 </td>

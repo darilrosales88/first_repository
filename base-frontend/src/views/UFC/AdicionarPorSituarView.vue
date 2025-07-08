@@ -178,7 +178,6 @@
 
             <!-- Columna Derecha -->
             <div class="col-md-6">
-
               <!-- Campo: estado -->
               <div class="mb-3">
                 <label
@@ -187,8 +186,10 @@
                   >Estado</label
                 >
                 <select
-                  class="form-select form-select-sm border-secondary" style="padding: 8px 12px;"
-                  v-model="formData.estado">
+                  class="form-select form-select-sm border-secondary"
+                  style="padding: 8px 12px"
+                  v-model="formData.estado"
+                >
                   <option value="cargado">Cargado</option>
                   <option value="vacio">Vacío</option>
                 </select>
@@ -196,8 +197,20 @@
 
               <!-- Campo: operacion -->
               <div class="mb-3">
-                <label for="operacion" class="form-label small fw-semibold text-secondary">Operación</label>
-                <input type="text" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.operacion" id="operacion" name="operacion" readonly/>
+                <label
+                  for="operacion"
+                  class="form-label small fw-semibold text-secondary"
+                  >Operación</label
+                >
+                <input
+                  type="text"
+                  class="form-control form-control-sm border-secondary"
+                  style="padding: 8px 12px"
+                  v-model="formData.operacion"
+                  id="operacion"
+                  name="operacion"
+                  readonly
+                />
               </div>
 
               <div class="mb-3">
@@ -287,7 +300,11 @@
           <!-- Campo: Equipo Ferroviario -->
           <div class="ufc-input-group">
             <label for="equipo_ferroviario">Equipo Ferroviario</label>
-            <select class="ufc-select" v-model="nuevoVagon.equipo_ferroviario" required>
+            <select
+              class="ufc-select"
+              v-model="nuevoVagon.equipo_ferroviario"
+              required
+            >
               <option value="" disabled>Seleccione un equipo</option>
               <option
                 v-for="equipo in equipos_vagones"
@@ -325,7 +342,8 @@
           <button
             type="button"
             class="ufc-button primary"
-            @click="agregarNuevoVagon()">
+            @click="agregarNuevoVagon()"
+          >
             <i class="bi bi-check-circle"></i> Agregar
           </button>
         </div>
@@ -574,12 +592,13 @@ export default {
     },
 
     agregarNuevoVagon() {
-      
-      if (this.nuevoVagon.equipo_ferroviario == '') {
+      if (this.nuevoVagon.equipo_ferroviario == "") {
         this.showErrorToast("Debe completar todos los campos");
         return;
       }
-      const equipoSeleccionado = this.equipos_vagones.find((e) => e.id === this.nuevoVagon.equipo_ferroviario);
+      const equipoSeleccionado = this.equipos_vagones.find(
+        (e) => e.id === this.nuevoVagon.equipo_ferroviario
+      );
       const yaExistente = this.vagonesAgregados.some(
         (vagon) =>
           vagon.equipo_ferroviario.id === this.nuevoVagon.equipo_ferroviario
@@ -735,7 +754,6 @@ export default {
 
     async submitForm() {
       try {
-
         const existeInforme = await this.verificarInformeOperativo();
         if (!existeInforme) {
           Swal.fire(
@@ -879,7 +897,7 @@ export default {
     },
 
     getSelectedProductosText() {
-      if (this.formData.producto.length === 0) return "";
+      if (this.formData.producto === 0) return "";
       if (this.formData.producto.length === 1) {
         const producto = this.productos.find(
           (p) => p.id === this.formData.producto
@@ -907,7 +925,7 @@ export default {
       );
       this.showSuccessToast("Vagón eliminado correctamente.");
     },
-    
+
     showSuccessToast(message) {
       const Toast = Swal.mixin({
         toast: true,

@@ -222,46 +222,44 @@
               </div>
 
  
-              <!-- Campo: Productos -->
               <div class="mb-3">
-                <label for="producto" class="form-label small fw-semibold text-secondary">Productos <span v-if="formData.estado === 'cargado'"></span></label>
-                <div class="ufc-input-with-action">
-                  <div class="ufc-custom-select" @click="toggleProductosDropdown">
-                    <div class="ufc-select-display">
-                      {{ getSelectedProductosText() || 'Seleccione productos...' }}
-                    </div>
-                    <i class="bi bi-chevron-down ufc-select-arrow"></i>
-                    
-                    <div class="ufc-productos-dropdown" v-if="showProductosDropdown">
-                      <div class="ufc-productos-search-container">
-                        <input
-                          type="text"
-                          class="ufc-productos-search"
-                          placeholder="Buscar productos..."
-                          v-model="productoSearch"
-                          @input="filterProductos"
-                          @click.stop>
-                      </div>
-                      <div class="ufc-productos-options">
-                        <div
-                          v-for="producto in filteredProductos"
-                          :key="producto.id"
-                          class="ufc-producto-option"
-                          :class="{ 'selected': formData.productos.includes(producto.id) }"
-                          @click.stop="toggleProductoSelection(producto.id)">
-                          {{ producto.id }}-{{ producto.producto_name }} - {{ producto.producto_codigo }}
-                          <template v-if="producto.tipo_embalaje">
-                            (Embalaje: {{ producto.tipo_embalaje.nombre || producto.tipo_embalaje.nombre_embalaje || 'N/A' }})
-                          </template>
-                        </div>
-                      </div>
-                    </div>
+                <!-- Campo: Productos-->
+                <div class="mb-3">
+                  
+                  <label
+                    for="productos"
+                    class="form-label small fw-semibold text-secondary"
+                    >Productos</label
+                  >
+                  <div class="ufc-input-with-action">
+                    <select
+                      class="form-select form-select-sm border-secondary"
+                      style="padding: 8px 12px"
+                      v-model="formData.producto"
+                      @change="buscarTipoEquipo"
+                      required
+                      oninvalid="this.setCustomValidity('Por favor, seleccione un Producto')"
+                      oninput="this.setCustomValidity('')"
+                    >
+                      <option value="" disabled>Seleccione un Producto</option>
+                      <option
+                        v-for="producto in productos"
+                        :key="producto.id"
+                        :value="producto.id"
+                      >
+                        <!-- Esto tambien hay que modificarlo en los demas y quitar las funciones basuras ademas de agregar esto mismo en los editar de cada uno @BZ-theFanG #-# -->
+                        {{ producto.producto_name }}-{{
+                          producto.producto_codigo
+                        }}-{{ producto.tipo_embalaje_name }}
+                      </option>
+                    </select>
+                    <button class="create-button ms-2" @click.stop.prevent="abrirModalAgregarProducto">
+                      <i class="bi bi-plus-circle large-icon"></i>
+                    </button>
                   </div>
-                  <button class="create-button ms-2" @click.stop.prevent="abrirModalAgregarProducto">
-                    <i class="bi bi-plus-circle large-icon"></i>
-                  </button>
                 </div>
               </div>
+
               <div class="mb-3">
                 <label for="observaciones" class="form-label small fw-semibold text-secondary">Observaciones</label>
                 <textarea
@@ -433,7 +431,7 @@ export default {
         tipo_equipo: "",
         operacion: "",
         estado: "cargado",
-        productos: [],
+        producto: "",
         cantidad_vagones: 1,
         observaciones: "",
         equipos_vagones: [],
@@ -723,16 +721,7 @@ export default {
 
     async submitForm() {
       try {
-        const informeNoAprobado = await this.verificarEstadoInforme();
-        if (!informeNoAprobado) {
-          Swal.fire(
-            "Error",
-            "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
-            "error"
-          );
-          return;
-        }
-        
+
         const existeInforme = await this.verificarInformeOperativo();
         if (!existeInforme) {
           Swal.fire(
@@ -744,6 +733,16 @@ export default {
           return;
         }
 
+        const informeNoAprobado = await this.verificarEstadoInforme();
+        if (!informeNoAprobado) {
+          Swal.fire(
+            "Error",
+            "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
+            "error"
+          );
+          return;
+        }
+
         if (this.vagonesAgregados.length==0) {
           Swal.fire({ 
             title: "Error",
@@ -752,7 +751,7 @@ export default {
           return;
         }
 
-        if (this.formData.estado === "cargado" && this.formData.productos.length === 0) {
+        if (this.formData.estado === "cargado" && this.formData.producto.length === 0) {
           this.showErrorToast("Debe seleccionar al menos un producto cuando el estado es Cargado");
           return;
         }
@@ -787,7 +786,7 @@ export default {
           tipo_equipo: this.formData.tipo_equipo,
           operacion: this.formData.operacion,
           estado: this.formData.estado,
-          producto: this.formData.productos,
+          producto: this.formData.producto,
           cantidad_vagones: this.vagonesAgregados.length,
           observaciones: this.formData.observaciones,
           informe_operativo: this.informeOperativoId,
@@ -885,25 +884,25 @@ export default {
     },
 
     toggleProductoSelection(productoId) {
-      const index = this.formData.productos.indexOf(productoId);
+      const index = this.formData.producto.indexOf(productoId);
       if (index === -1) {
-        this.formData.productos.push(productoId);
+        this.formData.producto.push(productoId);
       } else {
-        this.formData.productos.splice(index, 1);
+        this.formData.producto.splice(index, 1);
       }
     },
 
     getSelectedProductosText() {
-      if (this.formData.productos.length === 0) return "";
-      if (this.formData.productos.length === 1) {
+      if (this.formData.producto.length === 0) return "";
+      if (this.formData.producto.length === 1) {
         const producto = this.productos.find(
-          (p) => p.id === this.formData.productos[0]
+          (p) => p.id === this.formData.producto
         );
         return producto
           ? `${producto.id}-${producto.producto_name}`
           : "1 producto seleccionado";
       }
-      return `${this.formData.productos.length} productos seleccionados`;
+      return `${this.formData.producto.length} productos seleccionados`;
     },
 
     closeDropdownsOnClickOutside() {

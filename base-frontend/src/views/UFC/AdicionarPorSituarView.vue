@@ -203,32 +203,38 @@
               <div class="mb-3">
                 <!-- Campo: Productos-->
                 <div class="mb-3">
+                  
                   <label
                     for="productos"
                     class="form-label small fw-semibold text-secondary"
                     >Productos</label
                   >
-                  <select
-                    class="form-select form-select-sm border-secondary"
-                    style="padding: 8px 12px"
-                    v-model="formData.producto"
-                    @change="buscarTipoEquipo"
-                    required
-                    oninvalid="this.setCustomValidity('Por favor, seleccione un Producto')"
-                    oninput="this.setCustomValidity('')"
-                  >
-                    <option value="" disabled>Seleccione un Producto</option>
-                    <option
-                      v-for="producto in productos"
-                      :key="producto.id"
-                      :value="producto.id"
+                  <div class="ufc-input-with-action">
+                    <select
+                      class="form-select form-select-sm border-secondary"
+                      style="padding: 8px 12px"
+                      v-model="formData.producto"
+                      @change="buscarTipoEquipo"
+                      required
+                      oninvalid="this.setCustomValidity('Por favor, seleccione un Producto')"
+                      oninput="this.setCustomValidity('')"
                     >
-                      <!-- Esto tambien hay que modificarlo en los demas y quitar las funciones basuras ademas de agregar esto mismo en los editar de cada uno @BZ-theFanG #-# -->
-                      {{ producto.producto_name }}-{{
-                        producto.producto_codigo
-                      }}-{{ producto.tipo_embalaje_name }}
-                    </option>
-                  </select>
+                      <option value="" disabled>Seleccione un Producto</option>
+                      <option
+                        v-for="producto in productos"
+                        :key="producto.id"
+                        :value="producto.id"
+                      >
+                        <!-- Esto tambien hay que modificarlo en los demas y quitar las funciones basuras ademas de agregar esto mismo en los editar de cada uno @BZ-theFanG #-# -->
+                        {{ producto.producto_name }}-{{
+                          producto.producto_codigo
+                        }}-{{ producto.tipo_embalaje_name }}
+                      </option>
+                    </select>
+                    <button class="create-button ms-2" @click.stop.prevent="abrirModalAgregarProducto">
+                      <i class="bi bi-plus-circle large-icon"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -740,7 +746,6 @@ export default {
           this.$router.push({ name: "InfoOperativo" });
           return;
         }
-        
         const informeNoAprobado = await this.verificarEstadoInforme();
         if (!informeNoAprobado) {
           Swal.fire(
@@ -751,6 +756,7 @@ export default {
           return;
         }
 
+
         if (this.vagonesAgregados.length==0) {
           Swal.fire({
             title: "Error",
@@ -760,7 +766,7 @@ export default {
           return;
         }
 
-        if (this.formData.estado === "cargado" && this.formData.productos.length === 0) {
+        if (this.formData.estado === "cargado" && this.formData.producto.length === 0) {
           this.showErrorToast("Debe seleccionar al menos un producto cuando el estado es Cargado");
           return;
         }
@@ -835,7 +841,7 @@ export default {
         tipo_equipo: "",
         operacion: "",
         estado: "cargado",
-        productos: [], // Cambiado a array vacío
+        producto: [], // Cambiado a array vacío
         por_situar: 1,
         observaciones: "",
       };
@@ -864,11 +870,11 @@ export default {
     },
 
     toggleProductoSelection(productoId) {
-      const index = this.formData.productos.indexOf(productoId);
+      const index = this.formData.producto.indexOf(productoId);
       if (index === -1) {
-        this.formData.productos.push(productoId);
+        this.formData.producto.push(productoId);
       } else {
-        this.formData.productos.splice(index, 1);
+        this.formData.producto.splice(index, 1);
       }
     },
 
@@ -882,7 +888,7 @@ export default {
           ? `${producto.id}-${producto.producto_name}`
           : "1 producto seleccionado";
       }
-      return `${this.formData.productos.length} productos seleccionados`;
+      return `${this.formData.producto.length} productos seleccionados`;
     },
 
     closeDropdownsOnClickOutside() {

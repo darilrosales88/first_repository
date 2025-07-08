@@ -778,6 +778,7 @@ class en_trenes_serializer(serializers.ModelSerializer):
             'destino', 
             'producto', 
             'producto_name',
+            'producto_detalle',
             'cantidad_vagones',
             'observaciones',
             'informe_operativo',

@@ -381,69 +381,41 @@
                 </select>
               </div>
 
-              <!-- Campo: producto -->
               <div class="mb-3">
-                <label
-                  for="producto"
-                  class="form-label small fw-semibold text-secondary"
-                  >Productos</label
-                >
-                <div class="ufc-input-with-action">
-                  <div
-                    class="ufc-custom-select"
-                    @click="toggleProductosDropdown"
+                <!-- Campo: Productos-->
+                <div class="mb-3">
+                  
+                  <label
+                    for="productos"
+                    class="form-label small fw-semibold text-secondary"
+                    >Productos</label
                   >
-                    <div class="ufc-select-display">
-                      {{
-                        getSelectedProductosText() || "Seleccione productos..."
-                      }}
-                    </div>
-                    <i class="bi bi-chevron-down ufc-select-arrow"></i>
-
-                    <div
-                      class="ufc-productos-dropdown"
-                      v-if="showProductosDropdown"
+                  <div class="ufc-input-with-action">
+                    <select
+                      class="form-select form-select-sm border-secondary"
+                      style="padding: 8px 12px"
+                      v-model="formData.producto"
+                      @change="buscarTipoEquipo"
+                      required
+                      oninvalid="this.setCustomValidity('Por favor, seleccione un Producto')"
+                      oninput="this.setCustomValidity('')"
                     >
-                      <div class="ufc-productos-search-container">
-                        <input
-                          type="text"
-                          class="ufc-productos-search"
-                          placeholder="Buscar productos..."
-                          v-model="productoSearch"
-                          @input="filterProductos"
-                          @click.stop
-                        />
-                      </div>
-                      <div class="ufc-productos-options">
-                        <div
-                          v-for="producto in filteredProductos"
-                          :key="producto.id"
-                          class="ufc-producto-option"
-                          :class="{
-                            selected: formData.producto.includes(producto.id),
-                          }"
-                          @click.stop="toggleProductoSelection(producto.id)"
-                        >
-                          {{ producto.id }}-{{ producto.producto_name }} -
-                          {{ producto.producto_codigo }}
-                          <template v-if="producto.tipo_embalaje">
-                            (Embalaje:
-                            {{
-                              producto.tipo_embalaje_name ||
-                              producto.tipo_embalaje.nombre_embalaje ||
-                              "N/A"
-                            }})
-                          </template>
-                        </div>
-                      </div>
-                    </div>
+                      <option value="" disabled>Seleccione un Producto</option>
+                      <option
+                        v-for="producto in productos"
+                        :key="producto.id"
+                        :value="producto.id"
+                      >
+                        <!-- Esto tambien hay que modificarlo en los demas y quitar las funciones basuras ademas de agregar esto mismo en los editar de cada uno @BZ-theFanG #-# -->
+                        {{ producto.producto_name }}-{{
+                          producto.producto_codigo
+                        }}-{{ producto.tipo_embalaje_name }}
+                      </option>
+                    </select>
+                    <button class="create-button ms-2" @click.stop.prevent="abrirModalAgregarProducto">
+                      <i class="bi bi-plus-circle large-icon"></i>
+                    </button>
                   </div>
-                  <button
-                    class="create-button ms-2"
-                    @click.stop.prevent="abrirModalAgregarProducto"
-                  >
-                    <i class="bi bi-plus-circle large-icon"></i>
-                  </button>
                 </div>
               </div>
 
@@ -571,7 +543,7 @@ export default {
         estado: "cargado",
         tipo_destino: "",
         destino: "",
-        producto: [],
+        producto: "",
         cantidad_vagones: 1,
         observaciones: "",
         equipo_vagon: [],
@@ -655,7 +627,7 @@ export default {
         estado: "cargado",
         tipo_destino: "",
         destino: "",
-        producto: [],
+        producto: "",
         cantidad_vagones: 0,
         equipo_vagon: [],
         observaciones: "",
@@ -1065,7 +1037,7 @@ export default {
       if (this.formData.producto.length === 0) return "";
       if (this.formData.producto.length === 1) {
         const producto = this.productos.find(
-          (p) => p.id === this.formData.producto[0]
+          (p) => p.id === this.formData.producto
         );
         return producto
           ? `${producto.id}-${producto.producto_name}`
@@ -1073,6 +1045,7 @@ export default {
       }
       return `${this.formData.producto.length} productos seleccionados`;
     },
+
 
     closeDropdownsOnClickOutside() {
       document.addEventListener("click", (e) => {
@@ -1466,7 +1439,7 @@ input[list] {
 .btn-outline-danger:hover {
   color: #fff;
 }
-s .create-button {
+.create-button {
   text-decoration: none;
   border: none;
   color: green;

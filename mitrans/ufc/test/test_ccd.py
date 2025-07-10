@@ -5,7 +5,7 @@ from nomencladores.models import nom_provincia, nom_entidades,nom_pais,nom_osde_
 from Administracion.models import CustomUser
 import logging
 
-log=logging.Logger(name="###LOG:")
+log=logging.Logger(name="log")
 
 class UFCInformeCCDTestCase(TestCase):
       
@@ -59,6 +59,7 @@ class UFCInformeCCDTestCase(TestCase):
     def test_crear_pais(self):
         """
         Prueba la creacion del pais
+        
         """
         self.pais= nom_pais.objects.create(
             nacionalidad="JAP",
@@ -71,6 +72,7 @@ class UFCInformeCCDTestCase(TestCase):
     def test_crear_informe_ccd(self):
         """
         Prueba la creación de una instancia de ufc_informe_ccd.
+        
         """
         informe = ufc_informe_ccd.objects.create(
             creado_por=self.user,
@@ -78,7 +80,8 @@ class UFCInformeCCDTestCase(TestCase):
         )
 
         # Verificar que la instancia fue creada
-        self.assertIsInstance(informe, ufc_informe_ccd)
+        self.assertIsInstance(informe, ufc_informe_ccd,msg="Pasado el test de Crear ufc_informe_ccd")
+        self.assertLogs(log.info("Test Pasado"))
 
         # Verificar que la entidad y la provincia se asignaron correctamente desde el usuario
         self.assertEqual(informe.entidad, self.entidad)
@@ -89,10 +92,11 @@ class UFCInformeCCDTestCase(TestCase):
 
         # Verificar los comentarios
         self.assertEqual(informe.comentarios, "Este es un comentario de prueba.")
-
+    
     def test_str_method(self):
         """
         Prueba el método __str__ del modelo ufc_informe_ccd.
+        
         """
         informe = ufc_informe_ccd.objects.create(
             creado_por=self.user
@@ -103,6 +107,7 @@ class UFCInformeCCDTestCase(TestCase):
     def test_aprobacion_informe(self):
         """
         Prueba la aprobación de un informe.
+        
         """
         aprobador = CustomUser.objects.create_user(
             username="aprobador",

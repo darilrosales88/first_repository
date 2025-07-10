@@ -1476,5 +1476,96 @@ class ccd_en_trenes(models.Model):
         if self.tipo_equipo and getattr(self.tipo_equipo, "tipo_equipo", "").lower() == "locomotora":
             raise ValidationError("No se permite seleccionar 'locomotora' como tipo de equipo ferroviario.")
 
+
+
+
+class ccd_registro_vagones_cargados(models.Model):
+    # Opciones para el campo tipo_origen
+    TIPO_ORIGEN_CHOICES = [
+        ("municipio", "Municipio"),
+        ("provincia", "Provincia"),
+    ]
+
+    no_id = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        
+        verbose_name="Número de identificación",
+        help_text="Valores definidos en el nomenclador de equipos ferroviarios (excepto 'Locomotora')",
+    )
+
+    fecha_despacho = models.DateField(
+        null=True, blank=True, verbose_name="Fecha de despacho"
+    )
+
+    tipo_origen = models.CharField(
+        choices=TIPO_ORIGEN_CHOICES, max_length=50, null=True, blank=True
+    )
+
+    origen = models.CharField(max_length=40, null=True, blank=True)
+
+    fecha_llegada = models.DateField(
+        null=True, blank=True, verbose_name="Fecha de llegada"
+    )
+
+    observaciones = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="Observaciones",
+        help_text="Admite letras, números y caracteres especiales",
+    )
+    incidencias=models.BooleanField(verbose_name="Campo asociado si tiene alguna incidencia")
+
+    class Meta:
+        verbose_name = "Registro de vagón cargado"
+        verbose_name_plural = "Registros de vagones cargados"
+
+    def __str__(self):
+        return f"Vagón {self.no_id}" if self.no_id else "Registro sin ID"
+
+
+
 class ccd_vagones_cargados_descargados(models.Model):
-    pass
+    informe_ccd= models.ForeignKey(
+        ufc_informe_ccd,
+        on_delete=models.CASCADE,
+        related_name="vagones_cd_ccd",
+        null=False, blank=False,
+        verbose_name="Informe CCD asociado"
+    )
+    acceso= models.CharField(
+        max_length=50,
+        choices=TIPO_ORIGEN_DESTINO_CHOICES,
+        verbose_name="Tipo de acceso",
+        default="ac",
+    )
+    tipo_equipo= models.ForeignKey(
+        nom_tipo_equipo_ferroviario,
+        on_delete=models.CASCADE,
+        related_name="vagones_cd_ccd",
+        null=False, blank=False,
+        verbose_name="Tipo de equipo ferroviario",
+        help_text="Seleccione el tipo de equipo ferroviario asociado a Trenes",
+    
+    )
+    estado= models.CharField(
+        max_length=10,
+        choices=ESTADOS,
+        verbose_name="Estado del equipo",
+        default="vacio"
+    )
+    causa_incumplimiento=models.TextField(
+        blank=True,null=True,
+        verbose_name="Causas del incumplimiento de la carga/descarga"
+    )
+    producto = models.ForeignKey(
+        producto_CCD, blank=True, related_name="en_trenes_ccd", verbose_name="Productos En Trenes CCD", on_delete=models.SET_NULL,null=True
+    )
+    equipo_vagon=models.ManyToManyField(
+        nom_equipo_ferroviario,
+        blank=True,
+        related_name="en_trenes_ccd",
+        verbose_name="Equipos en Trenes CCD"
+    )
+    fecha_registro=models.DateField(auto_created=True)

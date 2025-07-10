@@ -1082,6 +1082,7 @@ class HistorialRotacionVagones(models.Model):
 
 
 #************************************************************************************************************************
+#/**********************Aqui empieza CCDxPRODUCTO****************************
 
 TIPO_ORIGEN_DESTINO_CHOICES = [
         ('ac', 'Acceso comercial'),
@@ -1183,9 +1184,6 @@ class producto_CCD(models.Model):
     @property
     def producto_display(self):
         return f"{self.producto.nombre_producto} - {self.embalaje_display}"
-
-
-
 
 
 class casillas_ccd_productos(models.Model):

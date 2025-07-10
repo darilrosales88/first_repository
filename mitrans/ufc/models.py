@@ -1192,7 +1192,7 @@ class casillas_ccd_productos(models.Model):
     informe_ccd= models.ForeignKey(
         ufc_informe_ccd,
         on_delete=models.CASCADE,
-        related_name="situados_ccd",
+        related_name="casillas_ccd",
         null=False, blank=False,
         verbose_name="Informe CCD asociado"
     ) 

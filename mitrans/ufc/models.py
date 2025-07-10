@@ -1189,8 +1189,26 @@ class producto_CCD(models.Model):
 
 
 class casillas_ccd_productos(models.Model):
-    pass
-
+    informe_ccd= models.ForeignKey(
+        ufc_informe_ccd,
+        on_delete=models.CASCADE,
+        related_name="situados_ccd",
+        null=False, blank=False,
+        verbose_name="Informe CCD asociado"
+    ) 
+    acceso= models.CharField(
+        max_length=50,
+        choices=TIPO_ORIGEN_DESTINO_CHOICES,
+        verbose_name="Tipo de acceso",
+        default="ac",
+    )
+    total_ayer=models.IntegerField(default=0,verbose_name="Casillas Ayer")
+    entro_hoy=models.IntegerField(default=0,verbose_name="Casillas entraron Hoy") 
+    plan_carga=models.IntegerField(default=0,verbose_name="Plan de Carga") 
+    plan_descarga=models.IntegerField(default=0,verbose_name="Plan de Descarga") 
+    recepcion=models.IntegerField(default=0,verbose_name="Recepciones") 
+    reexpedciones=models.IntegerField(default=0,verbose_name="Reexpediciones") 
+    
 class ccd_situados(models.Model):
     informe_ccd= models.ForeignKey(
         ufc_informe_ccd,

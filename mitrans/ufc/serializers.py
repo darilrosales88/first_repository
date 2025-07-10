@@ -171,15 +171,14 @@ class vagones_productos_serializer(serializers.ModelSerializer):
         try:
             with transaction.atomic():
                 # Extraer datos para relaciones
-                productos_ids = validated_data.pop('producto_ids', [])
+                
                 registros_data = validated_data.pop('registros_vagones_data', [])
                 
                 # Crear instancia principal
                 instance = super().create(validated_data)
                 
                 # Asignar productos
-                if productos_ids:
-                    instance.producto.set(productos_ids)
+                
                 
                 return instance
                 
@@ -403,7 +402,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
         try:
             with transaction.atomic():
                 # Extraer datos para relaciones
-                productos_data = validated_data.pop('producto', None)
+               
                 registros_data = validated_data.pop('registros_vagones_data', [])
                 
                 # Actualizar campos directos
@@ -412,9 +411,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 instance.save()
                 
                 # Actualizar productos si se proporcionaron
-                if productos_data is not None:
-                    instance.producto.set(productos_data)
-                
+              
                 # Manejar registros de vagones
                 if registros_data:
                     # Eliminar registros antiguos no incluidos
@@ -465,7 +462,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
         try:
             with transaction.atomic():
                 # Extraer datos para relaciones
-                productos_ids = validated_data.pop('producto_ids', [])
+        
                 registros_data = validated_data.pop('registros_vagones_data', [])
 
                 # Asegurar que real_carga_descarga no sea sobrescrito
@@ -477,8 +474,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 instance = super().create(validated_data)
                 
                 # Asignar productos
-                if productos_ids:
-                    instance.producto.set(productos_ids)
+                
                 
                 # Crear y asociar registros de vagones
                 for registro_data in registros_data:
@@ -808,10 +804,9 @@ class en_trenes_serializer(serializers.ModelSerializer):
         } for e in equipo_vagon]
 
     def create(self, validated_data):
-        productos_data = validated_data.pop('producto', [])
         equipo_vagon_data=validated_data.pop('equipo_vagon',[])
         instance = en_trenes.objects.create(**validated_data)
-        instance.producto.set(productos_data)
+    
         instance.equipo_vagon.set(equipo_vagon_data)
         
         for equipo in equipo_vagon_data:    
@@ -822,13 +817,11 @@ class en_trenes_serializer(serializers.ModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        productos_data = validated_data.pop('producto', None)
+        
         equipo_vagon_data=validated_data.pop('equipo_vagon',None)
         print("###**Log: ",equipo_vagon_data)
         #instance = super().update(instance, validated_data)
-        print("###**Log: ",productos_data)
-        if productos_data is not None:
-            instance.producto.set(productos_data)
+       
             
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -951,15 +944,11 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        productos_data = validated_data.pop('producto', [])
+        
         vagones_data = validated_data.pop('equipo_vagon', [])
         instance = super().create(validated_data)
         
         # Asociar productos MANUALMENTE después de crear la instancia
-        if productos_data:
-            instance.producto.set(productos_data)
-            instance.save()  # Guardar explícitamente
-        
         for vagon_data in vagones_data:
             equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
             vagon = vagones_dias.objects.create(
@@ -974,7 +963,6 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        productos_data = validated_data.pop('producto', None)   
         vagones_data = validated_data.pop('equipo_vagon', None)
         
         for attr, value in validated_data.items():
@@ -996,9 +984,7 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
                 )
                 instance.equipo_vagon.add(vagon)
                 
-        if productos_data is not None:
-            instance.producto.set(productos_data)
-            instance.save()
+       
         
         return instance        
         
@@ -1072,7 +1058,6 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
 ###Tanke
 
     def update(self, instance:por_situar, validated_data):
-        productos_data = validated_data.pop('producto', None)
         vagones_data = validated_data.pop('equipo_vagon', None)
         
         
@@ -1096,8 +1081,7 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
                 instance.equipo_vagon.add(vagon)
         
         # Actualizar productos si se proporcionan
-        if productos_data is not None:
-            instance.producto.set(productos_data)
+       
         
         print(validated_data)
         instance.save()
@@ -1155,7 +1139,7 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Extraer datos de vagones
         vagones_data = validated_data.pop('equipo_vagon', [])
-        productos_data = validated_data.pop('producto', [])
+       
         
         # Crear instancia principal
         instance = super().create(validated_data)
@@ -1172,13 +1156,12 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
             instance.equipo_vagon.add(vagon)
         
         # Asociar productos
-        instance.producto.set(productos_data)
-        
+    
         return instance
 
     def update(self, instance:arrastres, validated_data):
         vagones_data = validated_data.pop('equipo_vagon', None)
-        productos_data = validated_data.pop('producto', None)
+    
         
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -1200,8 +1183,7 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
                 instance.equipo_vagon.add(vagon)
         
         # Actualizar productos si se proporcionan
-        if productos_data is not None:
-            instance.producto.set(productos_data)
+       
         
         return instance
 

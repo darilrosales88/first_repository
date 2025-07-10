@@ -256,7 +256,6 @@ class vagon_cargado_descargado(models.Model):
 
             # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
             self.registros_vagones.clear()
-            self.producto.clear()
 
             # Finalmente eliminar el registro principal
             super().delete(*args, **kwargs)
@@ -342,6 +341,7 @@ class Situado_Carga_Descarga(models.Model):
         verbose_name="Cantidad de situados",
         default="0",
         validators=[
+            
             RegexValidator(
                 regex="^[0-9]+$",
                 message="Solo se permiten números positivos",
@@ -410,7 +410,6 @@ class Situado_Carga_Descarga(models.Model):
             
             # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
             self.equipo_vagon.clear()
-            self.producto.clear()
             
             # Finalmente eliminar el registro principal
             super().delete(*args, **kwargs)
@@ -658,7 +657,7 @@ class en_trenes(models.Model):
         try:
             # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
             self.equipo_vagon.clear()
-            self.producto.clear()
+        
             
             # Finalmente eliminar el registro principal
             super().delete(*args, **kwargs)
@@ -807,7 +806,7 @@ class por_situar(models.Model):
             
             # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
             self.equipo_vagon.clear()
-            self.producto.clear()
+        
             
             # Finalmente eliminar el registro principal
             super().delete(*args, **kwargs)
@@ -981,7 +980,7 @@ class arrastres(models.Model):
             
             # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
             self.equipo_vagon.clear()
-            self.producto.clear()
+        
             
             # Finalmente eliminar el registro principal
             super().delete(*args, **kwargs)

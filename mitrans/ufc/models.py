@@ -8,6 +8,7 @@ from nomencladores.models import( nom_tipo_equipo_ferroviario,nom_producto,
                                  nom_equipo_ferroviario,nom_provincia,
                                  nom_entidades   
                                  )
+import time
 
 
 
@@ -1140,7 +1141,7 @@ class ufc_informe_ccd(models.Model):
 
 
 
-class producto_CCD(models.Model):
+class ccd_producto(models.Model):
     """Modelo de Producto CCD"""
 
     ESTADO_CHOICES = [
@@ -1186,7 +1187,7 @@ class producto_CCD(models.Model):
         return f"{self.producto.nombre_producto} - {self.embalaje_display}"
 
 
-class casillas_ccd_productos(models.Model):
+class ccd_casillas_productos(models.Model):
     informe_ccd= models.ForeignKey(
         ufc_informe_ccd,
         on_delete=models.CASCADE,
@@ -1253,7 +1254,7 @@ class ccd_situados(models.Model):
         verbose_name="Causas del incumplimiento"
     )
     producto = models.ForeignKey(
-        producto_CCD, blank=True, related_name="situados_ccd", verbose_name="Productos Situados CCD", on_delete=models.SET_NULL,null=True
+        ccd_producto, blank=True, related_name="situados_ccd", verbose_name="Productos Situados CCD", on_delete=models.SET_NULL,null=True
     )
     equipo_vagon=models.ManyToManyField(
         vagones_dias,
@@ -1324,7 +1325,7 @@ class ccd_por_situar(models.Model):
         verbose_name="Causas del incumplimiento"
     )
     producto = models.ForeignKey(
-        producto_CCD, blank=True, related_name="por_situar_ccd", verbose_name="Productos Por Situar CCD", on_delete=models.SET_NULL,null=True
+        ccd_producto, blank=True, related_name="por_situar_ccd", verbose_name="Productos Por Situar CCD", on_delete=models.SET_NULL,null=True
     )
     equipo_vagon=models.ManyToManyField(
         vagones_dias,
@@ -1389,7 +1390,7 @@ class ccd_arrastres(models.Model):
         verbose_name="Observaciones"
     )
     producto = models.ForeignKey(
-        producto_CCD, blank=True, related_name="arrastres_ccd", verbose_name="Productos Arrastre CCD", on_delete=models.SET_NULL,null=True
+        ccd_producto, blank=True, related_name="arrastres_ccd", verbose_name="Productos Arrastre CCD", on_delete=models.SET_NULL,null=True
     )
     equipo_vagon=models.ManyToManyField(
         vagones_dias,
@@ -1453,7 +1454,7 @@ class ccd_en_trenes(models.Model):
         verbose_name="Obsevaciones"
     )
     producto = models.ForeignKey(
-        producto_CCD, blank=True, related_name="en_trenes_ccd", verbose_name="Productos En Trenes CCD", on_delete=models.SET_NULL,null=True
+        ccd_producto, blank=True, related_name="en_trenes_ccd", verbose_name="Productos En Trenes CCD", on_delete=models.SET_NULL,null=True
     )
     equipo_vagon=models.ManyToManyField(
         nom_equipo_ferroviario,
@@ -1479,13 +1480,15 @@ class ccd_en_trenes(models.Model):
 
 
 
-class ccd_registro_vagones_cargados(models.Model):
+class ccd_registro_vagones_cd(models.Model):
     # Opciones para el campo tipo_origen
     TIPO_ORIGEN_CHOICES = [
         ("municipio", "Municipio"),
         ("provincia", "Provincia"),
     ]
 
+    equipo_ferrvoviario=models.ForeignKey(nom_equipo_ferroviario, on_delete=models.CASCADE,null=False,blank=False,verbose_name="Campo de equipo Ferroviario", related_name="registro_equipo_ccd")
+    
     no_id = models.CharField(
         max_length=50,
         null=True,
@@ -1503,20 +1506,16 @@ class ccd_registro_vagones_cargados(models.Model):
         choices=TIPO_ORIGEN_CHOICES, max_length=50, null=True, blank=True
     )
 
-    origen = models.CharField(max_length=40, null=True, blank=True)
+    origen = models.CharField(max_length=40, null=True, blank=True, verbose_name="Campo Origen")
 
     fecha_llegada = models.DateField(
         null=True, blank=True, verbose_name="Fecha de llegada"
     )
 
-    observaciones = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name="Observaciones",
-        help_text="Admite letras, números y caracteres especiales",
-    )
     incidencias=models.BooleanField(verbose_name="Campo asociado si tiene alguna incidencia")
 
+    observaciones=models.JSONField(verbose_name="Este campo guardaria una lista de [Faltante,Sobrante, Averias, Peso Origen, Peso Destino]", blank=True,null=True, default=None)
+    
     class Meta:
         verbose_name = "Registro de vagón cargado"
         verbose_name_plural = "Registros de vagones cargados"
@@ -1524,14 +1523,21 @@ class ccd_registro_vagones_cargados(models.Model):
     def __str__(self):
         return f"Vagón {self.no_id}" if self.no_id else "Registro sin ID"
 
+    def clean(self):
+        super().clean()
+        self.no_id= self.equipo_ferrvoviario.numero_identificacion
+        if self.incidencias and not self.observaciones:
+            raise ValidationError("Si el registro tiene incidencias los campos de incidencia no puede ser Null")
+        
+    
 
 
-class ccd_vagones_cargados_descargados(models.Model):
+class ccd_vagones_cd(models.Model):
     informe_ccd= models.ForeignKey(
         ufc_informe_ccd,
         on_delete=models.CASCADE,
         related_name="vagones_cd_ccd",
-        null=False, blank=False,
+        null=True, blank=True,
         verbose_name="Informe CCD asociado"
     )
     acceso= models.CharField(
@@ -1544,7 +1550,7 @@ class ccd_vagones_cargados_descargados(models.Model):
         nom_tipo_equipo_ferroviario,
         on_delete=models.CASCADE,
         related_name="vagones_cd_ccd",
-        null=False, blank=False,
+        null=True, blank=True,
         verbose_name="Tipo de equipo ferroviario",
         help_text="Seleccione el tipo de equipo ferroviario asociado a Trenes",
     
@@ -1560,12 +1566,12 @@ class ccd_vagones_cargados_descargados(models.Model):
         verbose_name="Causas del incumplimiento de la carga/descarga"
     )
     producto = models.ForeignKey(
-        producto_CCD, blank=True, related_name="en_trenes_ccd", verbose_name="Productos En Trenes CCD", on_delete=models.SET_NULL,null=True
+        ccd_producto, blank=True, related_name="vagones_cd_ccd", verbose_name="Productos En Trenes CCD", on_delete=models.SET_NULL,null=True
     )
     equipo_vagon=models.ManyToManyField(
-        nom_equipo_ferroviario,
+        ccd_registro_vagones_cd,
         blank=True,
-        related_name="en_trenes_ccd",
+        related_name="vagones_cd_ccd",
         verbose_name="Equipos en Trenes CCD"
     )
-    fecha_registro=models.DateField(auto_created=True)
+    fecha_registro=models.DateField(auto_created=True,blank=True,null=True)

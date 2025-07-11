@@ -1786,3 +1786,19 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
     
 #*************Termina View Rotacion de Vagones **********************
+
+
+
+#*************Aqui empieza la ViewSet de CCDxPRODUCTO****************
+#************Imports****************
+from .serializers import (ccd_productoSerializer,ccd_arrastresSerializer,ccd_en_trenesSerializer,ccd_por_situarSerializer,ccd_registro_vagones_cdSerializer, ccd_situadosSerializer,ccd_vagones_cdSerializer,)
+
+from .models import (ccd_vagones_cd,ccd_arrastres,ccd_en_trenes,ccd_por_situar,ccd_producto,ccd_registro_vagones_cd,ccd_situados,ccd_casillas_productos)
+#***********************************
+
+#*************VIEWSSET**************
+class ccd_productoViewSet(viewsets.ModelViewSet):
+    serializer_class=ccd_productoSerializer
+    queryset=ccd_producto.objects.all()
+    permission_classes=[IsUFCPermission]
+

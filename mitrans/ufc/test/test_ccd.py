@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from ufc.models import ufc_informe_ccd
-from nomencladores.models import nom_provincia, nom_entidades,nom_pais,nom_osde_oace_organismo,nom_territorio
+from ufc.models import ufc_informe_ccd,ccd_registro_vagones_cd
+from nomencladores.models import (nom_provincia, nom_entidades,nom_pais,nom_osde_oace_organismo,nom_territorio,nom_equipo_ferroviario,nom_tipo_equipo_ferroviario)
 from Administracion.models import CustomUser
 import logging
 
@@ -56,6 +56,28 @@ class UFCInformeCCDTestCase(TestCase):
             entidad=self.entidad
         )
     
+        #Crear Tipo Equipo
+        self.tipo_equipo=nom_tipo_equipo_ferroviario.objects.create(
+             tipo_equipo = "casilla",
+             longitud = 10,
+    peso_neto_sin_carga = 200,
+    peso_maximo_con_carga =344,
+    capacidad_cubica_maxima = 555,
+    descripcion = "Mostro",
+             
+        )
+        
+    def test_crear_tipo_equipo(self):
+        tipo_equipo=nom_tipo_equipo_ferroviario.objects.create(
+             longitud = 100,
+    peso_neto_sin_carga = 200,
+    peso_maximo_con_carga =344,
+    capacidad_cubica_maxima = 555,
+    descripcion = "Mostro", 
+        )
+        self.assertIsInstance(tipo_equipo,nom_tipo_equipo_ferroviario)
+        self.assertEqual(tipo_equipo.__str__(),'Tipo de equipo: casilla - Longitud: 100 - Peso neto sin carga: 200 - Peso máximo con carga: 344')
+        self.asser
     def test_crear_pais(self):
         """
         Prueba la creacion del pais
@@ -123,3 +145,13 @@ class UFCInformeCCDTestCase(TestCase):
         self.assertEqual(informe.estado_parte, "Aprobado")
         self.assertEqual(informe.aprobado_por, aprobador)
 
+    # def test_ccd_registro_vagones_cd(self):
+    #     """
+    #     Prueba la creacion de un registro de vagon ccd
+    #     """
+    #     equipo_ferroviario= nom_equipo_ferroviario.objects.create(
+            
+    #     )
+    #     registro= ccd_registro_vagones_cd.objects.create(
+    #         equipo_ferroviario=equipo_ferroviario
+    #     )

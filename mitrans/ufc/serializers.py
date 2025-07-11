@@ -5,10 +5,7 @@ from django_filters import rest_framework as filters
 from django.db.models import Q,Sum
 
 #Importando modelos de UFC
-from .models import (ufc_informe_operativo, vagon_cargado_descargado,producto_UFC, en_trenes,nom_equipo_ferroviario
-                    ,por_situar,Situado_Carga_Descarga,arrastres,HistorialVagonesProductos 
-                    ,registro_vagones_cargados,vagones_productos,rotacion_vagones,HistorialVagonCargadoDescargado
-                     )
+from .models import(HistorialVagonesProductos,en_trenes,Situado_Carga_Descarga,producto_UFC,registro_vagones_cargados,por_situar,registro_vagones_cargados,vagones_productos,rotacion_vagones,arrastres,ufc_informe_operativo,ccd_arrastres,ccd_en_trenes,ccd_vagones_cd,ccd_por_situar,ccd_registro_vagones_cd,ccd_situados,ccd_casillas_productos,ccd_producto,ufc_informe_ccd)
 
 from Administracion.models import Auditoria 
 from rest_framework.response import Response
@@ -1438,4 +1435,125 @@ class ufc_informe_operativo_serializer(serializers.ModelSerializer):
 
         
     #     return nom_equipo_ferroviario_serializer(equipos_list, many=True).data
+
+
+
+#######Aqui empiezan los serializadores de CCDxProducto###########
+#######Los Filtros se ponen en la view o viewSet #########
+
+
+class ccd_productoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_producto
+        fields="__all__"
+        depth=1 ##@darilrosales88 Este campo permite hacer cositas para anidar las ForeignKey
+
+
+class ccd_arrastresSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_arrastres
+        fields="__all__"
+
+
+class ccd_en_trenesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_en_trenes
+        fields="__all__"
     
+
+class ccd_por_situarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_por_situar
+        fields="__all__"
+    
+
+class ccd_situadosSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_situados
+        fields="__all__"
+
+class ccd_registro_vagones_cdSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_registro_vagones_cd
+        fields="__all__"
+    
+    
+
+class ccd_vagones_cdSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_vagones_cd
+        fields="__all__"
+        depth=1
+
+class ccd_casillas_productosSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_casillas_productos
+        fields="__all__"
+        depth=1
+
+
+class ufc_informe_ccdSerializer(serializers.ModelSerializer):
+    arrastres_list = serializers.SerializerMethodField()
+    en_trenes_list = serializers.SerializerMethodField()
+    vagones_cargados_descargados_list = serializers.SerializerMethodField()
+    situados_carga_descarga_list = serializers.SerializerMethodField()
+    por_situar_list = serializers.SerializerMethodField()
+    entidad_detalle=serializers.ReadOnlyField(source = 'entidad.nombre') 
+#    equipos_list=serializers.SerializerMethodField()
+    creado_por = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(), 
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    
+    aprobado_por = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(), 
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    
+    
+    creado_por_detalle=UserPermissionSerializer(source='creado_por', read_only=True)
+    aprobado_por_detalle=UserPermissionSerializer(source='aprobado_por', read_only=True)
+    class Meta:
+        model = ufc_informe_ccd   
+        fields="__all__"    
+        depth=1
+    
+    #OK Arrastres
+    def get_arrastres_list(self, obj):
+        """Obtiene todos los arrastres asociados al informe operativo."""
+        arrastres_queryset = obj.arrastres_ccd.all()
+        return ccd_arrastresSerializer(arrastres_queryset, many=True).data
+    #OK En Trenes
+    def get_en_trenes_list(self, obj):
+        """Obtiene todos los trenes asociados al informe operativo."""
+        en_trenes_queryset = obj.en_trenes_ccd.all()
+        return ccd_en_trenesSerializer(en_trenes_queryset, many=True).data
+    #OK vagones C/D
+    def get_vagones_cargados_descargados_list(self, obj):
+        """Obtiene todos los vagones cargados/descargados asociados al informe operativo."""
+        vagones_cargados_descargados_queryset = obj.vagones_cd_ccd.all()
+        return ccd_vagones_cdSerializer(vagones_cargados_descargados_queryset, many=True).data
+    #OK Situados
+    def get_situados_carga_descarga_list(self, obj):
+        """Obtiene todos los situados de carga/descarga asociados al informe operativo."""
+        situados_carga_descarga_queryset = obj.situados_ccd.all()
+        return ccd_situadosSerializer(situados_carga_descarga_queryset, many=True).data
+    #OK Por Situar
+    def get_por_situar_list(self, obj):
+        """Obtiene todos los registros por situar asociados al informe operativo."""
+        por_situar_queryset = obj.por_situar_ccd.all()
+        return ccd_por_situarSerializer(por_situar_queryset, many=True).data
+
+    def get_vagones_productos_list(self, obj):
+        """Obtiene todos los productos de vagones asociados al informe operativo."""
+        vagones_productos_queryset = obj.vagones_productos.all()
+        return vagones_productos_serializer(vagones_productos_queryset, many=True).data
+
+    def get_rotacion_vagones_list(self, obj):
+        """Obtiene todas las rotaciones de vagones asociadas al informe operativo."""
+        rotacion_vagones_queryset = obj.rotacion.all()
+        return RotacionVagonesSerializer(rotacion_vagones_queryset, many=True).data

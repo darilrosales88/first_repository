@@ -1,10 +1,12 @@
 from django.contrib import admin
 
 from .models import vagon_cargado_descargado,en_trenes ,Situado_Carga_Descarga,arrastres,producto_UFC
-from .models import registro_vagones_cargados,por_situar,registro_vagones_cargados,vagones_productos,rotacion_vagones
+from .models import (registro_vagones_cargados,por_situar,registro_vagones_cargados,vagones_productos,rotacion_vagones,ccd_arrastres,ccd_en_trenes,ccd_vagones_cd,ccd_por_situar,ccd_registro_vagones_cd,ccd_situados,ccd_casillas_productos,ccd_producto,ufc_informe_ccd)
 from .models import ufc_informe_operativo,vagones_dias
 
 
+
+######Modelos de UFC
 admin.site.register(en_trenes)
 admin.site.register(Situado_Carga_Descarga)
 admin.site.register(arrastres)
@@ -13,6 +15,17 @@ admin.site.register(producto_UFC)
 admin.site.register(rotacion_vagones)  
 admin.site.register(ufc_informe_operativo)
 admin.site.register(vagones_dias)
+
+#####Modelos de CCD
+admin.site.register(ccd_en_trenes)
+admin.site.register(ccd_registro_vagones_cd)
+admin.site.register(ccd_arrastres)
+admin.site.register(ccd_situados)
+admin.site.register(ccd_por_situar)
+admin.site.register(ccd_producto)  
+admin.site.register(ufc_informe_ccd)
+admin.site.register(ccd_casillas_productos)
+admin.site.register(ccd_vagones_cd)
 
 
 @admin.register(vagon_cargado_descargado)

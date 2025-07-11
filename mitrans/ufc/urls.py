@@ -8,7 +8,8 @@ from .views import verificar_informe_existente,vagon_cargado_descargado_hoy_view
 from .views import SituadoCargaDescarga_hoy_Viewset,PorSituarCargaDescarga_hoy_ViewSet,en_trenes_hoy_viewset
 from .views import vagones_productos_hoy_viewset,HistorialVagonCargadoDescargadoViewSet,HistorialVagonesProductosViewSet,VagonesDiasViewSet
 
-
+###Imports View from CCD
+from .views import (ccd_productoViewSet)
 
 from django.urls import path
 
@@ -55,6 +56,12 @@ router.register('pendiente-arrastre', PendienteArrastreViewset, basename ="pendi
 
 #endpoint para rotacion de vagones
 router.register("rotaciones", RotacionVagonesViewSet, basename="rotacion-vagones")
+
+
+
+############Aqui empiezan los router de CCDxPRODUCTO
+router.register("ccd-productos",ccd_productoViewSet, basename="ccd-productos")
+
 
 
 #ahora declaramos el urlpatterns y lo igualamos a la propiedad urls de la variable creada de tipo routers

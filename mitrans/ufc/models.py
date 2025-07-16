@@ -1268,12 +1268,12 @@ class ccd_situados(models.Model):
         verbose_name="CCD Equipos Situados"
     
     def __str__(self):
-        return f"CCD Situado ID:{self.pk} -> Informe {self.informe_ccd}"
-       
-    def clean(self):
-        super().clean()
-        if self.tipo_equipo and getattr(self.tipo_equipo, "tipo_equipo", "").lower() == "locomotora":
-            raise ValidationError("No se permite seleccionar 'locomotora' como tipo de equipo ferroviario.")
+        return f"CCD Situado ID:{self.id} -> Informe {self.informe_ccd}"
+    #### esta partiendo la entrada de los datos
+    # def clean(self):
+    #     super().clean()
+    #     if self.tipo_equipo and getattr(self.tipo_equipo, "tipo_equipo", "").lower() == "locomotora":
+    #         raise ValidationError("No se permite seleccionar 'locomotora' como tipo de equipo ferroviario.")
     
     
     
@@ -1341,12 +1341,12 @@ class ccd_por_situar(models.Model):
     def __str__(self):
         return f"CCD Por Situar ID:{self.pk} -> Informe {self.informe_ccd}"
        
-    def clean(self):
-        super().clean()
-        if self.cantidad_vagones and self.cantidad_vagones!=self.equipo_vagon.count():
-            raise ValidationError("El campo cantidad de vagones tiene que ser igual a la cantidad de vagones pasados como listas")
-        if self.tipo_equipo and getattr(self.tipo_equipo, "tipo_equipo", "").lower() == "locomotora":
-            raise ValidationError("No se permite seleccionar 'locomotora' como tipo de equipo ferroviario.")
+    # def clean(self):
+    #     super().clean()
+    #     if self.cantidad_vagones and self.cantidad_vagones!=self.equipo_vagon.count():
+    #         raise ValidationError("El campo cantidad de vagones tiene que ser igual a la cantidad de vagones pasados como listas")
+    #     if self.tipo_equipo and getattr(self.tipo_equipo, "tipo_equipo", "").lower() == "locomotora":
+    #         raise ValidationError("No se permite seleccionar 'locomotora' como tipo de equipo ferroviario.")
     
     
     
@@ -1404,14 +1404,14 @@ class ccd_arrastres(models.Model):
         verbose_name="CCD Equipos Pendientes al Arrastre"
     
     def __str__(self):
-        return f"CCD Pendiente Arrastre ID:{self.pk} -> Informe {self.informe_ccd}"
+        return f"CCD Pendiente Arrastre ID:{self.producto} -> Informe {self.informe_ccd.pk}"
        
-    def clean(self):
-        super().clean()
-        if self.cantidad_vagones and self.cantidad_vagones!=self.equipo_vagon.count():
-            raise ValidationError("El campo cantidad de vagones tiene que ser igual a la cantidad de vagones pasados como listas")
-        if self.tipo_equipo and getattr(self.tipo_equipo, "tipo_equipo", "").lower() == "locomotora":
-            raise ValidationError("No se permite seleccionar 'locomotora' como tipo de equipo ferroviario.")
+    # def clean_fields(self):
+    #     super().clean_fields()
+    #     if self.cantidad_vagones and self.cantidad_vagones!=self.equipo_vagon.count():
+    #         raise ValidationError("El campo cantidad de vagones tiene que ser igual a la cantidad de vagones pasados como listas")
+    #     if self.tipo_equipo and getattr(self.tipo_equipo, "tipo_equipo", "").lower() == "locomotora":
+    #         raise ValidationError("No se permite seleccionar 'locomotora' como tipo de equipo ferroviario.")
 
 
 class ccd_en_trenes(models.Model):
@@ -1470,12 +1470,12 @@ class ccd_en_trenes(models.Model):
     def __str__(self):
         return f"CCD En Trenes ID:{self.pk} -> Informe {self.informe_ccd}"
        
-    def clean(self):
-        super().clean()
-        if self.cantidad_vagones and self.cantidad_vagones!=self.equipo_vagon.count():
-            raise ValidationError("El campo cantidad de vagones tiene que ser igual a la cantidad de vagones pasados como listas")
-        if self.tipo_equipo and getattr(self.tipo_equipo, "tipo_equipo", "").lower() == "locomotora":
-            raise ValidationError("No se permite seleccionar 'locomotora' como tipo de equipo ferroviario.")
+    # def clean(self):
+    #     super().clean()
+    #     if self.cantidad_vagones and self.cantidad_vagones!=self.equipo_vagon.count():
+    #         raise ValidationError("El campo cantidad de vagones tiene que ser igual a la cantidad de vagones pasados como listas")
+    #     if self.tipo_equipo and getattr(self.tipo_equipo, "tipo_equipo", "").lower() == "locomotora":
+    #         raise ValidationError("No se permite seleccionar 'locomotora' como tipo de equipo ferroviario.")
 
 
 
@@ -1523,11 +1523,11 @@ class ccd_registro_vagones_cd(models.Model):
     def __str__(self):
         return f"Vagón {self.no_id}" if self.no_id else "Registro sin ID"
 
-    def clean(self):
-        super().clean()
-        self.no_id= self.equipo_ferrvoviario.numero_identificacion
-        if self.incidencias and not self.observaciones:
-            raise ValidationError("Si el registro tiene incidencias los campos de incidencia no puede ser Null")
+    # def clean(self):
+    #     super().clean()
+    #     self.no_id= self.equipo_ferrvoviario.numero_identificacion
+    #     if self.incidencias and not self.observaciones:
+    #         raise ValidationError("Si el registro tiene incidencias los campos de incidencia no puede ser Null")
         
     
 

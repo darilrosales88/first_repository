@@ -183,3 +183,17 @@
   ]
 }
 ```
+
+## CCDxProducto 5 estados de los vagones
+
+Con sus respectivos CRUD
+
+```json
+{
+  "ccd-arrastres": "http://localhost:8000/ufc/ccd-arrastres/",
+  "ccd-situados": "http://localhost:8000/ufc/ccd-situados/",
+  "ccd-en-trenes": "http://localhost:8000/ufc/ccd-en-trenes/",
+  "ccd-por-situar": "http://localhost:8000/ufc/ccd-por-situar/",
+  "ccd-vagones-cd": "http://localhost:8000/ufc/ccd-vagones-cd/"
+}
+```

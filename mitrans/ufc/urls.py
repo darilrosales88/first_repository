@@ -9,7 +9,7 @@ from .views import SituadoCargaDescarga_hoy_Viewset,PorSituarCargaDescarga_hoy_V
 from .views import vagones_productos_hoy_viewset,HistorialVagonCargadoDescargadoViewSet,HistorialVagonesProductosViewSet,VagonesDiasViewSet
 
 ###Imports View from CCD
-from .views import (ccd_productoViewSet,ccd_informeViewSet)
+from .views import (ccd_productoViewSet,ccd_informeViewSet,ccd_arrastresViewSet,ccd_casillas_productosViewSet,ccd_en_trenesViewSet,ccd_por_situarViewSet,ccd_registro_vagones_cdViewSet,ccd_vagones_cdViewSet,ccd_situadosViewSet)
 
 from django.urls import path
 
@@ -63,6 +63,15 @@ router.register("rotaciones", RotacionVagonesViewSet, basename="rotacion-vagones
 ############Aqui empiezan los router de CCDxPRODUCTO
 router.register("ccd-productos",ccd_productoViewSet, basename="ccd-productos")
 router.register("ccd-informe",ccd_informeViewSet, basename="ccd-informe")
+##Los 5 Estados
+router.register("ccd-arrastres",ccd_arrastresViewSet, basename="ccd-arrastres")
+router.register("ccd-situados",ccd_situadosViewSet, basename="ccd-situados")
+router.register("ccd-en-trenes",ccd_en_trenesViewSet, basename="ccd-en-trenes")
+router.register("ccd-por-situar",ccd_por_situarViewSet, basename="ccd-por-situar")
+router.register("ccd-vagones-cd",ccd_vagones_cdViewSet, basename="ccd-vagones-cd")
+
+
+
 
 
 

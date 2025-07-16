@@ -5,9 +5,9 @@
         <!-- Botón de agregar - más destacado -->  
         <button class="btn btn-link p-0" @click="showModal = true">
           <router-link
-            v-if="hasGroup('AdminUFC')"
-            to="AdicionarVagonProducto"
-            title="Agregar nuevo vagón con productos"
+           v-if="hasGroup('AdminUFC')"
+            to="AdicionarVagonCargadoDescargado"
+            title="Agregar nuevo vagón cargado/descargado"
           >
             <i class="bi bi-plus-circle fs-3"></i>
           </router-link>
@@ -19,7 +19,7 @@
             <input
               type="search"
               class="form-control"
-              placeholder="Origen, Tipo Equipo, Producto"
+              placeholder="Origen, Destino, Producto, Locomotora"
               v-model="searchQuery"
               @input="handleSearchInput"
             />
@@ -31,18 +31,20 @@
           </div>
         </form>
       </div>
-      <h6>Vagones y productos</h6>
+  
       <!-- Tabla responsive con mejoras -->
       <div class="table table-responsive">
         <table class="table table-hover mb-0">
           <thead>
             <tr>
               <th scope="col" style="width: 50px">No</th>
-              <th scope="col">Origen</th>
-              <th scope="col">Combustible</th>
-              <th scope="col">Vagones situados</th>
-              <th scope="col">Vagones cargados</th>
+              <th scope="col">Acceso comercial</th>
+              <th scope="col">Tipo de equipo</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Operacion</th>
               <th scope="col">Productos</th>
+              <th scope="col">Real carga/descarga</th>
+              <th scope="col">Incidencia</th>
               <th scope="col">Acciones</th>
             </tr>
             <tr v-if="!busqueda_existente">
@@ -54,44 +56,47 @@
               </td>
             </tr>
           </thead>
-  
           <tbody>
             <tr
-              v-for="(vagon, index) in vagones_productos"
+              v-for="(vagon, index) in cargados_descargados"
               :key="vagon.id"
               class="align-middle"
             >
               <th scope="row">{{ index + 1 }}</th>
+              <td>{{ vagon.tipo_equipo_ferroviario_name }}</td>
               <td>{{ vagon.origen }}</td>
-              <td>{{ vagon.tipo_combustible_name || "-"}}</td>
-              <td>{{ vagon.vagones_situados }}</td>
-              <td>{{ vagon.vagones_cargados }}</td>
+              <td>
+                <span>
+                  {{ vagon.destino }}
+                </span>
+              </td>              
+              <td>{{ vagon.estado }}</td>
               <td>{{ vagon.productos_list }}</td>
               <td v-if="hasGroup('AdminUFC')">
-                <div class="d-flex">
-                  <button
-                    @click="viewDetails(vagon)"
-                    class="btn btn-sm btn-outline-info me-2"
-                    title="Ver detalles"
-                  >
-                    <i class="bi bi-eye-fill"></i>
-                  </button>
-                  <button
-                    @click="editVagon(vagon)"
-                    class="btn btn-sm btn-outline-warning me-2"
-                    title="Editar"
-                  >
-                    <i class="bi bi-pencil-square"></i>
-                  </button>
-                  <button
-                    @click="confirmDelete(vagon.id)"
-                    class="btn btn-sm btn-outline-danger"
-                    title="Eliminar"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
-              </td>
+              <div class="d-flex">
+                <button
+                  @click="viewDetails(tren)"
+                  class="btn btn-sm btn-outline-info me-2"
+                  title="Ver detalles"
+                >
+                  <i class="bi bi-eye-fill"></i>
+                </button>
+                <button
+                  @click="editTren(vagon)"
+                  class="btn btn-sm btn-outline-warning me-2"
+                  title="Editar"
+                >
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+                <button
+                  @click="confirmDelete(vagon.id)"
+                  class="btn btn-sm btn-outline-danger"
+                  title="Eliminar"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
             </tr>
           </tbody>
         </table>
@@ -100,7 +105,7 @@
       <!-- Paginación mejorada -->
       <div class="d-flex justify-content-between align-items-center">
         <div class="text-muted small">
-          Mostrando {{ vagones_productos.length }} de {{ totalItems }} registros
+          Mostrando {{ cargados_descargados.length }} de {{ totalItems }} registros
         </div>
         <nav aria-label="Page navigation">
           <ul class="pagination pagination-sm mb-0">
@@ -128,82 +133,56 @@
       </div>
       <!-- Termina la paginacion -->
   
-      <!-- Modal de detalles -->
-      <div v-if="mostrarModalDetalles" class="modal-backdrop">
-        <div class="modal-content">
-            <div class="modal-header">
-            <h5 class="modal-title">Detalles del Vagón y Productos</h5>
-            <button @click="cerrarModalDetalles" class="btn-close">
-                <i class="bi bi-x"></i>
-            </button>
-            </div>
-            <div class="modal-body" v-if="vagonSeleccionado">
-            <!-- Información básica -->
-            <div class="row mb-3">
-                <div class="col-md-6">
-                <p><strong>Tipo de origen:</strong> {{ vagonSeleccionado.tipo_origen_name || 'N/A' }}</p>
-                <p><strong>Origen:</strong> {{ vagonSeleccionado.origen || 'N/A' }}</p>
-                <p><strong>Tipo de combustible:</strong> {{ vagonSeleccionado.tipo_combustible_name || 'N/A' }}</p>
-                <p><strong>Tipo de equipo ferroviario:</strong> {{ vagonSeleccionado.tipo_equipo_ferroviario_name || 'N/A' }}</p>
-                </div>
-                <div>
-                  <h2>Detalles del Registro</h2>
-                  <p class="ps-modal-subtitle">
-                    Información completa del registro situado
-                  </p>
-                </div>
-              </div>
-              <button class="ps-modal-close" @click="cerrarModalDetalles()">
-                <i class="bi bi-x-lg"></i>
-              </button>
-            </div>
-
-            <!-- Estadísticas -->
-            <div class="row mb-3">
-                <div class="col-md-6">
-                <p><strong>Vagones situados:</strong> {{ vagonSeleccionado.vagones_situados || '0' }}</p>
-                <p><strong>Vagones cargados:</strong> {{ vagonSeleccionado.vagones_cargados || '0' }}</p>
-                </div>
-                <div class="col-md-6">
-                <p><strong>Plan acumulado día anterior:</strong> {{ vagonSeleccionado.plan_acumulado_dia_anterior || '0' }}</p>
-                <p><strong>Real acumulado día anterior:</strong> {{ vagonSeleccionado.real_acumulado_dia_anterior || '0' }}</p>
-                <p><strong>Plan del día :</strong> {{ vagonSeleccionado.plan_dia || '0' }}</p>
-                </div>
-            </div>
-
-            <!-- Productos asociados -->
-            <div class="mb-3">
-                <h6 class="border-bottom pb-2">Productos asociados</h6>
-                <div v-if="vagonSeleccionado.productos_list && vagonSeleccionado.productos_list.length > 0">
-                <p>{{ vagonSeleccionado.productos_list }}</p>
-                </div>
-                <div v-else>
-                <p class="text-muted">No hay productos asociados</p>
-                </div>
-            </div>
-
-            <!-- Observaciones -->
-            <div class="mb-3">
-                <h6 class="border-bottom pb-2">Observaciones</h6>
-                <p v-if="vagonSeleccionado.observaciones">{{ vagonSeleccionado.observaciones }}</p>
-                <p v-else class="text-muted">No hay observaciones registradas</p>
-            </div>
-            </div>
-        </div>
-        </div>
     </div>
   </template>
   
+  <style scoped>
+  .pagination-container {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .pagination-container button {
+    margin: 0 5px;
+  }
+  .btn-small {
+    font-size: 22px; /* Aumenta el tamaño del ícono */
+    color: black;
+    margin-right: 5px;
+    outline: none; /* Elimina el borde de foco */
+    border: none;
+    background: none; /* Elimina el fondo */
+    padding: 0; /* Elimina el padding para que solo se vea el ícono */
+  }
+  .btn-eye {
+    font-size: 22px; /* Aumenta el tamaño del ícono */
+    margin-right: 5px;
+    outline: none; /* Elimina el borde de foco */
+    border: none;
+    background: none; /* Elimina el fondo */
+    padding: 0; /* Elimina el padding para que solo se vea el ícono */
+  }
+  .btn:hover {
+    scale: 1.1; /* Asegura que no haya fondo al hacer hover */
+  }
+  
+  .btn:focus {
+    outline: none; /* Elimina el borde de foco al hacer clic */
+    box-shadow: none; /* Elimina cualquier sombra de foco en algunos navegadores */
+  }
+  </style>
   <script>
   import axios from "axios";
   import Swal from "sweetalert2";
   
   export default {
-    name: "VagonesProductos",
+    name: "CargadosDescargados",
   
     data() {
       return {
-        vagones_productos: [], // Lista de vagones con productos
+        cargados_descargados: [], // Lista de vagones
         allRecords: [], // Copia completa de todos los registros para filtrado local
         currentPage: 1,
         itemsPerPage: 10,
@@ -214,14 +193,13 @@
         userPermissions: [],
         userGroups: [],
         showContent: false,
-        mostrarModalDetalles: false,
-        vagonSeleccionado: null,
+        mostrarModal: false,
         loading: false,
       };
     },
   
     async mounted() {
-      await this.getVagonesProductos();
+      await this.getVagonesCargadosDescargados();
       await this.fetchUserPermissionsAndGroups();
     },
   
@@ -249,51 +227,52 @@
         }
       },
   
-      async getVagonesProductos() {
+      async getVagonesCargadosDescargados() {
         this.loading = true;
         try {
-          const response = await axios.get("/ufc/vagones-productos-hoy/", {
+          const response = await axios.get("/ufc/vagones-cargados-descargados/", {
             params: {
               page: this.currentPage,
               page_size: this.itemsPerPage,
             },
           });
           
-          this.vagones_productos = response.data.results;
+          this.cargados_descargados = response.data.results;
           this.allRecords = [...response.data.results]; // Guardar copia completa para filtrado
           this.totalItems = response.data.count;
           this.busqueda_existente = true;
         } catch (error) {
-          console.error("Error al obtener los vagones con productos:", error);
+          console.error("Error al obtener los vagones cargados/descargados:", error);
           this.busqueda_existente = false;
         } finally {
           this.loading = false;
         }
       },
   
+      // Nuevo método de búsqueda adaptado del componente que funciona
       handleSearchInput() {
         clearTimeout(this.debounceTimeout);
         this.debounceTimeout = setTimeout(() => {
           if (!this.searchQuery.trim()) {
-            this.vagones_productos = [...this.allRecords];
+            this.cargados_descargados = [...this.allRecords];
             this.busqueda_existente = true;
             return;
           }
   
           const query = this.searchQuery.toLowerCase();
-          this.vagones_productos = this.allRecords.filter((item) => {
+          this.cargados_descargados = this.allRecords.filter((item) => {
             const tipoEquipo = item.tipo_equipo_ferroviario_name?.toLowerCase() || "";
-            const tipoOrigen = item.origen?.toLowerCase() || "";
             const productos = item.productos_list?.toLowerCase() || "";
+            const estado = item.estado?.toLowerCase() || "";
             
             return (
-              tipoEquipo.includes(query) ||
-              tipoOrigen.includes(query) ||
-              productos.includes(query)
+              tipoEquipo.includes(query) || 
+              productos.includes(query) || 
+              estado.includes(query)
             );
           });
   
-          this.busqueda_existente = this.vagones_productos.length > 0;
+          this.busqueda_existente = this.cargados_descargados.length > 0;
         }, 300);
       },
   
@@ -301,50 +280,66 @@
       previousPage() {
         if (this.currentPage > 1) {
           this.currentPage--;
-          this.getVagonesProductos();
+          this.getVagonesCargadosDescargados();
         }
       },
   
       nextPage() {
         if (this.currentPage * this.itemsPerPage < this.totalItems) {
           this.currentPage++;
-          this.getVagonesProductos();
+          this.getVagonesCargadosDescargados();
         }
       },
   
       goToPage(page) {
         this.currentPage = page;
-        this.getVagonesProductos();
+        this.getVagonesCargadosDescargados();
       },
   
-      async deleteVagon(id) {
+      async delete_tren(id) {
         try {
-          await axios.delete(`/ufc/vagones-productos/${id}/`);
-          this.vagones_productos = this.vagones_productos.filter((objeto) => objeto.id !== id);
+          await axios.delete(`/ufc/vagones-cargados-descargados/${id}/`);
+          this.cargados_descargados = this.cargados_descargados.filter((objeto) => objeto.id !== id);
           Swal.fire(
             "Eliminado!",
-            "El registro ha sido eliminado exitosamente.",
+            "El producto ha sido eliminado exitosamente.",
             "success"
           );
         } catch (error) {
-          console.error("Error al eliminar el registro:", error);
-          Swal.fire("Error", "Hubo un error al eliminar el registro.", "error");
+          console.error("Error al eliminar el producto:", error);
+          Swal.fire("Error", "Hubo un error al eliminar el producto.", "error");
         }
       },
   
-      viewDetails(vagon) {
-        this.vagonSeleccionado = vagon;
-        this.mostrarModalDetalles = true;
+      openVagonDetailsModal(vagon) {
+        Swal.fire({
+          title: "Detalles del Vagon",
+          html: `
+            <div style="text-align: left;">
+              <p><strong>No Id Locomotora:</strong> ${vagon.numero_identificacion_locomotora}</p>
+              <p><strong>Tipo de equipo:</strong> ${vagon.tipo_equipo}</p>
+              <p><strong>Estado:</strong> ${vagon.estado}</p>
+              <p><strong>Producto Id:</strong> ${vagon.producto}</p>
+              <p><strong>Producto nombre:</strong> ${vagon.producto_name}</p>
+              <p><strong>Tipo de origen:</strong> ${vagon.tipo_origen}</p>
+              <p><strong>Origen:</strong> ${vagon.origen}</p>
+              <p><strong>Tipo de destino:</strong> ${vagon.tipo_destino}</p>
+              <p><strong>Destino:</strong> ${vagon.destino}</p>
+              <p><strong>Nombre del equipo de carga:</strong> ${vagon.equipo_carga_name}</p>
+              <p><strong>Observaciones:</strong> ${vagon.observaciones}</p>
+            </div>
+          `,
+          width: "600px",
+          customClass: {
+            popup: "custom-swal-popup",
+            title: "custom-swal-title",
+            htmlContainer: "custom-swal-html",
+          },
+        });
       },
   
-      cerrarModalDetalles() {
-        this.mostrarModalDetalles = false;
-        this.vagonSeleccionado = null;
-      },
-  
-      editVagon(vagon) {
-        // Aquí puedes implementar la navegación a la página de edición
-        this.$router.push({ name: 'EditarVagonesyProductos', params: { id: vagon.id } });
+      cerrarModal() {
+        this.mostrarModal = false;
       },
   
       confirmDelete(id) {
@@ -358,11 +353,12 @@
           reverseButtons: true,
         }).then((result) => {
           if (result.isConfirmed) {
-            this.deleteVagon(id);
+            this.delete_tren(id);
           }
         });
       },
   
+      // Método para manejar errores (similar al del componente que funciona)
       handleApiError(error, action) {
         let errorMsg = `Error al ${action}`;
         if (error.response) {
@@ -411,12 +407,11 @@
   
   /* Estilos para el modal */
   .modal-backdrop {
-    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+    height: 90%;
+    background-color: transparent; /* Fondo semitransparente */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -485,33 +480,5 @@
   .input-group {
     width: 100%;
   }
-  
-  /* Estilos para los botones de acción */
-  .btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    border-radius: 0.2rem;
-  }
-  
-  .btn-outline-info {
-    color: #17a2b8;
-    border-color: #17a2b8;
-  }
-  
-  .btn-outline-warning {
-    color: #ffc107;
-    border-color: #ffc107;
-  }
-  
-  .btn-outline-danger {
-    color: #dc3545;
-    border-color: #dc3545;
-  }
-  
-  .btn-outline-info:hover,
-  .btn-outline-warning:hover,
-  .btn-outline-danger:hover {
-    color: #fff;
-  }
   </style>
+  

@@ -1,135 +1,47 @@
-from datetime import date
-from django.db import models 
-from django.db.models.signals import pre_save, post_save, post_delete
-from django.db.models import Sum, Prefetch,Subquery, OuterRef
-from django.db.models.functions import TruncDate
-from django.db import transaction
+from django.db.models.signals import pre_save,post_save,post_delete
 from django.dispatch import receiver
 from django.utils import timezone
-from nomencladores.models import nom_equipo_ferroviario
-from .models import (
-    ufc_informe_operativo,
-    vagones_productos,
-    Situado_Carga_Descarga,
-    por_situar,
-    vagon_cargado_descargado,
-    vagones_dias,
-    registro_vagones_cargados,
-    en_trenes,
-    arrastres,
-    rotacion_vagones,
-    HistorialArrastres,
-    HistorialVagonCargadoDescargado,
-    HistorialVagonesProductos,
-    HistorialVagonPorSituar,
-    producto_UFC,
-    HistorialEnTrenes,
-    HistorialRotacionVagones,
-    HistorialSituadoCargaDescarga,
+from datetime import datetime
+from .models import (ufc_informe_operativo,                     
+                     vagones_productos,
+                     Situado_Carga_Descarga,
+                     por_situar,
+                     vagon_cargado_descargado,
+                     registro_vagones_cargados,
+                     en_trenes,
+                     arrastres,
+                     rotacion_vagones
 )
-from ufc.serializers import actualizar_estado_equipo_ferroviario
-
-# @receiver(pre_save, sender=ufc_informe_operativo)
-# def resetear_estados(sender, instance, **kwargs):
-#     """
-#     Borra los registros con fecha diferente al día actual de los modelos cuando se crea un nuevo informe
-#     operativo .
-#     """
-#     if instance.pk is None:  # Solo para nuevos registros
-#         hoy = timezone.now().date()
-
-#         # Verificar si ya existe un informe con la fecha de hoy
-#         existe_informe_hoy = sender.objects.filter(fecha_operacion__date=hoy).exists()
-
-#         if not existe_informe_hoy:
-#             # Borrar todos los registros de ambos modelos
-#             equipos=[]
-#             registros_cargados=vagon_cargado_descargado.objects.all()
-#             for registro in registros_cargados:
-#                 equipos.append()
-#             vagones_productos.objects.all()
-#             Situado_Carga_Descarga.objects.all()
-#             por_situar.objects.all()
-#             registro_vagones_cargados.objects.all()
-#             en_trenes.objects.all()
-#             arrastres.objects.all()
-
-
-@receiver(post_save, sender=ufc_informe_operativo)
-def actualizar_estado_vagones(sender, instance:ufc_informe_operativo, **kwargs):
-    """
-    Signal que actualiza el estado de los vagones asociados cuando cambia estado_parte
-    del informe operativo, considerando todas las relaciones posibles.
-    """
-    # Solo ejecutar si es una actualización y estado_parte está en los campos actualizados
-    if kwargs.get('created', False) or instance.estado_parte=="Creado":
-        return
-
-    with transaction.atomic():
-        # Bloquear el informe para evitar condiciones de carrera
-        informe = ufc_informe_operativo.objects.select_for_update().get(pk=instance.pk)
-        updated=0
-        # 1. Vagones a través de por_situar -> vagones_dias
-####-----------Aqui se pone a disponible Los estados de Por Situar, Situados, Pendiente---------########        
-        vagones_ids = vagones_dias.objects.filter(
-        por_situar_vagones_dias__informe_operativo=informe,
-    ).values_list('equipo_ferroviario_id', flat=True)
-        
-        vagones_partes = nom_equipo_ferroviario.objects.filter(id__in=list(vagones_ids))
-        updated += vagones_partes.update(estado_actual='Disponible')
-    #     vagones_por_situar=nom_equipo_ferroviario.objects.filter(
-    #     registro_por_dias__por_situar_vagones_dias__informe_operativo_id=informe.id
-    # ).distinct()
-        
-        vagones_ids = vagones_dias.objects.filter(
-        situados_vagones_dias__informe_operativo=informe,
-    ).values_list('equipo_ferroviario_id', flat=True)
-        print(vagones_ids)
-        vagones_partes = nom_equipo_ferroviario.objects.filter(id__in=list(vagones_ids))
-        updated += vagones_partes.update(estado_actual='Disponible')
-
-
-        vagones_ids = vagones_dias.objects.filter(
-        arrastre_vagones_dias__informe_operativo=informe,
-    ).values_list('equipo_ferroviario_id', flat=True)
-        
-        vagones_partes = nom_equipo_ferroviario.objects.filter(id__in=list(vagones_ids))
-        updated += vagones_partes.update(estado_actual='Disponible')
-####-----------Aqui se pone a disponible Los estado Cargado/Descargado---------########       
-        # Obtener los números de identificación de los vagones asociados
-        vagones_cargados=nom_equipo_ferroviario.objects.filter(
-        numero_identificacion__in=Subquery(
-            registro_vagones_cargados.objects.filter(
-                registro_vagones_cargados__informe_operativo=informe
-            ).values_list('no_id', flat=True)
-        )
-    )
-        #vagones_cargados = nom_equipo_ferroviario.objects.filter(id__in=list(vagones_cargados))
-        updated += vagones_cargados.update(estado_actual='Disponible')
-        
-        
-        # 2. Vagones a través de la relación ManyToMany en en_trenes
-####-----------Aqui se pone a disponible Los estado En Trenes---------########     
-        vagones_en_trenes = nom_equipo_ferroviario.objects.filter(
-            en_trenes_vagones__informe_operativo=informe
-        ).distinct()
-        #print (vagones_partes,vagones_ids)
-        
-        
-        updated += vagones_en_trenes.update(estado_actual='Disponible')
-        
-        # Opcional: Registrar el cambio
-        if updated > 0:
-            print(f"Informe {informe.id}: {updated} vagones actualizados a Disponible")
-            
+from django.db.models import Sum
+from django.db import transaction
 
 @receiver(pre_save, sender=ufc_informe_operativo)
-def set_entidad_from_creator(sender, instance, **kwargs):
-    if not instance.entidad and instance.creado_por:
-        instance.entidad = instance.creado_por.entidad
-
-
-@receiver(post_delete, sender=vagon_cargado_descargado)
+def borrar_registros_antiguos(sender, instance, **kwargs):
+    """
+    Borra los registros con fecha diferente al día actual de los modelos cuando se crea un nuevo informe
+    operativo .
+    """
+    if instance.pk is None:  # Solo para nuevos registros
+        hoy = timezone.now().date()
+        
+        # Verificar si ya existe un informe con la fecha de hoy
+        existe_informe_hoy = sender.objects.filter(
+            fecha_operacion__date=hoy
+        ).exists()
+        
+        if not existe_informe_hoy:
+            # Borrar todos los registros de ambos modelos
+            with transaction.atomic():
+                vagon_cargado_descargado.objects.all().delete()
+                vagones_productos.objects.all().delete()
+                Situado_Carga_Descarga.objects.all().delete()
+                por_situar.objects.all().delete()
+                registro_vagones_cargados.objects.all().delete()
+                en_trenes.objects.all().delete()
+                arrastres.objects.all().delete()
+                rotacion_vagones.objects.all().delete()
+                
+@receiver(post_delete,sender=vagon_cargado_descargado)
 @receiver(post_save, sender=vagon_cargado_descargado)
 def actualizar_rotacion(sender, instance, **kwargs):
     """

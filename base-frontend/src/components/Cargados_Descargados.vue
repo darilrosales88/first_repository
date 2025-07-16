@@ -1,300 +1,309 @@
 <template>
-  <div class="container py-3">
-    <div class="card border">
-      <div class="card-header bg-light border-bottom">
-        <h5 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-clipboard-data me-2"></i>Vagones Cargados/descargados
-        </h5>
-      </div>
-      <div class="card-body p-3">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <router-link v-if="hasGroup('AdminUFC')" to="AdicionarVagonCargadoDescargado">
-            <button class="btn  btn-sm btn-primary">
-              <i class="bi bi-plus-circle me-1"></i>Agregar nuevo vagón cargado/descargado
-            </button>
+  <!-- El template permanece exactamente igual -->
+  <div class="cargado-container">
+    <!-- Header con título y acciones -->
+    <div class="ps-header">
+      <h1 class="ps-title">
+        <i class="bi bi-train-freight-front ps-title-icon"></i>
+        Vagones Cargados/Descargados
+      </h1>
+
+      <div class="ps-actions">
+        <button class="btn btn-link p-0" v-if="hasGroup('AdminUFC')">
+          <router-link
+            to="AdicionarVagonCargadoDescargado"
+            title="Agregar nuevo vagón cargado/descargado"
+          >
+            <i class="bi bi-plus-circle fs-3"></i>
           </router-link>
-          <form @submit.prevent="search_producto" class="search-container">
-            <div class="input-group">
-              <input type="search" class="form-control" placeholder="TEF, Origen, Destino, Estado,..." v-model="searchQuery"
-                @input="handleSearchInput"/>
-              <span class="position-absolute top-50 start-0 translate-middle-y ps-2">
-                <i class="bi bi-search"></i>
-              </span>
-            </div>
-          </form>
+        </button>
+
+        <!-- Buscador moderno -->
+        <div class="ps-search-container">
+          <i class="bi bi-search ps-search-icon"></i>
+          <input
+            type="search"
+            class="ps-search-input"
+            placeholder="Origen, Destino, Producto, Locomotora"
+            v-model="searchQuery"
+            @input="handleSearchInput"
+          />
+          <div class="ps-search-border"></div>
         </div>
-        <!-- Tabla responsive con mejoras -->
-        <div class="table table-responsive">
-          <table class="table table-sm table-bordered table-hover">
-            <thead class="table-light">
-              <tr>
-                <th scope="col" style="width: 50px">No</th>
-                <th scope="col">TEF</th>
-                <th scope="col">Origen</th>
-                <th scope="col">Destino</th>
-                <th scope="col">Estado</th>
-                <th scope="col">Productos</th>
-                <th scope="col">Acciones</th>
-              </tr>
-              <tr v-if="!busqueda_existente && cargados_descargados.length != 0">
-                <td colspan="8" class="text-center text-muted py-4">
-                  <i class="bi bi-exclamation-circle fs-4"></i>
-                  <p class="mt-2">
-                    No se encontraron resultados para "{{ searchQuery }}"
-                  </p>
-                </td>
-              </tr>
-              <tr v-if="cargados_descargados.length == 0">
-                <td colspan="8" class="text-center text-muted py-4">
-                  <div class="ps-loading" v-if="loading">
-                    <div class="ps-spinner"></div>
-                    <span>Cargando registros...</span>
-                  </div>
-                  <div v-else>
-                    <i class="bi bi-database-exclamation fs-4"></i>
-                    <p class="mt-2">
-                      No hay registros
-                    </p>
-                    <router-link to="AdicionarVagonCargadoDescargado">
-                      <button class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-circle me-1"></i>Crear primer registro
-                      </button>
-                    </router-link>
-                  </div>
-                </td>
-              </tr>       
-            </thead>
-            <tbody>
-              <tr v-for="(vagon, index) in cargados_descargados" :key="vagon.id" class="align-middle">
-                <th scope="row">{{ index + 1 }}</th>
-                <td>{{ vagon.tipo_equipo_ferroviario_name }}</td>
-                <td>{{ vagon.origen }}</td>
-                <td>
-                  <span>
-                    {{ vagon.destino }}
-                  </span>
-                </td>
-                <td>{{ vagon.estado }}</td>
-                <td>{{ vagon.productos_list }}</td>
-                <td v-if="hasGroup('AdminUFC')">
-                  <div class="d-flex">
-                    <button @click="viewDetails(vagon)" class="btn btn-sm btn-outline-info me-2" title="Ver detalles">
-                      <i class="bi bi-eye-fill"></i>
-                    </button>
+      </div>
+    </div>
 
-                    <button @click="editVagon(vagon)" class="btn btn-sm btn-outline-warning me-2" title="Editar">
-                      <i class="bi bi-pencil-square"></i>
-                    </button>
-                    <button @click="confirmDelete(vagon.id)" class="btn btn-sm btn-outline-danger" title="Eliminar">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Modal de detalles -->
-        <div v-if="mostrarModalDetalles" class="ps-modal-overlay" @click.self="cerrarModalDetalles()">
-          <!-- Modal -->
-          <div class="ps-modal">
-            <!-- 1. Encabezado del Modal -->
-            <div class="ps-modal-header">
-              <div class="ps-modal-header-content">
-                <div class="ps-modal-icon-container">
-                  <i class="bi bi-info-circle-fill ps-modal-icon"></i>
+    <!-- Tarjeta contenedora de la tabla -->
+    <div class="ps-card">
+      <!-- Tabla con diseño moderno -->
+      <div class="ps-table-container">
+        <table class="ps-table">
+          <thead>
+            <tr>
+              <th class="ps-th" style="width: 50px">No</th>
+              <th class="ps-th">TEF</th>
+              <th class="ps-th">Origen</th>
+              <th class="ps-th">Destino</th>
+              <th class="ps-th">Estado</th>
+              <th class="ps-th">Productos</th>
+              <th class="ps-th ps-th-actions">Acciones</th>
+            </tr>
+            <tr v-if="!busqueda_existente">
+              <td colspan="7" class="ps-empty-td">
+                <div class="ps-empty-state">
+                  <i class="bi bi-exclamation-circle"></i>
+                  <h3>No se encontraron resultados</h3>
+                  <p>No encontramos coincidencias para "{{ searchQuery }}"</p>
                 </div>
-                <div>
-                  <h2>Detalles del Registro</h2>
-                  <p class="ps-modal-subtitle">
-                    Información completa del registro situado
-                  </p>
+              </td>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Estado de carga -->
+            <tr v-if="loading">
+              <td colspan="7" class="ps-loading-td">
+                <div class="ps-loading">
+                  <div class="ps-spinner"></div>
+                  <span>Cargando registros...</span>
                 </div>
-              </div>
-              <button class="ps-modal-close" @click="cerrarModalDetalles()">
-                <i class="bi bi-x-lg"></i>
-              </button>
-            </div>
+              </td>
+            </tr>
 
-            <!-- 2. Cuerpo del Modal -->
-            <div class="ps-modal-body">
-              <div class="ps-detail-grid">
-                
-                <!-- 2.1 Tarjeta - Información Básica -->
-                <div class="ps-detail-card">
-                  <div class="ps-detail-card-header">
-                    <i class="bi bi-tag-fill"></i>
-                    <h4>Información Básica</h4>
-                  </div>
-                  <div class="ps-detail-card-body">
-
-                    <!-- 2.1.2 Item - Origen -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Tipo Origen:</span>
-                      <span class="ps-detail-value">
-                        {{ vagonSeleccionado.tipo_origen_name || "N/A" }}
-                      </span>
-                    </div>
-                    
-                    <!-- 2.1.2 Item - Origen -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Origen:</span>
-                      <span class="ps-detail-value">
-                        {{ vagonSeleccionado.origen || "N/A" }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 2.2 Tarjeta - Estado,Operación y Producto -->
-                <div class="ps-detail-card">
-                  <div class="ps-detail-card-header">
-                    <i class="bi bi-clipboard2-data-fill"></i>
-                    <h4>Estado,Operación y Producto</h4>
-                  </div>
-                  <div class="ps-detail-card-body">
-                    
-                    <!-- 2.2.1 Item - Estado -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Estado:</span>
-                      <span class="ps-detail-value">
-                        <span :class="`ps-status ps-status-${getStatusClass(vagonSeleccionado.estado)}`">
-                          {{ vagonSeleccionado.estado || "N/A" }}
-                        </span>
-                      </span>
-                    </div>
-
-                    <!-- 2.2.2 Item - Operación -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Operación:</span>
-                      <span class="ps-detail-value">
-                        {{ vagonSeleccionado.operacion || "N/A" }}
-                      </span>
-                    </div>                    
-                    
-                    <!-- 2.2.3 Item - Productos (lista) -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Productos:</span>
-                      <span class="ps-detail-value">
-                        <template v-if="stringArray && stringArray .length > 0">
-                          <div v-for="producto in stringArray " class="producto-item">
-                            • {{ producto}}
-                          </div>
-                        </template>
-                        <span v-else>N/A</span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 2.3 Tarjeta - Cantidades (destacada) -->
-                <div class="ps-detail-card">
-                  <div class="ps-detail-card-header">
-                    <i class="bi bi-check-circle-fill"></i>
-                    <h4>Cantidades</h4>
-                  </div>
-                  <div class="ps-detail-card-body">
-                    
-                    <!-- 2.3.1 Item - Vagones -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Real Carga/Descarga:</span>
-                      <span class="ps-detail-value ps-highlight-value ps-badge-success">
-                        {{ vagonSeleccionado.real_carga_descarga|| "0" }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div class="ps-detail-card">
-                  <div class="ps-detail-card-header">
-                    <i class="bi bi-geo-alt-fill"></i>
-                    <h4>Destinos</h4>
-                  </div>
-                  <div class="ps-detail-card-body">
-                    
-                    <!-- 2.4.1 Item - Tipo Destino -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Tipo Destino:</span>
-                      <span class="ps-detail-value">
-                        {{ getTipoOrigenText(vagonSeleccionado.tipo_destino) || "N/A" }}
-                      </span>
-                    </div>
-                  </div>
-
-                  <!-- 2.4.2 Item - Destino -->
-                  <div class="ps-detail-item">
-                    <span class="ps-detail-label">Destino:</span>
-                    <span class="ps-detail-value">
-                      {{ vagonSeleccionado.destino || "N/A" }}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- 2.4 Tarjeta - Causas del Incumplimiento (ancho completo) -->
-                <div class="ps-detail-card ps-detail-card-full">
-                  <div class="ps-detail-card-header">
-                    <i class="bi bi-chat-square-text-fill"></i>
-                    <h4>Causas de Incumplimiento</h4>
-                  </div>
-                  <div class="ps-detail-card-body">
-                    
-                    <!-- 2.4.1 Item - Observaciones -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-value">
-                        {{ vagonSeleccionado.causas_incumplimiento || "Ninguna causa de incumplimiento registrada" }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 2.5 Tarjeta - Fecha de Creación -->
-                <div class="ps-detail-card">
-                  <div class="ps-detail-card-header">
-                    <i class="bi bi-calendar-event-fill"></i>
-                    <h4>Fecha de Creación</h4>
-                  </div>
-                  <div class="ps-detail-card-body">
-                    
-                    <!-- 2.5.1 Item - Fecha y Hora -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Fecha y Hora:</span>
-                      <span class="ps-detail-value">
-                        {{ vagonSeleccionado.fecha_registro}}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Paginación mejorada -->
-        <div class="d-flex justify-content-between align-items-center">
-          <div class="text-muted small">
-            Mostrando {{ cargados_descargados.length }} de
-            {{ totalItems }} registros
-          </div>
-          <nav aria-label="Page navigation">
-            <ul class="pagination pagination-sm mb-0">
-              <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                <button class="page-link" @click="previousPage">
-                  <i class="bi bi-chevron-left"></i>
-                </button>
-              </li>
-              <li class="page-item disabled">
-                <span class="page-link">
-                  Página {{ currentPage }} de
-                  {{ Math.ceil(totalItems / itemsPerPage) }}
+            <!-- Filas de datos -->
+            <tr
+              v-for="(vagon, index) in cargados_descargados"
+              :key="vagon.id"
+              class="ps-tr"
+            >
+              <td class="ps-td">{{ index + 1 }}</td>
+              <td class="ps-td">{{ vagon.tipo_equipo_ferroviario_name }}</td>
+              <td class="ps-td">{{ vagon.origen }}</td>
+              <td class="ps-td">{{ vagon.destino }}</td>
+              <td class="ps-td">
+                <span
+                  :class="`ps-status ps-status-${getStatusClass(vagon.estado)}`"
+                >
+                  {{ vagon.estado }}
                 </span>
-              </li>
-              <li class="page-item" :class="{ disabled: currentPage * itemsPerPage >= totalItems }">
-                <button class="page-link" @click="nextPage">
-                  <i class="bi bi-chevron-right"></i>
-                </button>
-              </li>
-            </ul>
-          </nav>
+              </td>
+              <td class="ps-td">{{ vagon.productos_list }}</td>
+
+              <!-- Acciones -->
+              <td v-if="hasGroup('AdminUFC')" class="ps-td">
+                <div class="d-flex">
+                  <button
+                    @click="viewDetails(vagon)"
+                    class="btn btn-sm btn-outline-info me-2"
+                    title="Ver detalles"
+                  >
+                    <i class="bi bi-eye-fill"></i>
+                  </button>
+
+                  <button
+                    @click="editVagon(vagon)"
+                    class="btn btn-sm btn-outline-warning me-2"
+                    title="Editar"
+                  >
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button
+                    @click="confirmDelete(vagon.id)"
+                    class="btn btn-sm btn-outline-danger"
+                    title="Eliminar"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Estado vacío -->
+            <tr
+              v-if="
+                !loading &&
+                cargados_descargados.length === 0 &&
+                busqueda_existente
+              "
+            >
+              <td colspan="7" class="ps-empty-td">
+                <div class="ps-empty-state">
+                  <i class="bi bi-database-exclamation"></i>
+                  <h3>No hay registros</h3>
+                  <p>
+                    No hay vagones cargados/descargados registrados actualmente
+                  </p>
+                  <router-link
+                    to="/AdicionarVagonCargadoDescargado"
+                    class="ps-empty-action"
+                    v-if="hasGroup('AdminUFC')"
+                  >
+                    <i class="bi bi-plus-circle"></i> Crear primer registro
+                  </router-link>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Paginación mejorada -->
+    <div
+      class="ps-pagination d-flex justify-content-between align-items-center"
+    >
+      <div class="ps-pagination-info">
+        Mostrando {{ Math.min(currentPage * itemsPerPage, totalItems) }} de
+        {{ totalItems }} registros
+      </div>
+      <nav aria-label="Navegación de páginas">
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item" :class="{ disabled: currentPage === 1 }">
+            <button class="page-link ps-pagination-btn" @click="previousPage">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+          </li>
+          <li class="page-item disabled">
+            <span class="page-link">
+              Página {{ currentPage }} de
+              {{ Math.ceil(totalItems / itemsPerPage) }}
+            </span>
+          </li>
+          <li
+            class="page-item"
+            :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
+          >
+            <button class="page-link ps-pagination-btn" @click="nextPage">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <!-- Modal de detalles - Versión mejorada -->
+    <div
+      v-if="mostrarModalDetalles"
+      class="ps-modal-overlay"
+      @click.self="cerrarModalDetalles"
+    >
+      <div class="ps-modal">
+        <div class="ps-modal-header">
+          <div class="ps-modal-header-content">
+            <div class="ps-modal-icon-container">
+              <i class="bi bi-info-circle-fill ps-modal-icon"></i>
+            </div>
+            <div>
+              <h2>Detalles del Vagón</h2>
+              <p class="ps-modal-subtitle">
+                Información completa del vagón cargado/descargado
+              </p>
+            </div>
+          </div>
+          <button class="ps-modal-close" @click="cerrarModalDetalles">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <div class="ps-modal-body" v-if="vagonSeleccionado">
+          <div class="ps-detail-grid">
+            <div class="ps-detail-card">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-tag-fill"></i>
+                <h4>Información Básica</h4>
+              </div>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Tipo de Equipo:</span>
+                  <span class="ps-detail-value">{{
+                    vagonSeleccionado.tipo_equipo_ferroviario_name || "N/A"
+                  }}</span>
+                </div>
+
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Origen:</span>
+                  <span class="ps-detail-value">{{
+                    vagonSeleccionado.origen || "N/A"
+                  }}</span>
+                </div>
+
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Destino:</span>
+                  <span class="ps-detail-value">{{
+                    vagonSeleccionado.destino || "N/A"
+                  }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ps-detail-card">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-clipboard2-data-fill"></i>
+                <h4>Estado y Fecha</h4>
+              </div>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Estado:</span>
+                  <span class="ps-detail-value">
+                    <span
+                      :class="`ps-status ps-status-${getStatusClass(
+                        vagonSeleccionado.estado
+                      )}`"
+                    >
+                      {{ vagonSeleccionado.estado || "N/A" }}
+                    </span>
+                  </span>
+                </div>
+
+                <div class="ps-detail-item">
+                  <span class="ps-detail-label">Fecha:</span>
+                  <span class="ps-detail-value">{{
+                    vagonSeleccionado.fecha || "N/A"
+                  }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ps-detail-card ps-detail-card-highlight">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-box-seam-fill"></i>
+                <h4>Productos</h4>
+              </div>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-value">
+                    <span v-if="vagonSeleccionado.productos_list">
+                      {{ vagonSeleccionado.productos_list }}
+                    </span>
+                    <span v-else>N/A</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ps-detail-card ps-detail-card-full">
+              <div class="ps-detail-card-header">
+                <i class="bi bi-chat-square-text-fill"></i>
+                <h4>Observaciones</h4>
+              </div>
+              <div class="ps-detail-card-body">
+                <div class="ps-detail-item">
+                  <span class="ps-detail-value">{{
+                    vagonSeleccionado.observaciones ||
+                    "Ninguna observación registrada"
+                  }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ps-modal-footer">
+          <button
+            class="ps-modal-btn ps-modal-btn-secondary"
+            @click="cerrarModalDetalles"
+          >
+            <i class="bi bi-x-circle"></i> Cerrar
+          </button>
         </div>
       </div>
     </div> 
@@ -307,11 +316,17 @@ import Swal from "sweetalert2";
 
 export default {
   name: "CargadosDescargados",
-
+  props: {
+    informeID: {
+      type: Number,
+      required: false,
+    },
+  },
   data() {
     return {
       cargados_descargados: [], // Lista de vagones
       allRecords: [], // Copia completa de todos los registros para filtrado local
+      habilitado: true,
       currentPage: 1,
       itemsPerPage: 10,
       totalItems: 0,
@@ -338,22 +353,6 @@ export default {
   },
 
   methods: {
-    getTipoOrigenText(id) {
-      const option = this.tipo_origen_options.find((o) => o.id === id);
-      return option ? option.text : id;
-    },
-    getStatusClass(status) {
-      if (!status) return "default";
-      const statusLower = status.toLowerCase();
-
-      if (statusLower.includes("activo")) return "success";
-      if (statusLower.includes("pendiente")) return "warning";
-      if (statusLower.includes("inactivo") || statusLower.includes("cancelado"))
-        return "danger";
-
-      return "info";
-    },
-
     hasGroup(group) {
       return this.userGroups.some((g) => g.name === group);
     },
@@ -368,36 +367,6 @@ export default {
     cerrarModalDetalles() {
       this.mostrarModalDetalles = false;
       this.vagonSeleccionado = null;
-    },
-
-    convertCharsToStrings(item) {
-      // Convertir el string en arreglo de caracteres, manteniendo espacios
-      this.charArray = item.productos_list.split('');
-      
-      let currentWord = '';
-      this.stringArray = [];
-      
-      for (const char of this.charArray) {
-        if (char === ',') {
-          // Al encontrar coma, guardar la palabra actual (incluso si está vacía)
-          this.stringArray.push(currentWord);
-          currentWord = '';
-        } else {
-          // Agregar el carácter a la palabra actual (incluyendo espacios)
-          currentWord += char;
-        }
-      }
-      
-      // Añadir la última palabra si existe (puede ser vacía)
-      if (currentWord !== '' || this.charArray[this.charArray.length - 1] === ',') {
-        this.stringArray.push(currentWord);
-      }
-      
-      // Opcional: eliminar espacios en blanco al inicio/final de cada palabra
-      this.stringArray = this.stringArray.map(word => word.trim());
-      
-      // Opcional: filtrar palabras vacías si no se desean
-      // this.stringArray = this.stringArray.filter(word => word !== '');
     },
 
     async fetchUserPermissionsAndGroups() {
@@ -418,31 +387,17 @@ export default {
     async getVagonesCargadosDescargados() {
       this.loading = true;
       try {
-        const today = new Date();
-        const fechaFormateada = `${today.getFullYear()}-${String(
-          today.getMonth() + 1
-        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-        const infoID = await axios.get(
-          `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
-        );
-        if (infoID.data.existe) {
-          //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
-          const response = await axios.get(
-            "/ufc/vagones-cargados-descargados/",
-            {
-              params: {
-                page: this.currentPage,
-                page_size: this.itemsPerPage,
-                informe: infoID.data.id,
-              },
-            }
-          );
+        const response = await axios.get("/ufc/vagones-cargados-descargados/", {
+          params: {
+            page: this.currentPage,
+            page_size: this.itemsPerPage,
+          },
+        });
 
-          this.cargados_descargados = response.data.results;
-          this.allRecords = [...response.data.results]; // Guardar copia completa para filtrado
-          this.totalItems = response.data.count;
-          this.busqueda_existente = true;
-        }
+        this.cargados_descargados = response.data.results;
+        this.allRecords = [...response.data.results]; // Guardar copia completa para filtrado
+        this.totalItems = response.data.count;
+        this.busqueda_existente = true;
       } catch (error) {
         console.error(
           "Error al obtener los vagones cargados/descargados:",
@@ -452,17 +407,6 @@ export default {
       } finally {
         this.loading = false;
       }
-    },
-    getStatusClass(status) {
-      if (!status) return "default";
-      const statusLower = status.toLowerCase();
-
-      if (statusLower.includes("activo")) return "success";
-      if (statusLower.includes("pendiente")) return "warning";
-      if (statusLower.includes("inactivo") || statusLower.includes("cancelado"))
-        return "danger";
-
-      return "info";
     },
 
     // Nuevo método de búsqueda adaptado del componente que funciona
@@ -553,23 +497,6 @@ export default {
       });
     },
 
-    async delete_tren(id) {
-      try {
-        await axios.delete(`/ufc/vagones-cargados-descargados/${id}/`);
-        this.cargados_descargados = this.cargados_descargados.filter(
-          (objeto) => objeto.id !== id
-        );
-        Swal.fire(
-          "Eliminado!",
-          "El producto ha sido eliminado exitosamente.",
-          "success"
-        );
-      } catch (error) {
-        console.error("Error al eliminar el producto:", error);
-        Swal.fire("Error", "Hubo un error al eliminar el producto.", "error");
-      }
-    },
-
     confirmDelete(id) {
       Swal.fire({
         title: "¿Estás seguro?",
@@ -602,16 +529,71 @@ export default {
       console.error(errorMsg, error);
       Swal.fire("Error", errorMsg, "error");
     },
+    showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
+      });
+    },
   },
 };
 </script>
 
 <style scoped>
-
-.card-header {
-  background-color: #f8f9fa;
-  border-bottom: 2px solid #e0e0e0 !important;
-  padding: 0.75rem 1.25rem;
+/* Variables de color */
+:root {
+  --ps-primary: #4361ee;
+  --ps-primary-hover: #3a56d4;
+  --ps-secondary: #3f37c9;
+  --ps-accent: #4895ef;
+  --ps-danger: #f72585;
+  --ps-success: #4cc9f0;
+  --ps-warning: #f8961e;
+  --ps-info: #4895ef;
+  --ps-light: #f8f9fa;
+  --ps-dark: #212529;
+  --ps-gray: #6c757d;
+  --ps-light-gray: #e9ecef;
+  --ps-border-radius: 12px;
+  --ps-box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  --ps-transition: all 0.3s ease;
 }
 
 /* Estilos para el contenedor del buscador */
@@ -983,178 +965,6 @@ export default {
   height: 36px;
 }
 
-.modal-body {
-  margin-bottom: 20px;
-}
-
-/* Estilos para el icono de agregar */
-.btn-link {
-  color: #007bff; /* Color azul para el icono */
-  text-decoration: none; /* Sin subrayado */
-}
-
-.btn-link:hover {
-  color: #0056b3; /* Color azul más oscuro al pasar el mouse */
-}
-
-.search-container {
-  position: relative;
-  width: 100%;
-  max-width: 300px;
-}
-
-.search-container input {
-  padding-left: 2.5rem !important; /* Espacio para el icono */
-  border-radius: 20px !important;
-}
-
-.search-container .bi-search {
-  color: #6c757d; /* Color gris para el icono */
-  z-index: 10;
-}
-
-/* Para asegurar que el input group conserve los estilos */
-.input-group {
-  width: 100%;
-}
-
-/* Estados de carga y vacío */
-.ps-loading-td,
-.ps-empty-td {
-  padding: 3rem !important;
-}
-
-.ps-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  color: var(--ps-gray);
-}
-
-.ps-spinner {
-  width: 3rem;
-  height: 3rem;
-  border: 4px solid rgba(67, 97, 238, 0.1);
-  border-top-color: var(--ps-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-/* Tabla */
-.table {
-  font-size: 0.875rem;
-}
-
-.table thead th {
-  background-color: #f8f9fa;
-  border-color: #dee2e6;
-  color: #495057;
-  font-weight: 500;
-}
-
-.table tbody tr:hover {
-  background-color: #f8f9fa;
-}
-
-/* Modal mejorado */
-.ps-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
-  animation: fadeIn 0.3s ease-out;
-}
-
-.ps-modal {
-  background: white;
-  border-radius: var(--ps-border-radius);
-  width: 90%;
-  max-width: 800px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-  border-radius:10px;
-  animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-  overflow: hidden;
-}
-
-.ps-modal-header {
-  padding: 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color:#0d6efd;
-  color: white;
-  position: relative;
-}
-
-.ps-modal-header::after {
-  content: "";
-  position: absolute;
-  bottom: -10px;
-  left: 0;
-  width: 100%;
-  height: 20px;
-  background: linear-gradient(to bottom, rgba(67, 97, 238, 0.2), transparent);
-}
-
-.ps-modal-header-content {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.ps-modal-icon-container {
-  background: rgba(23, 25, 184, 0.2);
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.ps-modal-icon {
-  font-size: 1.5rem;
-}
-
-.ps-modal h2 {
-  margin: 0;
-  font-size: 1.4rem;
-}
-
-.ps-modal-subtitle {
-  margin: 0.25rem 0 0;
-  font-size: 0.9rem;
-  opacity: 0.9;
-  font-weight: 400;
-}
-
-.ps-modal-close {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 50%;
-  transition: var(--ps-transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-}
-
 .ps-modal-close:hover {
   background: rgba(255, 255, 255, 0.3);
   transform: rotate(90deg);
@@ -1188,8 +998,7 @@ export default {
 
 .ps-detail-card-header {
   padding: 1rem;
-  background-color:#0d6efd;
-  color: white;
+  background: linear-gradient(to right, #f8f9fa, white);
   border-bottom: 1px solid var(--ps-light-gray);
   display: flex;
   align-items: center;
@@ -1327,12 +1136,42 @@ export default {
   .card-body {
     padding: 1rem;
   }
-  
-  .btn {
+
+  .ps-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .ps-search-container {
     width: 100%;
   }
-  
-  .d-flex {
+
+  .ps-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .cargado-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .ps-title {
+    font-size: 1.5rem;
+  }
+
+  .ps-modal {
+    width: 95%;
+  }
+
+  .ps-modal-body {
+    padding: 1.25rem 1rem;
+  }
+
+  .ps-modal-footer {
+    padding: 1rem;
     flex-direction: column;
     gap: 0.5rem !important;
   }

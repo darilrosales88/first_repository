@@ -3,67 +3,111 @@
     <div class="card border">
       <div class="card-header bg-light border-bottom">
         <h5 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-clipboard-data me-2"></i>Registros de operaciones - UFC
+          <i class="bi bi-clipboard-data me-2"></i>Registros de operaciones UFC
         </h5>
       </div>
 
       <div class="card-body p-3">
         <form @submit.prevent="submitForm">
-          <!-- Fila 2 - Modificada para mejor responsividad -->
-          <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3 mb-4">
-            <div class="col">
+          <!-- Fila 1 -->
+          <div class="row mb-3 g-2">
+            <div class="col-md-6">
               <div class="form-group">
-                <label for="planMensualTotal" class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-calendar-month me-2 text-primary"></i>Plan Mensual Total
+                <label
+                  for="fechaActual"
+                  class="form-label small fw-semibold text-secondary"
+                >
+                  <i class="bi bi-calendar-check me-2 text-primary"></i>Fecha
+                  Actual
                 </label>
-                <input 
-                  type="number" 
-                  class="form-control form-control-sm border-secondary mt-2" 
-                  id="planMensualTotal" 
-                  v-model="formData.plan_mensual_total"
-                  :disabled="isExistingRecord">
+                <input
+                  type="date"
+                  class="form-control form-control-sm border-secondary"
+                  id="fechaActual"
+                  v-model="formData.fecha_actual"
+                  required
+                  :disabled="isExistingRecord"
+                />
               </div>
             </div>
+          </div>
 
-            <div class="col">
+          <!-- Fila 2 -->
+          <div class="row mb-3 g-2">
+            <div class="col-md-6">
               <div class="form-group">
-                <label for="planDiarioTotal" class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-calendar-day me-2 text-primary"></i>Plan Diario Total
-                </label>
-                <input 
-                  type="number" 
-                  class="form-control form-control-sm border-secondary mt-2" 
-                  id="planDiarioTotal" 
-                  v-model="formData.plan_diario_total_vagones_cargados"
-                  :disabled="isExistingRecord">
-              </div>
-            </div>
-
-            <div class="col">
-              <div class="form-group">
-                <label for="realTotalVagones" class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-train-freight-front me-2 text-primary"></i>Real Total Vagones
-                </label>
-                <input 
-                  type="number" 
-                  class="form-control form-control-sm border-secondary mt-2"
-                  id="realTotalVagones" 
-                  v-model="formData.real_total_vagones_cargados"
-                  :disabled="isExistingRecord">
-              </div>
-            </div>
-
-            <div class="col">
-              <div class="form-group">
-                <label for="totalVagonesSituados" class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-pin-map me-2 text-primary"></i>Total Vagones Situados
+                <label
+                  for="planMensualTotal"
+                  class="form-label small fw-semibold text-secondary"
+                >
+                  <i class="bi bi-calendar-month me-2 text-primary"></i>Plan
+                  Mensual Total
                 </label>
                 <input
                   type="number"
-                  class="form-control form-control-sm border-secondary mt-2"
+                  class="form-control form-control-sm border-secondary"
+                  id="planMensualTotal"
+                  v-model="formData.plan_mensual_total"
+                  :disabled="isExistingRecord"
+                />
+              </div>
+            </div>
+
+            <div class="col">
+              <div class="form-group">
+                <label
+                  for="planDiarioTotal"
+                  class="form-label small fw-semibold text-secondary"
+                >
+                  <i class="bi bi-calendar-day me-2 text-primary"></i>Plan
+                  Diario Total Vagones Cargados
+                </label>
+                <input
+                  type="number"
+                  class="form-control form-control-sm border-secondary"
+                  id="planDiarioTotal"
+                  v-model="formData.plan_diario_total_vagones_cargados"
+                  :disabled="isExistingRecord"
+                />
+              </div>
+            </div>
+          </div>
+
+            <div class="col">
+              <div class="form-group">
+                <label
+                  for="realTotalVagones"
+                  class="form-label small fw-semibold text-secondary"
+                >
+                  <i class="bi bi-train-freight-front me-2 text-primary"></i
+                  >Real Total Vagones Cargados
+                </label>
+                <input
+                  type="number"
+                  class="form-control form-control-sm border-secondary"
+                  id="realTotalVagones"
+                  v-model="formData.real_total_vagones_cargados"
+                  :disabled="isExistingRecord"
+                />
+              </div>
+            </div>
+
+            <div class="col">
+              <div class="form-group">
+                <label
+                  for="totalVagonesSituados"
+                  class="form-label small fw-semibold text-secondary"
+                >
+                  <i class="bi bi-pin-map me-2 text-primary"></i>Total de
+                  Vagones Situados
+                </label>
+                <input
+                  type="number"
+                  class="form-control form-control-sm border-secondary"
                   id="totalVagonesSituados"
                   v-model="formData.total_vagones_situados"
-                  :disabled="isExistingRecord"/>
+                  :disabled="isExistingRecord"
+                />
               </div>
             </div>
           </div>
@@ -72,36 +116,50 @@
           <div class="row row-cols-1 row-cols-md-2 g-3 mb-4">
             <div class="col">
               <div class="form-group">
-                <label for="planTotalAcumulado" class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-graph-up me-2 text-primary"></i>Plan Total Acumulado
+                <label
+                  for="planTotalAcumulado"
+                  class="form-label small fw-semibold text-secondary"
+                >
+                  <i class="bi bi-graph-up me-2 text-primary"></i>Plan Total
+                  Acumulado Actual
                 </label>
-                <input 
-                  type="number" 
-                  class="form-control form-control-sm border-secondary" 
-                  id="planTotalAcumulado" 
+                <input
+                  type="number"
+                  class="form-control form-control-sm border-secondary"
+                  id="planTotalAcumulado"
                   v-model="formData.plan_total_acumulado_actual"
-                  :disabled="isExistingRecord">
+                  :disabled="isExistingRecord"
+                />
               </div>
             </div>
 
             <div class="col">
               <div class="form-group">
-                <label for="realTotalAcumulado" class="form-label small fw-semibold text-secondary">
-                  <i class="bi bi-graph-up-arrow me-2 text-primary"></i>Real Total Acumulado
+                <label
+                  for="realTotalAcumulado"
+                  class="form-label small fw-semibold text-secondary"
+                >
+                  <i class="bi bi-graph-up-arrow me-2 text-primary"></i>Real
+                  Total Acumulado Actual
                 </label>
-                <input 
-                  type="number" 
-                  class="form-control form-control-sm border-secondary" 
-                  id="realTotalAcumulado" 
+                <input
+                  type="number"
+                  class="form-control form-control-sm border-secondary"
+                  id="realTotalAcumulado"
                   v-model="formData.real_total_acumulado_actual"
-                  :disabled="isExistingRecord">
+                  :disabled="isExistingRecord"
+                />
               </div>
             </div>
           </div>
 
           <!-- Botones -->
-          <div class="d-flex justify-content-end gap-2 mt-4">            
-            <button type="submit" class="btn btn-sm btn-primary" :disabled="isExistingRecord || isLoading">
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button
+              type="submit"
+              class="btn btn-sm btn-primary"
+              :disabled="isExistingRecord || isLoading"
+            >
               <i class="bi bi-save me-1"></i>Guardar
             </button>
           </div>
@@ -117,19 +175,12 @@ import axios from 'axios';
 
 export default {
   name: "InfOperative",
-  props: {
-    fechaActual: {
-      type: Date,
-      required: true,
-    },
-  },
   data() {
     return {
       informeOperativoId: null,
       isExistingRecord: false,
-      informeOperativoId: null,
-      fecha_actual:this.fechaActual,
       formData: {
+        fecha_actual: "",
         plan_mensual_total: 0,
         plan_diario_total_vagones_cargados: 0,
         real_total_vagones_cargados: 0,
@@ -145,11 +196,15 @@ export default {
     };
   },
   async mounted() {
-    // Check for existing record on load
-    console.log(this.fecha_actual)
-    await this.checkExistingRecord();
+    // Obtener la fecha actual en formato YYYY-MM-DD según la zona horaria local
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000; // offset en milisegundos
+    const localISOTime = new Date(now - offset).toISOString().split("T")[0];
+    this.formData.fecha_actual = localISOTime;
+    await this.obtenerUsername(); //Busca el nombre del usuario
 
-    // Configurar el intervalo para verificar cada 10 segundos
+    // Check for existing record on load
+    await this.checkExistingRecord();
   },
 
   beforeUnmount() {
@@ -158,6 +213,7 @@ export default {
       clearInterval(this.checkInterval);
     }
   },
+
   methods: {
     visualizarInforme() {
       if (this.informeOperativoId) {
@@ -173,25 +229,23 @@ export default {
       try {
         // Enviar la fecha ya ajustada a la vista para ver si existe el parte
         const response = await axios.get("/ufc/verificar-informe-existente/", {
-          params: { fecha_operacion: this.fechaActual },
+          params: { fecha_operacion: this.formData.fecha_actual },
         });
 
         if (response.data.existe) {
           this.informeOperativoId = response.data.id;
           this.isExistingRecord = true;
 
-          this.$emit('record-status-changed', {
-            isExisting: true,
-          });
-
           // Cargar datos del informe creado
           const recordResponse = await axios.get(
-            `/ufc/informe-operativo/${this.informeOperativoId}/`
+            `/ufc/informe-operativo/${
+              this.informeID ? this.informeID : this.informeOperativoId
+            }/`
           );
 
           // Formatear la fecha para mostrar solo YYYY-MM-DD
           if (recordResponse.data.fecha_operacion) {
-            this.fecha_actual= recordResponse.data.fecha_operacion;
+            this.formData.fecha_actual = recordResponse.data.fecha_operacion;
             const today = new Date();
             const fechaFormateada = `${today.getFullYear()}-${String(
               today.getMonth() + 1
@@ -263,46 +317,65 @@ export default {
           isExisting: true,
         });
 
-        await Swal.fire({
-          title: "¡Éxito!",
-          text: "Los datos operativos se han guardado correctamente.",
-          icon: "success",
-          confirmButtonText: "Aceptar",
+        this.$emit("record-status-changed", {
+          isExisting: true,
         });
+        
+        this.showSuccessToast("Informe creado correctamente");
       } catch (error) {
         console.error("Error al guardar operación:", error);
-
+        this.showErrorToast("Error al crear el informe");
         let errorMessage = "Ocurrió un error al guardar los datos.";
         if (error.response?.data) {
           errorMessage = Object.values(error.response.data).join("<br>");
         }
-
-        await Swal.fire({
-          title: "Error",
-          html: errorMessage,
-          icon: "error",
-          confirmButtonText: "Entendido",
-        });
       } finally {
         this.isLoading = false;
       }
     },
+        showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
+      });
+    },
   },
 };
 </script>
-<style scoped>
-/* Estilos responsivos adicionales */
-@media (max-width: 768px) {
-  .form-label {
-    font-size: 0.8rem;
-  }
-  
-  .form-control {
-    font-size: 0.9rem;
-  }
-  
-  .card-body {
-    padding: 1rem !important;
-  }
-}
-</style>

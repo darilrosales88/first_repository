@@ -33,7 +33,7 @@
               <th class="io-th">Fecha</th>
               <th class="io-th">Hora</th>
               <th class="io-th">Tipo de Parte</th>
-              <th class="io-th">Entidad</th>
+              <th class="io-th">Provincia</th>
               <th class="io-th">Estado</th>
               <th class="io-th">Creado por</th>
               <th class="io-th">Aprobado por</th>
@@ -65,7 +65,9 @@
               </td>
               <td class="io-td">Informe operativo</td>
               <td class="io-td">
-                {{ informe.entidad_detalle || "-" }}
+                {{
+                  informe.creado_por_detalle?.provincia.nombre_provincia || "-"
+                }}
               </td>
               <td class="io-td">
                 <span
@@ -87,233 +89,214 @@
                 }}<!-- Uso de operador ternario una talla -->
               </td>
 
-              <!-- Acciones -->
-              <td class="io-td io-td-actions">
-                <div class="d-flex">
-                  <button
-                    @click="viewDetails(informe)"
-                    class="btn btn-sm btn-outline-info me-2"
-                    title="Ver detalles"
-                  >
-                    <i class="bi bi-eye-fill"></i>
-                  </button>
-                  <!-- <router-link
-                    :to="{
-                      name: 'EditarInformeOperativo',
-                      params: { id: informe.id },
-                    }"
-                    class="btn btn-sm btn-outline-warning me-2"
-                    title="Editar"
-                    v-if="informe.estado_parte !== 'Aprobado'"
-                  >
-                    <i class="bi bi-pencil-square"></i>
-                  </router-link> -->
-                  <button
-                    @click="confirmDelete(informe.id)"
-                    class="btn btn-sm btn-outline-danger"
-                    title="Eliminar"
-                    :disabled="loading || informe.estado_parte === 'Aprobado'"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-
-            <!-- Estado vacío -->
-            <tr v-if="!loading && filteredRecords.length === 0">
-              <td colspan="8" class="io-empty-td">
-                <div class="io-empty-state">
-                  <i class="bi bi-database-exclamation"></i>
-                  <h3>
-                    {{
-                      searchQuery ? "No hay coincidencias" : "No hay informes"
-                    }}
-                  </h3>
-                  <p>
-                    {{
-                      searchQuery
-                        ? `No encontramos resultados para "${searchQuery}"`
-                        : "No hay informes operativos registrados"
-                    }}
-                  </p>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Paginación -->
-    <div class="io-pagination">
-      <div class="text-muted small">
-        Mostrando {{ filteredRecords.length }} de {{ totalItems }} registros
-      </div>
-      <nav aria-label="Page navigation">
-        <ul class="pagination pagination-sm mb-0">
-          <li class="page-item" :class="{ disabled: currentPage === 1 }">
-            <button class="page-link" @click="previousPage">
-              <i class="bi bi-chevron-left"></i>
-            </button>
-          </li>
-          <li class="page-item disabled">
-            <span class="page-link">
-              Página {{ currentPage }} de
-              {{ Math.ceil(totalItems / itemsPerPage) }}
-            </span>
-          </li>
-          <li
-            class="page-item"
-            :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
-          >
-            <button class="page-link" @click="nextPage">
-              <i class="bi bi-chevron-right"></i>
-            </button>
-          </li>
-        </ul>
-      </nav>
-    </div>
-
-    <!-- Modal de detalles -->
-    <div
-      v-if="showDetailsModal"
-      class="io-modal-overlay"
-      @click.self="closeDetailsModal"
-    >
-      <div class="io-modal">
-        <div class="io-modal-header">
-          <div class="io-modal-header-content">
-            <div class="io-modal-icon-container">
-              <i class="bi bi-clipboard-data io-modal-icon"></i>
-            </div>
-            <div>
-              <h2>Detalles del Informe Operativo</h2>
-              <p class="io-modal-subtitle">
-                Información completa del parte seleccionado
-              </p>
-            </div>
-          </div>
-          <button class="io-modal-close" @click="closeDetailsModal">
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </div>
-
-        <div class="io-modal-body">
-          <div class="io-detail-grid">
-            <div class="io-detail-card">
-              <div class="io-detail-card-header">
-                <i class="bi bi-calendar-date"></i>
-                <h4>Información General</h4>
-              </div>
-              <div class="io-detail-card-body">
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Fecha:</span>
-                  <span class="io-detail-value">{{
-                    formatFullDate(currentInforme.fecha_operacion) || "N/A"
-                  }}</span>
-                </div>
-
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Tipo de parte:</span>
-                  <span class="io-detail-value">Informe Operativo Diario</span>
-                </div>
-
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Estado:</span>
-                  <span class="io-detail-value">
-                    <span
-                      :class="`io-status io-status-${getStatusClass(
-                        currentInforme.estado_parte
-                      )}`"
+                <!-- Acciones -->
+                <td>
+                  <div class="d-flex">
+                    <router-link
+                      :to="{
+                        name: 'VisualizarInfoOperative',
+                        params: { id: informe.id },
+                      }"
+                      class="btn btn-sm btn-outline-info me-2"
+                      title="Editar"
                     >
-                      {{ currentInforme.estado_parte || "N/A" }}
+                      <i class="bi bi-eye-fill"></i>
+                    </router-link>
+                    <!-- <button
+                      @click="viewDetails(informe)"
+                      class="btn btn-sm btn-outline-info me-2"
+                      title="Ver detalles"
+                    >
+                      <i class="bi bi-eye-fill"></i>
+                    </button> -->
+
+                    <!-- <router-link :to="{ name: 'EditarInformeOperativo', params: { id: informe.id },}" class="btn btn-sm btn-outline-warning me-2" title="Editar"
+                    v-if="informe.estado_parte !== 'Aprobado'">
+                      <i class="bi bi-pencil-square"></i>
+                    </router-link> -->
+
+                    <button
+                      @click="confirmDelete(informe.id)"
+                      class="btn btn-sm btn-outline-danger"
+                      title="Eliminar"
+                      :disabled="loading || informe.estado_parte === 'Aprobado'"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Paginación -->
+      <div class="io-pagination">
+        <div class="text-muted small">
+          Mostrando {{ filteredRecords.length }} de {{ totalItems }} registros
+        </div>
+        <nav aria-label="Page navigation">
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" :class="{ disabled: currentPage === 1 }">
+              <button class="page-link" @click="previousPage">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+            </li>
+            <li class="page-item disabled">
+              <span class="page-link">
+                Página {{ currentPage }} de
+                {{ Math.ceil(totalItems / itemsPerPage) }}
+              </span>
+            </li>
+            <li
+              class="page-item"
+              :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
+            >
+              <button class="page-link" @click="nextPage">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+      <!-- Modal de detalles -->
+      <div
+        v-if="showDetailsModal"
+        class="io-modal-overlay"
+        @click.self="closeDetailsModal"
+      >
+        <div class="io-modal">
+          <div class="io-modal-header">
+            <div class="io-modal-header-content">
+              <div class="io-modal-icon-container">
+                <i class="bi bi-clipboard-data io-modal-icon"></i>
+              </div>
+              <div>
+                <h2>Detalles del Informe Operativo</h2>
+                <p class="io-modal-subtitle">
+                  Información completa del parte seleccionado
+                </p>
+              </div>
+            </div>
+            <button class="io-modal-close" @click="closeDetailsModal">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+          <div class="io-modal-body">
+            <div class="io-detail-grid">
+              <div class="io-detail-card">
+                <div class="io-detail-card-header">
+                  <i class="bi bi-calendar-date"></i>
+                  <h4>Información General</h4>
+                </div>
+                <div class="io-detail-card-body">
+                  <div class="io-detail-item">
+                    <span class="io-detail-label">Fecha:</span>
+                    <span class="io-detail-value">{{
+                      formatFullDate(currentInforme.fecha_operacion) || "N/A"
+                    }}</span>
+                  </div>
+
+                  <div class="io-detail-item">
+                    <span class="io-detail-label">Tipo de parte:</span>
+                    <span class="io-detail-value"
+                      >Informe Operativo Diario</span
+                    >
+                  </div>
+
+                  <div class="io-detail-item">
+                    <span class="io-detail-label">Estado:</span>
+                    <span class="io-detail-value">
+                      <span
+                        :class="`io-status io-status-${getStatusClass(
+                          currentInforme.estado_parte
+                        )}`"
+                      >
+                        {{ currentInforme.estado_parte || "N/A" }}
+                      </span>
                     </span>
-                  </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div class="io-detail-card">
-              <div class="io-detail-card-header">
-                <i class="bi bi-person-lines-fill"></i>
-                <h4>Responsables</h4>
-              </div>
-              <div class="io-detail-card-body">
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Creado por:</span>
-                  <span class="io-detail-value">{{
-                    currentInforme.creado_por_detalle?.first_name || "N/A"
-                  }}</span>
+              <div class="io-detail-card">
+                <div class="io-detail-card-header">
+                  <i class="bi bi-person-lines-fill"></i>
+                  <h4>Responsables</h4>
                 </div>
+                <div class="io-detail-card-body">
+                  <div class="io-detail-item">
+                    <span class="io-detail-label">Creado por:</span>
+                    <span class="io-detail-value">{{
+                      currentInforme.creado_por_detalle?.first_name || "N/A"
+                    }}</span>
+                  </div>
 
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Aprobado por:</span>
-                  <span class="io-detail-value">{{
-                    currentInforme.aprobado_por_detalle?.first_name || "N/A"
-                  }}</span>
+                  <div class="io-detail-item">
+                    <span class="io-detail-label">Aprobado por:</span>
+                    <span class="io-detail-value">{{
+                      currentInforme.aprobado_por_detalle?.first_name || "N/A"
+                    }}</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div class="io-detail-card">
-              <div class="io-detail-card-header">
-                <i class="bi bi-geo-alt-fill"></i>
-                <h4>Ubicación</h4>
-              </div>
-              <div class="io-detail-card-body">
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Provincia:</span>
-                  <span class="io-detail-value">{{
-                    currentInforme?.creado_por_detalle?.provincia
-                      .nombre_provincia || "N/A"
-                  }}</span>
+              <div class="io-detail-card">
+                <div class="io-detail-card-header">
+                  <i class="bi bi-geo-alt-fill"></i>
+                  <h4>Ubicación</h4>
+                </div>
+                <div class="io-detail-card-body">
+                  <div class="io-detail-item">
+                    <span class="io-detail-label">Provincia:</span>
+                    <span class="io-detail-value">{{
+                      currentInforme?.creado_por_detalle?.provincia
+                        .nombre_provincia || "N/A"
+                    }}</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div class="io-detail-card io-detail-card-full">
-              <div class="io-detail-card-header">
-                <i class="bi bi-bar-chart-line-fill"></i>
-                <h4>Métricas</h4>
-              </div>
-              <div class="io-detail-card-body">
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Plan Mensual Total:</span>
-                  <span class="io-detail-value">{{
-                    currentInforme.plan_mensual_total || "0"
-                  }}</span>
+              <div class="io-detail-card io-detail-card-full">
+                <div class="io-detail-card-header">
+                  <i class="bi bi-bar-chart-line-fill"></i>
+                  <h4>Métricas</h4>
                 </div>
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Vagones Cargados (Plan):</span>
-                  <span class="io-detail-value">{{
-                    currentInforme.plan_diario_total_vagones_cargados || "0"
-                  }}</span>
-                </div>
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Vagones Cargados (Real):</span>
-                  <span class="io-detail-value">{{
-                    currentInforme.real_total_vagones_cargados || "0"
-                  }}</span>
-                </div>
-                <div class="io-detail-item">
-                  <span class="io-detail-label">Vagones Situados:</span>
-                  <span class="io-detail-value">{{
-                    currentInforme.total_vagones_situados || "0"
-                  }}</span>
+                <div class="io-detail-card-body">
+                  <div class="io-detail-item">
+                    <span class="io-detail-label">Plan Mensual Total:</span>
+                    <span class="io-detail-value">{{
+                      currentInforme.plan_mensual_total || "0"
+                    }}</span>
+                  </div>
+                  <div class="io-detail-item">
+                    <span class="io-detail-label"
+                      >Vagones Cargados (Plan):</span
+                    >
+                    <span class="io-detail-value">{{
+                      currentInforme.plan_diario_total_vagones_cargados || "0"
+                    }}</span>
+                  </div>
+                  <div class="io-detail-item">
+                    <span class="io-detail-label"
+                      >Vagones Cargados (Real):</span
+                    >
+                    <span class="io-detail-value">{{
+                      currentInforme.real_total_vagones_cargados || "0"
+                    }}</span>
+                  </div>
+                  <div class="io-detail-item">
+                    <span class="io-detail-label">Vagones Situados:</span>
+                    <span class="io-detail-value">{{
+                      currentInforme.total_vagones_situados || "0"
+                    }}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="io-modal-footer">
-          <button
-            class="io-modal-btn io-modal-btn-secondary"
-            @click="closeDetailsModal"
-          >
-            <i class="bi bi-x-circle"></i> Cerrar
-          </button>
         </div>
       </div>
     </div>
@@ -437,7 +420,6 @@ export default {
         this.totalItems = response.data.count;
       } catch (error) {
         console.error("Error al buscar informes", error);
-        this.showErrorToast("Error al buscar informes");
       } finally {
         this.loading = false;
       }
@@ -466,7 +448,7 @@ export default {
 
     async viewDetails(informe) {
       this.loading = true;
-      try {
+      /*       try {
         const response = await axios.get(
           `/ufc/informe-operativo/${informe.id}/`
         );
@@ -477,7 +459,7 @@ export default {
         this.showErrorToast("No se pudieron cargar los detalles completos");
       } finally {
         this.loading = false;
-      }
+      } */
     },
 
     closeDetailsModal() {
@@ -806,26 +788,102 @@ export default {
 }
 
 /* Estados de carga y vacío */
-.io-loading-td,
-.io-empty-td {
+.ps-loading-td,
+.ps-empty-td {
   padding: 3rem !important;
 }
 
-.io-loading {
+.ps-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  color: var(--io-gray);
+  color: var(--ps-gray);
 }
 
-.io-spinner {
+.ps-spinner {
   width: 3rem;
   height: 3rem;
   border: 4px solid rgba(67, 97, 238, 0.1);
-  border-top-color: var(--io-primary);
+  border-top-color: var(--ps-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+/* Estilos para el contenedor del buscador */
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 300px; /* Ancho máximo del buscador */
+}
+
+/* Estilos para el input del buscador */
+.search-container input {
+  padding-right: 40px; /* Espacio para el icono de lupa */
+  border-radius: 20px; /* Bordes redondeados */
+}
+
+/* Estilos para el icono de lupa */
+.search-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888; /* Color del icono */
+  pointer-events: none; /* Evita que el icono interfiera con el input */
+}
+
+/* Estilos para la tabla responsive */
+.table-responsive {
+  overflow-x: auto; /* Permite desplazamiento horizontal en pantallas pequeñas */
+}
+
+/* Estilos para el icono de agregar */
+.btn-link {
+  color: #007bff; /* Color azul para el icono */
+  text-decoration: none; /* Sin subrayado */
+}
+
+.btn-link:hover {
+  color: #0056b3; /* Color azul más oscuro al pasar el mouse */
+}
+
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+}
+
+.search-container input {
+  padding-left: 2.5rem !important; /* Espacio para el icono */
+  border-radius: 20px !important;
+}
+
+.search-container .bi-search {
+  color: #6c757d; /* Color gris para el icono */
+  z-index: 10;
+}
+
+/* Para asegurar que el input group conserve los estilos */
+.input-group {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* Tabla */
+.table {
+  font-size: 0.875rem;
+}
+
+.table thead th {
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+  color: #495057;
+  font-weight: 500;
+}
+
+.table tbody tr:hover {
+  background-color: #f8f9fa;
 }
 
 .io-empty-state {
@@ -889,13 +947,12 @@ export default {
 }
 
 .io-modal {
-  background: white;
-  border-radius: var(--io-border-radius);
   width: 90%;
   max-width: 800px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
+  border-radius: 10px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
   animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   overflow: hidden;
@@ -907,7 +964,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, var(--io-primary), var(--io-secondary));
+  background-color: #0d6efd;
   color: white;
   position: relative;
 }
@@ -929,7 +986,7 @@ export default {
 }
 
 .io-modal-icon-container {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(23, 25, 184, 0.2);
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -1003,8 +1060,9 @@ export default {
 
 .io-detail-card-header {
   padding: 1rem;
-  background: linear-gradient(to right, #f8f9fa, white);
-  border-bottom: 1px solid var(--io-light-gray);
+  background-color: #0d6efd;
+  color: white;
+  border-bottom: 1px solid var(--ps-light-gray);
   display: flex;
   align-items: center;
   gap: 0.75rem;

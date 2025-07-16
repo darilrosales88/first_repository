@@ -2,18 +2,88 @@
   <div class="container py-3">
     <!-- Encabezado -->
     <div class="card border">
-      <div class="card-header bg-light border-bottom">
+      <div
+        class="card-header bg-light border-bottom d-flex justify-content-between align-items-center"
+      >
         <h5 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-search me-2"></i>Rotación de los vagones
+          <i class="bi bi-search me-2"></i>Consultar rotación de los vagones
         </h5>
         <!-- Botón para abrir el modal -->
       </div>
 
       <!-- Cuerpo -->
       <div class="card-body p-3">
+        <!-- Resumen general -->
+        <div class="mt-4">
+          <h6 class="text-secondary fw-semibold mb-3">
+            <i class="bi bi-bar-chart-line me-2"></i>Resumen general
+          </h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="card border-secondary">
+                <div class="card-body p-3">
+                  <h6 class="card-title text-secondary fw-semibold">
+                    Total de vagones en servicio
+                  </h6>
+                  <p class="card-text display-6 text-center">
+                    {{ resumen.totalVagonesEnServicio }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card border-secondary">
+                <div class="card-body p-3">
+                  <h6 class="card-title text-secondary fw-semibold">
+                    Plan total carga
+                  </h6>
+                  <p class="card-text display-6 text-center">
+                    {{ resumen.planCarga }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card border-secondary">
+                <div class="card-body p-3">
+                  <h6 class="card-title text-secondary fw-semibold">
+                    Total real carga
+                  </h6>
+                  <p class="card-text display-6 text-center">
+                    {{ resumen.realCarga }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card border-secondary">
+                <div class="card-body p-3">
+                  <h6 class="card-title text-secondary fw-semibold">
+                    Plan total de rotación
+                  </h6>
+                  <p class="card-text display-6 text-center">
+                    {{ resumen.planRotacion }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card border-secondary">
+                <div class="card-body p-3">
+                  <h6 class="card-title text-secondary fw-semibold">
+                    Total real de rotación
+                  </h6>
+                  <p class="card-text display-6 text-center">
+                    {{ resumen.realRotacion }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- Registro de rotación por tipo de equipo -->
-        <div class="mt-4">
+        <div>
           <h6
             class="d-flex justify-content-between align-items-center text-secondary fw-semibold mb-3"
             style="padding: 0.5rem 1rem">
@@ -25,7 +95,7 @@
             </span>
 
             <!-- Botón alineado a la derecha -->
-            <button class="btn btn-sm btn-primary" @click="mostrarModal = true">
+            <button class="btn btn-sm btn-primary" @click="mostrarModal = true" v-if="this.habilitado">
               <i class="bi bi-plus-circle me-1"></i>Adicionar rotación
             </button>
           </h6>
@@ -39,7 +109,7 @@
                 <th scope="col">Real carga</th>
                 <th scope="col">Plan rotación</th>
                 <th scope="col">Real rotación</th>
-                <th scope="col">Acciones</th>
+                <th scope="col" v-if="this.habilitado">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -54,7 +124,7 @@
                 <td>{{ equipo.real_carga }}</td>
                 <td>{{ equipo.plan_rotacion }}</td>
                 <td>{{ equipo.real_rotacion }}</td>
-                <td>
+                <td v-if="this.habilitado">
                   <button
                     class="btn btn-sm btn-outline-danger"
                     @click="eliminarRotacion(equipo.id)">
@@ -70,134 +140,104 @@
             </tbody>
           </table>
         </div>
-
-        <!-- Resumen general -->
-        <div class="mt-4">
-          <h6 class="text-secondary fw-semibold mb-3">
-            <i class="bi bi-bar-chart-line me-2"></i>Resumen general
-          </h6>
-
-          <div class="row g-3">
-            <div class="col-md-4">
-              <div class="card border-secondary">
-                <div class="card-body p-1">
-                  <h6 class="card-title text-secondary fw-semibold">
-                    Plan total carga
-                  </h6>
-                  <p class="card-text display-6 text-center">
-                    {{ resumen.planCarga }}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="card border-secondary">
-                <div class="card-body p-1">
-                  <h6 class="card-title text-secondary fw-semibold">
-                    Plan total de rotación
-                  </h6>
-                  <p class="card-text display-6 text-center">
-                    {{ resumen.planRotacion }}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="card border-secondary">
-                <div class="card-body p-1">
-                  <h6 class="card-title text-secondary fw-semibold">
-                    Total de vagones en servicio
-                  </h6>
-                  <p class="card-text display-6 text-center">
-                    {{ resumen.totalVagonesEnServicio }}
-                  </p>
-                </div>
-              </div>             
-            </div>
-            
-          </div>
-
-          <div class="row g-3 mt-1">
-            <div class="col-md-6">
-              <div class="card border-secondary">
-                <div class="card-body p-1">
-                  <h6 class="card-title text-secondary fw-semibold">
-                    Total real carga
-                  </h6>
-                  <p class="card-text display-6 text-center">
-                    {{ resumen.realCarga }}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div class="col-md-6">
-              <div class="card border-secondary">
-                <div class="card-body p-1">
-                  <h6 class="card-title text-secondary fw-semibold">
-                    Total real de rotación
-                  </h6>
-                  <p class="card-text display-6 text-center">
-                    {{ resumen.realRotacion }}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
     <!-- Modal para adicionar/editar rotación de vagones -->
-    <div class="modal fade ufc-modal-overlay" :class="{ show: mostrarModal }" tabindex="-1" role="dialog" style="display: block; " v-if="mostrarModal">
-      <div class="modal-dialog modal-dialog-centered" role="document" >
-        <div class="modal-content" >
-          <div class="ufc-modal-header">
-            <h3 class="modal-title">
+    <div
+      class="modal fade"
+      :class="{ show: mostrarModal }"
+      tabindex="-1"
+      role="dialog"
+      style="display: block"
+      v-if="mostrarModal"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
               {{
                 modoEdicion
                   ? "Editar rotación de vagones"
                   : "Adicionar rotación de vagones"
               }}
-            </h3>
-            <button class="ufc-modal-close" @click="cerrarModal"><i class="bi bi-x"></i></button>
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              @click="cerrarModal"
+            ></button>
           </div>
-          <div class="ufc-modal-body">
-            
-              <form @submit.prevent="modoEdicion ? actualizarRotacion() : guardarRotacion()">
-                <div class="ufc-form-grid">
-                  <!-- Tipo de equipo ferroviario -->
-                  <div class="ufc-input-group">
-                    <label for="tipoEquipo" class="form-label small fw-semibold text-secondary">
-                      Tipo de equipo ferroviario
-                    </label>
-
-                    <select class="form-select form-select-sm" style="width:280px; padding: 8px 12px;" id="tipoEquipo" v-model="nuevaRotacion.tipoEquipo" required>
-                      <option value="" disabled>
-                        Seleccione un tipo de equipo
-                      </option>
-                      <option v-for="equipo in tiposEquiposFerroviarios":key="equipo.id" :value="equipo.id"> {{ equipo.tipo_equipo_name }}--{{equipo.tipo_carga_name}}
-                      </option>
-                    </select>
-                  </div>
-
-                  <!-- Vagones en servicio -->
-                  <div class="ufc-input-group">
-                    <label for="vagonesEnServicio" class="form-label small fw-semibold text-secondary" >
-                      Vagones en servicio
-                    </label>
-                    <input type="number" class="form-control form-control-sm" style="width:165px; padding: 8px 12px;" id="vagonesEnServicio" v-model.number="nuevaRotacion.vagonesEnServicio" min="0" required/>
-                  </div>
+          <div class="modal-body">
+            <form
+              @submit.prevent="
+                modoEdicion ? actualizarRotacion() : guardarRotacion()
+              "
+            >
+              <div class="row g-3">
+                <!-- Tipo de equipo ferroviario -->
+                <div class="col-12">
+                  <label
+                    for="tipoEquipo"
+                    class="form-label small fw-semibold text-secondary"
+                  >
+                    Tipo de equipo ferroviario<span style="color: red">*</span>
+                  </label>
+                  <select
+                    class="form-select form-select-sm"
+                    id="tipoEquipo"
+                    v-model="nuevaRotacion.tipoEquipo"
+                    required
+                  >
+                    <option value="" disabled>
+                      Seleccione un tipo de equipo
+                    </option>
+                    <option
+                      v-for="equipo in tiposEquiposFerroviarios"
+                      :key="equipo.id"
+                      :value="equipo.id"
+                    >
+                      {{ equipo.tipo_equipo_name }}--{{
+                        equipo.tipo_carga_name
+                      }}
+                    </option>
+                  </select>
                 </div>
-              </form>
-            
+
+                <!-- Vagones en servicio -->
+                <div class="col-12">
+                  <label
+                    for="vagonesEnServicio"
+                    class="form-label small fw-semibold text-secondary"
+                  >
+                    Vagones en servicio<span style="color: red">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    id="vagonesEnServicio"
+                    v-model.number="nuevaRotacion.vagonesEnServicio"
+                    min="0"
+                    required
+                  />
+                </div>
+              </div>
+            </form>
           </div>
-          <div class="ufc-form-actions">
-            <button type="button" class="ufc-button secondary" @click="cerrarModal">
-              <i class="bi bi-x-circle"></i>Cancelar
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-sm btn-secondary"
+              @click="cerrarModal"
+            >
+              Cancelar
             </button>
-            <button type="button" class="ufc-button primary" @click="modoEdicion ? actualizarRotacion() : guardarRotacion()">
-              <i class="bi bi-check-circle"></i>{{ modoEdicion ? "Actualizar" : "Aceptar" }}
+            <button
+              type="button"
+              class="btn btn-sm btn-primary"
+              @click="modoEdicion ? actualizarRotacion() : guardarRotacion()"
+            >
+              {{ modoEdicion ? "Actualizar" : "Aceptar" }}
             </button>
           </div>
         </div>
@@ -211,6 +251,12 @@ import axios from "axios";
 import Swal from "sweetalert2";
 export default {
   name: "ConsultaRotacionVagones",
+  props: {
+    informeID: {
+      type: Number,
+      required: false,
+    },
+  },
   data() {
     return {
       resumen: {
@@ -220,6 +266,7 @@ export default {
         planRotacion: 0,
         realRotacion: 0,
       },
+      habilitado: true,
       registrosRotacion: [],
       mostrarModal: false, // Controla la visibilidad del modal
       nuevaRotacion: {
@@ -232,14 +279,6 @@ export default {
       indiceEdicion: null, // Guarda el índice del registro que se está editando
     };
   },
-
-  props: {
-    informeId: {
-      type: [String, Number],
-      required: true,
-    },
-  },
-
   mounted() {
     this.get_rotaciones();
     this.getEquipos();
@@ -256,23 +295,12 @@ export default {
       try {
         let allRotaciones = []; // Almacena todos los registros de rotaciones
         let nextPage = "/ufc/rotaciones/"; // URL inicial del endpoint
-        const infoID = await axios.get(
-          `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
-        );
-        if (infoID.data.existe) {
-          //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
-          // Bucle para manejar paginación (si aplica)
-          while (nextPage) {
-            const response = await axios.get(nextPage, {
-              params: {
-                page: this.currentPage,
-                page_size: this.itemsPerPage,
-                informe: infoID.data.id,
-              },
-            });
-            allRotaciones = [...allRotaciones, ...response.data.results]; // Agrega los resultados
-            nextPage = response.data.next; // Actualiza la URL de la siguiente página
-          }
+
+        // Bucle para manejar paginación (si aplica)
+        while (nextPage) {
+          const response = await axios.get(nextPage);
+          allRotaciones = [...allRotaciones, ...response.data.results]; // Agrega los resultados
+          nextPage = response.data.next; // Actualiza la URL de la siguiente página
         }
 
         // Asigna los datos obtenidos a una variable en el componente
@@ -335,20 +363,22 @@ export default {
       this.indiceEdicion = null;
     },
 
-    /*  async verificarInformeOperativo() {
+    async verificarInformeOperativo() {
       try {
-        this.formData.fecha = new Date().toISOString();
         const today = new Date();
         const fechaFormateada = `${today.getFullYear()}-${String(
           today.getMonth() + 1
         ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-        const response = await axios.get("/ufc/verificar-informe-existente/", {
-          params: { fecha_operacion: fechaFormateada },
-        });
+        const informeResponse = await axios.get(
+          "/ufc/verificar-informe-existente/",
+          {
+            params: { fecha_operacion: fechaFormateada },
+          }
+        );
 
-        if (response.data.existe) {
-          this.informeOperativoId = response.data.id;
+        if (informeResponse.data.existe) {
+          this.informeOperativoId = informeResponse.data.id;
           return true;
         }
         return false;
@@ -356,9 +386,11 @@ export default {
         console.error("Error al verificar informe:", error);
         return false;
       }
-    }, */
+    },
 
     async guardarRotacion() {
+      // 1. Verificar si existe informe operativo para la fecha actual
+      /* const existeInforme = await this.verificarInformeOperativo(); */
       if (0) {
         Swal.fire(
           "Error",
@@ -382,6 +414,12 @@ export default {
         const response = await axios.post("/ufc/rotaciones/", {
           tipo_equipo_ferroviario: this.nuevaRotacion.tipoEquipo,
           en_servicio: this.nuevaRotacion.vagonesEnServicio,
+          informe_operativo: this.informeOperativoId,
+        });
+        console.log("Esto es lo que se envia", {
+          tipo_equipo_ferroviario: this.nuevaRotacion.tipoEquipo,
+          en_servicio: this.nuevaRotacion.vagonesEnServicio,
+          informe_operativo: this.informeOperativoId,
         });
         await this.get_rotaciones();
         Swal.fire("Éxito", "La rotación ha sido guardada correctamente.", "success");
@@ -465,163 +503,6 @@ export default {
 </script>
 
 <style scoped>
-
-/* Estilos para el modal */
-.ufc-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.ufc-modal-header {
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #002a68;
-  color: white;
-  border-radius: 0.5rem 0.5rem 0 0;
-}
-.ufc-modal-header h3 {
-  margin: 0;
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-
-.ufc-modal-close {
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 1.3rem;
-  cursor: pointer;
-  padding: 5px;
-  transition: all 0.2s;
-}
-
-.ufc-modal-close:hover {
-  color: #ccc;
-}
-
-.ufc-modal-body .ufc-form-actions {
-  border-top: 1px solid #eee;
-  padding-top: 15px;
-  margin-top: 0;
-}
-
-.ufc-modal-body {
-  padding: 20px;
-}
-.ufc-input-group {
-  margin-bottom: 15px;
-}
-
-.ufc-input-group label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #444;
-}
-
-.ufc-input-group .required {
-  color: #e74c3c;
-}
-
-.ufc-form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-}
-
-@media (max-width: 768px) {
-  .ufc-form-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.ufc-form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
- 
-  border-top: 1px solid #eee;
-}
-.ufc-button {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 1 rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 15px 0;
-}
-
-.ufc-button.primary {
-  margin-right: 20px;
-}
-
-.ufc-button.primary:hover {
-  background: #003d8f;
-}
-
-.ufc-button.secondary {
-    background:rgb(241, 81, 63);
-    color: white;
-}
-
-.ufc-button.secondary:hover {
-    background:rgb(228, 56, 37);
-}
-
-.create-button {
-  text-decoration: none;
-  color: green;
-  margin-left: 940px;
-}
-
-button {
-  margin-left: 10px;
-  padding: 5px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-button[type="button"] {
-  background-color: #007bff;
-  color: white;
-}
-
-button[type="submit"] {
-  margin-left: 15px;
-  background-color: #007bff;
-  color: white;
-}
-
-.btn-outline-danger {
-  color: #dc3545;
-  border-color: #dc3545;
-}
-
-.btn-outline-danger:hover {
-  color: #fff;
-}
-
 /* Resumen general */
 .card {
   border-radius: 0.5rem;

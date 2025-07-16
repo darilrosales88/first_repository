@@ -11,7 +11,7 @@ from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descarg
                         producto_vagon_serializer, en_trenes_serializer,PorSituarCargaDescargaSerializer, SituadoCargaDescargaSerializers, 
                         PendienteArrastreSerializer, registro_vagones_cargados_serializer,
                         registro_vagones_cargados_filter, vagones_productos_filter, 
-                        vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer,PorSituarCargaDescargaFilter,
+                        vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer,
                         ufc_informe_operativo_serializer,ufc_informe_operativo_filter,
                         HistorialVagonCargadoDescargado,HistorialVagonCargadoDescargadoSerializer,
                         HistorialVagonesProductosSerializer,vagones_dias_serializer, rotacion_filter,PendienteArrastreFilter
@@ -33,7 +33,7 @@ from django.utils import timezone
 #para usar el or
 
 #Actualizando el ModelViewSet para usar diferentes permisos según la acción
-from .permissions import IsAdminUFCPermission,IsVisualizadorUFCPermission
+from .permissions import IsAdminUFCPermission,IsVisualizadorUFCPermission,IsRevisorUFCPermission
 
 from rest_framework.decorators import action,api_view  # Importa el decorador action
 
@@ -63,7 +63,7 @@ class IsUFCPermission(permissions.BasePermission):
             permission_classes = [IsAdminUFCPermission]
         else:  # Para list y retrieve
             # Permitir tanto a AdminUFC como a VisualizadorUFC ver los registros
-            permission_classes = [IsAdminUFCPermission | IsVisualizadorUFCPermission]
+            permission_classes = [IsAdminUFCPermission | IsVisualizadorUFCPermission | IsRevisorUFCPermission]
         return [permission() for permission in permission_classes]
 
 #Funcion para actualizar el estado de los vagones deberia estar global
@@ -96,8 +96,8 @@ def actualizar_estado_equipo_ferroviario( equipo_o_id, nuevo_estado, id=None):
 class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
     queryset = ufc_informe_operativo.objects.all().order_by('-id')
     serializer_class = ufc_informe_operativo_serializer
+    permission_classes= [IsUFCPermission]
 
-    
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -208,7 +208,8 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
             
         serializer = self.get_serializer(
             instance, 
-            data={'estado_parte': request.data['estado_parte']}, 
+            data={'estado_parte': request.data['estado_parte']
+                  }, 
             partial=True
         )
         
@@ -378,6 +379,7 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
     queryset = vagones_productos.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = vagones_productos_serializer
     filter_class = vagones_productos_filter
+    permission_classes= [IsUFCPermission]
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -563,7 +565,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
     queryset = vagon_cargado_descargado.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = vagon_cargado_descargado_serializer
     filter_class = vagon_cargado_descargado_filter
-    
+    permission_classes= [IsUFCPermission]
     def get_queryset(self):
         queryset = super().get_queryset()
         informe_id = self.request.query_params.get('informe')
@@ -965,7 +967,7 @@ class en_trenes_view_set(viewsets.ModelViewSet):
     serializer_class = en_trenes_serializer
     filter_backends = [DjangoFilterBackend]
     filter_class = en_trenes_filter
-
+    permission_classes= [IsUFCPermission]
     ordering_fields = ['id'] 
     ordering = ['-id']  # Orden por defecto (descendente por id)    
 
@@ -1132,21 +1134,12 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
     queryset = producto_UFC.objects.all().order_by('-id') # Definir el queryset
     serializer_class = producto_vagon_serializer
     permission_classes = [IsUFCPermission]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = producto_vagon_filter
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        search_term = self.request.query_params.get('buscar_producto', None)
-
-        if search_term:
-            # Filtra por coincidencia en cualquiera de los campos
-            queryset = queryset.select_related('producto').filter(
-            Q(id__icontains=search_term) |
-            Q(tpo_embalaje__icontains=search_term)|
-            Q(producto__nombre_producto__icontains=search_term)|
-            Q(producto___codigo_producto__icontains=search_term)
-            
-)
-        return queryset
+    search_fields=[
+        'tipo_equipo__tipo_equipo'
+    ]
 
     def create(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='AdminUFC').exists():
@@ -1244,7 +1237,7 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
     queryset = por_situar.objects.all().order_by("-id")
     serializer_class = PorSituarCargaDescargaSerializer
     filter_backends = [DjangoFilterBackend]
-    
+    permission_classes= [IsUFCPermission]
     def get_queryset(self):
         queryset = super().get_queryset()
         tipo_equipo = self.request.query_params.get("tipo_equipo")
@@ -1678,9 +1671,9 @@ class PendienteArrastre_hoy_Viewset(viewsets.ModelViewSet):
 #*************Registro de vagones Dia*******************
 class VagonesDiasViewSet(viewsets.ModelViewSet):
     queryset=vagones_dias.objects.all()
-    serializer_class=vagones_dias_serializer    
-    
-    
+    serializer_class=vagones_dias_serializer
+    permission_classes = [IsUFCPermission]
+
 #*************Empieza View Rotacion de Vagones **********************
 class RotacionVagonesViewSet(viewsets.ModelViewSet):
     """

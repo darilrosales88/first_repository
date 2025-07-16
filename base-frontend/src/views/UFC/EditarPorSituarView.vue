@@ -334,9 +334,8 @@ export default {
         origen: "",
         tipo_equipo: "",
         operacion: "",
-        estado: "cargado",
-        productos: [],
-        por_situar: "",
+        productos: [], // Cambiamos de producto (singular) a productos (array)
+        por_situar: 1,
         observaciones: "",
         equipos_vagones: [],
       },
@@ -396,7 +395,13 @@ export default {
         );
         const registro = response.data;
 
-        await this.getProductos();
+        for(let i = 0; i < registro.equipo_vagon_detalle.length; i++) {
+          let vagon = {
+              equipo_ferroviario: registro.equipo_vagon_detalle[i].equipo_ferroviario_detalle,
+              cant_dias: registro.equipo_vagon_detalle[i].cant_dias,
+          };
+          this.vagonesAgregados.push(vagon);
+        }
 
         this.formData = {
           id: registro.id,
@@ -409,6 +414,8 @@ export default {
           por_situar: registro.por_situar,
           observaciones: registro.observaciones,
         };
+        this.buscarEquipos();
+
       } catch (error) {
         // ... manejo de errores ...
       } finally {
@@ -676,87 +683,63 @@ export default {
     },
 
     toggleProductosDropdown() {
-      this.showProductosDropdown = !this.showProductosDropdown;
-      if (this.showProductosDropdown) {
-        this.productoSearch = "";
-        this.filterProductos();
+    this.showProductosDropdown = !this.showProductosDropdown;
+    if (this.showProductosDropdown) {
+      this.productoSearch = '';
+      this.filterProductos();
+    }
+  },
+  
+  filterProductos() {
+    if (!this.productoSearch) {
+      this.filteredProductos = this.productos;
+      return;
+    }
+    const searchTerm = this.productoSearch.toLowerCase();
+    this.filteredProductos = this.productos.filter(producto => 
+      producto.producto_name.toLowerCase().includes(searchTerm) ||
+      producto.producto_codigo.toLowerCase().includes(searchTerm) ||
+      producto.id.toString().includes(searchTerm)
+    );
+  },
+  
+  toggleProductoSelection(productoId) {
+    const index = this.formData.productos.indexOf(productoId);
+    if (index === -1) {
+      this.formData.productos.push(productoId);
+    } else {
+      this.formData.productos.splice(index, 1);
+    }
+  },
+  
+  getSelectedProductosText() {
+    if (this.formData.productos.length === 0) return '';
+    
+    // Si el estado es vacío, mostramos solo el conteo
+    if (this.formData.estado === 'vacio') {
+      return `${this.formData.productos.length} producto(s) seleccionado(s)`;
+    }
+    
+    // Para estado cargado, mostramos más detalles
+    if (this.formData.productos.length === 1) {
+      const producto = this.productos.find(p => p.id === this.formData.productos[0]);
+      return producto ? `${producto.id}-${producto.producto_name}` : '1 producto seleccionado';
+    }
+    return `${this.formData.productos.length} productos seleccionados`;
+  },
+  
+  handleEstadoChange() {
+    // Eliminamos la lógica que limpiaba los productos
+    // Ahora los productos permanecen sin importar el estado
+  },
+  
+  closeDropdownsOnClickOutside() {
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.ufc-custom-select')) {
+        this.showProductosDropdown = false;
       }
-    },
-
-    filterProductos() {
-      if (!this.productoSearch) {
-        this.filteredProductos = this.productos;
-        return;
-      }
-      const searchTerm = this.productoSearch.toLowerCase();
-      this.filteredProductos = this.productos.filter(
-        (producto) =>
-          producto.producto_name.toLowerCase().includes(searchTerm) ||
-          producto.producto_codigo.toLowerCase().includes(searchTerm) ||
-          producto.id.toString().includes(searchTerm)
-      );
-    },
-
-    toggleProductoSelection(productoId) {
-      const index = this.formData.productos.indexOf(productoId);
-      if (index === -1) {
-        this.formData.productos.push(productoId);
-      } else {
-        this.formData.productos.splice(index, 1);
-      }
-    },
-
-    getSelectedProductosText() {
-      if (this.formData.productos.length === 0) return "";
-
-      // Si el estado es vacío, mostramos solo el conteo
-      if (this.formData.estado === "vacio") {
-        return `${this.formData.productos.length} producto(s) seleccionado(s)`;
-      }
-
-      // Para estado cargado, mostramos más detalles
-      if (this.formData.productos.length === 1) {
-        const producto = this.productos.find(
-          (p) => p.id === this.formData.productos[0]
-        );
-        return producto
-          ? `${producto.id}-${producto.producto_name}`
-          : "1 producto seleccionado";
-      }
-      return `${this.formData.productos.length} productos seleccionados`;
-    },
-
-    handleEstadoChange() {
-      // Eliminamos la lógica que limpiaba los productos
-      // Ahora los productos permanecen sin importar el estado
-    },
-
-    closeDropdownsOnClickOutside() {
-      document.addEventListener("click", (e) => {
-        if (!e.target.closest(".ufc-custom-select")) {
-          this.showProductosDropdown = false;
-        }
-      });
-    },
-    volver_principal() {
-      event.preventDefault();
-      event.stopPropagation();
-      Swal.fire({
-        title: "¿Volver a la página principal?",
-        text: "Los datos no guardados se perderán",
-        icon: "warning",
-        showCancelButton: true,
-        cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Continuar',
-        cancelButtonColor: "#f1513f",
-        confirmButtonText: '<i class="bi bi-box-arrow-right me-1"></i>Volver',
-        confirmButtonColor: "#007bff",
-        reverseButtons: true,
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.$router.push({ name: "InfoOperativo" });
-        }
-      });
-    },
+    });
+  }
   },
 };
 </script>

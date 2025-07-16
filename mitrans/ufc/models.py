@@ -1,15 +1,23 @@
-from django.db import models
+from django.db import models, transaction
+from django.core.validators import RegexValidator
+from django.core.exceptions import ValidationError
+
+from Administracion.models import CustomUser
 from nomencladores.models import( nom_tipo_equipo_ferroviario,nom_producto,
                                  nom_tipo_embalaje,nom_unidad_medida,
-                                 nom_equipo_ferroviario,nom_provincia,
-                                 nom_entidades   
+                                 nom_equipo_ferroviario,nom_provincia   
                                  )
 from Administracion.models import CustomUser
 from django.core.validators import RegexValidator
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.db.models import Sum,Prefetch
 # Usamos un delay para asegurar que las relaciones ManyToMany estén establecidas 
 from django.db import transaction
-
-
+from django.db.models.functions import TruncDate
+from django.utils import timezone
+from datetime import datetime, date
+from django.db.models.functions import Cast
 
 
 
@@ -81,6 +89,9 @@ class producto_UFC(models.Model):
     producto = models.ForeignKey(nom_producto, on_delete=models.CASCADE)
     tipo_embalaje = models.ForeignKey(nom_tipo_embalaje, on_delete=models.CASCADE)
     unidad_medida = models.ForeignKey(nom_unidad_medida, on_delete=models.CASCADE)
+    
+    tipo_equipo=models.ForeignKey(nom_tipo_equipo_ferroviario,on_delete=models.CASCADE,null=True,blank=True)
+    
     cantidad = models.IntegerField()
     estado = models.CharField(
         choices=ESTADO_CHOICES, null=True, blank=True, max_length=20
@@ -204,7 +215,9 @@ class vagon_cargado_descargado(models.Model):
     )
     # Cambiamos ForeignKey a ManyToManyField, es posible que un vagon tenga mas de un producto
     producto = models.ManyToManyField(
-        producto_UFC, blank=True, related_name="vagones_cargados"
+        producto_UFC,
+        blank=True,
+        related_name='vagones_cargados'
     )
 
     registros_vagones = models.ManyToManyField(
@@ -254,7 +267,7 @@ class vagon_cargado_descargado(models.Model):
             # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
             self.registros_vagones.clear()
             self.producto.clear()
-
+            
             # Finalmente eliminar el registro principal
             super().delete(*args, **kwargs)
 
@@ -330,13 +343,8 @@ class Situado_Carga_Descarga(models.Model):
     producto = models.ManyToManyField(
         producto_UFC,
         blank=True,
-        null=True,
-    )
-    fecha = models.DateTimeField(
-        auto_now_add=True, verbose_name="Fecha de registro", editable=False
-    )
-    producto = models.ManyToManyField(
-        producto_UFC, blank=True, related_name="situados", verbose_name="Productos"
+        related_name="situados",
+        verbose_name="Productos"
     )
 
     situados = models.CharField(
@@ -344,6 +352,7 @@ class Situado_Carga_Descarga(models.Model):
         verbose_name="Cantidad de situados",
         default="0",
         validators=[
+            
             RegexValidator(
                 regex="^[0-9]+$",
                 message="Solo se permiten números positivos",
@@ -412,7 +421,6 @@ class Situado_Carga_Descarga(models.Model):
             
             # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
             self.equipo_vagon.clear()
-            self.producto.clear()
             
             # Finalmente eliminar el registro principal
             super().delete(*args, **kwargs)
@@ -593,12 +601,13 @@ class en_trenes(models.Model):
         blank=True,
         null=True,
     )
-    tipo_equipo = models.ForeignKey(
-        nom_tipo_equipo_ferroviario, on_delete=models.CASCADE, default="", max_length=50
-    )
-    estado = models.CharField(default="", choices=ESTADO_CHOICES, max_length=50)
+    tipo_equipo=models.ForeignKey(nom_tipo_equipo_ferroviario, on_delete=models.CASCADE,default="", max_length=50)
+    estado = models.CharField(default="" ,choices=ESTADO_CHOICES, max_length = 50)
     producto = models.ManyToManyField(
-        producto_UFC, blank=True, related_name="en_trenes", verbose_name="Productos"
+        producto_UFC,
+        blank=True,
+        related_name="en_trenes",
+        verbose_name="Productos"
     )
 
     tipo_origen = models.CharField(
@@ -645,12 +654,22 @@ class en_trenes(models.Model):
     class Meta:
         verbose_name = "Tren"
         verbose_name_plural="Trenes"
-         
+
+        constraints = [models.UniqueConstraint(
+            fields = [
+                "tipo_equipo",
+                "estado",
+                "origen",
+                "destino",
+            ],
+            name="unique_train_register",
+        )]
+
     def delete(self, *args, **kwargs):
         try:
             # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
             self.equipo_vagon.clear()
-            self.producto.clear()
+        
             
             # Finalmente eliminar el registro principal
             super().delete(*args, **kwargs)
@@ -730,17 +749,19 @@ class por_situar(models.Model):
     )
     
     estado = models.CharField(max_length=200, choices=status, verbose_name="Estado")
-
-    t_operacion = (("carga", "Carga"), ("descarga", "Descarga"))
-
-    operacion = models.CharField(
-        max_length=200, choices=t_operacion, verbose_name="Operacion"
+    
+    t_operacion = (
+        ('carga', 'Carga'),
+        ('descarga', 'Descarga')
     )
-    fecha = models.DateTimeField(
-        auto_now_add=True, verbose_name="Fecha de registro", editable=False
-    )
+    
+    operacion = models.CharField(max_length=200, choices=t_operacion, verbose_name="Operacion")
+    fecha = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de registro", editable=False)
     producto = models.ManyToManyField(
-        producto_UFC, blank=True, related_name="por_situar", verbose_name="Productos"
+        producto_UFC,
+        blank=True,
+        related_name="por_situar",
+        verbose_name="Productos"
     )
 
     por_situar = models.CharField(
@@ -799,7 +820,7 @@ class por_situar(models.Model):
             
             # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
             self.equipo_vagon.clear()
-            self.producto.clear()
+        
             
             # Finalmente eliminar el registro principal
             super().delete(*args, **kwargs)
@@ -891,22 +912,18 @@ class arrastres(models.Model):
         ('descarga', 'Descarga')
     ]
     estado = models.CharField(
-        max_length=200,
-        choices=ESTADO_CHOICES,
-        verbose_name="Estado",
-        blank=True,
-        null=True,
+        max_length=200, 
+        choices=ESTADO_CHOICES, 
+        verbose_name="Estado", 
+        blank=True, 
+        null=True
     )
-    operacion=models.CharField(
-        max_length=200,
-        choices=OPERACION_CHOICES,
-        verbose_name="Operacion",
-        blank=True,
-        null=True,
-    )
-
+    
     producto = models.ManyToManyField(
-        producto_UFC, blank=True, related_name="arrastres", verbose_name="Productos_UFC"
+        producto_UFC,
+        blank=True,
+        related_name="arrastres",
+        verbose_name="Productos_UFC"
     )
     cantidad_vagones = models.CharField(
         max_length=10,
@@ -973,7 +990,7 @@ class arrastres(models.Model):
             
             # Limpiar relaciones ManyToMany (aunque ya deberían estar vacías)
             self.equipo_vagon.clear()
-            self.producto.clear()
+        
             
             # Finalmente eliminar el registro principal
             super().delete(*args, **kwargs)
@@ -1040,6 +1057,14 @@ class rotacion_vagones(models.Model):
         verbose_name_plural = "Registros de rotación"
         ordering = ["-fecha"]
 
+        constraints = [models.UniqueConstraint(
+            fields = [
+                "tipo_equipo_ferroviario",
+                "informe_operativo",
+            ],
+            name="unique_train_rotation"
+        )]
+
     def __str__(self):
         return (
             f"{self.tipo_equipo_ferroviario.tipo_equipo} - Servicio: {self.en_servicio}"
@@ -1063,3 +1088,158 @@ class HistorialRotacionVagones(models.Model):
 
     def __str__(self):
         return f"Historial rotación vagones para informe {self.informe_operativo.id}"
+
+# Señal para crear el historial al guardar
+@receiver(post_save, sender=rotacion_vagones)
+def crear_historial_rotacion_vagones(sender, instance, created, **kwargs):
+    if not created:
+        return
+
+    def _crear_historial():
+        fecha_registro = instance.fecha.date()
+        
+        informe = ufc_informe_operativo.objects.annotate(
+            fecha_op=TruncDate('fecha_operacion')
+        ).filter(fecha_op=fecha_registro).first()
+        
+        if not informe:
+            return
+
+        # Obtener el registro completo con relaciones
+        registro_completo = rotacion_vagones.objects.select_related(
+            'tipo_equipo_ferroviario'
+        ).get(pk=instance.pk)
+
+        # Serializar datos principales
+        datos_rotacion = {
+            'id': registro_completo.id,
+            'tipo_equipo': {
+                'id': registro_completo.tipo_equipo_ferroviario.id,
+                'nombre': registro_completo.tipo_equipo_ferroviario.get_tipo_equipo_display(),
+            },
+            'en_servicio': registro_completo.en_servicio,
+            'plan_carga': registro_completo.plan_carga,
+            'real_carga': registro_completo.real_carga,
+            'plan_rotacion': registro_completo.plan_rotacion,
+            'real_rotacion': registro_completo.real_rotacion,
+            'fecha': str(registro_completo.fecha),
+            'actualizado_el': str(registro_completo.actualizado_el)
+        }
+
+        HistorialRotacionVagones.objects.create(
+            informe_operativo=informe,
+            datos_rotacion=datos_rotacion
+        )
+
+    transaction.on_commit(_crear_historial)
+
+# Señal para eliminar el historial
+@receiver(post_delete, sender=rotacion_vagones)
+def eliminar_historial_rotacion_vagones(sender, instance, **kwargs):
+    try:
+        HistorialRotacionVagones.objects.filter(
+            datos_rotacion__icontains={'id': instance.id}
+        ).delete()
+    except Exception as e:
+        print(f"Error eliminando historial de rotación de vagones: {str(e)}")
+
+
+#funcion que calcula de forma automatica los campos del parte ufc_informe_operativo
+@receiver(post_save, sender=vagon_cargado_descargado)
+@receiver(post_save, sender=Situado_Carga_Descarga)
+@receiver(post_save, sender=vagones_productos)
+def calcular_informe_operativo_diario(sender, instance, created, **kwargs):
+    """
+    Calcula y actualiza los datos del informe operativo diario.
+    Se ejecuta después de guardar un vagon_cargado_descargado.
+    """
+    try:
+        # Usamos una transacción atómica para evitar inconsistencias
+        with transaction.atomic():
+            # Obtener la fecha actual (sin la hora)
+            hoy = date.today()
+            
+            informe = ufc_informe_operativo.objects.filter(
+                fecha_operacion__date=hoy
+            ).order_by('-fecha_operacion').first()
+            
+            """ # Obtener el informe más reciente para hoy o crear uno nuevo            
+
+            if not informe:
+                informe = ufc_informe_operativo.objects.create(
+                    fecha_operacion=timezone.now()
+                ) """
+            
+            # 1. Sumatoria de plan_mensual de vagones_productos (solo del día actual)
+            plan_mensual_total = vagones_productos.objects.filter(
+                fecha__date=hoy
+            ).aggregate(
+                total=Sum('plan_mensual')
+            )['total'] or 0
+            
+            # 2. Sumatoria de plan_diario_carga_descarga (solo del día actual)
+            plan_diario_total = vagon_cargado_descargado.objects.filter(
+                fecha__date=hoy
+            ).aggregate(
+                total=Sum('plan_diario_carga_descarga')
+            )['total'] or 0
+            
+            # 3. Sumatoria de real_carga_descarga (solo del día actual)
+            real_total = vagon_cargado_descargado.objects.filter(
+                fecha__date=hoy
+            ).aggregate(
+                total=Sum('real_carga_descarga')
+            )['total'] or 0
+            
+            # 4. Sumatoria de situados (solo del día actual) - Versión compatible
+            situados_total = 0
+            situados_qs = Situado_Carga_Descarga.objects.filter(
+                fecha__date=hoy
+            ).only('situados')
+            
+            for situado in situados_qs:
+                try:
+                    situados_total += int(situado.situados) if situado.situados else 0
+                except (ValueError, TypeError):
+                    continue
+            
+            # 5. Sumatoria de plan_acumulado_actual (solo del día actual)
+            plan_acumulado_actual = vagones_productos.objects.filter(
+                fecha__date=hoy
+            ).aggregate(
+                total=Sum('plan_acumulado_actual')
+            )['total'] or 0
+            
+            # 6. Sumatoria de real_acumulado_actual (solo del día actual)
+            real_acumulado_actual = vagones_productos.objects.filter(
+                fecha__date=hoy
+            ).aggregate(
+                total=Sum('real_acumulado_actual')
+            )['total'] or 0
+            
+            # Actualizar el informe con los valores calculados
+            informe.plan_mensual_total = plan_mensual_total
+            informe.plan_diario_total_vagones_cargados = plan_diario_total
+            informe.real_total_vagones_cargados = real_total
+            informe.total_vagones_situados = situados_total
+            informe.plan_total_acumulado_actual = plan_acumulado_actual
+            informe.real_total_acumulado_actual = real_acumulado_actual
+            informe.save()
+            
+    except Exception as e:
+        # En producción, usa logging.getLogger(__name__).error(...)
+        print(f"Error al calcular el informe operativo: {str(e)}")
+        # No relanzamos la excepción para no interrumpir el flujo principal
+
+#ejecutar la funcion de actualizacion de los campos del parte cuando se elimina uno de los registros de los modelos que la activan
+#Cuando se elimine un registro de unode  esos modelos, se llama a la función recalcular_informe_operativo_al_eliminar
+#Esta función a su vez llamará a calcular_informe_operativo_diario con created=False (ya que no es una creación)
+#La función original recalculará todos los valores del informe operativo basándose en los registros restantes
+@receiver(post_delete, sender=vagon_cargado_descargado)
+@receiver(post_delete, sender=Situado_Carga_Descarga)
+@receiver(post_delete, sender=vagones_productos)
+def recalcular_informe_operativo_al_eliminar(sender, instance, **kwargs):
+    """
+    Recalcula el informe operativo cuando se elimina un registro de los modelos relacionados
+    """
+    calcular_informe_operativo_diario(sender, instance, created=False, **kwargs)

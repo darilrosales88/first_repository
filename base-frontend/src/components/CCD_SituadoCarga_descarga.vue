@@ -4,7 +4,7 @@
     <div class="ps-header">
       <h1 class="ps-title">
         <i class="bi bi-inboxes-fill ps-title-icon"></i>
-        Registros Por Situar
+        Registros Situado 
       </h1>
 
       <div class="ps-actions">
@@ -36,13 +36,14 @@
         <table class="ps-table">
           <thead>
             <tr>
-              <th class="ps-th">Tipo Origen</th>
-              <th class="ps-th">Origen</th>
+              <th class="ps-th">#</th>
+              <th class="ps-th">Acceso Comercial</th>
               <th class="ps-th">Tipo Equipo</th>
               <th class="ps-th">Estado</th>
               <th class="ps-th">Operación</th>
               <th class="ps-th">Producto</th>
-              <th class="ps-th">Por Situar</th>
+              <th class="ps-th">Situados</th>
+              <th class="ps-th">Dias Situados</th>
               <th class="ps-th ps-th-actions">Acciones</th>
             </tr>
           </thead>
@@ -63,9 +64,10 @@
               :key="item.id"
               class="ps-tr"
             >
+              <td class="ps-td ps-td-index">{{ index + 1 }}</td>
               <td class="ps-td">{{ item.tipo_origen_name }}</td>
               <td class="ps-td">{{ item.origen }}</td>
-              <td class="ps-td">{{ item.tipo_equipo_name }}</td>
+              <td class="ps-td">{{ item.tipo_equipo }}</td>
               <td class="ps-td">
                 <span
                   :class="`ps-status ps-status-${getStatusClass(item.estado)}`"
@@ -82,38 +84,37 @@
                 </span>
                 <span v-else>-</span>
               </td>
-              <td class="ps-td">{{ item.por_situar }}</td>
+              <td class="ps-td">
+                {{ item.por_situar
+                }}<!-- Tuve que quitar la etiqueta span badge porque esta tiene el estilo de los textos en blanco -->
+              </td>
 
-              <!-- Acciones -->
-              <td v-if="hasGroup('AdminUFC')" class="ps-td">
-                <div class="d-flex">
-                  <button
-                    @click="viewDetails(item)"
-                    class="btn btn-sm btn-outline-info me-2"
-                    title="Ver detalles"
-                  >
-                    <i class="bi bi-eye-fill"></i>
-                  </button>
-
-                  <router-link
-                    :to="{
-                      name: 'EditarPorSituar',
-                      params: { id: item.id || 'default-id' },
-                    }"
-                    class="btn btn-sm btn-outline-warning me-2"
-                    title="Editar"
-                  >
-                    <i class="bi bi-pencil-square"></i>
-                  </router-link>
-
-                  <button
-                    @click="confirmDelete(item.id)"
-                    class="btn btn-sm btn-outline-danger"
-                    title="Eliminar"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
+              <td class="ps-td ps-td-actions">
+                <button
+                  @click="viewDetails(item)"
+                  class="ps-action-btn ps-action-view"
+                  title="Ver detalles"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+                <router-link
+                  :to="{
+                    name: 'EditarPorSituar',
+                    params: { id: item.id || 'default-id' },
+                  }"
+                  class="ps-action-btn ps-action-edit"
+                  title="Editar"
+                >
+                  <i class="bi bi-pencil"></i>
+                </router-link>
+                <button
+                  @click="confirmDelete(item.id)"
+                  class="ps-action-btn ps-action-delete"
+                  title="Eliminar"
+                  :disabled="loading"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
               </td>
             </tr>
 
@@ -149,38 +150,6 @@
       </div>
     </div>
 
-    <!-- Paginación mejorada -->
-    <div
-      class="ps-pagination d-flex justify-content-between align-items-center"
-    >
-      <div class="ps-pagination-info">
-        Mostrando {{ Math.min(currentPage * itemsPerPage, totalItems) }} de
-        {{ totalItems }} registros
-      </div>
-      <nav aria-label="Navegación de páginas">
-        <ul class="pagination pagination-sm mb-0">
-          <li class="page-item" :class="{ disabled: currentPage === 1 }">
-            <button class="page-link ps-pagination-btn" @click="previousPage">
-              <i class="bi bi-chevron-left"></i>
-            </button>
-          </li>
-          <li class="page-item disabled">
-            <span class="page-link">
-              Página {{ currentPage }} de
-              {{ Math.ceil(totalItems / itemsPerPage) }}
-            </span>
-          </li>
-          <li
-            class="page-item"
-            :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
-          >
-            <button class="page-link ps-pagination-btn" @click="nextPage">
-              <i class="bi bi-chevron-right"></i>
-            </button>
-          </li>
-        </ul>
-      </nav>
-    </div>
     <!-- Modal de detalles - Versión mejorada con más color -->
     <div
       v-if="showDetailsModal"
@@ -216,9 +185,7 @@
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Tipo Origen:</span>
                   <span class="ps-detail-value">{{
-                    currentRecord.tipo_origen_name ||
-                    currentRecord.tipo_origen ||
-                    "N/A"
+                    currentRecord.tipo_origen || "N/A"
                   }}</span>
                 </div>
 
@@ -232,7 +199,7 @@
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Tipo de Equipo:</span>
                   <span class="ps-detail-value">{{
-                    currentRecord.tipo_equipo_name || "N/A"
+                    currentRecord.tipo_equipo || "N/A"
                   }}</span>
                 </div>
               </div>
@@ -266,17 +233,9 @@
 
                 <div class="ps-detail-item">
                   <span class="ps-detail-label">Producto:</span>
-                  <span class="ps-detail-value">
-                    <span
-                      v-if="
-                        currentRecord.productos_info &&
-                        currentRecord.productos_info.length > 0
-                      "
-                    >
-                      {{ getNombresProductos(currentRecord.productos_info) }}
-                    </span>
-                    <span v-else>N/A</span>
-                  </span>
+                  <span class="ps-detail-value">{{
+                    currentRecord.producto || "N/A"
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -341,35 +300,25 @@
           </button>
         </div>
       </div>
-    </div> 
+    </div>
   </div>
 </template>
 
 <script>
-import axios from "axios";
 import Swal from "sweetalert2";
+import axios from "axios";
 
 export default {
   data() {
     return {
       allRecords: [],
-      debounceTimeout: null,
-      isEditing: false,
-      currentItemId: null,
       searchQuery: "",
       registrosPorSituar: [],
       loading: false,
-      busqueda_existente: true,
-      showModal: false,
       showDetailsModal: false,
+      errorLoading: false,
       currentRecord: {},
-      currentPage: 1,
-      itemsPerPage: 10,
-      totalItems: 0,
-      searchQuery: "",
       debounceTimeout: null,
-      busqueda_existente: true,
-      userPermissions: [],
     };
   },
 
@@ -379,14 +328,12 @@ export default {
       const query = this.searchQuery.toLowerCase();
       return this.registrosPorSituar.filter((item) => {
         const fieldsToSearch = [
-          item.tipo_origen_name,
+          item.tipo_origen,
           item.origen,
-          item.tipo_equipo_name,
+          item.tipo_equipo,
           item.estado,
           item.operacion,
-          item.productos_info
-            ? this.getNombresProductos(item.productos_info)
-            : "",
+          item.producto_name,
           item.por_situar,
           item.observaciones,
         ];
@@ -399,46 +346,23 @@ export default {
 
   mounted() {
     this.getPorSituar();
-    this.fetchUserPermissionsAndGroups();
   },
 
   methods: {
-    hasGroup(group) {
-      return this.userGroups.some((g) => g.name === group);
-    },
-
-    async fetchUserPermissionsAndGroups() {
-      try {
-        const userId = localStorage.getItem("userid");
-        if (userId) {
-          const response = await axios.get(
-            `/apiAdmin/user/${userId}/permissions-and-groups/`
-          );
-          this.userPermissions = response.data.permissions;
-          this.userGroups = response.data.groups;
-        }
-      } catch (error) {
-        console.error("Error al obtener permisos y grupos:", error);
-      }
-    },
-
     getPorSituar() {
       this.loading = true;
       axios
-        .get("http://127.0.0.1:8000/ufc/por-situar-hoy/")
+        .get("http://127.0.0.1:8000/ufc/por-situar/")
         .then((response) => {
           this.registrosPorSituar = response.data.results;
-          this.totalItems = response.data.count;
           this.loading = false;
         })
-
         .catch((error) => {
           console.error("Error al obtener datos:", error);
           this.errorLoading = true;
           this.loading = false;
           this.showErrorToast("No se pudieron cargar los registros");
         });
-      console.log("que lasodsjkbvbksdjfksd: ", this.registrosPorSituar);
     },
 
     getNombresProductos(productos) {
@@ -449,13 +373,16 @@ export default {
         .join(", ");
     },
 
-    hasGroup(group) {
-      return this.userGroups.some((g) => g.name === group);
-    },
+    getStatusClass(status) {
+      if (!status) return "default";
+      const statusLower = status.toLowerCase();
 
-    closeModal() {
-      this.showDetailsModal = false;
-      this.currentRecord = {};
+      if (statusLower.includes("activo")) return "success";
+      if (statusLower.includes("pendiente")) return "warning";
+      if (statusLower.includes("inactivo") || statusLower.includes("cancelado"))
+        return "danger";
+
+      return "info";
     },
 
     async viewDetails(item) {
@@ -468,22 +395,19 @@ export default {
           `http://127.0.0.1:8000/ufc/por-situar/${item.id}/`
         );
         this.currentRecord = {
-          ...this.currentRecord,
           ...response.data,
+          // Asegurar que observaciones tenga un valor
+          observaciones:
+            response.data.observaciones || "Ninguna observación registrada",
+          // Formatear la fecha de creación
+          created_at: response.data.created_at || new Date().toISOString(),
         };
-
-        this.showDetailsModal = true;
       } catch (error) {
         console.error("Error al cargar detalles:", error);
         this.showErrorToast("No se pudieron cargar los detalles completos");
       } finally {
         this.loading = false;
       }
-    },
-
-    editRecord(item) {
-      // Implementa la lógica de edición aquí
-      console.log("Editar registro:", item);
     },
 
     formatDateTime(dateString) {
@@ -502,7 +426,7 @@ export default {
         return date.toLocaleDateString("es-ES", options);
       } catch (e) {
         console.error("Error formateando fecha:", e);
-        return dateString;
+        return dateString; // Retorna el valor original si hay error
       }
     },
 
@@ -533,12 +457,17 @@ export default {
         cancelButtonColor: "#33b5e5",
         confirmButtonText: "Sí, eliminar",
         cancelButtonText: "Cancelar",
+        customClass: {
+          popup: "ps-swal-popup",
+          confirmButton: "ps-swal-confirm",
+          cancelButton: "ps-swal-cancel",
+        },
       });
 
       if (result.isConfirmed) {
         try {
           this.loading = true;
-          await axios.delete(`/ufc/por-situar-hoy/${id}/`);
+          await axios.delete(`http://127.0.0.1:8000/ufc/por-situar/${id}/`);
           this.showSuccessToast("Registro eliminado");
           await this.getPorSituar();
         } catch (error) {
@@ -559,6 +488,10 @@ export default {
         background: "#4BB543",
         color: "#fff",
         iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
       });
 
       Toast.fire({
@@ -577,6 +510,10 @@ export default {
         background: "#ff4444",
         color: "#fff",
         iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
       });
 
       Toast.fire({
@@ -599,48 +536,22 @@ export default {
       this.showErrorToast(errorMsg);
     },
 
-    handleSearchInput() {
-      if (this.debounceTimeout) {
-        clearTimeout(this.debounceTimeout);
-      }
-      this.debounceTimeout = setTimeout(() => {
-        // Lógica de búsqueda si es necesaria
-      }, 300);
+    formatDate(dateString) {
+      if (!dateString) return "N/A";
+      const options = {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      };
+      return new Date(dateString).toLocaleDateString("es-ES", options);
     },
   },
 };
 </script>
 
 <style scoped>
-/* Estilos CSS de los botones (de la primera tabla) */
-.btn-small {
-  font-size: 22px; /* Aumenta el tamaño del ícono */
-  color: black;
-  margin-right: 5px;
-  outline: none; /* Elimina el borde de foco */
-  border: none;
-  background: none; /* Elimina el fondo */
-  padding: 0; /* Elimina el padding para que solo se vea el ícono */
-}
-
-.btn-eye {
-  font-size: 22px; /* Aumenta el tamaño del ícono */
-  margin-right: 5px;
-  outline: none; /* Elimina el borde de foco */
-  border: none;
-  background: none; /* Elimina el fondo */
-  padding: 0; /* Elimina el padding para que solo se vea el ícono */
-}
-
-.btn:hover {
-  scale: 1.1; /* Asegura que no haya fondo al hacer hover */
-}
-
-.btn:focus {
-  outline: none; /* Elimina el borde de foco al hacer clic */
-  box-shadow: none; /* Elimina cualquier sombra de foco en algunos navegadores */
-}
-
 .producto-item {
   padding: 0.5rem 0;
   border-bottom: 1px dashed #eee;
@@ -668,68 +579,156 @@ export default {
   --ps-transition: all 0.3s ease;
 }
 
-/* Estilos para el contenedor del buscador */
-.search-container {
+/* Estilos base */
+.por-situar-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Header */
+.ps-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1.5rem;
+}
+
+.ps-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--ps-dark);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ps-title-icon {
+  color: var(--ps-primary);
+}
+
+.ps-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* Botón de agregar como icono */
+.ps-add-icon {
+  background: var(--ps-primary);
+  color: white;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  transition: var(--ps-transition);
+  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
   position: relative;
-  width: 100%;
-  max-width: 300px; /* Ancho máximo del buscador */
+  overflow: hidden;
+  border: none;
 }
 
-/* Estilos para el input del buscador */
-.search-container input {
-  padding-right: 40px; /* Espacio para el icono de lupa */
-  border-radius: 20px; /* Bordes redondeados */
-}
-
-/* Estilos para el icono de lupa */
-.search-icon {
+.ps-add-icon::after {
+  content: "";
   position: absolute;
-  right: 10px;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  opacity: 0;
+  transition: var(--ps-transition);
+}
+
+.ps-add-icon:hover {
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: 0 6px 16px rgba(67, 97, 238, 0.4);
+}
+
+.ps-add-icon:hover::after {
+  opacity: 1;
+}
+
+/* Buscador */
+.ps-search-container {
+  position: relative;
+  width: 280px;
+}
+
+.ps-search-icon {
+  position: absolute;
+  left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #888; /* Color del icono */
-  pointer-events: none; /* Evita que el icono interfiera con el input */
+  color: var(--ps-gray);
+  font-size: 1rem;
 }
 
-/* Estilos para la tabla responsive */
-.table-responsive {
-  overflow-x: auto; /* Permite desplazamiento horizontal en pantallas pequeñas */
-}
-
-/* Estilos para el icono de agregar */
-.btn-link {
-  color: #007bff; /* Color azul para el icono */
-  text-decoration: none; /* Sin subrayado */
-}
-
-.btn-link:hover {
-  color: #0056b3; /* Color azul más oscuro al pasar el mouse */
-}
-
-.search-container {
-  position: relative;
+.ps-search-input {
   width: 100%;
-  max-width: 300px;
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
+  border: 1px solid var(--ps-light-gray);
+  border-radius: var(--ps-border-radius);
+  font-size: 0.95rem;
+  transition: var(--ps-transition);
+  background-color: white;
 }
 
-.search-container input {
-  padding-left: 2.5rem !important; /* Espacio para el icono */
-  border-radius: 20px !important;
+.ps-search-input:focus {
+  outline: none;
+  border-color: var(--ps-primary);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
 }
 
-.search-container .bi-search {
-  color: #6c757d; /* Color gris para el icono */
-  z-index: 10;
+.ps-search-border {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--ps-primary);
+  transition: var(--ps-transition);
 }
 
-/* Para asegurar que el input group conserve los estilos */
-.input-group {
+.ps-search-input:focus ~ .ps-search-border {
   width: 100%;
+}
+
+/* Tarjeta contenedora */
+.ps-card {
+  background: white;
+  border-radius: var(--ps-border-radius);
+  box-shadow: var(--ps-box-shadow);
+  overflow: hidden;
+  transition: var(--ps-transition);
+}
+
+.ps-card:hover {
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.12);
 }
 
 /* Tabla */
-.table {
-  font-size: 0.875rem;
+.ps-table-container {
+  overflow-x: auto;
+  padding: 0.5rem;
+}
+
+.ps-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 1000px;
 }
 
 .ps-th {
@@ -905,12 +904,6 @@ export default {
   animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 .ps-empty-state {
   display: flex;
   flex-direction: column;
@@ -979,6 +972,7 @@ export default {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
   animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .ps-modal-header {
@@ -1008,7 +1002,7 @@ export default {
 }
 
 .ps-modal-icon-container {
-  background: rgba(23, 25, 184, 0.2);
+  background: rgba(255, 255, 255, 0.2);
   width: 48px;
   height: 48px;
   border-radius: 50%;

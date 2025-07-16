@@ -1153,7 +1153,7 @@ class ccd_producto(models.Model):
         ("prod_varios", "Productos Varios"),
     ]
 
-    producto = models.ForeignKey(nom_producto, on_delete=models.CASCADE)
+    producto = models.ForeignKey(nom_producto, on_delete=models.CASCADE,null=True)
     tipo_embalaje = models.ForeignKey(nom_tipo_embalaje, on_delete=models.CASCADE)
     unidad_medida = models.ForeignKey(nom_unidad_medida, on_delete=models.CASCADE)
     

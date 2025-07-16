@@ -20,7 +20,7 @@ from django.core.cache import cache
 from Administracion.models import Auditoria
 
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status,filters
 
 #para el filtrado
 from django_filters.rest_framework import DjangoFilterBackend
@@ -1791,14 +1791,75 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
 
 #*************Aqui empieza la ViewSet de CCDxPRODUCTO****************
 #************Imports****************
-from .serializers import (ccd_productoSerializer,ccd_arrastresSerializer,ccd_en_trenesSerializer,ccd_por_situarSerializer,ccd_registro_vagones_cdSerializer, ccd_situadosSerializer,ccd_vagones_cdSerializer,)
+from .serializers import (ccd_productoSerializer,ccd_arrastresSerializer,ccd_en_trenesSerializer,ccd_por_situarSerializer,ccd_registro_vagones_cdSerializer, ccd_situadosSerializer,ccd_vagones_cdSerializer, ufc_informe_ccdSerializer)
 
-from .models import (ccd_vagones_cd,ccd_arrastres,ccd_en_trenes,ccd_por_situar,ccd_producto,ccd_registro_vagones_cd,ccd_situados,ccd_casillas_productos)
+from .models import (ccd_vagones_cd,ccd_arrastres,ccd_en_trenes,ccd_por_situar,ccd_producto,ccd_registro_vagones_cd,ccd_situados,ccd_casillas_productos,ufc_informe_ccd)
 #***********************************
 
 #*************VIEWSSET**************
 class ccd_productoViewSet(viewsets.ModelViewSet):
     serializer_class=ccd_productoSerializer
-    queryset=ccd_producto.objects.all()
+    queryset=ccd_producto.objects.order_by("-id").all()
     permission_classes=[IsUFCPermission]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
 
+
+class ccd_informeViewSet(viewsets.ModelViewSet):
+    serializer_class=ufc_informe_ccdSerializer
+    queryset=ufc_informe_ccd.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
+    # search_fields = ['contiene', 'producto__nombre_producto', 'cantidad']
+    # filterset_fields = ['producto', 'tipo_embalaje', 'unidad_medida']
+    # ordering_fields = ['id', 'contiene', 'cantidad']
+    # ordering = ['-id']
+
+@api_view(['GET'])
+def verificar_informe_ccd_existente(request):
+    entidad=request.user.entidad
+    
+    fecha_operacion = request.query_params.get('fecha_operacion')
+    
+    
+    try:
+        fecha_obj=""
+        if not fecha_operacion:
+            fecha_obj=datetime.now().date()
+        else:
+            fecha_obj = datetime.strptime(fecha_operacion, '%Y-%m-%d').date()
+        
+        existe = ufc_informe_ccd.objects.filter(
+            fecha_operacion__date=fecha_obj,
+            entidad=entidad
+        ).exists()
+        print(existe)
+        if existe:
+            informe = ufc_informe_ccd.objects.filter(
+                fecha_operacion__date=fecha_obj,
+                entidad=entidad
+            ).first()
+            return Response({
+                "existe": True,
+                "id": informe.id,
+                "fecha_operacion": informe.fecha_operacion,
+                "estado":informe.estado_parte,
+            })
+        return Response({"existe": False})
+    except ValueError:
+        return Response({"error": "Formato de fecha inválido"}, status=400)
+
+class ccd_arrastresViewSet(viewsets.ModelViewSet):
+    serializer_class=ccd_arrastresSerializer
+    queryset=ccd_arrastres.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
+    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']

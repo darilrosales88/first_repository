@@ -37,13 +37,15 @@ from nomencladores.serializers import (
     nom_producto_serializer,
     nom_tipo_embalaje_serializer,
     nom_unidad_medida_serializer,
-    nom_tipo_equipo_ferroviario_serializer
+    nom_tipo_equipo_ferroviario_serializer,
+    nom_entidades_serializer,
 )
 from nomencladores.models import (
     nom_producto,
     nom_tipo_embalaje,
     nom_unidad_medida,
-    nom_tipo_equipo_ferroviario)
+    nom_tipo_equipo_ferroviario,
+    nom_entidades)
 
 #****************-------------------------********************--------------------***************-----------------********************************
 #Funcion para actualizar el estado de los vagones deberia estar global
@@ -1199,6 +1201,8 @@ def create_nested_field_pair(serializer_class, model_class, field_name, allow_nu
     )
     return read_field, write_field
 
+
+#OK read/wirte para que se haga entrada con los id y devuelva el serializador del objeto en el write
 class ccd_productoSerializer(serializers.ModelSerializer):
 
     
@@ -1237,6 +1241,19 @@ class ccd_productoSerializer(serializers.ModelSerializer):
 
 class ccd_arrastresSerializer(serializers.ModelSerializer):
     
+    producto, producto_id = create_nested_field_pair(
+        ccd_productoSerializer, ccd_producto, 'producto'
+    )
+    acceso, acceso_id = create_nested_field_pair(
+        nom_entidades_serializer, nom_entidades, 'acceso'
+    )
+    tipo_equipo, tipo_equipo_id = create_nested_field_pair(
+        nom_tipo_equipo_ferroviario_serializer, nom_tipo_equipo_ferroviario, 'tipo_equipo'
+    )
+    equipos_vagon, acceso_id = create_nested_field_pair(
+        vagones_dias_serializer, vagones_dias, 'equipos_vagon',many=True
+    )
+
     class Meta:
         model=ccd_arrastres
         fields="__all__"

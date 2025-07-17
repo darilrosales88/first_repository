@@ -1270,6 +1270,7 @@ class ccd_situados(models.Model):
     def __str__(self):
         return f"CCD Situado ID:{self.id} -> Informe {self.informe_ccd}"
     #### esta partiendo la entrada de los datos
+    #### SEGUN GPT ESTAS VALIDACIONES DEBERIAN SER EN EL SERIALIZER, VAMOS A VER QUE TAL PORQUE AL SERIALIZAR NO ME DEJA HACER VALIDACIONES
     # def clean(self):
     #     super().clean()
     #     if self.tipo_equipo and getattr(self.tipo_equipo, "tipo_equipo", "").lower() == "locomotora":

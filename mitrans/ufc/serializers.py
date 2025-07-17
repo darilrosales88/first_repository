@@ -456,7 +456,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
         except Exception as e:
             raise serializers.ValidationError(f"Error al actualizar el registro: {str(e)}")
         
-    
+    #Esto es una cosa que no me gusta, pero es necesario para que el serializer funcione
     def validate(self, data):
         # Validación para causas_incumplimiento
         data['causas_incumplimiento'] = data.get('causas_incumplimiento', '')
@@ -1529,6 +1529,19 @@ class ccd_situadosSerializer(serializers.ModelSerializer):
         model=ccd_situados
         fields="__all__"
         
+    def validate_tipo_equipo(self, value):
+        if value and getattr(value, "tipo_equipo", "").lower() == "locomotora":
+            raise serializers.ValidationError("No se permite seleccionar 'locomotora' como tipo de equipo ferroviario.")
+        return value
+    
+    def validate(self, data):
+        # Validar que el producto sea opcional
+        print ("###**Log: ",data)
+        if data["tipo_equipo"]["tipo_equipo"].lower() == "locomotora":
+            raise serializers.ValidationError("No se permite seleccionar 'locomotora' como tipo de equipo ferroviario.")
+        
+        return data
+    
 
 class ccd_registro_vagones_cdSerializer(serializers.ModelSerializer):
     class Meta:

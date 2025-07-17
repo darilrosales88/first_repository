@@ -8,14 +8,14 @@
       <div class="card border">
         <div class="card-header bg-light border-bottom">
           <h6 class="mb-0 text-dark fw-semibold">
-            Listado de Embarcaciones
+            Embarcaciones
           </h6>
         </div>
         <div class="card-body p-3">
           <div class="d-flex justify-content-between align-items-center mb-4">
             <router-link v-if="hasGroup('Admin')" to="/AdicionarEmbarcacion">
-              <button class="btn btn-sm btn-primary">
-                <i class="bi bi-plus-circle me-1"></i>Agregar nueva embarcación
+              <button class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Añadir
               </button>
             </router-link>
             <form @submit.prevent="SearchAtraque" class="search-container">
@@ -66,7 +66,7 @@
                   <td>
                     <div class="d-flex">
                       <button 
-                        @click="openatraqueDetailsModal(item)"
+                        @click="openEmbarcacionDetailsModal(item)"
                         class="btn btn-sm btn-outline-info me-2"
                         title="Ver detalles">
                         <i class="bi bi-eye-fill"></i>

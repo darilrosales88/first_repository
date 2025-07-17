@@ -8,14 +8,14 @@
       <div class="card border">
         <div class="card-header bg-light border-bottom">
           <h6 class="mb-0 text-dark fw-semibold">
-            Listado de equpos ferroviarios
+            Equipos ferroviarios
           </h6>
         </div>
         <div class="card-body p-3">
           <div class="d-flex justify-content-between align-items-center mb-4">
             <router-link v-if="hasGroup('Admin')" to="AdicionarEquipo">
-              <button class="btn btn-sm btn-primary">
-                <i class="bi bi-plus-circle me-1"></i>Agregar nuevo equipo
+              <button class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Añadir
               </button>
             </router-link>
             <form @submit.prevent="SearchAtraque" class="search-container">

@@ -268,30 +268,6 @@ class vagon_cargado_descargado(models.Model):
             raise
 
 
-# Modelo para almacenar el historial de vagon_cargado_descargado y sus relaciones
-class HistorialVagonCargadoDescargado(models.Model):
-    informe_operativo = models.ForeignKey(
-        ufc_informe_operativo,
-        on_delete=models.CASCADE,
-        related_name="historiales_vagones",
-    )
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    datos_vagon = (
-        models.JSONField()
-    )  # Almacena todos los datos del vagon_cargado_descargado
-    datos_productos = models.JSONField()  # Almacena datos de productos relacionados
-    datos_registros_vagones = (
-        models.JSONField()
-    )  # Almacena datos de registros_vagones_cargados
-
-    class Meta:
-        verbose_name = "Historial de vagón cargado/descargado"
-        verbose_name_plural = "Historiales de vagones cargados/descargados"
-        ordering = ["-fecha_creacion"]
-
-    def __str__(self):
-        return f"Historial para informe {self.informe_operativo.id} - {self.fecha_creacion}"
-
 
 
 #************************************************************************************************************************
@@ -423,28 +399,6 @@ class Situado_Carga_Descarga(models.Model):
         return f"{self.tipo_origen} - {self.origen} - {self.tipo_equipo}"
 
 
-# Modelo para el historial de Situado_Carga_Descarga
-class HistorialSituadoCargaDescarga(models.Model):
-    informe_operativo = models.ForeignKey(
-        ufc_informe_operativo,
-        on_delete=models.CASCADE,
-        related_name="historiales_situados",
-    )
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    datos_situado = models.JSONField()  # Almacena todos los datos del situado
-    datos_productos = models.JSONField(
-        null=True,  # Permite NULL
-        blank=True,  # Permite vacío
-        default=list,  # Valor por defecto como lista vacía
-    )  # Almacena datos de productos relacionados
-
-    class Meta:
-        verbose_name = "Historial de situado"
-        verbose_name_plural = "Historiales de situados"
-        ordering = ["-fecha_creacion"]
-
-    def __str__(self):
-        return f"Historial de situado para informe {self.informe_operativo.id} - {self.fecha_creacion}"
 
 
 
@@ -538,23 +492,6 @@ class vagones_productos(models.Model):
         return f"Vagones y productos: {productos_str}"
 
 
-class HistorialVagonesProductos(models.Model):
-    informe_operativo = models.ForeignKey(
-        ufc_informe_operativo,
-        on_delete=models.CASCADE,
-        related_name="historiales_vagones_productos",
-    )
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    datos_vagon_producto = models.JSONField()  # Datos principales del registro
-    datos_productos = models.JSONField()  # Productos relacionados
-
-    class Meta:
-        verbose_name = "Historial de vagón-producto"
-        verbose_name_plural = "Historiales de vagones-productos"
-        ordering = ["-fecha_creacion"]
-
-    def __str__(self):
-        return f"Historial vagon-producto para informe {self.informe_operativo.id}"
 
 
 #************************************************************************************************************************************
@@ -670,25 +607,6 @@ class en_trenes(models.Model):
         return f"En trenes {self.id} -{self.numero_identificacion_locomotora}- {self.get_estado_display()}"
 
 
-# Modelo para el historial de en_trenes
-class HistorialEnTrenes(models.Model):
-    informe_operativo = models.ForeignKey(
-        ufc_informe_operativo,
-        on_delete=models.CASCADE,
-        related_name="historiales_en_trenes",
-    )
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    datos_tren = models.JSONField()  # Almacena todos los datos del tren
-    datos_productos = models.JSONField()  # Almacena datos de productos relacionados
-    datos_vagones = models.JSONField()  # Almacena datos de los vagones relacionados
-
-    class Meta:
-        verbose_name = "Historial de tren"
-        verbose_name_plural = "Historiales de trenes"
-        ordering = ["-fecha_creacion"]
-
-    def __str__(self):
-        return f"Historial de tren para informe {self.informe_operativo.id} - {self.fecha_creacion}"
 
 #***********************************************************************************************************************
 
@@ -819,26 +737,9 @@ class por_situar(models.Model):
         return f"{self.tipo_origen} - {self.origen} - {self.tipo_equipo}"
 
 
-# clase asociada al historial de por_situar
 
 
-class HistorialVagonPorSituar(models.Model):
-    informe_operativo = models.ForeignKey(
-        ufc_informe_operativo,
-        on_delete=models.CASCADE,
-        related_name="historiales_por_situar",
-    )
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    datos_vagon = models.JSONField()  # Almacena todos los datos del por_situar
-    datos_productos = models.JSONField()  # Almacena datos de productos relacionados
 
-    class Meta:
-        verbose_name = "Historial de vagón por situar"
-        verbose_name_plural = "Historiales de vagones por situar"
-        ordering = ["-fecha_creacion"]
-
-    def __str__(self):
-        return f"Historial por situar para informe {self.informe_operativo.id} - {self.fecha_creacion}"
 
 
     
@@ -994,25 +895,6 @@ class arrastres(models.Model):
 
 
 
-# Modelo para el historial de arrastres
-class HistorialArrastres(models.Model):
-    informe_operativo = models.ForeignKey(
-        ufc_informe_operativo,
-        on_delete=models.CASCADE,
-        related_name="historiales_arrastres",
-    )
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    datos_arrastre = models.JSONField()  # Almacena todos los datos del arrastre
-    datos_productos = models.JSONField()  # Almacena datos de productos relacionados
-
-    class Meta:
-        verbose_name = "Historial de arrastre"
-        verbose_name_plural = "Historiales de arrastres"
-        ordering = ["-fecha_creacion"]
-
-    def __str__(self):
-        return f"Historial de arrastre para informe {self.informe_operativo.id} - {self.fecha_creacion}"
-
 
 #************************************************************************************************************************
     
@@ -1062,23 +944,6 @@ class rotacion_vagones(models.Model):
         )
 
 
-# Modelo para el historial de rotacion_vagones
-class HistorialRotacionVagones(models.Model):
-    informe_operativo = models.ForeignKey(
-        ufc_informe_operativo,
-        on_delete=models.CASCADE,
-        related_name="historiales_rotacion_vagones",
-    )
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    datos_rotacion = models.JSONField()  # Almacena todos los datos de rotación
-
-    class Meta:
-        verbose_name = "Historial de rotación de vagones"
-        verbose_name_plural = "Historiales de rotaciones de vagones"
-        ordering = ["-fecha_creacion"]
-
-    def __str__(self):
-        return f"Historial rotación vagones para informe {self.informe_operativo.id}"
 
 
 
@@ -1270,6 +1135,7 @@ class ccd_situados(models.Model):
     def __str__(self):
         return f"CCD Situado ID:{self.id} -> Informe {self.informe_ccd}"
     #### esta partiendo la entrada de los datos
+    #### SEGUN GPT ESTAS VALIDACIONES DEBERIAN SER EN EL SERIALIZER, VAMOS A VER QUE TAL PORQUE AL SERIALIZAR NO ME DEJA HACER VALIDACIONES
     # def clean(self):
     #     super().clean()
     #     if self.tipo_equipo and getattr(self.tipo_equipo, "tipo_equipo", "").lower() == "locomotora":

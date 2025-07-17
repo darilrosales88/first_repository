@@ -77,7 +77,7 @@ class UFCInformeCCDTestCase(TestCase):
         )
         self.assertIsInstance(tipo_equipo,nom_tipo_equipo_ferroviario)
         self.assertEqual(tipo_equipo.__str__(),'Tipo de equipo: casilla - Longitud: 100 - Peso neto sin carga: 200 - Peso máximo con carga: 344')
-        self.asser
+        
     def test_crear_pais(self):
         """
         Prueba la creacion del pais

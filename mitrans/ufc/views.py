@@ -4,7 +4,7 @@ from rest_framework import viewsets,generics,permissions
 from rest_framework.pagination import PageNumberPagination
 #importacion de modelos
 from .models import vagon_cargado_descargado,producto_UFC,en_trenes
-from .models import registro_vagones_cargados,vagones_productos,HistorialVagonesProductos
+from .models import registro_vagones_cargados,vagones_productos
 from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones,ufc_informe_operativo,vagones_dias
 #importacion de serializadores asociados a los modelos
 from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descargado_serializer, 
@@ -13,8 +13,7 @@ from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descarg
                         registro_vagones_cargados_filter, vagones_productos_filter, producto_vagon_filter,
                         vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer,PorSituarCargaDescargaFilter,
                         ufc_informe_operativo_serializer,ufc_informe_operativo_filter,
-                        HistorialVagonCargadoDescargado,HistorialVagonCargadoDescargadoSerializer,
-                        HistorialVagonesProductosSerializer,vagones_dias_serializer, rotacion_filter,PendienteArrastreFilter
+                        vagones_dias_serializer, rotacion_filter,PendienteArrastreFilter
                         )
 from django.core.cache import cache
 from Administracion.models import Auditoria
@@ -483,41 +482,6 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
         Auditoria.objects.create(
             usuario=request.user if request.user.is_authenticated else None,
             accion="Visualizar lista de vagones y productos",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return super().list(request, *args, **kwargs) 
-
-class HistorialVagonesProductosViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = HistorialVagonesProductos.objects.all().order_by('-fecha_creacion')
-    serializer_class = HistorialVagonesProductosSerializer
-    permission_classes = [IsUFCPermission]
-    pagination_class = PageNumberPagination
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        informe_id = self.request.query_params.get('informe_id')
-
-        if informe_id:
-            queryset = queryset.filter(informe_operativo_id=informe_id)
-
-        return queryset.select_related('informe_operativo')
-
-    def list(self, request, *args, **kwargs):
-        # Verificar permisos del grupo
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        # Auditoría
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar historial de vagones y productos",
             direccion_ip=direccion_ip,
             navegador=navegador,
         )

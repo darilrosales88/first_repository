@@ -13,22 +13,15 @@ export default {
   name: "App",
   components: {},
   beforeCreate() {
+
     /*para que se ejecute la funcion InitializeStore de la ruta store/index.js */
     this.$store.commit("initializeStore");
     if (this.$store.state.token) {
-      /*estamos preguntando si se esta autenticado para igualar a axios.defaults.headers.common['Authorization']
-                                        el valor del token, de la forma Token 89545nj34kj5jh453y495, por poner un ejemplo*/
-      axios.defaults.headers.common["Authorization"] =
-        "Token " + this.$store.state.token;
+      /*estamos preguntando si se esta autenticado para igualar a axios.defaults.headers.common['Authorization'] el valor del token, de la forma Token 89545nj34kj5jh453y495, por poner un ejemplo*/
+      axios.defaults.headers.common["Authorization"] = "Token " + this.$store.state.token;
     } else {
-      axios.defaults.headers.common["Authorization"] =
-        ""; /*en caso contrario el valor de axios.defaults.headers.common['Authorization']
-                                                                    es nulo */
+      axios.defaults.headers.common["Authorization"] = ""; /*en caso contrario el valor de axios.defaults.headers.common['Authorization'] es nulo */
     }
-
-    /* if (!this.$store.state.team.id) {
-                this.$router.push('/dashboard/add-team')
-            } */
   },
 };
 </script>

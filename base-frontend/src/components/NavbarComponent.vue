@@ -180,7 +180,7 @@ export default {
           submenu: [
             { title: "Registro de Informes", route: "/ufc" },
             { title: "Informe Operativo", route: "/InfoOperativo" },
-            { title: "CCD Producto", route: "" },
+            { title: "CCD Producto", route: "/ccdxproducto" },
           ],
         },
         {

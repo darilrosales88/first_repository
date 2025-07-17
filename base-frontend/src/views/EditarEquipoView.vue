@@ -6,7 +6,7 @@
     <br />
     <Navbar-Component />
     
-    <div class="form-container">
+    <div class="form-container" style="margin-left: 18em; width: 75%">
       <h3 style="color: #002A68;">Editar Equipo Ferroviario</h3>
       <form @submit.prevent="update_equipo_ferroviario" class="form-grid">
         <!-- Tipo de equipo -->

@@ -5,10 +5,7 @@ from django_filters import rest_framework as filters
 from django.db.models import Q,Sum
 
 #Importando modelos de UFC
-from .models import (ufc_informe_operativo, vagon_cargado_descargado,producto_UFC, en_trenes,nom_equipo_ferroviario
-                    ,por_situar,Situado_Carga_Descarga,arrastres,HistorialVagonesProductos 
-                    ,registro_vagones_cargados,vagones_productos,rotacion_vagones,HistorialVagonCargadoDescargado
-                     )
+from .models import(HistorialVagonesProductos,en_trenes,Situado_Carga_Descarga,producto_UFC,registro_vagones_cargados,por_situar,registro_vagones_cargados,vagones_productos,rotacion_vagones,arrastres,ufc_informe_operativo)
 
 from Administracion.models import Auditoria 
 from rest_framework.response import Response
@@ -32,7 +29,21 @@ from Administracion.serializers import UserPermissionSerializer
 #nom_pais_filter es una clase que se implementa para definir sobre qué campos quiero filtrar los registros de mi API, 
 #hereda de filters.FilterSet
 
+#### USADO POR CCD
+## Modelos de CCD
+from .models import (ccd_arrastres,ccd_en_trenes,ccd_vagones_cd,ccd_por_situar,ccd_registro_vagones_cd,ccd_situados,ccd_casillas_productos,ccd_producto,ufc_informe_ccd)
 
+from nomencladores.serializers import (
+    nom_producto_serializer,
+    nom_tipo_embalaje_serializer,
+    nom_unidad_medida_serializer,
+    nom_tipo_equipo_ferroviario_serializer
+)
+from nomencladores.models import (
+    nom_producto,
+    nom_tipo_embalaje,
+    nom_unidad_medida,
+    nom_tipo_equipo_ferroviario)
 
 #****************-------------------------********************--------------------***************-----------------********************************
 #Funcion para actualizar el estado de los vagones deberia estar global
@@ -171,15 +182,14 @@ class vagones_productos_serializer(serializers.ModelSerializer):
         try:
             with transaction.atomic():
                 # Extraer datos para relaciones
-                productos_ids = validated_data.pop('producto_ids', [])
+                
                 registros_data = validated_data.pop('registros_vagones_data', [])
                 
                 # Crear instancia principal
                 instance = super().create(validated_data)
                 
                 # Asignar productos
-                if productos_ids:
-                    instance.producto.set(productos_ids)
+                
                 
                 return instance
                 
@@ -403,7 +413,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
         try:
             with transaction.atomic():
                 # Extraer datos para relaciones
-                productos_data = validated_data.pop('producto', None)
+               
                 registros_data = validated_data.pop('registros_vagones_data', [])
                 
                 # Actualizar campos directos
@@ -412,9 +422,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 instance.save()
                 
                 # Actualizar productos si se proporcionaron
-                if productos_data is not None:
-                    instance.producto.set(productos_data)
-                
+              
                 # Manejar registros de vagones
                 if registros_data:
                     # Eliminar registros antiguos no incluidos
@@ -465,7 +473,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
         try:
             with transaction.atomic():
                 # Extraer datos para relaciones
-                productos_ids = validated_data.pop('producto_ids', [])
+        
                 registros_data = validated_data.pop('registros_vagones_data', [])
 
                 # Asegurar que real_carga_descarga no sea sobrescrito
@@ -477,8 +485,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 instance = super().create(validated_data)
                 
                 # Asignar productos
-                if productos_ids:
-                    instance.producto.set(productos_ids)
+                
                 
                 # Crear y asociar registros de vagones
                 for registro_data in registros_data:
@@ -808,10 +815,9 @@ class en_trenes_serializer(serializers.ModelSerializer):
         } for e in equipo_vagon]
 
     def create(self, validated_data):
-        productos_data = validated_data.pop('producto', [])
         equipo_vagon_data=validated_data.pop('equipo_vagon',[])
         instance = en_trenes.objects.create(**validated_data)
-        instance.producto.set(productos_data)
+    
         instance.equipo_vagon.set(equipo_vagon_data)
         
         for equipo in equipo_vagon_data:    
@@ -822,13 +828,11 @@ class en_trenes_serializer(serializers.ModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        productos_data = validated_data.pop('producto', None)
+        
         equipo_vagon_data=validated_data.pop('equipo_vagon',None)
         print("###**Log: ",equipo_vagon_data)
         #instance = super().update(instance, validated_data)
-        print("###**Log: ",productos_data)
-        if productos_data is not None:
-            instance.producto.set(productos_data)
+       
             
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -951,15 +955,11 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        productos_data = validated_data.pop('producto', [])
+        
         vagones_data = validated_data.pop('equipo_vagon', [])
         instance = super().create(validated_data)
         
         # Asociar productos MANUALMENTE después de crear la instancia
-        if productos_data:
-            instance.producto.set(productos_data)
-            instance.save()  # Guardar explícitamente
-        
         for vagon_data in vagones_data:
             equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
             vagon = vagones_dias.objects.create(
@@ -974,7 +974,6 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        productos_data = validated_data.pop('producto', None)   
         vagones_data = validated_data.pop('equipo_vagon', None)
         
         for attr, value in validated_data.items():
@@ -996,9 +995,7 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
                 )
                 instance.equipo_vagon.add(vagon)
                 
-        if productos_data is not None:
-            instance.producto.set(productos_data)
-            instance.save()
+       
         
         return instance        
         
@@ -1072,7 +1069,6 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
 ###Tanke
 
     def update(self, instance:por_situar, validated_data):
-        productos_data = validated_data.pop('producto', None)
         vagones_data = validated_data.pop('equipo_vagon', None)
         
         
@@ -1096,8 +1092,7 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
                 instance.equipo_vagon.add(vagon)
         
         # Actualizar productos si se proporcionan
-        if productos_data is not None:
-            instance.producto.set(productos_data)
+       
         
         print(validated_data)
         instance.save()
@@ -1155,7 +1150,7 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Extraer datos de vagones
         vagones_data = validated_data.pop('equipo_vagon', [])
-        productos_data = validated_data.pop('producto', [])
+       
         
         # Crear instancia principal
         instance = super().create(validated_data)
@@ -1172,13 +1167,12 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
             instance.equipo_vagon.add(vagon)
         
         # Asociar productos
-        instance.producto.set(productos_data)
-        
+    
         return instance
 
     def update(self, instance:arrastres, validated_data):
         vagones_data = validated_data.pop('equipo_vagon', None)
-        productos_data = validated_data.pop('producto', None)
+    
         
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -1200,8 +1194,7 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
                 instance.equipo_vagon.add(vagon)
         
         # Actualizar productos si se proporcionan
-        if productos_data is not None:
-            instance.producto.set(productos_data)
+       
         
         return instance
 
@@ -1456,4 +1449,170 @@ class ufc_informe_operativo_serializer(serializers.ModelSerializer):
 
         
     #     return nom_equipo_ferroviario_serializer(equipos_list, many=True).data
+
+
+
+#######Aqui empiezan los serializadores de CCDxProducto###########
+#######Los Filtros se ponen en la view o viewSet #########
+
+def create_nested_field_pair(serializer_class, model_class, field_name, allow_null=False,many=False):
+    """
+    Crea un par de campos (read/write) para relaciones anidadas.
     
+    return read_field, write_field
+
+    """
+    read_field = serializer_class(read_only=True,many=many)
+    write_field = serializers.PrimaryKeyRelatedField(
+        queryset=model_class.objects.all(),
+        source=field_name,
+        write_only=True,
+        allow_null=allow_null
+    )
+    return read_field, write_field
+
+class ccd_productoSerializer(serializers.ModelSerializer):
+
+    
+    #### Usando la nueva estructura creada
+    producto, producto_id = create_nested_field_pair(
+        nom_producto_serializer, nom_producto, 'producto'
+    )
+    
+    tipo_embalaje, tipo_embalaje_id = create_nested_field_pair(
+        nom_tipo_embalaje_serializer, nom_tipo_embalaje, 'tipo_embalaje'
+    )
+    
+    unidad_medida, unidad_medida_id = create_nested_field_pair(
+        nom_unidad_medida_serializer, nom_unidad_medida, 'unidad_medida'
+    )
+    
+    tipo_equipo, tipo_equipo_id = create_nested_field_pair(
+        nom_tipo_equipo_ferroviario_serializer, 
+        nom_tipo_equipo_ferroviario, 
+        'tipo_equipo',
+        allow_null=True
+    )
+    ##@darilrosales88 Este campo permite hacer cositas para anidar las ForeignKey
+    class Meta:
+        model=ccd_producto
+        fields="__all__"
+
+
+      
+        
+
+class ccd_arrastresSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model=ccd_arrastres
+        fields="__all__"
+        
+
+
+class ccd_en_trenesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_en_trenes
+        fields="__all__"
+        
+    
+
+class ccd_por_situarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_por_situar
+        fields="__all__"
+        
+    
+
+class ccd_situadosSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_situados
+        fields="__all__"
+        
+
+class ccd_registro_vagones_cdSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_registro_vagones_cd
+        fields="__all__"
+       
+    
+    
+
+class ccd_vagones_cdSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_vagones_cd
+        fields="__all__"
+        
+
+class ccd_casillas_productosSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_casillas_productos
+        fields="__all__"
+      
+
+
+class ufc_informe_ccdSerializer(serializers.ModelSerializer):
+    arrastres_list = serializers.SerializerMethodField()
+    en_trenes_list = serializers.SerializerMethodField()
+    vagones_cargados_descargados_list = serializers.SerializerMethodField()
+    situados_carga_descarga_list = serializers.SerializerMethodField()
+    por_situar_list = serializers.SerializerMethodField()
+    entidad_detalle=serializers.ReadOnlyField(source = 'entidad.nombre') 
+#    equipos_list=serializers.SerializerMethodField()
+    creado_por = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(), 
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    
+    aprobado_por = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(), 
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    
+    
+    creado_por_detalle=UserPermissionSerializer(source='creado_por', read_only=True)
+    aprobado_por_detalle=UserPermissionSerializer(source='aprobado_por', read_only=True)
+    class Meta:
+        model = ufc_informe_ccd   
+        fields="__all__"    
+  
+    
+    #OK Arrastres
+    def get_arrastres_list(self, obj):
+        """Obtiene todos los arrastres asociados al informe operativo."""
+        arrastres_queryset = obj.arrastres_ccd.all()
+        return ccd_arrastresSerializer(arrastres_queryset, many=True).data
+    #OK En Trenes
+    def get_en_trenes_list(self, obj):
+        """Obtiene todos los trenes asociados al informe operativo."""
+        en_trenes_queryset = obj.en_trenes_ccd.all()
+        return ccd_en_trenesSerializer(en_trenes_queryset, many=True).data
+    #OK vagones C/D
+    def get_vagones_cargados_descargados_list(self, obj):
+        """Obtiene todos los vagones cargados/descargados asociados al informe operativo."""
+        vagones_cargados_descargados_queryset = obj.vagones_cd_ccd.all()
+        return ccd_vagones_cdSerializer(vagones_cargados_descargados_queryset, many=True).data
+    #OK Situados
+    def get_situados_carga_descarga_list(self, obj):
+        """Obtiene todos los situados de carga/descarga asociados al informe operativo."""
+        situados_carga_descarga_queryset = obj.situados_ccd.all()
+        return ccd_situadosSerializer(situados_carga_descarga_queryset, many=True).data
+    #OK Por Situar
+    def get_por_situar_list(self, obj):
+        """Obtiene todos los registros por situar asociados al informe operativo."""
+        por_situar_queryset = obj.por_situar_ccd.all()
+        return ccd_por_situarSerializer(por_situar_queryset, many=True).data
+
+    def get_vagones_productos_list(self, obj):
+        """Obtiene todos los productos de vagones asociados al informe operativo."""
+        vagones_productos_queryset = obj.vagones_productos.all()
+        return vagones_productos_serializer(vagones_productos_queryset, many=True).data
+
+    def get_rotacion_vagones_list(self, obj):
+        """Obtiene todas las rotaciones de vagones asociadas al informe operativo."""
+        rotacion_vagones_queryset = obj.rotacion.all()
+        return RotacionVagonesSerializer(rotacion_vagones_queryset, many=True).data

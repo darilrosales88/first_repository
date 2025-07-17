@@ -85,7 +85,6 @@
                   oninvalid="this.setCustomValidity('Por favor, seleccione un origen')"
                   oninput="this.setCustomValidity('')"
                 >
-                  
                   <option value="" disabled>Seleccione un origen</option>
                   <option
                     v-for="entidad in entidades"
@@ -207,22 +206,34 @@
                 <select
                   class="form-select form-select-sm border-secondary"
                   style="padding: 8px 12px"
-                  v-model="formData.estado">
+                  v-model="formData.estado"
+                >
                   <option value="cargado">Cargado</option>
                   <option value="vacio">Vacio</option>
                 </select>
               </div>
 
               <!-- Campo: operacion -->
-              <div  style="margin-bottom: 12px;">
-                <label for="operacion" class="form-label small fw-semibold text-secondary">Operación</label>
-                <input type="text" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.operacion" id="operacion" name="operacion" readonly/>
+              <div style="margin-bottom: 12px">
+                <label
+                  for="operacion"
+                  class="form-label small fw-semibold text-secondary"
+                  >Operación</label
+                >
+                <input
+                  type="text"
+                  class="form-control form-control-sm border-secondary"
+                  style="padding: 8px 12px"
+                  v-model="formData.operacion"
+                  id="operacion"
+                  name="operacion"
+                  readonly
+                />
               </div>
 
               <div class="mb-3">
                 <!-- Campo: Productos-->
                 <div class="mb-3">
-                  
                   <label
                     for="productos"
                     class="form-label small fw-semibold text-secondary"
@@ -250,7 +261,10 @@
                         }}-{{ producto.tipo_embalaje_name }}
                       </option>
                     </select>
-                    <button class="create-button ms-2" @click.stop.prevent="abrirModalAgregarProducto">
+                    <button
+                      class="create-button ms-2"
+                      @click.stop.prevent="abrirModalAgregarProducto"
+                    >
                       <i class="bi bi-plus-circle large-icon"></i>
                     </button>
                   </div>
@@ -367,13 +381,15 @@
           <button
             type="button"
             class="ufc-button secondary"
-            @click="cerrarModalVagon">
+            @click="cerrarModalVagon"
+          >
             <i class="bi bi-x-circle"></i> Cancelar
           </button>
           <button
             type="button"
             class="ufc-button primary"
-            @click="agregarNuevoVagon()">
+            @click="agregarNuevoVagon()"
+          >
             <i class="bi bi-check-circle"></i> Agregar
           </button>
         </div>
@@ -473,14 +489,14 @@ export default {
         tipo_equipo: "",
         estado: "cargado",
         operacion: "",
-        productos: "",
+        producto: "", //Estaba escrito productos , en el form se llena producto
         situados: 1,
         pendiente_proximo_dia: 0,
         observaciones: "",
         equipos_vagones: [],
       },
       isDisable: true,
-      userGroups: [], 
+      userGroups: [],
       userPermissions: [], // Inicializa como array vacío
       productoSearch: "",
       filteredProductos: [],
@@ -524,6 +540,7 @@ export default {
   },
 
   mounted() {
+    this.verificarInformeOperativo(); // Esto tu vo que ser agregado, ya que se estaba buscando un ID que no existia
     this.getProductos();
     this.getEntidades();
     this.getPuertos();
@@ -542,7 +559,7 @@ export default {
       return new Date().toLocaleString("es-ES");
     },
   },
-  
+
   methods: {
     async verificarInformeOperativo() {
       try {
@@ -606,14 +623,16 @@ export default {
     },
 
     agregarNuevoVagon() {
-      
-      if (this.nuevoVagon.equipo_ferroviario == '') {
+      if (this.nuevoVagon.equipo_ferroviario == "") {
         this.showErrorToast("Debe completar todos los campos");
         return;
       }
-      const equipoSeleccionado = this.equipos_vagones.find((e) => e.id === this.nuevoVagon.equipo_ferroviario);
+      const equipoSeleccionado = this.equipos_vagones.find(
+        (e) => e.id === this.nuevoVagon.equipo_ferroviario
+      );
       const yaExistente = this.vagonesAgregados.some(
-        (vagon) => vagon.equipo_ferroviario.id === this.nuevoVagon.equipo_ferroviario
+        (vagon) =>
+          vagon.equipo_ferroviario.id === this.nuevoVagon.equipo_ferroviario
       );
 
       if (yaExistente) {
@@ -692,7 +711,6 @@ export default {
       this.showSuccessToast("Vagón eliminado correctamente.");
     },
 
-
     cerrarModalVagon() {
       this.mostrarModalVagon = false;
       this.vagonEditIndex = null;
@@ -768,8 +786,8 @@ export default {
     },
     async submitForm() {
       try {
-
         const informeNoAprobado = await this.verificarEstadoInforme();
+        console.log("Estado: ", informeNoAprobado);
         if (!informeNoAprobado) {
           Swal.fire(
             "Error",
@@ -789,7 +807,7 @@ export default {
           return;
         }
 
-        if (this.vagonesAgregados.length==0) {
+        if (this.vagonesAgregados.length == 0) {
           Swal.fire({
             title: "Error",
             text: "Debe añadir al menos un vagón",
@@ -798,11 +816,15 @@ export default {
           return;
         }
 
-        if (this.formData.estado === "cargado" && this.formData.producto.length === 0) {
-          this.showErrorToast("Debe seleccionar al menos un producto cuando el estado es Cargado");
+        if (
+          this.formData.estado === "cargado" &&
+          this.formData.producto.length === 0
+        ) {
+          this.showErrorToast(
+            "Debe seleccionar al menos un producto cuando el estado es Cargado"
+          );
           return;
         }
-
 
         if (this.vagonesAgregados.length !== this.formData.situados) {
           Swal.fire({
@@ -851,7 +873,7 @@ export default {
       } catch (error) {
         console.error("Error al enviar el formulario:", error);
         this.showErrorToast(error.message);
-      } 
+      }
     },
     resetForm() {
       this.formData = {
@@ -860,7 +882,7 @@ export default {
         tipo_equipo: "",
         estado: "cargado",
         operacion: "",
-        productos: [],
+        producto: "", //Hay que revisar los reset de todos los estados. @BZ-theFanG
         situados: 1,
         pendiente_proximo_dia: 0,
         observaciones: "",
@@ -928,7 +950,6 @@ export default {
       }
       return `${this.formData.producto.length} productos seleccionados`;
     },
-
 
     closeDropdownsOnClickOutside() {
       document.addEventListener("click", (e) => {
@@ -1003,12 +1024,13 @@ export default {
     },
     async verificarEstadoInforme() {
       try {
+        console.log("Hay id del informe", this.informeOperativoId); // @BZ-theFanG el id no existia entonces esto siempre retornaba false
         if (!this.informeOperativoId) return false;
 
         const response = await axios.get(
           `/ufc/informe-operativo/${this.informeOperativoId}/`
         );
-        return response.data.estado_parte !== "Aprobado";
+        return response.data.estado_parte === "Creado"; // Aqui se tuvo que cambiar la logica Revisalo en los otros componentes
       } catch (error) {
         console.error("Error al verificar estado del informe:", error);
         return false;

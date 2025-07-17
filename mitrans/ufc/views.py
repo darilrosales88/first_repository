@@ -20,7 +20,7 @@ from django.core.cache import cache
 from Administracion.models import Auditoria
 
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status,filters
 
 #para el filtrado
 from django_filters.rest_framework import DjangoFilterBackend
@@ -1786,3 +1786,156 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
     
 #*************Termina View Rotacion de Vagones **********************
+
+
+
+#*************Aqui empieza la ViewSet de CCDxPRODUCTO****************
+#************Imports****************
+from .serializers import (ccd_productoSerializer,ccd_arrastresSerializer,ccd_en_trenesSerializer,ccd_por_situarSerializer,ccd_registro_vagones_cdSerializer, ccd_situadosSerializer,ccd_vagones_cdSerializer, ufc_informe_ccdSerializer, ccd_casillas_productosSerializer)
+
+from .models import (ccd_vagones_cd,ccd_arrastres,ccd_en_trenes,ccd_por_situar,ccd_producto,ccd_registro_vagones_cd,ccd_situados,ccd_casillas_productos,ufc_informe_ccd)
+#***********************************
+
+#*************VIEWSSET**************
+#### View CCD Productos OK
+class ccd_productoViewSet(viewsets.ModelViewSet):
+    serializer_class=ccd_productoSerializer
+    queryset=ccd_producto.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+
+#### View CCD Informe general OK
+class ccd_informeViewSet(viewsets.ModelViewSet):
+    serializer_class=ufc_informe_ccdSerializer
+    queryset=ufc_informe_ccd.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
+    # search_fields = ['contiene', 'producto__nombre_producto', 'cantidad']
+    # filterset_fields = ['producto', 'tipo_embalaje', 'unidad_medida']
+    # ordering_fields = ['id', 'contiene', 'cantidad']
+    # ordering = ['-id']
+
+
+#### View Verificar OK
+@api_view(['GET'])
+def verificar_informe_ccd_existente(request):
+    entidad=request.user.entidad
+    
+    fecha_operacion = request.query_params.get('fecha_operacion')
+    
+    
+    try:
+        fecha_obj=""
+        if not fecha_operacion:
+            fecha_obj=datetime.now().date()
+        else:
+            fecha_obj = datetime.strptime(fecha_operacion, '%Y-%m-%d').date()
+        
+        existe = ufc_informe_ccd.objects.filter(
+            fecha_operacion__date=fecha_obj,
+            entidad=entidad
+        ).exists()
+        print(existe)
+        if existe:
+            informe = ufc_informe_ccd.objects.filter(
+                fecha_operacion__date=fecha_obj,
+                entidad=entidad
+            ).first()
+            return Response({
+                "existe": True,
+                "id": informe.id,
+                "fecha_operacion": informe.fecha_operacion,
+                "estado":informe.estado_parte,
+            })
+        return Response({"existe": False})
+    except ValueError:
+        return Response({"error": "Formato de fecha inválido"}, status=400)
+
+#### View CCD arrastres OK
+class ccd_arrastresViewSet(viewsets.ModelViewSet):
+    serializer_class=ccd_arrastresSerializer
+    queryset=ccd_arrastres.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
+    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+
+#### View CCD En Trenes OK
+class ccd_en_trenesViewSet(viewsets.ModelViewSet):
+    serializer_class=ccd_en_trenesSerializer
+    queryset=ccd_en_trenes.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
+    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+    
+#### View CCD Vagones Carga/Descarga OK
+class ccd_vagones_cdViewSet(viewsets.ModelViewSet):
+    serializer_class=ccd_vagones_cdSerializer
+    queryset=ccd_vagones_cd.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
+    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+    
+#### View CCD por Situar OK
+class ccd_por_situarViewSet(viewsets.ModelViewSet):
+    serializer_class=ccd_por_situarSerializer
+    queryset=ccd_por_situar.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
+    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+
+#### View CCD Situados OK
+class ccd_situadosViewSet(viewsets.ModelViewSet):
+    serializer_class=ccd_situadosSerializer
+    queryset=ccd_situados.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
+    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+    
+#### View CCD Casillas Productos
+class ccd_casillas_productosViewSet(viewsets.ModelViewSet):
+    serializer_class=ccd_casillas_productosSerializer
+    queryset=ccd_casillas_productos.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
+    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+    
+#### View CCD Registro Vagones Carga/Descarga
+class ccd_registro_vagones_cdViewSet(viewsets.ModelViewSet):
+    serializer_class=ccd_registro_vagones_cdSerializer
+    queryset=ccd_registro_vagones_cd.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
+    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']

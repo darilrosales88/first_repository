@@ -37,13 +37,15 @@ from nomencladores.serializers import (
     nom_producto_serializer,
     nom_tipo_embalaje_serializer,
     nom_unidad_medida_serializer,
-    nom_tipo_equipo_ferroviario_serializer
+    nom_tipo_equipo_ferroviario_serializer,
+    nom_entidades_serializer,
 )
 from nomencladores.models import (
     nom_producto,
     nom_tipo_embalaje,
     nom_unidad_medida,
-    nom_tipo_equipo_ferroviario)
+    nom_tipo_equipo_ferroviario,
+    nom_entidades)
 
 #****************-------------------------********************--------------------***************-----------------********************************
 #Funcion para actualizar el estado de los vagones deberia estar global
@@ -257,11 +259,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
     estado_name = serializers.ReadOnlyField(source='get_estado_display')
     operacion_name = serializers.ReadOnlyField(source='get_operacion_display')
     tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
-    producto = serializers.PrimaryKeyRelatedField(
-        many=False,
-        queryset=producto_UFC.objects.all(),
-        required=False
-    )
+    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
     producto_detalle=producto_vagon_serializer(many=False,source='producto', read_only=True)
     
     registros_vagones_data = serializers.ListField(
@@ -277,10 +275,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
     class Meta:
         model = vagon_cargado_descargado
         fields = '__all__'  # O lista explícita incluyendo 'productos_list'
-        extra_kwargs = {            
-            'producto': {'read_only': True},
-            'registros_vagones': {'read_only': True}
-        }
+        
 
     def update(self, instance, validated_data):
         try:
@@ -373,14 +368,6 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
         except Exception as e:
             raise serializers.ValidationError(f"Error al crear el registro: {str(e)}")
     
-    
-    def get_productos_list(self, obj):
-        return ", ".join([
-            p.producto.nombre_producto 
-            for p in obj.producto.all() 
-            if hasattr(p, 'producto')
-        ])  
-
 
 
 #serializador para los vagones asignados al estado vagones cargados/descargados
@@ -1199,6 +1186,8 @@ def create_nested_field_pair(serializer_class, model_class, field_name, allow_nu
     )
     return read_field, write_field
 
+
+#OK read/wirte para que se haga entrada con los id y devuelva el serializador del objeto en el write
 class ccd_productoSerializer(serializers.ModelSerializer):
 
     
@@ -1237,6 +1226,22 @@ class ccd_productoSerializer(serializers.ModelSerializer):
 
 class ccd_arrastresSerializer(serializers.ModelSerializer):
     
+    producto, producto_id = create_nested_field_pair(
+        ccd_productoSerializer, ccd_producto, 'producto'
+    )
+    acceso, acceso_id = create_nested_field_pair(
+        nom_entidades_serializer, nom_entidades, 'acceso'
+    )
+    tipo_equipo, tipo_equipo_id = create_nested_field_pair(
+        nom_tipo_equipo_ferroviario_serializer, nom_tipo_equipo_ferroviario, 'tipo_equipo'
+    )
+    equipo_vagon = serializers.ListField(
+        child=serializers.DictField(),
+        write_only=True,
+        required=False
+    )
+    equipo_vagon_detalle=vagones_dias_serializer(many=True,source='equipo_vagon', read_only=True)
+
     class Meta:
         model=ccd_arrastres
         fields="__all__"
@@ -1251,13 +1256,49 @@ class ccd_en_trenesSerializer(serializers.ModelSerializer):
     
 
 class ccd_por_situarSerializer(serializers.ModelSerializer):
+    
+    # producto, producto_id = create_nested_field_pair(
+    #     ccd_productoSerializer, ccd_producto, 'producto'
+    # )
+    # acceso, acceso_id = create_nested_field_pair(
+    #     nom_entidades_serializer, nom_entidades, 'acceso'
+    # )
+    # tipo_equipo, tipo_equipo_id = create_nested_field_pair(
+    #     nom_tipo_equipo_ferroviario_serializer, nom_tipo_equipo_ferroviario, 'tipo_equipo'
+    # )
+    # equipo_vagon = serializers.ListField(
+    #     child=serializers.DictField(),
+    #     write_only=True,
+    #     required=False
+    # )
+    #equipo_vagon_detalle=vagones_dias_serializer(many=True,source='equipo_vagon', read_only=True)
     class Meta:
         model=ccd_por_situar
         fields="__all__"
+    
+    def validate(self, attrs):
+        error=""
+        if attrs.get('tipo_equipo') and attrs['tipo_equipo'].tipo_equipo.lower() == 'locomotora':
+            error+= "No se permite seleccionar 'locomotora' como tipo de equipo ferroviario. "
+        if attrs.get('cantidad_vagones') and attrs.get('equipo_vagon'):
+            if attrs['cantidad_vagones'] != len(attrs['equipo_vagon']):
+                error += "La cantidad de vagones debe coincidir con la cantidad de equipos ferroviarios proporcionados."
+        if error:
+            raise serializers.ValidationError(detail=error,code="Field Errors")
+        return super().validate(attrs)
+    
         
     
 #####
 class ccd_situadosSerializer(serializers.ModelSerializer):
+    
+    equipo_vagon = serializers.ListField(
+        child=serializers.DictField(),
+        write_only=True,
+        required=False
+    )
+    equipo_vagon_detalle=vagones_dias_serializer(many=True,source='equipo_vagon', read_only=True)
+    
     class Meta:
         model=ccd_situados
         fields="__all__"
@@ -1267,14 +1308,7 @@ class ccd_situadosSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("No se permite seleccionar 'locomotora' como tipo de equipo ferroviario.")
         return value
     
-    def validate(self, data):
-        # Validar que el producto sea opcional
-        print ("###**Log: ",data)
-        if data["tipo_equipo"]["tipo_equipo"].lower() == "locomotora":
-            raise serializers.ValidationError("No se permite seleccionar 'locomotora' como tipo de equipo ferroviario.")
-        
-        return data
-    
+
 
 class ccd_registro_vagones_cdSerializer(serializers.ModelSerializer):
     class Meta:

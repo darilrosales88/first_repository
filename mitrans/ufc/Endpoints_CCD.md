@@ -1,8 +1,26 @@
 # Endpoints de CCDxPRODUCTO
 
+## Para obtener los productos de UFC que estan asociados a un tipo de equipo usar el query
+  -/ufc/producto-vagon/?tipo_equipo=`ID del tipo de equipo`
+
+
+
+## Para Obtener los Accesos y los CCD 
+  Se implemento el siguiente endpoint
+    -/api/entidades-acceso-ccd/
+
 ## Productos Para CCD
 
-- http://localhost:8000/ufc/ccd-productos
+- http://localhost:8000/ufc/ccd-productos/?filterset_field=
+  Estan implementados los siguientes campos para filtrar
+  ```python
+  filterset_fields = ['tipo_equipo__id', 'producto__codigo_producto','tipo_embalaje__id','unidad_medida__simbolo']
+  ```
+- http://localhost:8000/ufc/ccd-productos/?search=
+  Y estos buscadores
+  ```python
+  search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+  ```
 
 ### GET
 

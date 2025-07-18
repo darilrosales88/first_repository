@@ -1506,7 +1506,10 @@ class ccd_productoViewSet(viewsets.ModelViewSet):
     serializer_class=ccd_productoSerializer
     queryset=ccd_producto.objects.order_by("-id").all()
     permission_classes=[IsUFCPermission]
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter,DjangoFilterBackend, # Para filtros exactos
+                       filters.OrderingFilter]  # Para ordenamiento
+    
+    filterset_fields = ['tipo_equipo__id', 'producto__codigo_producto','tipo_embalaje__id','unidad_medida__simbolo']
     search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
 
 #### View CCD Informe general OK

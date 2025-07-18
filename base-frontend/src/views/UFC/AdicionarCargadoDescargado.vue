@@ -475,7 +475,8 @@ export default {
           operacion: this.formData.operacion,
           plan_diario_carga_descarga: Number(this.formData.plan_diario_carga_descarga),
           causas_incumplimiento: this.formData.causas_incumplimiento || 'Sin causas especificadas',
-          producto_ids: this.formData.producto,
+          producto: this.formData.producto,       //producto_ids: this.formData.producto  TATO ME VAS A FUNDIR EL WIRO
+                      
           registros_vagones_data: this.registros_vagones_temporales.map(v => ({
             no_id: v.no_id,
             fecha_despacho: v.fecha_despacho,

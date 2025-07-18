@@ -8,7 +8,7 @@ from .views import verificar_informe_existente,verificar_informe_ccd_existente
 from .views import VagonesDiasViewSet
 
 ###Imports View from CCD
-from .views import (ccd_productoViewSet,ccd_informeViewSet,ccd_arrastresViewSet,ccd_casillas_productosViewSet,ccd_en_trenesViewSet,ccd_por_situarViewSet,ccd_registro_vagones_cdViewSet,ccd_vagones_cdViewSet,ccd_situadosViewSet)
+from .views import (obtener_real_carga_ccd,ccd_productoViewSet,ccd_informeViewSet,ccd_arrastresViewSet,ccd_casillas_productosViewSet,ccd_en_trenesViewSet,ccd_por_situarViewSet,ccd_registro_vagones_cdViewSet,ccd_vagones_cdViewSet,ccd_situadosViewSet)
 
 from django.urls import path
 
@@ -17,7 +17,7 @@ urlpatterns = [
     path('verificar-informe-existente/', verificar_informe_existente, name='verificar-informe-existente'), 
     path('producto-vagon/verificar/', verificar_productos, name='verificar-productos'),
     path('verificar-informe-ccd-existente/', verificar_informe_ccd_existente, name='verificar-informe-ccd-existente'), 
-    
+    path("obtener-real-carga-ccd/",obtener_real_carga_ccd ,name="obtener-real-carga"),
     #path('destinos/verificar-existencia/', verificar_destino, name='verificar_destino'),#verificar si existe un destino dado cliente-destino
     #path('entidades/verificar-existencia-reeup/', verificar_codigo_reeup, name='verificar_existencia_reeup'),#verificar si existe ya el codigo reeup
         

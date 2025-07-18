@@ -85,7 +85,7 @@
                     {{ vagon.estado }}
                   </span>
                 </td>
-                <td>{{ vagon.productos_list }}</td>
+                <td>{{ vagon.producto_detalle.producto_name }}</td> 
                 <td v-if="hasGroup('AdminUFC')">
                   <div class="d-flex">
                     <button

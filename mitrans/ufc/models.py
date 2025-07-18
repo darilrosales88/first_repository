@@ -1101,7 +1101,8 @@ class ccd_situados(models.Model):
         max_length=10,
         choices=ESTADOS,
         verbose_name="Estado del equipo",
-        default="vacio"
+        default="vacio",
+        blank=True
     )
     operacion= models.CharField(
         max_length=10,
@@ -1132,6 +1133,13 @@ class ccd_situados(models.Model):
        
     class Meta:
         verbose_name="CCD Equipos Situados"
+        # constraints=[models.UniqueConstraint(
+        #     fields = [
+        #         "producto",
+        #         "informe_ccd",
+        #     ],
+        #     name="unique_ccd_situados_register",
+        # )]
     
     def __str__(self):
         return f"CCD Situado ID:{self.id} -> Informe {self.informe_ccd}"
@@ -1434,6 +1442,12 @@ class ccd_vagones_cd(models.Model):
         choices=ESTADOS,
         verbose_name="Estado del equipo",
         default="vacio"
+    )
+    operacion=models.CharField(
+        max_length=15,
+        choices=OPERACIONES,
+        verbose_name="Operacion realizada",
+        default=""
     )
     causa_incumplimiento=models.TextField(
         blank=True,null=True,

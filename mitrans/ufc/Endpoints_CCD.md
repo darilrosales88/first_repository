@@ -9,6 +9,10 @@
   Se implemento el siguiente endpoint
     -/api/entidades-acceso-ccd/
 
+## Para obtener el Real a la carga/descarga
+  Se debe hacer llamada a
+  -/ufc/obtener-real-carga-ccd/?tipo_equipo={ID}&informe={ID}&producto={ID}
+
 ## Productos Para CCD
 
 - http://localhost:8000/ufc/ccd-productos/?filterset_field=

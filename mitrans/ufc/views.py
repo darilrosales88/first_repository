@@ -1500,13 +1500,67 @@ from .serializers import (ccd_productoSerializer,ccd_arrastresSerializer,ccd_en_
 from .models import (ccd_vagones_cd,ccd_arrastres,ccd_en_trenes,ccd_por_situar,ccd_producto,ccd_registro_vagones_cd,ccd_situados,ccd_casillas_productos,ufc_informe_ccd)
 #***********************************
 
+
+##### Methods Api view para Real Carga/Descarga
+@api_view(['GET'])
+def obtener_real_carga_ccd(request):
+    """
+    Obtiene los registros de Real Carga/Descarga filtrando por tipo_equipo_ferroviario (id).
+    Parámetros esperados en la query: tipo_equipo (id), informe (id, opcional)
+    """
+    tipo_equipo_id = request.query_params.get('tipo_equipo')
+    informe_id = request.query_params.get('informe')
+    producto_id = request.query_params.get('producto')
+    
+    hoy = timezone.now().date()
+    error=""
+    if not tipo_equipo_id:
+        error+="Debe proporcionar el parámetro tipo_equipo (id)"
+    if not informe_id:
+        error+="\nDebe proporcionar el parámetro informe (id)"
+    if not producto_id:
+        error+="\nDebe proporcionar el parámetro producto (id)"
+    
+    if error:
+        return Response({"error": error}, status=400)
+    
+    filtros = {
+        "tipo_equipo__id": tipo_equipo_id,
+        "fecha_registro": hoy,
+        "informe_ccd__id":informe_id,
+        "producto__id":producto_id
+    }
+    
+    registros_carga = ccd_vagones_cd.objects.filter(**filtros,operacion="carga")
+    registros_descarga = ccd_vagones_cd.objects.filter(**filtros,operacion="descarga")
+    
+    real_carga=0
+    for registro in registros_carga:
+        real_carga+=registro.equipo_vagon.count()
+    
+    real_descarga=0
+    for registro in registros_descarga:
+        real_descarga+=registro.equipo_vagon.count()
+        
+    
+    return Response({"real_carga":real_carga,
+                     "real_descarga":real_descarga}, status=200)
+    
+
+
+
+
+
 #*************VIEWSSET**************
 #### View CCD Productos OK
 class ccd_productoViewSet(viewsets.ModelViewSet):
     serializer_class=ccd_productoSerializer
     queryset=ccd_producto.objects.order_by("-id").all()
     permission_classes=[IsUFCPermission]
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter,DjangoFilterBackend, # Para filtros exactos
+                       filters.OrderingFilter]  # Para ordenamiento
+    
+    filterset_fields = ['tipo_equipo__id', 'producto__codigo_producto','tipo_embalaje__id','unidad_medida__simbolo']
     search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
 
 #### View CCD Informe general OK

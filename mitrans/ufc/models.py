@@ -1021,7 +1021,6 @@ class ccd_producto(models.Model):
     producto = models.ForeignKey(nom_producto, on_delete=models.CASCADE,null=True)
     tipo_embalaje = models.ForeignKey(nom_tipo_embalaje, on_delete=models.CASCADE)
     unidad_medida = models.ForeignKey(nom_unidad_medida, on_delete=models.CASCADE)
-    
     tipo_equipo=models.ForeignKey(nom_tipo_equipo_ferroviario,on_delete=models.CASCADE,null=True,blank=True)
     
     cantidad = models.IntegerField()
@@ -1060,11 +1059,12 @@ class ccd_casillas_productos(models.Model):
         null=False, blank=False,
         verbose_name="Informe CCD asociado"
     ) 
-    acceso= models.CharField(
-        max_length=50,
-        choices=TIPO_ORIGEN_DESTINO_CHOICES,
-        verbose_name="Tipo de acceso",
-        default="ac",
+    acceso= models.ForeignKey(
+        nom_entidades,
+        on_delete=models.CASCADE,
+        related_name="casillas_ccd",
+        null=True, blank=True,
+        verbose_name="Acceso o Centro Carga/Descarga"
     )
     total_ayer=models.IntegerField(default=0,verbose_name="Casillas Ayer")
     entro_hoy=models.IntegerField(default=0,verbose_name="Casillas entraron Hoy") 
@@ -1081,11 +1081,12 @@ class ccd_situados(models.Model):
         null=False, blank=False,
         verbose_name="Informe CCD asociado"
     )
-    acceso= models.CharField(
-        max_length=50,
-        choices=TIPO_ORIGEN_DESTINO_CHOICES,
-        verbose_name="Tipo de acceso",
-        default="ac",
+    acceso= models.ForeignKey(
+        nom_entidades,
+        on_delete=models.CASCADE,
+        related_name="situados_ccd",
+        null=True, blank=True,
+        verbose_name="Acceso o Centro Carga/Descarga"
     )
     tipo_equipo= models.ForeignKey(
         nom_tipo_equipo_ferroviario,
@@ -1100,7 +1101,8 @@ class ccd_situados(models.Model):
         max_length=10,
         choices=ESTADOS,
         verbose_name="Estado del equipo",
-        default="vacio"
+        default="vacio",
+        blank=True
     )
     operacion= models.CharField(
         max_length=10,
@@ -1131,6 +1133,13 @@ class ccd_situados(models.Model):
        
     class Meta:
         verbose_name="CCD Equipos Situados"
+        # constraints=[models.UniqueConstraint(
+        #     fields = [
+        #         "producto",
+        #         "informe_ccd",
+        #     ],
+        #     name="unique_ccd_situados_register",
+        # )]
     
     def __str__(self):
         return f"CCD Situado ID:{self.id} -> Informe {self.informe_ccd}"
@@ -1153,11 +1162,12 @@ class ccd_por_situar(models.Model):
         null=False, blank=False,
         verbose_name="Informe CCD asociado"
     )
-    acceso= models.CharField(
-        max_length=50,
-        choices=TIPO_ORIGEN_DESTINO_CHOICES,
-        verbose_name="Tipo de acceso",
-        default="ac",
+    acceso= models.ForeignKey(
+        nom_entidades,
+        on_delete=models.CASCADE,
+        related_name="por_situar_ccd",
+        null=True, blank=True,
+        verbose_name="Acceso o Centro Carga/Descarga"
     )
     tipo_equipo= models.ForeignKey(
         nom_tipo_equipo_ferroviario,
@@ -1217,6 +1227,7 @@ class ccd_por_situar(models.Model):
     
     
 class ccd_arrastres(models.Model):
+   
     informe_ccd= models.ForeignKey(
         ufc_informe_ccd,
         on_delete=models.CASCADE,
@@ -1224,11 +1235,13 @@ class ccd_arrastres(models.Model):
         null=False, blank=False,
         verbose_name="Informe CCD asociado"
     )
-    acceso= models.CharField(
-        max_length=50,
-        choices=TIPO_ORIGEN_DESTINO_CHOICES,
-        verbose_name="Tipo de acceso",
-        default="ac",
+    acceso= models.ForeignKey(
+        nom_entidades,
+        on_delete=models.CASCADE,
+        related_name="arrastres_ccd",
+        null=True, blank=True,
+        verbose_name="Acceso o Centro Carga/Descarga",
+        default=7
     )
     tipo_equipo= models.ForeignKey(
         nom_tipo_equipo_ferroviario,
@@ -1258,6 +1271,7 @@ class ccd_arrastres(models.Model):
     producto = models.ForeignKey(
         ccd_producto, blank=True, related_name="arrastres_ccd", verbose_name="Productos Arrastre CCD", on_delete=models.SET_NULL,null=True
     )
+ 
     equipo_vagon=models.ManyToManyField(
         vagones_dias,
         blank=True,
@@ -1288,11 +1302,12 @@ class ccd_en_trenes(models.Model):
         null=False, blank=False,
         verbose_name="Informe CCD asociado"
     )
-    acceso= models.CharField(
-        max_length=50,
-        choices=TIPO_ORIGEN_DESTINO_CHOICES,
-        verbose_name="Tipo de acceso",
-        default="ac",
+    acceso= models.ForeignKey(
+        nom_entidades,
+        on_delete=models.CASCADE,
+        related_name="en_trenes_ccd",
+        null=True, blank=True,
+        verbose_name="Acceso o Centro Carga/Descarga"
     )
     tipo_equipo= models.ForeignKey(
         nom_tipo_equipo_ferroviario,
@@ -1353,7 +1368,7 @@ class ccd_registro_vagones_cd(models.Model):
         ("provincia", "Provincia"),
     ]
 
-    equipo_ferrvoviario=models.ForeignKey(nom_equipo_ferroviario, on_delete=models.CASCADE,null=False,blank=False,verbose_name="Campo de equipo Ferroviario", related_name="registro_equipo_ccd")
+    equipo_ferroviario=models.ForeignKey(nom_equipo_ferroviario, on_delete=models.CASCADE,null=False,blank=False,verbose_name="Campo de equipo Ferroviario", related_name="registro_equipo_ccd")
     
     no_id = models.CharField(
         max_length=50,
@@ -1406,11 +1421,12 @@ class ccd_vagones_cd(models.Model):
         null=True, blank=True,
         verbose_name="Informe CCD asociado"
     )
-    acceso= models.CharField(
-        max_length=50,
-        choices=TIPO_ORIGEN_DESTINO_CHOICES,
-        verbose_name="Tipo de acceso",
-        default="ac",
+    acceso= models.ForeignKey(
+        nom_entidades,
+        on_delete=models.CASCADE,
+        related_name="vagones_cd_ccd",
+        null=True, blank=True,
+        verbose_name="Acceso o Centro Carga/Descarga"
     )
     tipo_equipo= models.ForeignKey(
         nom_tipo_equipo_ferroviario,
@@ -1426,6 +1442,12 @@ class ccd_vagones_cd(models.Model):
         choices=ESTADOS,
         verbose_name="Estado del equipo",
         default="vacio"
+    )
+    operacion=models.CharField(
+        max_length=15,
+        choices=OPERACIONES,
+        verbose_name="Operacion realizada",
+        default=""
     )
     causa_incumplimiento=models.TextField(
         blank=True,null=True,

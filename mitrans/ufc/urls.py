@@ -8,7 +8,7 @@ from .views import verificar_informe_existente,verificar_informe_ccd_existente
 from .views import VagonesDiasViewSet
 
 ###Imports View from CCD
-from .views import (ccd_productoViewSet,ccd_informeViewSet,ccd_arrastresViewSet,ccd_casillas_productosViewSet,ccd_en_trenesViewSet,ccd_por_situarViewSet,ccd_registro_vagones_cdViewSet,ccd_vagones_cdViewSet,ccd_situadosViewSet)
+from .views import (obtener_real_carga_ccd,ccd_productoViewSet,ccd_informeViewSet,ccd_arrastresViewSet,ccd_casillas_productosViewSet,ccd_en_trenesViewSet,ccd_por_situarViewSet,ccd_registro_vagones_cdViewSet,ccd_vagones_cdViewSet,ccd_situadosViewSet)
 
 from django.urls import path
 
@@ -17,7 +17,7 @@ urlpatterns = [
     path('verificar-informe-existente/', verificar_informe_existente, name='verificar-informe-existente'), 
     path('producto-vagon/verificar/', verificar_productos, name='verificar-productos'),
     path('verificar-informe-ccd-existente/', verificar_informe_ccd_existente, name='verificar-informe-ccd-existente'), 
-    
+    path("obtener-real-carga-ccd/",obtener_real_carga_ccd ,name="obtener-real-carga"),
     #path('destinos/verificar-existencia/', verificar_destino, name='verificar_destino'),#verificar si existe un destino dado cliente-destino
     #path('entidades/verificar-existencia-reeup/', verificar_codigo_reeup, name='verificar_existencia_reeup'),#verificar si existe ya el codigo reeup
         
@@ -25,8 +25,7 @@ urlpatterns = [
 
 router = routers.DefaultRouter()
 #definimos las rutas
-
-#endpoint para informe operativo
+############### Aqui empiezan los endpoint de UFC
 router.register('informe-operativo',ufc_informe_operativo_view_set,basename='informe-operativo')
 #endpoints asociados a vagones y productos
 router.register('vagones-productos',vagones_productos_view_set,basename='vagones_productos')
@@ -41,20 +40,10 @@ router.register('vagones-cargados-descargados',vagon_cargado_descargado_view_set
 
 
 router.register('en-trenes',en_trenes_view_set, basename='en-trenes' )
-#router.register('en-trenes-hoy',en_trenes_hoy_viewset, basename='en-trenes-hoy' )
-
-
 router.register('vagones-dias',VagonesDiasViewSet,basename='vagones_dias')
 router.register('por-situar',PorSituarCargaDescargaViewSet, basename="por-situar")
-#router.register('por-situar-hoy',PorSituarCargaDescarga_hoy_ViewSet, basename="por-situar-hoy")
-
 router.register('situados', SituadoCargaDescargaViewset, basename="situados")
-#router.register('situados-hoy', SituadoCargaDescarga_hoy_Viewset, basename="situados-hoy")
 router.register('pendiente-arrastre', PendienteArrastreViewset, basename ="pendiente-arrastre")
-#router.register('pendiente-arrastre-hoy', PendienteArrastre_hoy_Viewset, basename ="pendiente-arrastre-hoy")
-
-
-#endpoint para rotacion de vagones
 router.register("rotaciones", RotacionVagonesViewSet, basename="rotacion-vagones")
 
 

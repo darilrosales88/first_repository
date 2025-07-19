@@ -278,7 +278,7 @@
                 <i class="bi bi-x-circle" me-1></i>Cancelar
               </button>
               <button type="submit" class="ufc-button primary">
-                <i class="bi bi-check-circle" me-1></i>Agregar
+                <i class="bi bi-check-circle" me-1></i>Añadir
               </button>
             </div>
           </div>
@@ -290,7 +290,7 @@
   <div v-if="mostrarModalVagon" class="ufc-modal-overlay">
     <div class="ufc-modal-container">
       <div class="ufc-modal-header">
-        <h3><i class="bi bi-train-freight-front"></i> Agregar Vagón</h3>
+        <h3><i class="bi bi-train-freight-front"></i> Añadir</h3>
         <button @click="cerrarModalVagon" class="ufc-modal-close">
           <i class="bi bi-x"></i>
         </button>
@@ -344,7 +344,7 @@
             class="ufc-button primary"
             @click="agregarNuevoVagon()"
           >
-            <i class="bi bi-check-circle"></i> Agregar
+            <i class="bi bi-check-circle"></i> Añadir
           </button>
         </div>
       </div>
@@ -361,7 +361,7 @@
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <button class="btn btn-primary" @click="abrirModalVagon()">
-            <i class="bi bi-plus-circle"></i> Agregar Vagón
+            <i class="bi bi-plus-circle"></i> Añadir
           </button>
         </div>
         <!-- Tabla responsive con mejoras -->
@@ -412,10 +412,10 @@
           <p v-if="vagonesAgregados.length < formData.por_situar">
             Faltan
             {{ formData.por_situar - vagonesAgregados.length }}
-            vagones por agregar.
+            vagones por añadirr.
           </p>
           <p v-else-if="vagonesAgregados.length === formData.por_situar">
-            Todos los vagones han sido agregados.
+            Todos los vagones han sido añadidos.
           </p>
         </div>
       </div>

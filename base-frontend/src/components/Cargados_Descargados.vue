@@ -11,9 +11,8 @@
           <router-link
             v-if="hasGroup('AdminUFC') && this.habilitado"
             to="AdicionarVagonCargadoDescargado">
-            <button class="btn btn-sm btn-primary">
-              <i class="bi bi-plus-circle me-1"></i>Agregar nuevo vagón
-              cargado/descargado
+            <button class="btn btn-primary">
+              <i class="bi bi-plus-circle me-1"></i>Añadir
             </button>
           </router-link>
           <form @submit.prevent="search_producto" class="search-container">
@@ -85,7 +84,7 @@
                     {{ vagon.estado }}
                   </span>
                 </td>
-                <td>{{ vagon.productos_list }}</td>
+ 
                 <td v-if="hasGroup('AdminUFC')">
                   <div class="d-flex">
                     <button
@@ -374,6 +373,7 @@ export default {
 
   async mounted() {
     await this.getVagonesCargadosDescargados();
+    console.log(this.cargados_descargados)
     await this.fetchUserPermissionsAndGroups();
   },
 

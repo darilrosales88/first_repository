@@ -24,8 +24,8 @@
             </span>
 
             <!-- Botón alineado a la derecha -->
-            <button class="btn btn-sm btn-primary" @click="mostrarModal = true" v-if="this.habilitado">
-              <i class="bi bi-plus-circle me-1"></i>Adicionar rotación
+            <button class="btn btn-primary" @click="mostrarModal = true" v-if="this.habilitado">
+              <i class="bi bi-plus-circle me-1"></i>Añadir rotación
             </button>
           </h6>
 

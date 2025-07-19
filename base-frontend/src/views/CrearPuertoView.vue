@@ -6,7 +6,7 @@
     <br />
     <Navbar-Component />
     
-    <div class="form-container">
+    <div class="form-container" style="margin-left: 18em; width: 75%">
       <h3>Adicionar Puerto</h3>
       <form @submit.prevent="saveItem" class="form-grid">
         <!-- Campo Nombre del Puerto -->

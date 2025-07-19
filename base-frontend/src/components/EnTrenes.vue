@@ -9,8 +9,8 @@
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <router-link v-if="hasGroup('AdminUFC') && this.habilitado" to="/AdicionarVagon">
-            <button class="btn btn-sm btn-primary">
-              <i class="bi bi-plus-circle me-1"></i>Agregar nuevo vagón en tren
+            <button class="btn btn-primary">
+              <i class="bi bi-plus-circle me-1"></i>Añadir
             </button>
           </router-link>
           <form @submit.prevent="search_producto" class="search-container">
@@ -87,17 +87,8 @@
                     {{ item.estado || "-" }}
                   </span>
                 </td>
-                <td>
-                  <span
-                    v-if="item.productos_info && item.productos_info.length > 0"
-                  >
-                    {{ getNombresProductos(item.productos_info) }}
-                  </span>
-                  <span v-else>-</span>
-                </td>
-                <td>
-                  <span>{{ item.cantidad_vagones || "0" }}</span>
-                </td>
+                <td>{{ item.producto_name || "-" }}</td>
+                <td>{{ item.cantidad_vagones || "0" }}</td>
                 <td>{{ item.origen || "-" }}</td>
                 <td>{{ item.destino || "-" }}</td>
                 <td v-if="showContent">
@@ -403,6 +394,7 @@ export default {
 
   async mounted() {
     await this.getTrenes();
+    console.log(this.enTrenes)
     await this.fetchUserPermissionsAndGroups();
   },
 
@@ -413,14 +405,6 @@ export default {
     },
     toggleContentVisibility() {
       this.showContent = !this.showContent;
-    },
-
-    getNombresProductos(productos) {
-      if (!productos || !Array.isArray(productos)) return "-";
-      return productos
-        .filter((p) => p && p.nombre_producto && p.codigo_producto)
-        .map((p) => `${p.nombre_producto} (${p.codigo_producto})`)
-        .join(", ");
     },
 
     hasGroup(group) {
@@ -460,7 +444,6 @@ export default {
       const fechaFormateada = `${today.getFullYear()}-${String(
         today.getMonth() + 1
       ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-      console.log("Ahora si: ", this.informeID);
       try {
         const infoID = await axios.get(
           `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`

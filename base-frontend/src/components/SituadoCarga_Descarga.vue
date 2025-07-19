@@ -12,9 +12,8 @@
             v-if="hasGroup('AdminUFC') && this.habilitado"
             to="/AdicionarSituados"
           >
-            <button class="btn btn-sm btn-primary">
-              <i class="bi bi-plus-circle me-1"></i>Agregar nuevo registro
-              situado
+            <button class="btn btn-primary">
+              <i class="bi bi-plus-circle me-1"></i>Añadir
             </button>
           </router-link>
           <form @submit.prevent="search_producto" class="search-container">
@@ -93,8 +92,7 @@
                 <td>{{ item.operacion }}</td>
                 <td class="ps-td">
                   <span v-if="item.producto">
-                    {{ item.producto_detalle.producto_name
-                    }}<!-- Aqui hay que actualizar tambien esto mismo en los demas estados @BZ-theFanG #-#-->
+                    {{ item.producto_detalle.producto_name}}<!-- Aqui hay que actualizar tambien esto mismo en los demas estados @BZ-theFanG #-#-->
                   </span>
                   <span v-else>-</span>
                 </td>

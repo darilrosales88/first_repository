@@ -1368,7 +1368,7 @@ class ccd_registro_vagones_cd(models.Model):
         ("provincia", "Provincia"),
     ]
 
-    equipo_ferrvoviario=models.ForeignKey(nom_equipo_ferroviario, on_delete=models.CASCADE,null=False,blank=False,verbose_name="Campo de equipo Ferroviario", related_name="registro_equipo_ccd")
+    equipo_ferroviario=models.ForeignKey(nom_equipo_ferroviario, on_delete=models.CASCADE,null=False,blank=False,verbose_name="Campo de equipo Ferroviario", related_name="registro_equipo_ccd")
     
     no_id = models.CharField(
         max_length=50,

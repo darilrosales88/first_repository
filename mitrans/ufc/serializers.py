@@ -1223,7 +1223,7 @@ class ccd_productoSerializer(serializers.ModelSerializer):
         
         return data
         
-
+## En talla
 class ccd_arrastresSerializer(serializers.ModelSerializer):
     
     producto, producto_id = create_nested_field_pair(
@@ -1235,10 +1235,9 @@ class ccd_arrastresSerializer(serializers.ModelSerializer):
     tipo_equipo, tipo_equipo_id = create_nested_field_pair(
         nom_tipo_equipo_ferroviario_serializer, nom_tipo_equipo_ferroviario, 'tipo_equipo'
     )
-    equipo_vagon = serializers.ListField(
-        child=serializers.DictField(),
-        write_only=True,
-        required=False
+    equipo_vagon = vagones_dias_serializer(
+        many=True,
+        write_only=True
     )
     equipo_vagon_detalle=vagones_dias_serializer(many=True,source='equipo_vagon', read_only=True)
 
@@ -1246,32 +1245,155 @@ class ccd_arrastresSerializer(serializers.ModelSerializer):
         model=ccd_arrastres
         fields="__all__"
         
-
+    def validate(self, attrs):
+        error=""
+        if attrs.get('tipo_equipo') and attrs['tipo_equipo'].tipo_equipo.lower() == 'locomotora':
+            error+= "No se permite seleccionar 'locomotora' como tipo de equipo ferroviario. "
+        if attrs.get('cantidad_vagones') and attrs.get('equipo_vagon'):
+            if attrs['cantidad_vagones'] != len(attrs['equipo_vagon']):
+                error += "La cantidad de vagones debe coincidir con la cantidad de equipos ferroviarios proporcionados."
+        if error:
+            raise serializers.ValidationError(detail=error,code="Field Errors")
+        return super().validate(attrs)
+    
+    #### Por el momento esta es la unica manera de crear los Nested serializer asi que hasta que no se me ocurra otra relacion se mantendra asi
+    ## Aqui esta el create para los vagones_dias   
+    def create(self, validated_data):
+        # Extraer datos de vagones
+        vagones_data = validated_data.pop('equipo_vagon', [])
+       
+        
+        # Crear instancia principal
+        instance = super().create(validated_data)
+        
+        # Crear registros de vagones_dias y asociarlos
+        for vagon_data in vagones_data:
+            equipo=vagon_data['equipo_ferroviario']
+            vagon = vagones_dias.objects.create(
+                equipo_ferroviario=equipo,
+                cant_dias=vagon_data['cant_dias']
+            )
+            
+            actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado CCD Pendiente a Arrastre")
+            instance.equipo_vagon.add(vagon)
+        return instance
+        
+            
+    ## Aqui esta el update para los vagones_dias   ####revisar
+    def update(self, instance:ccd_arrastres, validated_data):
+        vagones_data = validated_data.pop('equipo_vagon', None)
+    
+        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            instance.save()
+        
+        for equipo in instance.equipo_vagon.all():
+            equipo_id=equipo.equipo_ferroviario
+            actualizar_estado_equipo_ferroviario(equipo_id,"Disponible")
+        # Actualizar vagones si se proporcionan
+        if vagones_data is not None:
+            instance.equipo_vagon.clear()
+            for vagon_data in vagones_data:
+                equipo=vagon_data['equipo_ferroviario']
+                actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado CCD Pendiente a Arrastre")
+                vagon = vagones_dias.objects.create(
+                    equipo_ferroviario=equipo,
+                    cant_dias=vagon_data['cant_dias']
+                )
+                instance.equipo_vagon.add(vagon)
+        return instance
 
 class ccd_en_trenesSerializer(serializers.ModelSerializer):
+    producto, producto_id = create_nested_field_pair(
+        ccd_productoSerializer, ccd_producto, 'producto'
+    )
+    acceso, acceso_id = create_nested_field_pair(
+        nom_entidades_serializer, nom_entidades, 'acceso'
+    )
+    tipo_equipo, tipo_equipo_id = create_nested_field_pair(
+        nom_tipo_equipo_ferroviario_serializer, nom_tipo_equipo_ferroviario, 'tipo_equipo'
+    )
+    equipo_vagon_detalle=nom_equipo_ferroviario_serializer(many=True,source='equipo_vagon', read_only=True)
     class Meta:
         model=ccd_en_trenes
         fields="__all__"
         
+    def validate(self, attrs):
+        error=""
+        if attrs.get('tipo_equipo') and attrs['tipo_equipo'].tipo_equipo.lower() == 'locomotora':
+            error+= "No se permite seleccionar 'locomotora' como tipo de equipo ferroviario. "
+        if attrs.get('cantidad_vagones') and attrs.get('equipo_vagon'):
+            if attrs['cantidad_vagones'] != len(attrs['equipo_vagon']):
+                error += "La cantidad de vagones debe coincidir con la cantidad de equipos ferroviarios proporcionados."
+        if error:
+            raise serializers.ValidationError(detail=error,code="Field Errors")
+        return super().validate(attrs)
+    def create(self, validated_data):
+        equipo_vagon_data=validated_data.pop('equipo_vagon',[])
+        instance = ccd_en_trenes.objects.create(**validated_data)
+    
+        instance.equipo_vagon.set(equipo_vagon_data)
+        
+        for equipo in equipo_vagon_data:    
+        # Actualizar estado del equipo ferroviario
+            print("Este es el id a cambiar", equipo)
+            actualizar_estado_equipo_ferroviario(equipo.numero_identificacion, 'Asignado al estado CCD En Trenes')
+        
+        return instance
+
+    def update(self, instance, validated_data):
+        
+        equipo_vagon_data=validated_data.pop('equipo_vagon',None)
+        #instance = super().update(instance, validated_data)
+       
+            
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            instance.save()
+            
+        if equipo_vagon_data:
+# Eliminar registros antiguos no incluidos
+            # Primero, liberar equipos ferroviarios de registros que se eliminarán
+            registros_a_eliminar = instance.equipo_vagon.all()
+            for registro in registros_a_eliminar:
+                actualizar_estado_equipo_ferroviario(registro, 'Disponible')
+            
+            
+            # Actualizar o crear registros
+            for registro_id in equipo_vagon_data:
+                
+                if registro_id:
+                    # Actualizar registro existente
+                    registro = nom_equipo_ferroviario.objects.get(id=registro_id.id)
+                    instance.equipo_vagon.add(registro)
+                
+                # Actualizar estado del equipo ferroviario
+                actualizar_estado_equipo_ferroviario(registro_id, 'Asignado al estado CCD En Trenes')
+        
+        instance.equipo_vagon.set(equipo_vagon_data)
+        
+        
+        return instance
     
 
 class ccd_por_situarSerializer(serializers.ModelSerializer):
     
-    # producto, producto_id = create_nested_field_pair(
-    #     ccd_productoSerializer, ccd_producto, 'producto'
-    # )
-    # acceso, acceso_id = create_nested_field_pair(
-    #     nom_entidades_serializer, nom_entidades, 'acceso'
-    # )
-    # tipo_equipo, tipo_equipo_id = create_nested_field_pair(
-    #     nom_tipo_equipo_ferroviario_serializer, nom_tipo_equipo_ferroviario, 'tipo_equipo'
-    # )
-    # equipo_vagon = serializers.ListField(
-    #     child=serializers.DictField(),
-    #     write_only=True,
-    #     required=False
-    # )
-    #equipo_vagon_detalle=vagones_dias_serializer(many=True,source='equipo_vagon', read_only=True)
+    producto, producto_id = create_nested_field_pair(
+        ccd_productoSerializer, ccd_producto, 'producto'
+    )
+    acceso, acceso_id = create_nested_field_pair(
+        nom_entidades_serializer, nom_entidades, 'acceso'
+    )
+    tipo_equipo, tipo_equipo_id = create_nested_field_pair(
+        nom_tipo_equipo_ferroviario_serializer, nom_tipo_equipo_ferroviario, 'tipo_equipo'
+    )
+    equipo_vagon = vagones_dias_serializer(
+        many=True,
+        write_only=True
+    )
+    equipo_vagon_detalle=vagones_dias_serializer(many=True,source='equipo_vagon', read_only=True)
+    
     class Meta:
         model=ccd_por_situar
         fields="__all__"
@@ -1287,26 +1409,132 @@ class ccd_por_situarSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(detail=error,code="Field Errors")
         return super().validate(attrs)
     
+    #### Por el momento esta es la unica manera de crear los Nested serializer asi que hasta que no se me ocurra otra relacion se mantendra asi
+    ## Aqui esta el create para los vagones_dias   
+    def create(self, validated_data):
+        # Extraer datos de vagones
+        vagones_data = validated_data.pop('equipo_vagon', [])
+       
+        
+        # Crear instancia principal
+        instance = super().create(validated_data)
+        
+        # Crear registros de vagones_dias y asociarlos
+        for vagon_data in vagones_data:
+            equipo=vagon_data['equipo_ferroviario']
+            vagon = vagones_dias.objects.create(
+                equipo_ferroviario=equipo,
+                cant_dias=vagon_data['cant_dias']
+            )
+            
+            actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado CCD Por Situar")
+            instance.equipo_vagon.add(vagon)
+        return instance
+        
+            
+    ## Aqui esta el update para los vagones_dias   ####revisar
+    def update(self, instance:ccd_arrastres, validated_data):
+        vagones_data = validated_data.pop('equipo_vagon', None)
+    
+        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            instance.save()
+        
+        for equipo in instance.equipo_vagon.all():
+            equipo_id=equipo.equipo_ferroviario
+            actualizar_estado_equipo_ferroviario(equipo_id,"Disponible")
+        # Actualizar vagones si se proporcionan
+        if vagones_data is not None:
+            instance.equipo_vagon.clear()
+            for vagon_data in vagones_data:
+                equipo=vagon_data['equipo_ferroviario']
+                actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado CCD Por Situar")
+                vagon = vagones_dias.objects.create(
+                    equipo_ferroviario=equipo,
+                    cant_dias=vagon_data['cant_dias']
+                )
+                instance.equipo_vagon.add(vagon)
+        return instance
         
     
 #####
 class ccd_situadosSerializer(serializers.ModelSerializer):
     
-    equipo_vagon = serializers.ListField(
-        child=serializers.DictField(),
-        write_only=True,
-        required=False
+    producto, producto_id = create_nested_field_pair(
+        ccd_productoSerializer, ccd_producto, 'producto'
+    )
+    acceso, acceso_id = create_nested_field_pair(
+        nom_entidades_serializer, nom_entidades, 'acceso'
+    )
+    tipo_equipo, tipo_equipo_id = create_nested_field_pair(
+        nom_tipo_equipo_ferroviario_serializer, nom_tipo_equipo_ferroviario, 'tipo_equipo'
+    )
+    equipo_vagon = vagones_dias_serializer(
+        many=True,
+        write_only=True
     )
     equipo_vagon_detalle=vagones_dias_serializer(many=True,source='equipo_vagon', read_only=True)
     
     class Meta:
         model=ccd_situados
         fields="__all__"
+    
+    def validate(self, attrs):
+        error=""
+        if attrs.get('tipo_equipo') and attrs['tipo_equipo'].tipo_equipo.lower() == 'locomotora':
+            error+= "No se permite seleccionar 'locomotora' como tipo de equipo ferroviario. "
+        if error:
+            raise serializers.ValidationError(detail=error,code="Field Errors")
+        return super().validate(attrs)
+    
+    #### Por el momento esta es la unica manera de crear los Nested serializer asi que hasta que no se me ocurra otra relacion se mantendra asi
+    ## Aqui esta el create para los vagones_dias   
+    def create(self, validated_data):
+        # Extraer datos de vagones
+        vagones_data = validated_data.pop('equipo_vagon', [])
+       
         
-    def validate_tipo_equipo(self, value):
-        if value and getattr(value, "tipo_equipo", "").lower() == "locomotora":
-            raise serializers.ValidationError("No se permite seleccionar 'locomotora' como tipo de equipo ferroviario.")
-        return value
+        # Crear instancia principal
+        instance = super().create(validated_data)
+        
+        # Crear registros de vagones_dias y asociarlos
+        for vagon_data in vagones_data:
+            equipo=vagon_data['equipo_ferroviario']
+            vagon = vagones_dias.objects.create(
+                equipo_ferroviario=equipo,
+                cant_dias=vagon_data['cant_dias']
+            )
+            
+            actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado CCD Situado")
+            instance.equipo_vagon.add(vagon)
+        return instance
+        
+            
+    ## Aqui esta el update para los vagones_dias   ####revisar
+    def update(self, instance:ccd_arrastres, validated_data):
+        vagones_data = validated_data.pop('equipo_vagon', None)
+    
+        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            instance.save()
+        
+        for equipo in instance.equipo_vagon.all():
+            equipo_id=equipo.equipo_ferroviario
+            actualizar_estado_equipo_ferroviario(equipo_id,"Disponible")
+        # Actualizar vagones si se proporcionan
+        if vagones_data is not None:
+            instance.equipo_vagon.clear()
+            for vagon_data in vagones_data:
+                equipo=vagon_data['equipo_ferroviario']
+                actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado CCD Situado")
+                vagon = vagones_dias.objects.create(
+                    equipo_ferroviario=equipo,
+                    cant_dias=vagon_data['cant_dias']
+                )
+                instance.equipo_vagon.add(vagon)
+        return instance
     
 
 
@@ -1319,9 +1547,69 @@ class ccd_registro_vagones_cdSerializer(serializers.ModelSerializer):
     
 
 class ccd_vagones_cdSerializer(serializers.ModelSerializer):
+    
+    producto, producto_id = create_nested_field_pair(
+        ccd_productoSerializer, ccd_producto, 'producto'
+    )
+    acceso, acceso_id = create_nested_field_pair(
+        nom_entidades_serializer, nom_entidades, 'acceso'
+    )
+    tipo_equipo, tipo_equipo_id = create_nested_field_pair(
+        nom_tipo_equipo_ferroviario_serializer, nom_tipo_equipo_ferroviario, 'tipo_equipo'
+    )
+    equipo_vagon = ccd_registro_vagones_cdSerializer(
+        many=True,
+        write_only=True
+    )
+    equipo_vagon_detalle=ccd_registro_vagones_cdSerializer(many=True,source='equipo_vagon', read_only=True)
+    
     class Meta:
         model=ccd_vagones_cd
         fields="__all__"
+        
+    def create(self, validated_data):
+        # Extraer datos de vagones
+        vagones_data = validated_data.pop('equipo_vagon', [])
+       
+        
+        # Crear instancia principal
+        instance = super().create(validated_data)
+        
+        # Crear registros de vagones_dias y asociarlos
+        for vagon_data in vagones_data:
+            equipo=vagon_data['equipo_ferroviario']
+            vagon = ccd_registro_vagones_cd.objects.create(
+                **vagon_data,  # Asumiendo que vagon_data contiene los campos necesarios
+            )
+            
+            actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado CCD Vagon Cargado/Descargado")
+            instance.equipo_vagon.add(vagon)
+        return instance
+        
+            
+    ## Aqui esta el update para los vagones_dias   ####revisar
+    def update(self, instance:ccd_arrastres, validated_data):
+        vagones_data = validated_data.pop('equipo_vagon', None)
+    
+        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            instance.save()
+        
+        for equipo in instance.equipo_vagon.all():
+            equipo_id=equipo.equipo_ferroviario
+            actualizar_estado_equipo_ferroviario(equipo_id,"Disponible")
+        # Actualizar vagones si se proporcionan
+        if vagones_data is not None:
+            instance.equipo_vagon.clear()
+            for vagon_data in vagones_data:
+                equipo=vagon_data['equipo_ferroviario']
+                actualizar_estado_equipo_ferroviario(equipo,"Asignado al estado Vagon Cargado/Descargado")
+                vagon = ccd_registro_vagones_cd.objects.create(
+                    **vagon_data,  # Asumiendo que vagon_data contiene los campos necesarios
+                )
+                instance.equipo_vagon.add(vagon)
+        return instance
         
 
 class ccd_casillas_productosSerializer(serializers.ModelSerializer):

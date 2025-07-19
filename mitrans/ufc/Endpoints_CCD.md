@@ -9,6 +9,15 @@
   Se implemento el siguiente endpoint
     -/api/entidades-acceso-ccd/
 
+## Estructuras de los estados 
+* ["POR-SITUAR"](#ccd-por-situar-ok)
+* ["SITUADOS"](#ccd-situados-ok)
+* ["ARRASTRES"](#ccd-arrastres-ok)
+* ["EN-TRENES"](#ccd-en-trenes)
+* ["VAGONES-CD"](#ccd-vagones-cd)
+
+
+
 ## Para obtener el Real a la carga/descarga
   Se debe hacer llamada a
   -/ufc/obtener-real-carga-ccd/?tipo_equipo={ID}&informe={ID}&producto={ID}
@@ -219,3 +228,583 @@ Con sus respectivos CRUD
   "ccd-vagones-cd": "http://localhost:8000/ufc/ccd-vagones-cd/"
 }
 ```
+
+## CCD-arrastres OK
+
+### GET 
+  ```json
+  {
+    "id": 7,
+    "producto": {
+      "id": 2,
+      "producto": {
+        "id": 1,
+        "codigo_producto": "CHI0012",
+        "nombre_producto": "Chícharo",
+        "tipo_producto": "alimento",
+        "tipo_producto_name": "Alimento",
+        "descripcion": "Minsa"
+      },
+      "tipo_embalaje": {
+        "id": 3,
+        "nombre_tipo_embalaje": "RAPEL"
+      },
+      "unidad_medida": {
+        "id": 3,
+        "magnitud": "volumen",
+        "unidad_medida": "Litros",
+        "simbolo": "L"
+      },
+      "tipo_equipo": {
+        "id": 6,
+        "tipo_equipo": "planc_plat",
+        "tipo_equipo_name": "Plancha o Plataforma",
+        "tipo_carga": "contenedores",
+        "tipo_carga_name": "Contenedores",
+        "tipo_combustible": "combustible_blanco",
+        "tipo_combustible_name": "Combustible blanco",
+        "longitud": "122.00",
+        "peso_neto_sin_carga": "1234.00",
+        "peso_maximo_con_carga": "1234.00",
+        "capacidad_cubica_maxima": "12.00",
+        "descripcion": "adsf"
+      },
+      "cantidad": 1233,
+      "estado": "lleno",
+      "contiene": "alimentos"
+    },
+    "acceso": {
+      "id": 7,
+      "nombre": "CCD Uno",
+      "abreviatura": "CCDU",
+      "osde_oace_organismo": 1,
+      "codigo_reeup": "1212121245",
+      "o_o_o_name": "Ministerio de Comercio Interior",
+      "provincia": 1,
+      "provincia_name": "La Habana",
+      "tipo_entidad": "ccd",
+      "tipo_entidad_name": "Centro Carga/Descarga",
+      "territorio": 2,
+      "territorio_name": "Eser"
+    },
+    "tipo_equipo": {
+      "id": 6,
+      "tipo_equipo": "planc_plat",
+      "tipo_equipo_name": "Plancha o Plataforma",
+      "tipo_carga": "contenedores",
+      "tipo_carga_name": "Contenedores",
+      "tipo_combustible": "combustible_blanco",
+      "tipo_combustible_name": "Combustible blanco",
+      "longitud": "122.00",
+      "peso_neto_sin_carga": "1234.00",
+      "peso_maximo_con_carga": "1234.00",
+      "capacidad_cubica_maxima": "12.00",
+      "descripcion": "adsf"
+    },
+    "equipo_vagon_detalle": [
+      {
+        "id": 108,
+        "equipo_ferroviario_detalle": {
+          "id": 26,
+          "tipo_equipo": 6,
+          "tipo_equipo_name": "Plancha o Plataforma",
+          "estado_actual": "Asignado al estado CCD Pendiente a Arrastre",
+          "numero_identificacion": "CAV3",
+          "territorio": "centro",
+          "territorio_name": "Centro",
+          "tipo_carga": "Contenedores",
+          "tipo_combustible": "Combustible blanco",
+          "tipo_combustible_name": "Combustible blanco",
+          "peso_maximo": "1234.00"
+        },
+        "cant_dias": 1
+      }
+    ],
+    "fecha_registro": "2025-07-18",
+    "estado": "cargado",
+    "cantidad_vagones": 2,
+    "observaciones": "ESTE ULTIMO",
+    "informe_ccd": 3
+  }
+  ```
+
+### POST/PUT
+  ```json
+  {
+      "fecha_registro": "2025-07-18",
+      "estado": "cargado",
+      "operacion": "descarga",
+      "cantidad_vagones": 2,
+      "observaciones": "ESTE ULTIMO",
+      "informe_ccd": 3,
+      "acceso_id": 7,
+      "tipo_equipo_id": 6,
+      "producto_id": 2,
+      "equipo_vagon": [
+        {
+        "equipo_ferroviario":26,
+        "cant_dias":1
+        }
+      ]
+    }
+  ```
+
+
+## CCD-Por-Situar OK
+
+### POST/PUT
+  ```json
+  {
+  "id": 4,
+  "producto": {
+    "id": 2,
+    "producto": {
+      "id": 1,
+      "codigo_producto": "CHI0012",
+      "nombre_producto": "Chícharo",
+      "tipo_producto": "alimento",
+      "tipo_producto_name": "Alimento",
+      "descripcion": "Minsa"
+    },
+    "tipo_embalaje": {
+      "id": 3,
+      "nombre_tipo_embalaje": "RAPEL"
+    },
+    "unidad_medida": {
+      "id": 3,
+      "magnitud": "volumen",
+      "unidad_medida": "Litros",
+      "simbolo": "L"
+    },
+    "tipo_equipo": {
+      "id": 6,
+      "tipo_equipo": "planc_plat",
+      "tipo_equipo_name": "Plancha o Plataforma",
+      "tipo_carga": "contenedores",
+      "tipo_carga_name": "Contenedores",
+      "tipo_combustible": "combustible_blanco",
+      "tipo_combustible_name": "Combustible blanco",
+      "longitud": "122.00",
+      "peso_neto_sin_carga": "1234.00",
+      "peso_maximo_con_carga": "1234.00",
+      "capacidad_cubica_maxima": "12.00",
+      "descripcion": "adsf"
+    },
+    "cantidad": 1233,
+    "estado": "lleno",
+    "contiene": "alimentos"
+  },
+  "acceso": {
+    "id": 7,
+    "nombre": "CCD Uno",
+    "abreviatura": "CCDU",
+    "osde_oace_organismo": 1,
+    "codigo_reeup": "1212121245",
+    "o_o_o_name": "Ministerio de Comercio Interior",
+    "provincia": 1,
+    "provincia_name": "La Habana",
+    "tipo_entidad": "ccd",
+    "tipo_entidad_name": "Centro Carga/Descarga",
+    "territorio": 2,
+    "territorio_name": "Eser"
+  },
+  "tipo_equipo": {
+    "id": 6,
+    "tipo_equipo": "planc_plat",
+    "tipo_equipo_name": "Plancha o Plataforma",
+    "tipo_carga": "contenedores",
+    "tipo_carga_name": "Contenedores",
+    "tipo_combustible": "combustible_blanco",
+    "tipo_combustible_name": "Combustible blanco",
+    "longitud": "122.00",
+    "peso_neto_sin_carga": "1234.00",
+    "peso_maximo_con_carga": "1234.00",
+    "capacidad_cubica_maxima": "12.00",
+    "descripcion": "adsf"
+  },
+  "equipo_vagon_detalle": [
+    {
+      "id": 110,
+      "equipo_ferroviario_detalle": {
+        "id": 27,
+        "tipo_equipo": 8,
+        "tipo_equipo_name": "Casilla",
+        "estado_actual": "Asignado al estado CCD Por Situar",
+        "numero_identificacion": "VCL1",
+        "territorio": "centro",
+        "territorio_name": "Centro",
+        "tipo_carga": "Otros",
+        "tipo_combustible": "-",
+        "tipo_combustible_name": "Combustible negro",
+        "peso_maximo": "12444.00"
+      },
+      "cant_dias": 1
+    }
+  ],
+  "fecha_registro": "2025-07-18",
+  "estado": "cargado",
+  "operacion": "descarga",
+  "cantidad_vagones": 1,
+  "causas_incumplimiento": null,
+  "informe_ccd": 3
+}
+  ```
+
+## CCD-Situados OK
+
+### GET
+  ```json
+  {
+  "id": 1,
+  "producto": {
+    "id": 2,
+    "producto": {
+      "id": 1,
+      "codigo_producto": "CHI0012",
+      "nombre_producto": "Chícharo",
+      "tipo_producto": "alimento",
+      "tipo_producto_name": "Alimento",
+      "descripcion": "Minsa"
+    },
+    "tipo_embalaje": {
+      "id": 3,
+      "nombre_tipo_embalaje": "RAPEL"
+    },
+    "unidad_medida": {
+      "id": 3,
+      "magnitud": "volumen",
+      "unidad_medida": "Litros",
+      "simbolo": "L"
+    },
+    "tipo_equipo": {
+      "id": 6,
+      "tipo_equipo": "planc_plat",
+      "tipo_equipo_name": "Plancha o Plataforma",
+      "tipo_carga": "contenedores",
+      "tipo_carga_name": "Contenedores",
+      "tipo_combustible": "combustible_blanco",
+      "tipo_combustible_name": "Combustible blanco",
+      "longitud": "122.00",
+      "peso_neto_sin_carga": "1234.00",
+      "peso_maximo_con_carga": "1234.00",
+      "capacidad_cubica_maxima": "12.00",
+      "descripcion": "adsf"
+    },
+    "cantidad": 1233,
+    "estado": "lleno",
+    "contiene": "alimentos"
+  },
+  "acceso": {
+    "id": 7,
+    "nombre": "CCD Uno",
+    "abreviatura": "CCDU",
+    "osde_oace_organismo": 1,
+    "codigo_reeup": "1212121245",
+    "o_o_o_name": "Ministerio de Comercio Interior",
+    "provincia": 1,
+    "provincia_name": "La Habana",
+    "tipo_entidad": "ccd",
+    "tipo_entidad_name": "Centro Carga/Descarga",
+    "territorio": 2,
+    "territorio_name": "Eser"
+  },
+  "tipo_equipo": {
+    "id": 6,
+    "tipo_equipo": "planc_plat",
+    "tipo_equipo_name": "Plancha o Plataforma",
+    "tipo_carga": "contenedores",
+    "tipo_carga_name": "Contenedores",
+    "tipo_combustible": "combustible_blanco",
+    "tipo_combustible_name": "Combustible blanco",
+    "longitud": "122.00",
+    "peso_neto_sin_carga": "1234.00",
+    "peso_maximo_con_carga": "1234.00",
+    "capacidad_cubica_maxima": "12.00",
+    "descripcion": "adsf"
+  },
+  "equipo_vagon_detalle": [
+    {
+      "id": 112,
+      "equipo_ferroviario_detalle": {
+        "id": 26,
+        "tipo_equipo": 6,
+        "tipo_equipo_name": "Plancha o Plataforma",
+        "estado_actual": "Asignado al estado CCD Situado",
+        "numero_identificacion": "CAV3",
+        "territorio": "centro",
+        "territorio_name": "Centro",
+        "tipo_carga": "Contenedores",
+        "tipo_combustible": "Combustible blanco",
+        "tipo_combustible_name": "Combustible blanco",
+        "peso_maximo": "1234.00"
+      },
+      "cant_dias": 1
+    }
+  ],
+  "fecha_registro": "2025-07-18",
+  "estado": "cargado",
+  "operacion": "descarga",
+  "real_carga_descarga": 0.0,
+  "causas_incumplimiento": null,
+  "informe_ccd": 3
+}
+  ```
+  ### POST/PUT
+  ```json
+  {
+      "fecha_registro": "2025-07-18",
+      "estado": "cargado",
+      "operacion": "descarga",
+      "cantidad_vagones": 1,
+      "causas_incumplimiento": "ESTE ULTIMO",
+      "real_carga_descarga": 20,
+      "informe_ccd": 3,
+      "acceso_id": 7,
+      "tipo_equipo_id": 6,
+      "producto_id": 2,
+      "equipo_vagon": [
+        {
+        "equipo_ferroviario":26,
+        "cant_dias":1
+        }
+      ]
+    }
+  ```
+    - EN este ultimo el campo real carga _ descarga se actualiza en dependencia del tipo de operacion y el tipo de producto 
+  [Ver cómo obtener el Real a la carga/descarga](#para-obtener-el-real-a-la-cargadescarga) 
+
+  ### Tecnicamente para estos 3 estados son la misma estructura dde datos, 
+
+## CCD-VAGONES-CD
+    
+  ### GET
+    ```json
+    {
+  "id": 4,
+  "producto": {
+    "id": 2,
+    "producto": {
+      "id": 1,
+      "codigo_producto": "CHI0012",
+      "nombre_producto": "Chícharo",
+      "tipo_producto": "alimento",
+      "tipo_producto_name": "Alimento",
+      "descripcion": "Minsa"
+    },
+    "tipo_embalaje": {
+      "id": 3,
+      "nombre_tipo_embalaje": "RAPEL"
+    },
+    "unidad_medida": {
+      "id": 3,
+      "magnitud": "volumen",
+      "unidad_medida": "Litros",
+      "simbolo": "L"
+    },
+    "tipo_equipo": {
+      "id": 6,
+      "tipo_equipo": "planc_plat",
+      "tipo_equipo_name": "Plancha o Plataforma",
+      "tipo_carga": "contenedores",
+      "tipo_carga_name": "Contenedores",
+      "tipo_combustible": "combustible_blanco",
+      "tipo_combustible_name": "Combustible blanco",
+      "longitud": "122.00",
+      "peso_neto_sin_carga": "1234.00",
+      "peso_maximo_con_carga": "1234.00",
+      "capacidad_cubica_maxima": "12.00",
+      "descripcion": "adsf"
+    },
+    "cantidad": 1233,
+    "estado": "lleno",
+    "contiene": "alimentos"
+  },
+  "acceso": {
+    "id": 7,
+    "nombre": "CCD Uno",
+    "abreviatura": "CCDU",
+    "osde_oace_organismo": 1,
+    "codigo_reeup": "1212121245",
+    "o_o_o_name": "Ministerio de Comercio Interior",
+    "provincia": 1,
+    "provincia_name": "La Habana",
+    "tipo_entidad": "ccd",
+    "tipo_entidad_name": "Centro Carga/Descarga",
+    "territorio": 2,
+    "territorio_name": "Eser"
+  },
+  "tipo_equipo": {
+    "id": 6,
+    "tipo_equipo": "planc_plat",
+    "tipo_equipo_name": "Plancha o Plataforma",
+    "tipo_carga": "contenedores",
+    "tipo_carga_name": "Contenedores",
+    "tipo_combustible": "combustible_blanco",
+    "tipo_combustible_name": "Combustible blanco",
+    "longitud": "122.00",
+    "peso_neto_sin_carga": "1234.00",
+    "peso_maximo_con_carga": "1234.00",
+    "capacidad_cubica_maxima": "12.00",
+    "descripcion": "adsf"
+  },
+  "equipo_vagon_detalle": [
+    {
+      "id": 4,
+      "fecha_despacho": "2020-10-01",
+      "no_id": "41414",
+      "tipo_origen": "municipio",
+      "origen": "CCD uno",
+      "fecha_llegada": "2019-11-01",
+      "incidencias": true,
+      "observaciones": "adsafafasf",
+      "equipo_ferroviario": 25
+    }
+  ],
+  "fecha_registro": "2025-07-18",
+  "estado": "cargado",
+  "operacion": "descarga",
+  "causa_incumplimiento": null,
+  "informe_ccd": 3
+}
+    ``` 
+  ### POST/PUT
+    ```json
+    {
+  "fecha_registro": "2025-07-18",
+  "estado": "cargado",
+  "operacion": "descarga",
+  "cantidad_vagones": 1,
+  "observaciones": "ESTE ULTIMO",
+  "informe_ccd": 3,
+  "acceso_id": 7,
+  "tipo_equipo_id": 6,
+  "producto_id": 2,
+  "equipo_vagon": [
+    {
+      "equipo_ferroviario": 25,
+      "incidencias": 1,
+      "observaciones": "adsafafasf",
+      "fecha_llegada": "2019-11-01",
+      "tipo_origen": "municipio",
+      "origen": "CCD uno",
+      "no_id": "41414",
+      "fecha_despacho": "2020-10-1"
+    }
+  ],
+  "causa_incumplimiento":"ALGO"
+}
+    ```
+
+## CCD-EN-TRENES
+  ### GET
+    ```json
+    {
+  "id": 1,
+  "producto": {
+    "id": 2,
+    "producto": {
+      "id": 1,
+      "codigo_producto": "CHI0012",
+      "nombre_producto": "Chícharo",
+      "tipo_producto": "alimento",
+      "tipo_producto_name": "Alimento",
+      "descripcion": "Minsa"
+    },
+    "tipo_embalaje": {
+      "id": 3,
+      "nombre_tipo_embalaje": "RAPEL"
+    },
+    "unidad_medida": {
+      "id": 3,
+      "magnitud": "volumen",
+      "unidad_medida": "Litros",
+      "simbolo": "L"
+    },
+    "tipo_equipo": {
+      "id": 6,
+      "tipo_equipo": "planc_plat",
+      "tipo_equipo_name": "Plancha o Plataforma",
+      "tipo_carga": "contenedores",
+      "tipo_carga_name": "Contenedores",
+      "tipo_combustible": "combustible_blanco",
+      "tipo_combustible_name": "Combustible blanco",
+      "longitud": "122.00",
+      "peso_neto_sin_carga": "1234.00",
+      "peso_maximo_con_carga": "1234.00",
+      "capacidad_cubica_maxima": "12.00",
+      "descripcion": "adsf"
+    },
+    "cantidad": 1233,
+    "estado": "lleno",
+    "contiene": "alimentos"
+  },
+  "acceso": {
+    "id": 7,
+    "nombre": "CCD Uno",
+    "abreviatura": "CCDU",
+    "osde_oace_organismo": 1,
+    "codigo_reeup": "1212121245",
+    "o_o_o_name": "Ministerio de Comercio Interior",
+    "provincia": 1,
+    "provincia_name": "La Habana",
+    "tipo_entidad": "ccd",
+    "tipo_entidad_name": "Centro Carga/Descarga",
+    "territorio": 2,
+    "territorio_name": "Eser"
+  },
+  "tipo_equipo": {
+    "id": 6,
+    "tipo_equipo": "planc_plat",
+    "tipo_equipo_name": "Plancha o Plataforma",
+    "tipo_carga": "contenedores",
+    "tipo_carga_name": "Contenedores",
+    "tipo_combustible": "combustible_blanco",
+    "tipo_combustible_name": "Combustible blanco",
+    "longitud": "122.00",
+    "peso_neto_sin_carga": "1234.00",
+    "peso_maximo_con_carga": "1234.00",
+    "capacidad_cubica_maxima": "12.00",
+    "descripcion": "adsf"
+  },
+  "equipo_vagon_detalle": [
+    {
+      "id": 26,
+      "tipo_equipo": 6,
+      "tipo_equipo_name": "Plancha o Plataforma",
+      "estado_actual": "Asignado al estado CCD Vagon Cargado/Descargado",
+      "numero_identificacion": "CAV3",
+      "territorio": "centro",
+      "territorio_name": "Centro",
+      "tipo_carga": "Contenedores",
+      "tipo_combustible": "Combustible blanco",
+      "tipo_combustible_name": "Combustible blanco",
+      "peso_maximo": "1234.00"
+    }
+  ],
+  "fecha_registro": "2025-07-18",
+  "estado": "cargado",
+  "cantidad_vagones": 1,
+  "observaciones": "ESTE ULTIMO",
+  "informe_ccd": 3,
+  "equipo_vagon": [
+    26
+  ]
+}
+    ```
+  ### POST/PUT
+    ```json
+    {
+  "fecha_registro": "2025-07-18",
+  "estado": "cargado",
+  "operacion": "descarga",
+  "cantidad_vagones": 1,
+  "observaciones": "ESTE ULTIMO",
+  "informe_ccd": 3,
+  "acceso_id": 7,
+  "tipo_equipo_id": 6,
+  "producto_id": 2,
+  "equipo_vagon": [
+    26
+  ],
+}
+    ```

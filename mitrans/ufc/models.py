@@ -992,7 +992,11 @@ class ufc_informe_ccd(models.Model):
         verbose_name = "Parte CCD por Producto"
         verbose_name_plural = "Partes CCD por Producto"
         ordering = ["-fecha_operacion"]
-    
+        permissions = [
+            ("puede_rechazar_informe", "Puede rechazar informes CCD"),
+            ("puede_aprobar_informe", "Puede aprobar informes CCD"),
+            ("puede_cambiar_a_listo", "Puede cambiar el estado del informe CCD a listo"),
+        ]
     def save(self, *args, **kwargs):
         # Asignar entidad del creador si no está establecida
         if not self.entidad and self.creado_por:

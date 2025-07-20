@@ -32,7 +32,7 @@ from django.utils import timezone
 #para usar el or
 
 #Actualizando el ModelViewSet para usar diferentes permisos según la acción
-from .permissions import IsAdminUFCPermission,IsVisualizadorUFCPermission,IsRevisorUFCPermission
+from .permissions import IsAdminUFCPermission,IsVisualizadorUFCPermission,IsRevisorUFCPermission,IsUFCPermission,OperadorUFCPermission,RevisorUFCPermission,ReadOnly
 
 from rest_framework.decorators import action,api_view  # Importa el decorador action
 
@@ -47,23 +47,6 @@ from django.http import JsonResponse
 
 import json
 
-
-# Verifica si el usuario tiene el rol "ufc"
-class IsUFCPermission(permissions.BasePermission):
-    def has_permission(self, request, view):
-        ROLES_PERMITIDO=['ufc','admin']
-        return request.user.role in ROLES_PERMITIDO
-    
-#la otra variante de asignacion de permisos en base a grupos(AdminUFC, VisualizadorUFC)
-
-#asignando a permission_classes los permisos asociados al usuario, extraido a la raiz pues sera comun para todos los ModelViewSet
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            permission_classes = [IsAdminUFCPermission]
-        else:  # Para list y retrieve
-            # Permitir tanto a AdminUFC como a VisualizadorUFC ver los registros
-            permission_classes = [IsAdminUFCPermission | IsVisualizadorUFCPermission | IsRevisorUFCPermission]
-        return [permission() for permission in permission_classes]
 
 #Funcion para actualizar el estado de los vagones deberia estar global
 def actualizar_estado_equipo_ferroviario( equipo_o_id, nuevo_estado, id=None):
@@ -95,7 +78,7 @@ def actualizar_estado_equipo_ferroviario( equipo_o_id, nuevo_estado, id=None):
 class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
     queryset = ufc_informe_operativo.objects.all().order_by('-id')
     serializer_class = ufc_informe_operativo_serializer
-    permission_classes= [IsUFCPermission]
+    permission_classes= [OperadorUFCPermission|IsAdminUFCPermission|IsVisualizadorUFCPermission|RevisorUFCPermission|ReadOnly]
 
 
     def get_queryset(self):
@@ -131,9 +114,9 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
+        if request.user.groups.filter(name='RevisorUFC').exists():
             return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
+                {"detail": "No tiene permiso para realizar esta acción.\n Solo los Operadores UFC pueden crear partes"},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -230,7 +213,7 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
  
     def update(self, request, *args, **kwargs):
         
-        if not request.user.groups.filter(name='AdminUFC').exists():
+        if not request.user.groups.filter(name='OperadorUFC').exists():
             return Response(
                 {"detail": "No tiene permiso para realizar esta acción."},
                 status=status.HTTP_403_FORBIDDEN
@@ -254,7 +237,7 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
+        if not request.user.groups.filter(name='OperadorUFC').exists():
             return Response(
                 {"detail": "No tiene permiso para realizar esta acción."},
                 status=status.HTTP_403_FORBIDDEN
@@ -276,7 +259,7 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
+        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='OperadorUFC').exists():
             return Response(
                 {"detail": "No tiene permiso para realizar esta acción."},
                 status=status.HTTP_403_FORBIDDEN
@@ -378,7 +361,7 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
     queryset = vagones_productos.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = vagones_productos_serializer
     filter_class = vagones_productos_filter
-    permission_classes= [IsUFCPermission]
+    permission_classes= [IsUFCPermission|ReadOnly]
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -495,7 +478,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
     queryset = vagon_cargado_descargado.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = vagon_cargado_descargado_serializer
     filter_class = vagon_cargado_descargado_filter
-    permission_classes= [IsUFCPermission]
+    permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     def get_queryset(self):
         queryset = super().get_queryset()
         informe_id = self.request.query_params.get('informe')
@@ -810,7 +793,7 @@ class en_trenes_view_set(viewsets.ModelViewSet):
     serializer_class = en_trenes_serializer
     filter_backends = [DjangoFilterBackend]
     filter_class = en_trenes_filter
-    permission_classes= [IsUFCPermission]
+    permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     ordering_fields = ['id'] 
     ordering = ['-id']  # Orden por defecto (descendente por id)    
 
@@ -1046,7 +1029,7 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
     queryset = por_situar.objects.all().order_by("-id")
     serializer_class = PorSituarCargaDescargaSerializer
     filter_backends = [DjangoFilterBackend]
-    permission_classes= [IsUFCPermission]
+    permission_classes= [IsUFCPermission|ReadOnly]
     def get_queryset(self):
         queryset = super().get_queryset()
         tipo_equipo = self.request.query_params.get("tipo_equipo")
@@ -1161,7 +1144,7 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
     queryset = Situado_Carga_Descarga.objects.all().order_by("-id")
     serializer_class = SituadoCargaDescargaSerializers
     filter_backends = [DjangoFilterBackend]
-    permission_classes = [IsUFCPermission] 
+    permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -1270,7 +1253,7 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
 class PendienteArrastreViewset(viewsets.ModelViewSet):
     queryset = arrastres.objects.all()
     serializer_class = PendienteArrastreSerializer
-    permission_classes = [IsUFCPermission] 
+    permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     filter_class = PendienteArrastreFilter
     
     def get_queryset(self):
@@ -1388,7 +1371,7 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
     
     queryset = rotacion_vagones.objects.all()
     serializer_class = RotacionVagonesSerializer
-    permission_classes = [IsUFCPermission] 
+    permission_classes = [IsUFCPermission|ReadOnly]  # Permite acceso de solo lectura a usuarios sin permisos de escritura
     filter_class = rotacion_filter
 
     ordering_fields = ['id'] 
@@ -1567,7 +1550,7 @@ class ccd_productoViewSet(viewsets.ModelViewSet):
 class ccd_informeViewSet(viewsets.ModelViewSet):
     serializer_class=ufc_informe_ccdSerializer
     queryset=ufc_informe_ccd.objects.order_by("-id").all()
-    permission_classes=[IsUFCPermission]
+    
     filter_backends = [ 
         DjangoFilterBackend,  # Para filtros exactos
         filters.SearchFilter,  # Para búsqueda de texto

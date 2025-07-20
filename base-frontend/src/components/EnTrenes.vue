@@ -8,7 +8,7 @@
       </div>
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <router-link v-if="hasGroup('AdminUFC') && this.habilitado" to="/AdicionarVagon">
+          <router-link v-if="hasGroup(['AdminUFC', 'OperadorUFC']) && this.habilitado" to="/AdicionarVagon">
             <button class="btn btn-sm btn-primary">
               <i class="bi bi-plus-circle me-1"></i>Agregar nuevo vagón en tren
             </button>
@@ -103,7 +103,7 @@
                 <td v-if="showContent">
                   {{ item.descripcion || "-" }}
                 </td>
-                <td v-if="hasGroup('AdminUFC')">
+                <td v-if="hasGroup(['AdminUFC', 'OperadorUFC'])">
                   <div class="d-flex">
                     <button
                       @click="viewDetails(item)"
@@ -423,9 +423,12 @@ export default {
         .join(", ");
     },
 
-    hasGroup(group) {
-      return this.userGroups.some((g) => g.name === group);
-    },
+    hasGroup(groups) {
+  if (!Array.isArray(groups)) {
+    groups = [groups];
+  }
+  return this.userGroups.some((g) => groups.includes(g.name));
+},
 
     async fetchUserPermissionsAndGroups() {
       try {

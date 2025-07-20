@@ -103,12 +103,16 @@
             <div class="col-md-6">
               <!-- Campo: estado -->
               <div class="mb-3">
-                <label for="estado" class="form-label small fw-semibold text-secondary"
-                  >Estado</label>
+                <label
+                  for="estado"
+                  class="form-label small fw-semibold text-secondary"
+                  >Estado</label
+                >
                 <select
-                  class="form-select form-select-sm border-secondary" style="padding: 8px 12px;"
+                  class="form-select form-select-sm border-secondary"
+                  style="padding: 8px 12px"
                   v-model="formData.estado"
-                  required>
+                >
                   <option value="cargado">Cargado</option>
                   <option value="vacio">Vacío</option>
                 </select>
@@ -116,19 +120,20 @@
 
               <!-- Campo: operacion -->
               <div class="mb-3">
-                <label for="operacion" class="form-label small fw-semibold text-secondary">Operación</label>
-                <select
-                  class="form-select form-select-sm border-secondary" style="padding: 8px 12px;"
+                <label
+                  for="operacion"
+                  class="form-label small fw-semibold text-secondary"
+                  >Operación</label
+                >
+                <input
+                  type="text"
+                  class="form-control form-control-sm border-secondary"
+                  style="padding: 8px 12px"
                   v-model="formData.operacion"
-                  required>
-                  <option value="" disabled>Seleccione una operación</option>
-                  <option
-                    v-for="option in t_operacion_options"
-                    :key="option.id"
-                    :value="option.id">
-                    {{ option.text }}
-                  </option>
-                </select>
+                  id="operacion"
+                  name="operacion"
+                  readonly
+                />
               </div>
 
               <div class="mb-3">
@@ -235,7 +240,7 @@
           <button
             type="button"
             class="ufc-button primary"
-            @click="agregarNuevoVagon()"
+            @click="annadirNuevoVagon()"
             :disabled="!nuevoVagon.equipo_ferroviario || !nuevoVagon.cant_dias">
             <i class="bi bi-check-circle"></i> Agregar
           </button>
@@ -296,6 +301,11 @@
             Faltan
             {{ formData.por_situar - vagonesAgregados.length }}
             vagones por agregar.
+          </p>
+          <p v-if="vagonesAgregados.length > formData.por_situar">
+            Existen
+            {{ vagonesAgregados.length  - formData.por_situar}}
+            vagones sobrantes.
           </p>
           <p v-else-if="vagonesAgregados.length === formData.por_situar">
             Todos los vagones han sido agregados.
@@ -369,6 +379,19 @@ export default {
     this.getPuertos();
     this.getProductos();
     this.getEquipos();
+  },
+
+  watch: {
+    "formData.estado": {
+      immediate: true,
+      handler(newVal) {
+        if (newVal === "vacio") {
+          this.formData.operacion = "carga";
+        } else if (newVal === "cargado") {
+          this.formData.operacion = "descarga";
+        }
+      },
+    },
   },
 
   methods: {
@@ -468,6 +491,22 @@ export default {
       }
     },
     async abrirModalVagon() {
+      if (this.equipos_vagones.length == 0) {
+        Swal.fire({
+          title: "Error",
+          text: "Seleccione un tipo de equipo ferroviario",
+          icon: "error",
+        });
+        return;
+      }
+      if (this.vagonesAgregados.length == this.formData.por_situar) {
+        Swal.fire({
+          title: "Error",
+          text: "Todos los vagones han sido añadidos",
+          icon: "error",
+        });
+        return;
+      }
       this.mostrarModalVagon = true;
       
     },
@@ -479,15 +518,24 @@ export default {
         cant_dias: 1,
       };
     },
-    agregarNuevoVagon() {
+    annadirNuevoVagon() {
       if (!this.nuevoVagon.equipo_ferroviario || !this.nuevoVagon.cant_dias) {
-        Swal.fire("Error", "Debe completar todos los campos", "error");
+        Swal.fire("Error", "Complete todos los campos", "error");
         return;
       }
-
       const equipoSeleccionado = this.equipos_vagones.find(
         (e) => e.id === this.nuevoVagon.equipo_ferroviario
       );
+
+      const yaExistente = this.vagonesAgregados.some(
+        (vagon) =>
+          vagon.equipo_ferroviario.id === this.nuevoVagon.equipo_ferroviario
+      );
+
+      if (yaExistente) {
+        this.showErrorToast("Este vagón ya existe");
+        return;
+      }
 
       const vagonAgregado = {
         equipo_ferroviario: equipoSeleccionado,
@@ -501,7 +549,7 @@ export default {
       this.vagonesAgregados.push(vagonAgregado);
       this.cerrarModalVagon();
 
-      Swal.fire("Éxito", "Vagón agregado correctamente", "success");
+      Swal.fire("Éxito", "Vagón añadido", "success");
     },
 
     async getProductos() {
@@ -558,43 +606,36 @@ export default {
       try {
         this.loading = true;
 
-        // Validación
-        const errors = [];
-
-        if (!this.formData.origen) {
-          errors.push("El campo Origen es requerido");
+        if (this.vagonesAgregados.length==0) {
+          Swal.fire({
+            title: "Error",
+            text: "Añada al menos un vagón",
+            icon: "error",
+          });
+          return;
         }
 
-        if (!this.formData.tipo_equipo) {
-          errors.push("El campo Tipo de Equipo es requerido");
+        if (this.formData.estado === "cargado" && this.formData.producto.length === 0) {
+          this.showErrorToast("Seleccione al menos un producto");
+          return;
         }
 
-        if (!this.formData.operacion) {
-          errors.push("El campo Operación es requerido");
+        if (this.vagonesAgregados.length !== this.formData.por_situar) {
+          Swal.fire({
+            title: "Advertencia",
+            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de "Por Situar" (${this.formData.por_situar}). ¿Desea actualizar el campo "Situados" para que coincida?`,
+            icon: "warning",
+            showCancelButton: true,
+            cancelButtonText: "Corregir manualmente",
+            confirmButtonText: "Actualizar",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.formData.por_situar = this.vagonesAgregados.length;
+            }
+          });
+          return;
         }
 
-        if (
-          this.formData.estado === "cargado" &&
-          this.formData.producto.length === 0
-        ) {
-          throw new Error(
-            "Debe seleccionar al menos un producto cuando el estado es Cargado"
-          );
-        }
-
-        if (!this.formData.por_situar || this.formData.por_situar < 1) {
-          errors.push("La cantidad por situar debe ser al menos 1");
-        }
-
-        if (!["ac_ccd", "puerto"].includes(this.formData.tipo_origen)) {
-          errors.push("Tipo de origen no válido");
-        }
-
-        if (errors.length > 0) {
-          throw new Error(errors.join("\n"));
-        }
-
-        // Preparar datos para enviar
         const payload = {
           tipo_origen: this.formData.tipo_origen,
           origen: this.formData.origen,
@@ -620,13 +661,8 @@ export default {
           payload
         );
 
-        Swal.fire({
-          title: "Éxito",
-          text: "Registro actualizado correctamente",
-          icon: "success",
-        }).then(() => {
-          this.$router.push({ name: "InfoOperativo" });
-        });
+        this.showSuccessToast("Registro actualizado");
+        this.$router.push({ name: "InfoOperativo" });
       } catch (error) {
         let errorMessage = "Error al actualizar el registro";
 
@@ -697,7 +733,7 @@ export default {
       this.vagonesAgregados.splice(index, 1);
       this.equipos_vagones.push(vagon.equipo_ferroviario); 
       console.log("Aqui4",this.equipos_vagones);
-      this.showSuccessToast("Vagón eliminado correctamente.");
+      this.showSuccessToast("Vagón eliminado");
     },
 
     showSuccessToast(message) {

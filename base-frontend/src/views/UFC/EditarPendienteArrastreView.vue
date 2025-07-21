@@ -612,7 +612,7 @@ export default {
         equipo_ferroviario: "",
         cant_dias: 1,
       },
-      informeOperativoId: null,
+      informeOperativoId: 0,
 
       tipo_origen_options: [
         { id: "ac_ccd", text: "comercial/AccesoCCD" },
@@ -695,6 +695,7 @@ export default {
           producto: registro.producto,
           cantidad_vagones: registro.cantidad_vagones,
           observaciones: registro.observaciones,
+
         };
         this.buscarEquipos();
       } catch (error) {
@@ -947,6 +948,7 @@ export default {
           return;
         }
         // Preparar los datos para enviar
+        console.log("Este es el ID: ", this.informeOperativoId)
         const payload = {
           tipo_origen: this.formData.tipo_origen,
           origen: this.formData.origen,
@@ -958,7 +960,8 @@ export default {
           producto: this.formData.producto,
           cantidad_vagones: this.vagonesAgregados.length,
           observaciones: this.formData.observaciones,
-          informe_operativo: this.informeOperativoId,
+
+          //informe_operativo: this.informeOperativoId, -> El id del informe en nigun caso deberia ser actualizado, error de logica, si se envia un valor null Causa que se desligue el estado del informe operativo 
 
           // Datos de los vagones (estructura corregida)
           equipo_vagon: this.vagonesAgregados.map((vagon) => ({

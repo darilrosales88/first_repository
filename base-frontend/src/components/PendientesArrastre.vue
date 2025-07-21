@@ -486,6 +486,7 @@ export default {
           }
           this.totalItems = response.data.count;
           this.arrastresPendientes = response.data.results;
+          console.log(this.arrastresPendientes);
         } else {
           this.showErrorToast("No hay ID para cargar");
         }

@@ -67,7 +67,7 @@
                         v-for="entidad in entidades"
                         :key="entidad.id"
                         :value="entidad.nombre">
-                        {{ entidad.id }}-{{ entidad.nombre }}
+                        {{ entidad.nombre }}
                       </option>
                     </select>
 
@@ -83,7 +83,7 @@
                         v-for="puerto in puertos"
                         :key="puerto.id"
                         :value="puerto.nombre_puerto">
-                        {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                        {{ puerto.nombre_puerto }}
                       </option>
                     </select>
                     
@@ -133,7 +133,7 @@
                         v-for="entidad in entidades"
                         :key="entidad.id"
                         :value="entidad.nombre">
-                        {{ entidad.id }}-{{ entidad.nombre }}
+                        {{ entidad.nombre }}
                       </option>
                     </select>
 
@@ -149,7 +149,7 @@
                         v-for="puerto in puertos"
                         :key="puerto.id"
                         :value="puerto.nombre_puerto">
-                        {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                        {{ puerto.nombre_puerto }}
                       </option>
                     </select>
                     
@@ -178,9 +178,7 @@
                     v-for="equipo in equipos"
                     :key="equipo.id"
                     :value="equipo.id">
-                    {{ equipo.id }}-{{ equipo.tipo_equipo_name }}-{{
-                      equipo.tipo_carga_name
-                    }}
+                    {{ equipo.tipo_equipo_name }}
                   </option>
                 </select>
               </div>
@@ -208,8 +206,7 @@
                 <label for="estado" class="form-label small fw-semibold text-secondary">Estado</label>
                 <select
                   class="form-select form-select-sm border-secondary" style="padding: 8px 12px;"
-                  v-model="formData.estado"
-                  @change="handleEstadoChange">
+                  v-model="formData.estado">
                   <option value="cargado">Cargado</option>
                   <option value="vacio">Vacío</option>
                 </select>
@@ -277,7 +274,7 @@
                   <i class="bi bi-x-circle" me-1></i>Cancelar
               </button>
               <button type="submit" class="ufc-button primary">
-                <i class="bi bi-check-circle" me-1></i>Agregar
+                <i class="bi bi-check-circle" me-1></i>Añadir
               </button>
             </div>
           </div>
@@ -293,7 +290,7 @@
   <div v-if="mostrarModalVagon" class="ufc-modal-overlay">
     <div class="ufc-modal-container">
       <div class="ufc-modal-header">
-        <h3><i class="bi bi-train-freight-front"></i> Agregar Vagón</h3>
+        <h3><i class="bi bi-train-freight-front"></i> Añadir Vagón</h3>
         <button @click="cerrarModalVagon" class="ufc-modal-close">
           <i class="bi bi-x"></i>
         </button>
@@ -339,7 +336,7 @@
             type="button"
             class="ufc-button primary"
             @click="agregarNuevoVagon">
-            <i class="bi bi-check-circle"></i> Agregar
+            <i class="bi bi-check-circle"></i> Añadir
           </button>
         </div>
       </div>
@@ -351,13 +348,13 @@
     <div class="card border">
       <div class="card-header bg-light border-bottom">
         <h5 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-train-freight-front"></i> Vagones agregados
+          <i class="bi bi-train-freight-front"></i> Vagones
         </h5>
       </div>
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <button class="btn btn-primary" @click="abrirModalVagon()">
-            <i class="bi bi-plus-circle"></i> Agregar Vagón
+            <i class="bi bi-plus-circle"></i> Añadir
           </button>
         </div>
         <!-- Tabla responsive con mejoras -->
@@ -400,6 +397,11 @@
             {{ formData.cantidad_vagones - vagonesAgregados.length }}
             vagones por agregar.
           </p>
+          <p v-if="vagonesAgregados.length > formData.cantidad_vagones">
+            Existen
+            {{ vagonesAgregados.length  - formData.cantidad_vagones}}
+            vagones sobrantes.
+          </p>
           <p v-else-if="vagonesAgregados.length === formData.cantidad_vagones">
             Todos los vagones han sido agregados.
           </p>
@@ -440,7 +442,6 @@ export default {
       userGroups: [], // Inicializa como array vacío
       userPermissions: [], // Inicializa como array vacío
       productoSearch: "",
-      filteredProductos: [],
       showProductosDropdown: false,
       entidades: [],
       puertos: [],
@@ -473,8 +474,6 @@ export default {
     this.getEntidades();
     this.getPuertos();
     this.getEquipos();
-    this.filteredProductos = this.productos;
-    this.closeDropdownsOnClickOutside();
   },
   watch: {
     "formData.estado": {
@@ -549,7 +548,7 @@ export default {
       if (this.equipos_vagones.length==0) {
         Swal.fire({
           title: "Error",
-          text: "Debe seleccionar el tipo de equipo ferroviario",
+          text: "Seleccione el tipo de equipo ferroviario",
           icon: "error",
         });
         return;
@@ -585,7 +584,7 @@ export default {
     },
     agregarNuevoVagon() {
       if (this.nuevoVagon.equipo_ferroviario == '') {
-        this.showErrorToast("Debe completar todos los campos");
+        this.showErrorToast("Complete todos los campos");
         return;
       }
 
@@ -607,7 +606,7 @@ export default {
       };
       this.vagonesAgregados.push(vagonAgregado);
       this.cerrarModalVagon();
-      this.showSuccessToast("Vagón agregado correctamente");
+      this.showSuccessToast("Vagón añadido");
     },
 
     async getEquipos() {
@@ -714,11 +713,6 @@ export default {
       this.getProductos();
     },
 
-    handleEstadoChange() {
-      // Eliminamos la lógica que vaciaba los productos
-      // Ahora este método no hace nada con los productos
-    },
-
     async submitForm() {
       try {
 
@@ -726,7 +720,7 @@ export default {
         if (!existeInforme) {
           Swal.fire(
             "Error",
-            "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+            "No existe un informe operativo creado para la fecha actual. Cree uno primero.",
             "error"
           );
           this.$router.push({ name: "InfoOperativo" });
@@ -746,13 +740,13 @@ export default {
         if (this.vagonesAgregados.length==0) {
           Swal.fire({ 
             title: "Error",
-            text: "Debe añadir al menos un vagón",
+            text: "Añada al menos un vagón",
             icon: "error",});
           return;
         }
 
         if (this.formData.estado === "cargado" && this.formData.producto.length === 0) {
-          this.showErrorToast("Debe seleccionar al menos un producto cuando el estado es Cargado");
+          this.showErrorToast("Seleccione al menos un producto cuando el estado es Cargado");
           return;
         }
 
@@ -765,15 +759,11 @@ export default {
         if (this.vagonesAgregados.length !== this.formData.cantidad_vagones) {
           Swal.fire({
             title: "Advertencia",
-            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de "Por Situar" (${this.formData.cantidad_vagones}). ¿Desea actualizar el campo "Situados" para que coincida?`,
+            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de "Situados" (${this.formData.situados}). ¿Desea actualizar el campo "Situados" para que coincida?`,
             icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Sí, actualizar",
-            cancelButtonText: "No, corregir manualmente",
-          }).then((result) => {
-            if (result.isConfirmed) {
-              this.formData.cantidad_vagones = this.vagonesAgregados.length;
-            }
+            showCancelButton: false,
+            confirmButtonText: "Aceptar",
+            confirmButtonColor: "#007bff"
           });
           return;
         }
@@ -802,10 +792,10 @@ export default {
         const response = await axios.post("/ufc/pendiente-arrastre/", payload);
 
         // Mostrar mensaje de éxito
+        this.$router.push({ name: "InfoOperativo" });
         this.showSuccessToast("El registro ha sido creado correctamente");
         this.resetForm();
-        this.$router.push({ name: "InfoOperativo" });
-        
+
       } catch (error) {
         console.error("Error al enviar el formulario:", error);
         this.showErrorToast(error.message);
@@ -845,81 +835,13 @@ export default {
       this.vagonesAgregados = [];
     },
 
-    confirmCancel() {
-      Swal.fire({
-        title: "¿Cancelar operación?",
-        text: "Los datos no guardados se perderán",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Sí, cancelar",
-        cancelButtonText: "No, continuar",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.resetForm();
-          this.$router.push({ name: "InfoOperativo" });
-        }
-      });
-    },
-
-    toggleProductosDropdown() {
-      this.showProductosDropdown = !this.showProductosDropdown;
-      if (this.showProductosDropdown) {
-        this.productoSearch = "";
-        this.filterProductos();
-      }
-    },
-
-    filterProductos() {
-      if (!this.productoSearch) {
-        this.filteredProductos = this.productos;
-        return;
-      }
-      const searchTerm = this.productoSearch.toLowerCase();
-      this.filteredProductos = this.productos.filter(
-        (producto) =>
-          producto.producto_name.toLowerCase().includes(searchTerm) ||
-          producto.producto_codigo.toLowerCase().includes(searchTerm) ||
-          producto.id.toString().includes(searchTerm)
-      );
-    },
-
-    toggleProductoSelection(productoId) {
-      const index = this.formData.producto.indexOf(productoId);
-      if (index === -1) {
-        this.formData.producto.push(productoId);
-      } else {
-        this.formData.producto.splice(index, 1);
-      }
-    },
-
-    getSelectedProductosText() {
-      if (this.formData.producto.length === 0) return "";
-      if (this.formData.producto.length === 1) {
-        const producto = this.productos.find(
-          (p) => p.id === this.formData.producto
-        );
-        return producto
-          ? `${producto.id}-${producto.producto_name}`
-          : "1 producto seleccionado";
-      }
-      return `${this.formData.producto.length} productos seleccionados`;
-    },
-
-    closeDropdownsOnClickOutside() {
-      document.addEventListener("click", (e) => {
-        if (!e.target.closest(".ufc-custom-select")) {
-          this.showProductosDropdown = false;
-        }
-      });
-    },
-
     eliminarVagon(index) {
       this.vagonesAgregados.splice(index, 1);
       localStorage.setItem(
         "vagonesAgregados",
         JSON.stringify(this.vagonesAgregados)
       );
-      this.showSuccessToast("Vagón eliminado correctamente.");
+      this.showSuccessToast("Vagón eliminado");
     },
 
     volver_principal() {

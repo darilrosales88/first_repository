@@ -78,7 +78,7 @@
                     v-for="entidad in entidades"
                     :key="entidad.id"
                     :value="entidad.nombre">
-                    {{ entidad.id }}-{{ entidad.nombre }}
+                    {{ entidad.nombre }}
                   </option>
                 </select>
 
@@ -95,7 +95,7 @@
                     v-for="puerto in puertos"
                     :key="puerto.id"
                     :value="puerto.nombre_puerto">
-                    {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                    {{ puerto.nombre_puerto }}
                   </option>
                 </select>
 
@@ -127,7 +127,7 @@
                     v-for="equipo in equipos"
                     :key="equipo.id"
                     :value="equipo.id">
-                    {{ equipo.id }}-{{ equipo.tipo_equipo_name }}-{{
+                    {{ equipo.tipo_equipo_name }}-{{
                       equipo.tipo_carga_name
                     }}
                   </option>
@@ -326,7 +326,7 @@
     <div class="card border">
       <div class="card-header bg-light border-bottom">
         <h5 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-train-freight-front"></i> Vagones agregados
+          <i class="bi bi-train-freight-front"></i> Vagones 
         </h5>
       </div>
       <div class="card-body p-3">
@@ -750,18 +750,14 @@ export default {
           return;
         }
 
-        if (this.vagonesAgregados.length !== this.formData.por_situar) {
+        if (this.vagonesAgregados.length != this.formData.por_situar) {
           Swal.fire({
             title: "Advertencia",
             text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de "Por Situar" (${this.formData.por_situar}). ¿Desea actualizar el campo "Situados" para que coincida?`,
             icon: "warning",
-            showCancelButton: true,
-            cancelButtonText: "Corregir manualmente",
-            confirmButtonText: "Actualizar",
-          }).then((result) => {
-            if (result.isConfirmed) {
-              this.formData.por_situar = this.vagonesAgregados.length;
-            }
+            showCancelButton: false,
+            confirmButtonText: "Aceptar",
+            confirmButtonColor: "#007bff"
           });
           return;
         }
@@ -784,9 +780,9 @@ export default {
         };
         console.log("Payload a enviar:", payload);
         const response = await axios.post("/ufc/por-situar/", payload);
-        this.showSuccessToast("Registro creado");
         this.resetForm();
         this.$router.push({ name: "InfoOperativo" });
+        this.showSuccessToast("Registro creado");
       } catch (error) {
         console.error("Error al enviar el formulario:", error);
 

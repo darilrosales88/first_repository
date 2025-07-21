@@ -46,7 +46,7 @@
                     v-for="entidad in entidades"
                     :key="entidad.id"
                     :value="entidad.nombre">
-                    {{ entidad.id }}-{{ entidad.nombre }}
+                    {{ entidad.nombre }}
                   </option>
                 </select>
 
@@ -60,7 +60,7 @@
                     v-for="puerto in puertos"
                     :key="puerto.id"
                     :value="puerto.nombre_puerto">
-                    {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                    {{ puerto.nombre_puerto }}
                   </option>
                 </select>
 
@@ -82,7 +82,7 @@
                     v-for="equipo in equipos"
                     :key="equipo.id"
                     :value="equipo.id">
-                    {{ equipo.id }}-{{ equipo.tipo_equipo_name }}-{{
+                    {{ equipo.tipo_equipo_name }}-{{
                       equipo.tipo_carga_name
                     }}
                   </option>
@@ -155,8 +155,6 @@
                         v-for="producto in productos"
                         :key="producto.id"
                         :value="producto.id">
-
-                        <!-- Esto tambien hay que modificarlo en los demas y quitar las funciones basuras ademas de agregar esto mismo en los editar de cada uno @BZ-theFanG #-# -->
                         {{ producto.producto_name }}-{{
                           producto.producto_codigo
                         }}-{{ producto.tipo_embalaje_name }}
@@ -253,7 +251,7 @@
     <div class="card border">
       <div class="card-header bg-light border-bottom">
         <h5 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-train-freight-front"></i> Vagones agregados
+          <i class="bi bi-train-freight-front"></i> Vagones
         </h5>
       </div>
       <div class="card-body p-3">
@@ -402,8 +400,6 @@ export default {
           `http://127.0.0.1:8000/ufc/por-situar/${this.registroId}/`
         );
         const registro = response.data;
-        console.log("Aqui",response.data)
-        
 
         for(let i = 0; i < registro.equipo_vagon_detalle.length; i++) {
           let vagon = {
@@ -424,7 +420,7 @@ export default {
           por_situar: registro.por_situar,
           observaciones: registro.observaciones,
         };
-        console.log("Aqui2",this.formData)
+        
         this.buscarEquipos();
 
       } catch (error) {
@@ -491,14 +487,6 @@ export default {
       }
     },
     async abrirModalVagon() {
-      if (this.equipos_vagones.length == 0) {
-        Swal.fire({
-          title: "Error",
-          text: "Seleccione un tipo de equipo ferroviario",
-          icon: "error",
-        });
-        return;
-      }
       if (this.vagonesAgregados.length == this.formData.por_situar) {
         Swal.fire({
           title: "Error",
@@ -548,25 +536,31 @@ export default {
 
       this.vagonesAgregados.push(vagonAgregado);
       this.cerrarModalVagon();
-
-      Swal.fire("Éxito", "Vagón añadido", "success");
+      this.showSuccessToast("Vagón añadido");
     },
 
     async getProductos() {
+      this.loading = true;
       try {
-        this.loading = true;
         const response = await axios.get("/ufc/producto-vagon/", {
           params: {
-            include_details: true,
+            include_details: true, 
           },
         });
 
-        this.productos = response.data.results.map((p) => ({
-          id: p.id,
-          producto_name: p.producto_name || `Producto ${p.id}`,
-          producto_codigo: p.producto_codigo || "N/A",
-          tipo_embalaje: p.tipo_embalaje_name || "N/A",
-        }));
+        this.productos = response.data.results.map((p) => {
+          // Asegurar que tipo_embalaje esté definido
+          const tipoEmbalaje = p.tipo_embalaje || {};
+          return {
+            ...p,
+            tipo_embalaje: {
+              nombre:
+                tipoEmbalaje.nombre ||
+                tipoEmbalaje.nombre_embalaje ||
+                "Sin embalaje",
+            },
+          };
+        });
       } catch (error) {
         console.error("Error al obtener productos:", error);
         Swal.fire("Error", "No se pudieron cargar los productos", "error");
@@ -620,18 +614,14 @@ export default {
           return;
         }
 
-        if (this.vagonesAgregados.length !== this.formData.por_situar) {
+        if (this.vagonesAgregados.length != this.formData.por_situar) {
           Swal.fire({
             title: "Advertencia",
             text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de "Por Situar" (${this.formData.por_situar}). ¿Desea actualizar el campo "Situados" para que coincida?`,
             icon: "warning",
-            showCancelButton: true,
-            cancelButtonText: "Corregir manualmente",
-            confirmButtonText: "Actualizar",
-          }).then((result) => {
-            if (result.isConfirmed) {
-              this.formData.por_situar = this.vagonesAgregados.length;
-            }
+            showCancelButton: false,
+            confirmButtonText: "Aceptar",
+            confirmButtonColor: "#007bff"
           });
           return;
         }
@@ -661,8 +651,8 @@ export default {
           payload
         );
 
-        this.showSuccessToast("Registro actualizado");
         this.$router.push({ name: "InfoOperativo" });
+        this.showSuccessToast("Registro actualizado");
       } catch (error) {
         let errorMessage = "Error al actualizar el registro";
 
@@ -676,36 +666,6 @@ export default {
         console.error("Error al enviar el formulario:", error);
       } finally {
         this.loading = false;
-      }
-    },
-    getNombresProductos(productos) {
-      if (!productos || !Array.isArray(productos)) return "-";
-      return productos
-        .filter((p) => p && p.nombre_producto)
-        .map((p) => p.nombre_producto)
-        .join(", ");
-    },
-
-    confirmCancel() {
-      Swal.fire({
-        title: "¿Cancelar cambios?",
-        text: "Los cambios no guardados se perderán",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Sí, cancelar",
-        cancelButtonText: "No, continuar",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.$router.push({ name: "InfoOperativo" });
-        }
-      });
-    },
-
-    toggleProductosDropdown() {
-      this.showProductosDropdown = !this.showProductosDropdown;
-      if (this.showProductosDropdown) {
-        this.productoSearch = "";
-        this.filterProductos();
       }
     },
 
@@ -732,7 +692,6 @@ export default {
     eliminarVagon(vagon, index) {
       this.vagonesAgregados.splice(index, 1);
       this.equipos_vagones.push(vagon.equipo_ferroviario); 
-      console.log("Aqui4",this.equipos_vagones);
       this.showSuccessToast("Vagón eliminado");
     },
 
@@ -800,7 +759,10 @@ export default {
   min-height: 36px;
   display: flex;
   align-items: center;
-  border-color: rgba(var(--bs-secondary-rgb),var(--bs-border-opacity)) !important;
+  border-color: rgba(
+    var(--bs-secondary-rgb),
+    var(--bs-border-opacity)
+  ) !important;
 }
 
 .ufc-select-arrow {
@@ -864,7 +826,6 @@ export default {
   background-color: #f5f5f5;
 }
 /* Estilos para el grid dentro del modal */
-
 
 /* Ajustes para los botones del modal */
 .ufc-modal-body .ufc-form-actions {
@@ -1057,7 +1018,10 @@ export default {
   border: 1px solid #ddd;
   border-radius: 6px;
   overflow: hidden;
-  border-color: rgba(var(--bs-secondary-rgb),var(--bs-border-opacity)) !important;
+  border-color: rgba(
+    var(--bs-secondary-rgb),
+    var(--bs-border-opacity)
+  ) !important;
 }
 
 .ufc-por-situar-input {
@@ -1104,12 +1068,12 @@ export default {
 }
 
 .ufc-button.secondary {
-    background: #f1513f;
-    color: white;
+  background: #f1513f;
+  color: white;
 }
 
 .ufc-button.secondary:hover {
-    background:rgb(228, 56, 37);
+  background: rgb(228, 56, 37);
 }
 
 .create-button {
@@ -1135,7 +1099,6 @@ button {
 .btn-outline-danger:hover {
   color: #fff;
 }
-
 
 button[type="button"] {
   background-color: #007bff;
@@ -1254,4 +1217,15 @@ button[type="submit"] {
     transform: translateY(0);
   }
 }
+.form-select:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+  outline: 0;
+}
+.form-control:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+  outline: 0;
+}
 </style>
+

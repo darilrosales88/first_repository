@@ -91,7 +91,7 @@
                     :key="entidad.id"
                     :value="entidad.nombre"
                   >
-                    {{ entidad.id }}-{{ entidad.nombre }}
+                    {{ entidad.nombre }}
                   </option>
                 </select>
 
@@ -112,7 +112,7 @@
                     :key="puerto.id"
                     :value="puerto.nombre_puerto"
                   >
-                    {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                    {{ puerto.nombre_puerto }}
                   </option>
                 </select>
 
@@ -151,7 +151,7 @@
                     :key="equipo.id"
                     :value="equipo.id"
                   >
-                    {{ equipo.id }}-{{ equipo.tipo_equipo_name }}-{{
+                    {{ equipo.tipo_equipo_name }}-{{
                       equipo.tipo_carga_name
                     }}
                   </option>
@@ -255,7 +255,6 @@
                         :key="producto.id"
                         :value="producto.id"
                       >
-                        <!-- Esto tambien hay que modificarlo en los demas y quitar las funciones basuras ademas de agregar esto mismo en los editar de cada uno @BZ-theFanG #-# -->
                         {{ producto.producto_name }}-{{
                           producto.producto_codigo
                         }}-{{ producto.tipo_embalaje_name }}
@@ -323,7 +322,7 @@
                 <i class="bi bi-x-circle" me-1></i>Cancelar
               </button>
               <button type="submit" class="ufc-button primary">
-                <i class="bi bi-check-circle" me-1></i>Agregar
+                <i class="bi bi-check-circle" me-1></i>Añadir
               </button>
             </div>
           </div>
@@ -336,7 +335,7 @@
   <div v-if="mostrarModalVagon" class="ufc-modal-overlay">
     <div class="ufc-modal-container">
       <div class="ufc-modal-header">
-        <h3><i class="bi bi-train-freight-front"></i> Agregar Vagón</h3>
+        <h3><i class="bi bi-train-freight-front"></i> Añadir Vagón</h3>
         <button @click="cerrarModalVagon" class="ufc-modal-close">
           <i class="bi bi-x"></i>
         </button>
@@ -388,9 +387,9 @@
           <button
             type="button"
             class="ufc-button primary"
-            @click="agregarNuevoVagon()"
+            @click="annadirNuevoVagon()"
           >
-            <i class="bi bi-check-circle"></i> Agregar
+            <i class="bi bi-check-circle"></i>Añadir
           </button>
         </div>
       </div>
@@ -400,13 +399,13 @@
     <div class="card border">
       <div class="card-header bg-light border-bottom">
         <h5 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-train-freight-front"></i> Vagones agregados
+          <i class="bi bi-train-freight-front"></i> Vagones 
         </h5>
       </div>
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <button class="btn btn-primary" @click="abrirModalVagon()">
-            <i class="bi bi-plus-circle"></i> Agregar Vagón
+            <i class="bi bi-plus-circle"></i> Añadir
           </button>
         </div>
         <!-- Tabla responsive con mejoras -->
@@ -457,7 +456,12 @@
           <p v-if="vagonesAgregados.length < formData.situados">
             Faltan
             {{ formData.situados - vagonesAgregados.length }}
-            vagones por agregar.
+            vagones por añadir.
+          </p>
+          <p v-if="vagonesAgregados.length > formData.situados">
+            Existen
+            {{ vagonesAgregados.length  - formData.situados}}
+            vagones sobrantes.
           </p>
           <p v-else-if="vagonesAgregados.length === formData.situados">
             Todos los vagones han sido agregados.
@@ -499,7 +503,6 @@ export default {
       userGroups: [],
       userPermissions: [], // Inicializa como array vacío
       productoSearch: "",
-      filteredProductos: [],
       showProductosDropdown: false,
       entidades: [],
       puertos: [],
@@ -540,13 +543,11 @@ export default {
   },
 
   mounted() {
-    this.verificarInformeOperativo(); // Esto tu vo que ser agregado, ya que se estaba buscando un ID que no existia
+    this.verificarInformeOperativo();
     this.getProductos();
     this.getEntidades();
     this.getPuertos();
     this.getEquipos();
-    this.filteredProductos = this.productos;
-    this.closeDropdownsOnClickOutside();
   },
 
   computed: {
@@ -588,7 +589,7 @@ export default {
       if (this.equipos_vagones.length == 0) {
         Swal.fire({
           title: "Error",
-          text: "Debe seleccionar el tipo de equipo",
+          text: "Seleccione el tipo de equipo",
           icon: "error",
         });
         return;
@@ -622,9 +623,9 @@ export default {
       }
     },
 
-    agregarNuevoVagon() {
+    annadirNuevoVagon() {
       if (this.nuevoVagon.equipo_ferroviario == "") {
-        this.showErrorToast("Debe completar todos los campos");
+        this.showErrorToast("Complete todos los campos");
         return;
       }
       const equipoSeleccionado = this.equipos_vagones.find(
@@ -651,7 +652,7 @@ export default {
 
       this.vagonesAgregados.push(vagonAgregado);
       this.cerrarModalVagon();
-      this.showSuccessToast("Vagón agregado correctamente");
+      this.showSuccessToast("Vagón añadido");
     },
 
     async getEquipos() {
@@ -708,7 +709,7 @@ export default {
         "vagonesAgregados",
         JSON.stringify(this.vagonesAgregados)
       );
-      this.showSuccessToast("Vagón eliminado correctamente.");
+      this.showSuccessToast("Vagón eliminado");
     },
 
     cerrarModalVagon() {
@@ -728,22 +729,32 @@ export default {
     },
 
     async getProductos() {
+      this.loading = true;
       try {
-        let allProductos = [];
-        let nextPage = "/ufc/producto-vagon/"; // URL inicial
+        const response = await axios.get("/ufc/producto-vagon/", {
+          params: {
+            include_details: true, 
+          },
+        });
 
-        while (nextPage) {
-          const response = await axios.get(nextPage);
-          allProductos = [...allProductos, ...response.data.results];
-
-          // Actualiza nextPage con la URL de la siguiente página (null si no hay más)
-          nextPage = response.data.next;
-        }
-
-        this.productos = allProductos;
+        this.productos = response.data.results.map((p) => {
+          // Asegurar que tipo_embalaje esté definido
+          const tipoEmbalaje = p.tipo_embalaje || {};
+          return {
+            ...p,
+            tipo_embalaje: {
+              nombre:
+                tipoEmbalaje.nombre ||
+                tipoEmbalaje.nombre_embalaje ||
+                "Sin embalaje",
+            },
+          };
+        });
       } catch (error) {
-        console.error("Error al obtener los productos:", error);
-        Swal.fire("Error", "Hubo un error al obtener los productos.", "error");
+        console.error("Error al obtener productos:", error);
+        Swal.fire("Error", "No se pudieron cargar los productos", "error");
+      } finally {
+        this.loading = false;
       }
     },
 
@@ -801,7 +812,7 @@ export default {
         if (!existeInforme) {
           Swal.fire(
             "Error",
-            "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+            "No existe un informe operativo creado para la fecha actual. Cree uno primero.",
             "error"
           );
           return;
@@ -810,7 +821,7 @@ export default {
         if (this.vagonesAgregados.length == 0) {
           Swal.fire({
             title: "Error",
-            text: "Debe añadir al menos un vagón",
+            text: "Añada al menos un vagón",
             icon: "error",
           });
           return;
@@ -821,7 +832,7 @@ export default {
           this.formData.producto.length === 0
         ) {
           this.showErrorToast(
-            "Debe seleccionar al menos un producto cuando el estado es Cargado"
+            "Seleccione al menos un producto cuando el estado es Cargado"
           );
           return;
         }
@@ -831,13 +842,9 @@ export default {
             title: "Advertencia",
             text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de "Situados" (${this.formData.situados}). ¿Desea actualizar el campo "Situados" para que coincida?`,
             icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Sí, actualizar",
-            cancelButtonText: "No, corregir manualmente",
-          }).then((result) => {
-            if (result.isConfirmed) {
-              this.formData.situados = this.vagonesAgregados.length;
-            }
+            showCancelButton: false,
+            confirmButtonText: "Aceptar",
+            confirmButtonColor: "#007bff"
           });
           return;
         }
@@ -856,20 +863,17 @@ export default {
           informe_operativo: this.informeOperativoId,
 
           equipo_vagon: this.vagonesAgregados.map((vagon) => ({
-            equipo_ferroviario: vagon.equipo_ferroviario.id, // ID del equipo
+            equipo_ferroviario: vagon.equipo_ferroviario.id,
             cant_dias: vagon.cant_dias,
-            // Otros campos necesarios para el vagon
           })),
         };
         console.log("Datos a enviar", payload);
 
-        // Enviar datos al endpoint
         const response = await axios.post("/ufc/situados/", payload);
-
-        // Mostrar mensaje de éxito
-        this.showSuccessToast("El registro ha sido creado correctamente");
-        this.resetForm();
         this.$router.push({ name: "InfoOperativo" });
+        this.showSuccessToast("El registro ha sido creado");
+        this.resetForm();
+        
       } catch (error) {
         console.error("Error al enviar el formulario:", error);
         this.showErrorToast(error.message);
@@ -889,74 +893,6 @@ export default {
       };
       this.vagonesAgregados = [];
       this.vagonesAgregados = [];
-    },
-
-    async confirmCancel() {
-      const result = await Swal.fire({
-        title: "¿Cancelar operación?",
-        text: "Los datos no guardados se perderán",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Sí, cancelar",
-        cancelButtonText: "No, continuar",
-        reverseButtons: true,
-      });
-
-      if (result.isConfirmed) {
-        this.resetForm();
-        this.$router.push({ name: "InfoOperativo" });
-      }
-    },
-
-    toggleProductosDropdown() {
-      this.showProductosDropdown = !this.showProductosDropdown;
-      if (this.showProductosDropdown) {
-        this.productoSearch = "";
-        this.filterProductos();
-      }
-    },
-
-    filterProductos() {
-      if (!this.productoSearch) {
-        this.filteredProductos = this.productos;
-        return;
-      }
-      const searchTerm = this.productoSearch.toLowerCase();
-      this.filteredProductos = this.productos.filter(
-        (producto) =>
-          producto.producto_name.toLowerCase().includes(searchTerm) ||
-          producto.producto_codigo.toLowerCase().includes(searchTerm) ||
-          producto.id.toString().includes(searchTerm)
-      );
-    },
-
-    toggleProductoSelection(productoId) {
-      const index = this.formData.producto.indexOf(productoId);
-      if (index === -1) {
-        this.formData.producto.push(productoId);
-      } else {
-        this.formData.producto.splice(index, 1);
-      }
-    },
-    getSelectedProductosText() {
-      if (this.formData.producto.length === 0) return "";
-      if (this.formData.producto.length === 1) {
-        const producto = this.productos.find(
-          (p) => p.id === this.formData.producto
-        );
-        return producto
-          ? `${producto.id}-${producto.producto_name}`
-          : "1 producto seleccionado";
-      }
-      return `${this.formData.producto.length} productos seleccionados`;
-    },
-
-    closeDropdownsOnClickOutside() {
-      document.addEventListener("click", (e) => {
-        if (!e.target.closest(".ufc-custom-select")) {
-          this.showProductosDropdown = false;
-        }
-      });
     },
 
     volver_principal() {

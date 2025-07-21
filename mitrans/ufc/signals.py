@@ -55,12 +55,12 @@ def actualizar_estado_vagones(sender, instance:ufc_informe_operativo, **kwargs):
     Signal que actualiza el estado de los vagones asociados cuando cambia estado_parte
     del informe operativo, considerando todas las relaciones posibles.
     """
-    print(kwargs,sender)
+    #print(kwargs,sender)
     # Solo ejecutar si es una actualización y estado_parte está en los campos actualizados
     if(not kwargs.get('origin')):
         if kwargs.get('created', False) or instance.estado_parte=="Creado":
             return
-    print(kwargs,sender)
+    #print(kwargs,sender)
     with transaction.atomic():
         # Bloquear el informe para evitar condiciones de carrera
         informe = ufc_informe_operativo.objects.select_for_update().get(pk=instance.pk)
@@ -119,8 +119,12 @@ def actualizar_estado_vagones(sender, instance:ufc_informe_operativo, **kwargs):
             print(f"Informe {informe.id}: {updated} vagones actualizados a Disponible")
             
 
-@receiver(pre_save, sender=ufc_informe_operativo)
+@receiver(post_save, sender=ufc_informe_operativo)
 def set_entidad_from_creator(sender, instance, **kwargs):
+    print("set_entidad_from_creator signal triggered")
+    print(instance.entidad, instance.creado_por)
+    print(instance)
+    
     if not instance.entidad and instance.creado_por:
         instance.entidad = instance.creado_por.entidad
 

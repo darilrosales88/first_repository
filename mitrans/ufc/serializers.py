@@ -887,7 +887,6 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
 
     def update(self, instance:arrastres, validated_data):
         vagones_data = validated_data.pop('equipo_vagon', None)
-    
         
         for attr, value in validated_data.items():
             setattr(instance, attr, value)

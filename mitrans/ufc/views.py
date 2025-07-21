@@ -1297,7 +1297,8 @@ class PendienteArrastreViewset(viewsets.ModelViewSet):
 class VagonesDiasViewSet(viewsets.ModelViewSet):
     queryset=vagones_dias.objects.all()
     serializer_class=vagones_dias_serializer
-    permission_classes = [IsUFCPermission]
+    permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
+
 
 #*************Empieza View Rotacion de Vagones **********************
 class RotacionVagonesViewSet(viewsets.ModelViewSet):
@@ -1309,7 +1310,8 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
     
     queryset = rotacion_vagones.objects.all()
     serializer_class = RotacionVagonesSerializer
-    permission_classes = [IsUFCPermission|ReadOnly]  # Permite acceso de solo lectura a usuarios sin permisos de escritura
+    permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
+  # Permite acceso de solo lectura a usuarios sin permisos de escritura
     filter_class = rotacion_filter
 
     ordering_fields = ['id'] 
@@ -1472,7 +1474,7 @@ def obtener_real_carga_ccd(request):
 class ccd_productoViewSet(viewsets.ModelViewSet):
     serializer_class=ccd_productoSerializer
     queryset=ccd_producto.objects.order_by("-id").all()
-    permission_classes=[IsUFCPermission]
+    permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission]     
     filter_backends = [filters.SearchFilter,DjangoFilterBackend, # Para filtros exactos
                        filters.OrderingFilter]  # Para ordenamiento
     
@@ -1534,7 +1536,7 @@ def verificar_informe_ccd_existente(request):
 class ccd_arrastresViewSet(viewsets.ModelViewSet):
     serializer_class=ccd_arrastresSerializer
     queryset=ccd_arrastres.objects.order_by("-id").all()
-    permission_classes=[IsUFCPermission]
+    permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     filter_backends = [ 
         DjangoFilterBackend,  # Para filtros exactos
         filters.SearchFilter,  # Para búsqueda de texto
@@ -1546,7 +1548,7 @@ class ccd_arrastresViewSet(viewsets.ModelViewSet):
 class ccd_en_trenesViewSet(viewsets.ModelViewSet):
     serializer_class=ccd_en_trenesSerializer
     queryset=ccd_en_trenes.objects.order_by("-id").all()
-    permission_classes=[IsUFCPermission]
+    permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     filter_backends = [ 
         DjangoFilterBackend,  # Para filtros exactos
         filters.SearchFilter,  # Para búsqueda de texto
@@ -1558,7 +1560,7 @@ class ccd_en_trenesViewSet(viewsets.ModelViewSet):
 class ccd_vagones_cdViewSet(viewsets.ModelViewSet):
     serializer_class=ccd_vagones_cdSerializer
     queryset=ccd_vagones_cd.objects.order_by("-id").all()
-    permission_classes=[IsUFCPermission]
+    permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     filter_backends = [ 
         DjangoFilterBackend,  # Para filtros exactos
         filters.SearchFilter,  # Para búsqueda de texto
@@ -1570,7 +1572,7 @@ class ccd_vagones_cdViewSet(viewsets.ModelViewSet):
 class ccd_por_situarViewSet(viewsets.ModelViewSet):
     serializer_class=ccd_por_situarSerializer
     queryset=ccd_por_situar.objects.order_by("-id").all()
-    permission_classes=[IsUFCPermission]
+    permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     filter_backends = [ 
         DjangoFilterBackend,  # Para filtros exactos
         filters.SearchFilter,  # Para búsqueda de texto
@@ -1582,7 +1584,7 @@ class ccd_por_situarViewSet(viewsets.ModelViewSet):
 class ccd_situadosViewSet(viewsets.ModelViewSet):
     serializer_class=ccd_situadosSerializer
     queryset=ccd_situados.objects.order_by("-id").all()
-    permission_classes=[IsUFCPermission]
+    permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     filter_backends = [ 
         DjangoFilterBackend,  # Para filtros exactos
         filters.SearchFilter,  # Para búsqueda de texto
@@ -1594,7 +1596,7 @@ class ccd_situadosViewSet(viewsets.ModelViewSet):
 class ccd_casillas_productosViewSet(viewsets.ModelViewSet):
     serializer_class=ccd_casillas_productosSerializer
     queryset=ccd_casillas_productos.objects.order_by("-id").all()
-    permission_classes=[IsUFCPermission]
+    permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     filter_backends = [ 
         DjangoFilterBackend,  # Para filtros exactos
         filters.SearchFilter,  # Para búsqueda de texto
@@ -1606,7 +1608,7 @@ class ccd_casillas_productosViewSet(viewsets.ModelViewSet):
 class ccd_registro_vagones_cdViewSet(viewsets.ModelViewSet):
     serializer_class=ccd_registro_vagones_cdSerializer
     queryset=ccd_registro_vagones_cd.objects.order_by("-id").all()
-    permission_classes=[IsUFCPermission]
+    permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     filter_backends = [ 
         DjangoFilterBackend,  # Para filtros exactos
         filters.SearchFilter,  # Para búsqueda de texto

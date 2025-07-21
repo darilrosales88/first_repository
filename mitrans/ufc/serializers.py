@@ -1613,6 +1613,9 @@ class ccd_vagones_cdSerializer(serializers.ModelSerializer):
         
 
 class ccd_casillas_productosSerializer(serializers.ModelSerializer):
+    acceso, acceso_id = create_nested_field_pair(
+        nom_entidades_serializer, nom_entidades, 'acceso'
+    )
     total_general=serializers.SerializerMethodField()
     diferencia_descarga=serializers.SerializerMethodField()
     diferencia_carga=serializers.SerializerMethodField()

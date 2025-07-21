@@ -172,11 +172,6 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
     
     #funcion añadida para la actualizacion del campo estado_parte***
     def partial_update(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
             
         instance = self.get_object()
         
@@ -213,11 +208,6 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
  
     def update(self, request, *args, **kwargs):
         
-        if not request.user.groups.filter(name='OperadorUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -259,11 +249,6 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='OperadorUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -453,11 +438,6 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
         
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
@@ -585,11 +565,6 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
 
     
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
         
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
@@ -769,11 +744,6 @@ class registro_vagones_cargados_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
         
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
@@ -900,12 +870,6 @@ class en_trenes_view_set(viewsets.ModelViewSet):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     def list(self, request, *args, **kwargs):
-        #si no pertenece a VisualizadorUFC o AdminUFC no puede realizar la accion
-        if not request.user.groups.filter(name='AdminUFC').exists() and not request.user.groups.filter(name='VisualizadorUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
 
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
@@ -925,8 +889,8 @@ class en_trenes_view_set(viewsets.ModelViewSet):
 class producto_vagon_view_set(viewsets.ModelViewSet):
     queryset = producto_UFC.objects.all().order_by('-id') # Definir el queryset
     serializer_class = producto_vagon_serializer
-    permission_classes = [IsUFCPermission]
     filter_backends = [DjangoFilterBackend]
+    permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     filterset_class = producto_vagon_filter
 
     search_fields=[
@@ -1004,11 +968,6 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
         
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
@@ -1029,7 +988,7 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
     queryset = por_situar.objects.all().order_by("-id")
     serializer_class = PorSituarCargaDescargaSerializer
     filter_backends = [DjangoFilterBackend]
-    permission_classes= [IsUFCPermission|ReadOnly]
+    permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     def get_queryset(self):
         queryset = super().get_queryset()
         tipo_equipo = self.request.query_params.get("tipo_equipo")
@@ -1049,11 +1008,6 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         try:
-            if not request.user.groups.filter(name='AdminUFC').exists():
-                return Response(
-                    {"detail": "No tiene permiso para realizar esta acción."},
-                    status=status.HTTP_403_FORBIDDEN
-                )
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             objeto_por_situar = serializer.save()
@@ -1121,11 +1075,6 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
         
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
@@ -1232,12 +1181,6 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
@@ -1334,11 +1277,6 @@ class PendienteArrastreViewset(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
         
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
@@ -1454,11 +1392,6 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='Admin').exists() and not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
         
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')

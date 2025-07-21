@@ -21,4 +21,6 @@ permissions = [
 ```
 
 ## Operador UFC (OperadorUFC)
-    Tiene Acceso a todo el CRUD de los Estados, tanto a Informe Operativo como a CCD x Producto
+Para que un usuario pueda cumplitr bien su Rol de Operador UFC se le debe asignar el Grupo
+{OperadorUFC,VisualizadorUFC,VisualizadorNomencladores}
+- Tiene Acceso a todo el CRUD de los Estados, tanto a Informe Operativo como a CCD x Producto

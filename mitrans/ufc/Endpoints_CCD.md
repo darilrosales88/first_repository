@@ -656,7 +656,14 @@ Con sus respectivos CRUD
       "origen": "CCD uno",
       "fecha_llegada": "2019-11-01",
       "incidencias": true,
-      "observaciones": "adsafafasf",
+      "observaciones": {
+        "faltante":0,
+        "sobrante":0,
+        "averia":0,
+        "peso_origen":0,
+        "peso_destino":0,
+        "observaciones_generales":"",
+      },
       "equipo_ferroviario": 25
     }
   ],
@@ -808,3 +815,51 @@ Con sus respectivos CRUD
   ],
 }
     ```
+## Casillas x Productos
+  ### GET
+  ```json
+  {
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 1,
+      "total_general": 22,
+      "diferencia_descarga": 15,
+      "diferencia_carga": null,
+      "situados": 4,
+      "situados_mas_2dias": 0,
+      "por_situar": 6,
+      "por_situar_mas_2dias": 0,
+      "en_trenes": 1,
+      "pendientes": 2,
+      "total_ayer": 10,
+      "entro_hoy": 12,
+      "plan_carga": 15,
+      "plan_descarga": 15,
+      "recepcion": 2,
+      "reexpedciones": 4,
+      "informe_ccd": 3,
+      "acceso": 1
+    }
+  ]
+}
+  ```
+
+### POST/PUT
+
+```json
+{
+
+  "acceso_id": 3, //FK del nom de accesos y CCD
+  "casillas_ayer": 1,//INT
+  "casillas_hoy": 2, //INT
+  "plan_carga": "ESTE ULTIMO",
+  "plan_descarga": 3,//INT
+  "informe_ccd": 3,
+  "recepciones": 6,//INT
+  "reexpediciones": 2,//INT
+  }
+```
+Que rico que te organizen todo esto en un documento para el FRONT, a darle envidia a los demas

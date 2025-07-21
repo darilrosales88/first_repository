@@ -992,7 +992,11 @@ class ufc_informe_ccd(models.Model):
         verbose_name = "Parte CCD por Producto"
         verbose_name_plural = "Partes CCD por Producto"
         ordering = ["-fecha_operacion"]
-    
+        permissions = [
+            ("puede_rechazar_informe", "Puede rechazar informes CCD"),
+            ("puede_aprobar_informe", "Puede aprobar informes CCD"),
+            ("puede_cambiar_a_listo", "Puede cambiar el estado del informe CCD a listo"),
+        ]
     def save(self, *args, **kwargs):
         # Asignar entidad del creador si no está establecida
         if not self.entidad and self.creado_por:
@@ -1001,7 +1005,7 @@ class ufc_informe_ccd(models.Model):
         super().save(*args, **kwargs)
     
     def __str__(self):
-        return f"Fecha de operación {self.fecha_operacion} - fecha actual: {self.fecha_actual}"
+        return f"ID:informe {self.pk} - Fecha de operación {self.fecha_operacion} - Entidad: {self.entidad}"
 
 
 
@@ -1073,6 +1077,14 @@ class ccd_casillas_productos(models.Model):
     recepcion=models.IntegerField(default=0,verbose_name="Recepciones") 
     reexpedciones=models.IntegerField(default=0,verbose_name="Reexpediciones") 
     
+    class Meta:
+        verbose_name="CCD Casillas por Centro Carga/Descarga"
+
+        
+
+    def __str__(self):
+        return f"CCD Casillas:{self.pk} -> Informe {self.informe_ccd}"
+    
 class ccd_situados(models.Model):
     informe_ccd= models.ForeignKey(
         ufc_informe_ccd,
@@ -1133,13 +1145,16 @@ class ccd_situados(models.Model):
        
     class Meta:
         verbose_name="CCD Equipos Situados"
-        # constraints=[models.UniqueConstraint(
-        #     fields = [
-        #         "producto",
-        #         "informe_ccd",
-        #     ],
-        #     name="unique_ccd_situados_register",
-        # )]
+        #Validacion #14 del RF_CCD
+        constraints=[models.UniqueConstraint(
+            fields = [
+                "producto",
+                "tipo_equipo",
+                "acceso",
+                "informe_ccd",
+            ],
+            name="unique_ccd_situados_register",
+        )]
     
     def __str__(self):
         return f"CCD Situado ID:{self.id} -> Informe {self.informe_ccd}"
@@ -1282,7 +1297,17 @@ class ccd_arrastres(models.Model):
        
     class Meta:
         verbose_name="CCD Equipos Pendientes al Arrastre"
-    
+        #Validacion #14 del RF_CCD
+        constraints=[models.UniqueConstraint(
+            fields = [
+                "producto",
+                "tipo_equipo",
+                "acceso",
+                "informe_ccd",
+            ],
+            name="unique_ccd_arrastres_register",
+        )]
+
     def __str__(self):
         return f"CCD Pendiente Arrastre ID:{self.producto} -> Informe {self.informe_ccd.pk}"
        
@@ -1347,7 +1372,17 @@ class ccd_en_trenes(models.Model):
        
     class Meta:
         verbose_name="CCD Equipos En Trenes"
-    
+        #Validacion #14 del RF_CCD
+        constraints=[models.UniqueConstraint(
+            fields = [
+                "producto",
+                "tipo_equipo",
+                "acceso",
+                "informe_ccd",
+            ],
+            name="unique_ccd_en_trenes_register",
+        )]
+
     def __str__(self):
         return f"CCD En Trenes ID:{self.pk} -> Informe {self.informe_ccd}"
        
@@ -1449,6 +1484,12 @@ class ccd_vagones_cd(models.Model):
         verbose_name="Operacion realizada",
         default=""
     )
+    real_carga_descarga=models.FloatField(
+        default=0,
+        verbose_name="Real carga/descarga",
+        null=True, blank=True,
+        help_text="Cantidad real de carga o descarga realizada",
+    )
     causa_incumplimiento=models.TextField(
         blank=True,null=True,
         verbose_name="Causas del incumplimiento de la carga/descarga"
@@ -1460,6 +1501,22 @@ class ccd_vagones_cd(models.Model):
         ccd_registro_vagones_cd,
         blank=True,
         related_name="vagones_cd_ccd",
-        verbose_name="Equipos en Trenes CCD"
+        verbose_name="Equipos Vagones Cargados/Descargados"
     )
     fecha_registro=models.DateField(auto_created=True,blank=True,null=True)
+    
+    class Meta:
+        verbose_name="CCD Vagones Cargados/Descargados"
+        #Validacion #14 del RF_CCD
+        constraints=[models.UniqueConstraint(
+            fields = [
+                "producto",
+                "tipo_equipo",
+                "acceso",
+                "informe_ccd",
+            ],
+            name="unique_ccd_vagones_cd_register",
+        )]
+
+    def __str__(self):
+        return f"CCD Vagones C/D ID:{self.pk} -> Informe {self.informe_ccd}"

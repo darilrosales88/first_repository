@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.views import APIView
 from django.contrib.auth.models import Permission, Group
 from django.contrib.auth import get_user_model
@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404
 from nomencladores.models import nom_cargo, nom_entidades  # Asegúrate de que los nombres sean correctos
 #Para la paginacion
 from rest_framework.pagination import PageNumberPagination
-from .permissions import IsAdmin
+from .permissions import IsAdmin,ReadOnly
 # Usa get_user_model() para obtener el modelo de usuario activo
 User = get_user_model()
 
@@ -183,7 +183,7 @@ class nom_user_view_set(viewsets.ModelViewSet):
     serializer_class = UserPermissionSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = user_filter  # Asegúrate de que esté correctamente referenciado
-    permission_classes = [IsAuthenticated,IsAdmin]
+    permission_classes = [ReadOnly|IsAdmin]
     def get_queryset(self):
         queryset = super().get_queryset()
         username = self.request.query_params.get('username')
@@ -193,6 +193,7 @@ class nom_user_view_set(viewsets.ModelViewSet):
 
 # Vista para crear usuarios
 class UserCreateView(APIView):
+    
     def post(self, request):
         username = request.data.get('username')
         email = request.data.get('email')

@@ -51,6 +51,8 @@ router.register("rotaciones", RotacionVagonesViewSet, basename="rotacion-vagones
 ############Aqui empiezan los router de CCDxPRODUCTO
 router.register("ccd-productos",ccd_productoViewSet, basename="ccd-productos")
 router.register("ccd-informe",ccd_informeViewSet, basename="ccd-informe")
+router.register("ccd-casillas",ccd_casillas_productosViewSet, basename="ccd-casillas")
+
 ##Los 5 Estados
 router.register("ccd-arrastres",ccd_arrastresViewSet, basename="ccd-arrastres")
 router.register("ccd-situados",ccd_situadosViewSet, basename="ccd-situados")

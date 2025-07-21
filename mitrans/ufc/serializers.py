@@ -1613,10 +1613,114 @@ class ccd_vagones_cdSerializer(serializers.ModelSerializer):
         
 
 class ccd_casillas_productosSerializer(serializers.ModelSerializer):
+    total_general=serializers.SerializerMethodField()
+    diferencia_descarga=serializers.SerializerMethodField()
+    diferencia_carga=serializers.SerializerMethodField()
+    situados=serializers.SerializerMethodField()
+    situados_mas_2dias=serializers.SerializerMethodField()
+    por_situar=serializers.SerializerMethodField()
+    por_situar_mas_2dias=serializers.SerializerMethodField()
+    en_trenes=serializers.SerializerMethodField()
+    pendientes=serializers.SerializerMethodField()
     class Meta:
         model=ccd_casillas_productos
         fields="__all__"
       
+    def get_total_general(self,object:ccd_casillas_productos):
+        """3.El campo Total General de cada acceso comercial es el resultado de:
+        
+            Total General = Total Ayer + Entro hoy 
+        """
+        return object.total_ayer+object.entro_hoy
+    
+    def get_diferencia_descarga(self,object:ccd_casillas_productos):
+        """4.	El campo Diferencia descarga de cada acceso comercial es el resultado de:
+        
+                Diferencia descarga = Real descarga – Plan descarga
+        """
+        return object.plan_descarga
+    
+    def get_diferencia_carga(self,object:ccd_casillas_productos):
+        return
+    def get_situados(self,object:ccd_casillas_productos):
+        """
+        6.	El campo Situados carga/descarga de cada acceso comercial es el resultado de: 
+
+        Situados carga/descarga = ∑ Cantidad de vagones del registro de la pestaña Situados a la carga/descarga
+        
+        """
+        situados = object.informe_ccd.situados_ccd.all()
+        contador=0
+        
+        try:    
+            contador=[registro.equipo_vagon.count() for registro in situados]
+        except Exception as e:
+            raise serializers.ValidationError(detail= f'No se pudo contar la cantidad de situados: {e}')
+        finally:
+            return sum(contador)
+        
+    def get_situados_mas_2dias(self,object:ccd_casillas_productos):
+        return 0
+    
+    def get_por_situar(self,object:ccd_casillas_productos):
+        """
+        8.	El campo Por situar de cada acceso comercial es el resultado de: 
+        
+        Por situar = ∑ Cantidad de vagones del registro de la pestaña Por situar a la carga/descarga
+        """
+        
+        por_situar = object.informe_ccd.por_situar_ccd.all()
+        contador=0
+        
+        try:    
+            contador=[registro.equipo_vagon.count() for registro in por_situar]
+        except Exception as e:
+            raise serializers.ValidationError(detail= f'No se pudo contar la cantidad de situados: {e}')
+        finally:
+            return sum(contador)
+    def get_por_situar_mas_2dias(self,object:ccd_casillas_productos):
+        return 0
+    def get_en_trenes(self,object:ccd_casillas_productos):
+        """10.	El campo En trenes de cada acceso comercial es el resultado de: 
+        
+        En trenes = ∑ Cantidad de vagones del registro de la pestaña En trenes
+        """
+        
+        en_trenes = object.informe_ccd.en_trenes_ccd.all()
+        contador=0
+        
+        try:    
+            contador=[registro.equipo_vagon.count() for registro in en_trenes]
+        except Exception as e:
+            raise serializers.ValidationError(detail= f'No se pudo contar la cantidad de situados: {e}')
+        finally:
+            return sum(contador)
+    def get_pendientes(self,object:ccd_casillas_productos):
+        """11.	El campo Pendientes de arrastre de cada acceso comercial es el resultado de: 
+        
+        Pendientes de arrastre = ∑ Cantidad de vagones del registro de la pestaña Pendientes de arrastre
+
+
+        Args:
+            object (ccd_casillas_productos): 
+
+        Raises:
+            serializers.ValidationError: detail= f'No se pudo contar la cantidad de situados: ERROR
+
+        Returns:
+            int: ∑ Cantidad de vagones del registro de la pestaña Pendientes de arrastre
+        """
+        
+        arrastres = object.informe_ccd.arrastres_ccd.all()
+        contador=0
+        
+        try:    
+            contador=[registro.equipo_vagon.count() for registro in arrastres]
+        except Exception as e:
+            raise serializers.ValidationError(detail= f'No se pudo contar la cantidad de situados: {e}')
+        finally:
+            return sum(contador)
+
 
 
 class ufc_informe_ccdSerializer(serializers.ModelSerializer):

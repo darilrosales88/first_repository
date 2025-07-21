@@ -656,7 +656,14 @@ Con sus respectivos CRUD
       "origen": "CCD uno",
       "fecha_llegada": "2019-11-01",
       "incidencias": true,
-      "observaciones": "adsafafasf",
+      "observaciones": {
+        "faltante":0,
+        "sobrante":0,
+        "averia":0,
+        "peso_origen":0,
+        "peso_destino":0,
+        "observaciones_generales":"",
+      },
       "equipo_ferroviario": 25
     }
   ],

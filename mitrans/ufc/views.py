@@ -207,7 +207,7 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
  
     def update(self, request, *args, **kwargs):
-        
+        #
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)

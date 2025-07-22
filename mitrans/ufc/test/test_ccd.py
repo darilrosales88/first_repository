@@ -123,7 +123,7 @@ class UFCInformeCCDTestCase(TestCase):
         informe = ufc_informe_ccd.objects.create(
             creado_por=self.user
         )
-        expected_str = f"Fecha de operación {informe.fecha_operacion} - fecha actual: {informe.fecha_actual}"
+        expected_str = f"ID:informe {informe.pk} - Fecha de operación {informe.fecha_operacion} - Entidad: {informe.entidad}"
         self.assertEqual(str(informe), expected_str)
 
     def test_aprobacion_informe(self):
@@ -155,3 +155,5 @@ class UFCInformeCCDTestCase(TestCase):
     #     registro= ccd_registro_vagones_cd.objects.create(
     #         equipo_ferroviario=equipo_ferroviario
     #     )
+    
+    

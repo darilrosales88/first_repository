@@ -363,11 +363,7 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+    
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         objeto_vagones_productos = serializer.save()
@@ -387,11 +383,6 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
         
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
@@ -413,11 +404,7 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        
         
         instance = self.get_object()
         id_objeto_vagon_producto = instance.id
@@ -483,11 +470,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         print("Datos recibidos en create:", request.data)  # Verificar datos entrantes
         #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         objeto_vagon_cargado_descargado = serializer.save()
@@ -507,11 +490,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        
         
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
@@ -531,11 +510,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
 
         return Response(serializer.data)
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        
         
         try:
             instance = self.get_object()
@@ -674,11 +649,7 @@ class registro_vagones_cargados_view_set(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+       
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         objeto_registro_vagones_cargados = serializer.save()
@@ -697,11 +668,7 @@ class registro_vagones_cargados_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -721,11 +688,7 @@ class registro_vagones_cargados_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+       
         
         instance = self.get_object()
         id_objeto_registro_vagones_cargados = instance.id
@@ -786,12 +749,7 @@ class en_trenes_view_set(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         #si no esta en el grupo AdminUFC no puede haver la accion
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         objeto_en_trenes = serializer.save()
@@ -810,11 +768,7 @@ class en_trenes_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+       
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -835,12 +789,7 @@ class en_trenes_view_set(viewsets.ModelViewSet):
 
     # En views.py (en_trenes_view_set)
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
+       
         instance = self.get_object()
         id_objeto_en_trenes = instance.id
         
@@ -898,11 +847,7 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
     ]
 
     def create(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+       
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         objeto_producto_en_vagon = serializer.save()
@@ -921,11 +866,7 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -945,11 +886,7 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        
         
         instance = self.get_object()
         id_objeto_en_trenes = instance.id
@@ -1028,11 +965,7 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
             # Manejo de excepciones para errores de validación
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)  
     def update(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -1052,11 +985,7 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        
         
         instance = self.get_object()
         id_objeto_por_situar = instance.id
@@ -1111,11 +1040,7 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
     # ya que el serializer ahora maneja la lógica de los productos
     
     def create(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         objeto_situado = serializer.save()
@@ -1134,11 +1059,7 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+       
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -1158,12 +1079,7 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
+       
         instance = self.get_object()
         id_objeto_situado = instance.id
 
@@ -1207,11 +1123,7 @@ class PendienteArrastreViewset(viewsets.ModelViewSet):
         return queryset
     
     def create(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+       
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         objeto_pendiente = serializer.save()
@@ -1230,11 +1142,7 @@ class PendienteArrastreViewset(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -1254,11 +1162,7 @@ class PendienteArrastreViewset(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+       
         
         instance = self.get_object()
         id_objeto_pediente = instance.id
@@ -1324,11 +1228,7 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
         return queryset
     
     def create(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+       
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         objeto_rotacion = serializer.save()
@@ -1347,11 +1247,7 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+       
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -1371,11 +1267,7 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+       
         
         instance = self.get_object()
         id_objeto_rotacion = instance.id

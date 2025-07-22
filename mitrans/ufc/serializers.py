@@ -1174,6 +1174,8 @@ def create_nested_field_pair(serializer_class, model_class, field_name, allow_nu
     Crea un par de campos (read/write) para relaciones anidadas.
     
     return read_field, write_field
+    
+    #REF2
 
     """
     read_field = serializer_class(read_only=True,many=many)
@@ -1612,38 +1614,120 @@ class ccd_vagones_cdSerializer(serializers.ModelSerializer):
         
 
 class ccd_casillas_productosSerializer(serializers.ModelSerializer):
+    """sumary_line: Este serializador maneja los productos de las casillas CCD
+    
+    Me bote cuando hice este , con 0 IA , referencia para demas proyectos #REF1
+    """
+    
     acceso, acceso_id = create_nested_field_pair(
         nom_entidades_serializer, nom_entidades, 'acceso'
     )
-    total_general=serializers.SerializerMethodField()
+    
+    real_carga=serializers.SerializerMethodField()
+    real_descarga=serializers.SerializerMethodField()
+    
     diferencia_descarga=serializers.SerializerMethodField()
     diferencia_carga=serializers.SerializerMethodField()
+    
     situados=serializers.SerializerMethodField()
     situados_mas_2dias=serializers.SerializerMethodField()
+    
     por_situar=serializers.SerializerMethodField()
     por_situar_mas_2dias=serializers.SerializerMethodField()
+    
     en_trenes=serializers.SerializerMethodField()
     pendientes=serializers.SerializerMethodField()
+    total=serializers.SerializerMethodField()
+    
     class Meta:
         model=ccd_casillas_productos
         fields="__all__"
       
-    def get_total_general(self,object:ccd_casillas_productos):
-        """3.El campo Total General de cada acceso comercial es el resultado de:
+    def validate_total_ayer(self, value):
+        """Valida que el total ayer sea un número entero positivo."""
+        # Quiero que se compruebe si hay un registro del 
         
-            Total General = Total Ayer + Entro hoy 
+        if value < 0:
+            raise serializers.ValidationError("El total ayer debe ser un número entero positivo.")
+        if ufc_informe_ccd.objects.all().count() == 0:
+            raise serializers.ValidationError("No hay un informe CCD registrado, por favor registre uno antes de continuar.")
+        if ufc_informe_ccd.objects.all().count() == 1: 
+            return value 
+        if ufc_informe_ccd.objects.filter(acceso=self.context['request'].user.entidad).all().count() > 1:
+            # Obtener el penúltimo informe (o el del día anterior si existe)
+            informes = ufc_informe_ccd.filter(acceso=self.context['request'].user.entidad).objects.order_by('-fecha_operacion')
+            if informes.count() > 1:
+                informe_ccd = informes[1]  # Penúltimo
+            registro=informe_ccd.casillas_ccd.filter(acceso=self.context['request'].user.entidad).first()
+            return registro.total_general
+        
+    def get_real_carga(self,object:ccd_casillas_productos):
+        """6.	El campo Real carga se actualiza:
+
+        Real carga = ∑No. ID registrados en la sección Cargados/Descargados 
+        del producto seleccionado de la pestaña Situados a la carga/descarga, cuando el campo Operación sea “1-Carga”.
+
         """
-        return object.total_ayer+object.entro_hoy
+        vagones=object.informe_ccd.vagones_cd_ccd.filter(operacion='carga').all()
+        
+        try:    
+            contador=[vagon.real_carga_descarga for vagon in vagones]
+        except Exception as e:
+            raise serializers.ValidationError(detail= f'No se pudo contar la cantidad de situados: {e}')
+        finally:
+            real=sum(contador)
+            return real
+        
+    def get_real_descarga(self,object:ccd_casillas_productos):
+        """7.	El campo Real descarga se actualiza:
+        
+        Real descarga = ∑No. ID registrados en la sección Cargados/Descargados 
+        del producto seleccionado de la pestaña Situados a la carga/descarga, cuando el campo Operación sea “2-Descarga”.
+
+        """
+        vagones=object.informe_ccd.vagones_cd_ccd.filter(operacion='descarga').all()
+        
+        try:    
+            contador=[vagon.real_carga_descarga for vagon in vagones]
+        except Exception as e:
+            raise serializers.ValidationError(detail= f'No se pudo contar la cantidad de situados: {e}')
+        finally:
+            real=sum(contador)
+            return real
+        
+    
     
     def get_diferencia_descarga(self,object:ccd_casillas_productos):
         """4.	El campo Diferencia descarga de cada acceso comercial es el resultado de:
         
                 Diferencia descarga = Real descarga – Plan descarga
         """
-        return object.plan_descarga
+        vagones=object.informe_ccd.vagones_cd_ccd.filter(operacion='descarga').all()
+        
+        try:    
+            contador=[vagon.real_carga_descarga for vagon in vagones]
+        except Exception as e:
+            raise serializers.ValidationError(detail= f'No se pudo contar la cantidad de situados: {e}')
+        finally:
+            diferencia=sum(contador)-object.plan_descarga
+            return diferencia
+
     
     def get_diferencia_carga(self,object:ccd_casillas_productos):
-        return
+        """4.	El campo Diferencia Carga de cada acceso comercial es el resultado de:
+        
+                Diferencia carga = Real carga – Plan carga
+        """
+        vagones=object.informe_ccd.vagones_cd_ccd.filter(operacion='carga').all()
+        
+        try:    
+            contador=[vagon.real_carga_descarga for vagon in vagones]
+        except Exception as e:
+            raise serializers.ValidationError(detail= f'No se pudo contar la cantidad de situados: {e}')
+        finally:
+            diferencia=sum(contador)-object.plan_carga
+            return diferencia
+        
     def get_situados(self,object:ccd_casillas_productos):
         """
         6.	El campo Situados carga/descarga de cada acceso comercial es el resultado de: 
@@ -1662,7 +1746,16 @@ class ccd_casillas_productosSerializer(serializers.ModelSerializer):
             return sum(contador)
         
     def get_situados_mas_2dias(self,object:ccd_casillas_productos):
-        return 0
+        """Esta funcion retorna la cantidad de vagones situados que tienen mas de 2 dias"""
+        situados = object.informe_ccd.situados_ccd.all()
+        contador=0  
+        try:    
+            contador=[registro.equipo_vagon.filter(cant_dias__gt=2).count() for registro in situados if registro.equipo_vagon.filter(cant_dias__gt=2)]
+        except Exception as e:
+            raise serializers.ValidationError(detail= f'No se pudo contar la cantidad de situados: {e}')
+        finally:
+            return sum(contador)
+        
     
     def get_por_situar(self,object:ccd_casillas_productos):
         """
@@ -1681,7 +1774,17 @@ class ccd_casillas_productosSerializer(serializers.ModelSerializer):
         finally:
             return sum(contador)
     def get_por_situar_mas_2dias(self,object:ccd_casillas_productos):
-        return 0
+        """Esta funcion retorna la cantidad de vagones por situar que tienen mas de 2 dias"""
+        por_situar = object.informe_ccd.por_situar_ccd.all()
+        contador=0  
+        try:    
+            contador=[registro.equipo_vagon.filter(cant_dias__gt=2).count() for registro in por_situar if registro.equipo_vagon.filter(cant_dias__gt=2)]
+        except Exception as e:
+            raise serializers.ValidationError(detail= f'No se pudo contar la cantidad de por_situar: {e}')
+        finally:
+            return sum(contador)
+        
+        
     def get_en_trenes(self,object:ccd_casillas_productos):
         """10.	El campo En trenes de cada acceso comercial es el resultado de: 
         
@@ -1697,6 +1800,7 @@ class ccd_casillas_productosSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(detail= f'No se pudo contar la cantidad de situados: {e}')
         finally:
             return sum(contador)
+        
     def get_pendientes(self,object:ccd_casillas_productos):
         """11.	El campo Pendientes de arrastre de cada acceso comercial es el resultado de: 
         
@@ -1722,7 +1826,16 @@ class ccd_casillas_productosSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(detail= f'No se pudo contar la cantidad de situados: {e}')
         finally:
             return sum(contador)
-
+    
+    def get_total(self, object: ccd_casillas_productos):
+        """12. El campo Total de cada acceso comercial es el resultado de:
+        pendientes + en_trenes + por_situar + situados
+        """
+        pendientes = self.get_pendientes(object)
+        en_trenes = self.get_en_trenes(object)
+        por_situar = self.get_por_situar(object)
+        situados = self.get_situados(object)
+        return pendientes + en_trenes + por_situar + situados
 
 
 class ufc_informe_ccdSerializer(serializers.ModelSerializer):
@@ -1731,6 +1844,7 @@ class ufc_informe_ccdSerializer(serializers.ModelSerializer):
     vagones_cargados_descargados_list = serializers.SerializerMethodField()
     situados_carga_descarga_list = serializers.SerializerMethodField()
     por_situar_list = serializers.SerializerMethodField()
+    casillas_list = serializers.SerializerMethodField()
     entidad_detalle=serializers.ReadOnlyField(source = 'entidad.nombre') 
 #    equipos_list=serializers.SerializerMethodField()
     creado_por = serializers.PrimaryKeyRelatedField(
@@ -1781,10 +1895,10 @@ class ufc_informe_ccdSerializer(serializers.ModelSerializer):
         por_situar_queryset = obj.por_situar_ccd.all()
         return ccd_por_situarSerializer(por_situar_queryset, many=True).data
 
-    def get_vagones_productos_list(self, obj):
+    def get_casillas_list(self, obj):
         """Obtiene todos los productos de vagones asociados al informe operativo."""
-        vagones_productos_queryset = obj.vagones_productos.all()
-        return vagones_productos_serializer(vagones_productos_queryset, many=True).data
+        casillas_queryset = obj.casillas_ccd.all()
+        return ccd_casillas_productosSerializer(casillas_queryset, many=True).data
 
     def get_rotacion_vagones_list(self, obj):
         """Obtiene todas las rotaciones de vagones asociadas al informe operativo."""

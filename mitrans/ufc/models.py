@@ -964,14 +964,15 @@ OPERACIONES = [('carga', 'Carga'), ('descarga', 'Descarga')]
 
 
 class ufc_informe_ccd(models.Model):    
-
+    """Modelo para registrar informes CCD por producto"""
+    ESTADOS_PARTE=[('creado', 'Creado'), ('aprobado', 'Aprobado'), ('listo', 'Listo'), ('rechazado', 'Rechazado')]
     fecha_operacion = models.DateTimeField(
         auto_now_add=True, verbose_name="Fecha de operación", unique=True
     )
     fecha_actual = models.DateTimeField(
         auto_now=True, verbose_name="Fecha actual", unique=True
     )
-    estado_parte = models.CharField(default="Creado",max_length=14)
+    estado_parte = models.CharField(default="creado",max_length=14, choices=ESTADOS_PARTE, verbose_name="Estado del parte")
     comentarios= models.TextField(
         null=True,
         blank=True,
@@ -1071,7 +1072,8 @@ class ccd_casillas_productos(models.Model):
         verbose_name="Acceso o Centro Carga/Descarga"
     )
     total_ayer=models.IntegerField(default=0,verbose_name="Casillas Ayer")
-    entro_hoy=models.IntegerField(default=0,verbose_name="Casillas entraron Hoy") 
+    entro_hoy=models.IntegerField(default=0,verbose_name="Casillas entraron Hoy")
+    total_general=models.IntegerField(default=0,verbose_name="Total General de Casillas") 
     plan_carga=models.IntegerField(default=0,verbose_name="Plan de Carga") 
     plan_descarga=models.IntegerField(default=0,verbose_name="Plan de Descarga") 
     recepcion=models.IntegerField(default=0,verbose_name="Recepciones") 
@@ -1080,8 +1082,13 @@ class ccd_casillas_productos(models.Model):
     class Meta:
         verbose_name="CCD Casillas por Centro Carga/Descarga"
 
-        
+    def save(self, *args, **kwargs):
+        # Asignar entidad del creador si no está establecida
 
+        self.total_general= self.entro_hoy + self.total_ayer
+        super().save(*args, **kwargs)
+
+    
     def __str__(self):
         return f"CCD Casillas:{self.pk} -> Informe {self.informe_ccd}"
     
@@ -1228,6 +1235,7 @@ class ccd_por_situar(models.Model):
        
     class Meta:
         verbose_name="CCD Equipos Por Situar"
+        verbose_name_plural="CCD Equipos Por Situar"
     
     def __str__(self):
         return f"CCD Por Situar ID:{self.pk} -> Informe {self.informe_ccd}"

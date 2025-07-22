@@ -815,7 +815,7 @@ Con sus respectivos CRUD
   ],
 }
     ```
-## Casillas x Productos
+## Casillas x Productos OK
   ### GET
   ```json
   {
@@ -825,23 +825,39 @@ Con sus respectivos CRUD
   "results": [
     {
       "id": 1,
+      "acceso": {
+        "id": 1,
+        "nombre": "Cuba Ron SA",
+        "abreviatura": "CRSA",
+        "osde_oace_organismo": 1,
+        "codigo_reeup": "23455",
+        "o_o_o_name": "Ministerio de Comercio Interior",
+        "provincia": 1,
+        "provincia_name": "La Habana",
+        "tipo_entidad": "importador",
+        "tipo_entidad_name": "Importador",
+        "territorio": 2,
+        "territorio_name": "Eser"
+      },
       "total_general": 22,
-      "diferencia_descarga": 15,
-      "diferencia_carga": null,
-      "situados": 4,
-      "situados_mas_2dias": 0,
-      "por_situar": 6,
-      "por_situar_mas_2dias": 0,
+      "real_carga": 0,
+      "real_descarga": 25.0,
+      "diferencia_descarga": 10.0,
+      "diferencia_carga": -15,
+      "situados": 6,
+      "situados_mas_2dias": 2,
+      "por_situar": 9,
+      "por_situar_mas_2dias": 7,
       "en_trenes": 1,
       "pendientes": 2,
+      "total": 18,
       "total_ayer": 10,
       "entro_hoy": 12,
       "plan_carga": 15,
       "plan_descarga": 15,
       "recepcion": 2,
       "reexpedciones": 4,
-      "informe_ccd": 3,
-      "acceso": 1
+      "informe_ccd": 3
     }
   ]
 }

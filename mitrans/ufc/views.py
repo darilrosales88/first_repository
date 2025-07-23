@@ -47,6 +47,25 @@ from django.http import JsonResponse
 
 import json
 
+# Función auxiliar para crear registros de auditoría
+def registrar_auditoria(request, accion):
+    """
+    Método centralizado para registrar acciones en el modelo Auditoria
+    
+    """
+    try:
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion=accion,
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+    except Exception as e:
+        # No romper el flujo principal si hay error al registrar auditoría
+        print(f"Error al registrar auditoría: {str(e)}")
+
 
 #Funcion para actualizar el estado de los vagones deberia estar global
 def actualizar_estado_equipo_ferroviario( equipo_o_id, nuevo_estado, id=None):
@@ -158,15 +177,8 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         informe = serializer.save()
         
-        # Auditoría
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar Informe operativo: {informe.fecha_operacion}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        # Auditoría centralizada
+        registrar_auditoria(request, f"Insertar Informe operativo: {informe.fecha_operacion}")
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
@@ -194,15 +206,8 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
-        # Auditoría
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user,
-            accion=f"Actualizar estado del Informe operativo a {serializer.data['estado_parte']}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        # Auditoría centralizada
+        registrar_auditoria(request, f"Actualizar estado del Informe operativo a {serializer.data.estado_parte}")
 
         return Response(serializer.data)
  
@@ -214,51 +219,25 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         informe = serializer.save()
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar Informe operativo: {informe.fecha_operacion}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        # Auditoría centralizada
+        registrar_auditoria(request, f"Modificar Informe operativo: {informe.fecha_operacion}")
 
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='OperadorUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
         instance = self.get_object()
         fecha_oper = instance.fecha_operacion
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar Informe operativo: {fecha_oper}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        # Auditoría centralizada
+        registrar_auditoria(request, f"Eliminar Informe operativo: {fecha_oper}")
 
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
         # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de Partes informe operativo",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
+        registrar_auditoria(request, "Visualizar lista de Partes informe operativo")
+        
         return super().list(request, *args, **kwargs)  
 
 #Verificando que exista el informe creado antes de insertar
@@ -367,16 +346,8 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         objeto_vagones_productos = serializer.save()
-
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Insertar vagón y producto/s: {objeto_vagones_productos.id}",
-            navegador=navegador,
-        )
+        registrar_auditoria(request, f"Insertar vagón y producto/s: {objeto_vagones_productos.id}")
+        
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -389,35 +360,17 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         objeto_vagones_productos = serializer.save()
-
         # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Modificar instancia de vagones y productos: {objeto_vagones_productos.id}",
-            navegador=navegador,
-        )
+        registrar_auditoria(request, f"Modificar instancia de vagones y productos: {objeto_vagones_productos.id}")
 
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        
-        
+        #permisos de acceso a la operacion   
         instance = self.get_object()
         id_objeto_vagon_producto = instance.id
+        registrar_auditoria(request, f"Eliminar instancia de vagones y productos: {id_objeto_vagon_producto}")
         
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Eliminar instancia de vagones y productos: {id_objeto_vagon_producto}",
-            navegador=navegador,
-        )
         
         # Esto activará el método delete() del modelo que maneja la eliminación en cascada
         instance.delete()
@@ -425,16 +378,8 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
-        
         # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de vagones y productos",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        registrar_auditoria(request, "Visualizar lista de vagones y productos")
 
         return super().list(request, *args, **kwargs) 
 
@@ -474,16 +419,9 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         objeto_vagon_cargado_descargado = serializer.save()
-
         # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Insertar vagón cargado/descargado: {objeto_vagon_cargado_descargado.id}",
-            navegador=navegador,
-        )
+        registrar_auditoria(request, f"Insertar vagón cargado/descargado: {objeto_vagon_cargado_descargado.id}")
+        
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -496,15 +434,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         objeto_vagon_cargado_descargado = serializer.save()
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Modificar vagón cargado/descargado: {objeto_vagon_cargado_descargado.id}",
-            navegador=navegador,
-        )
+        registrar_auditoria(request, f"Modificar vagón cargado/descargado: {objeto_vagon_cargado_descargado.id}")
 
         return Response(serializer.data)
     def destroy(self, request, *args, **kwargs):
@@ -514,16 +444,8 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
             instance = self.get_object()
             id_objeto_vagon_cargado_descargado = instance.id
             
-            # Registrar la acción en el modelo de Auditoria antes de eliminar
-            navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-            direccion_ip = request.META.get('REMOTE_ADDR')
+            registrar_auditoria(request, f"Eliminar vagón cargado/descargado y sus registros asociados: {id_objeto_vagon_cargado_descargado}")
             
-            Auditoria.objects.create(
-                usuario=request.user if request.user.is_authenticated else None,
-                direccion_ip=direccion_ip,
-                accion=f"Eliminar vagón cargado/descargado y sus registros asociados: {id_objeto_vagon_cargado_descargado}",
-                navegador=navegador,
-            )
             
             # Eliminar la instancia (esto activará el método delete() del modelo)
             instance.delete()
@@ -540,14 +462,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         
         # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de vagones cargados/descargados",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        registrar_auditoria(request, "Visualizar lista de vagones cargados/descargados")
 
         return super().list(request, *args, **kwargs)
     #calculando el campo real_carga_descarga

@@ -131,7 +131,7 @@ def set_entidad_from_creator(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=vagon_cargado_descargado)
 @receiver(post_save, sender=vagon_cargado_descargado)
-def actualizar_rotacion(sender, instance, **kwargs):
+def actualizar_rotacion(sender, instance:rotacion_vagones, **kwargs):
     """
     Se ejecuta después de guardar un vagon_cargado_descargado.
     Busca o crea un registro en rotacion_vagones asociado al tipo de equipo ferroviario.
@@ -142,13 +142,24 @@ def actualizar_rotacion(sender, instance, **kwargs):
         print("El registro no tiene tipo de equipo ferroviario.")
         return
     tipo_equipo = instance.tipo_equipo_ferroviario
-    informe=instance.informe_operativo
+    informe = None
+    try:
+        if hasattr(instance, 'informe_operativo'):  # Verifica si el modelo tiene
+            informe=instance.informe_operativo
+            rotaciones = rotacion_vagones.objects.filter(tipo_equipo_ferroviario=tipo_equipo, informe_operativo=informe)
+            for rotacion in rotaciones:
+                actualizar_datos_rotacion(rotacion, tipo_equipo, informe)
+                rotacion.save()
+                print(f"Se actualizó el registro de rotación: {rotacion.id}")
+    except KeyError as e:
+        print(f"Error al acceder a informe_operativo: {e}")
+        # Si no hay informe, no se puede actualizar la rotación
+        print("No se puede actualizar la rotación sin un informe operativo.")
+    finally:
+        return
+    
 
-    rotaciones = rotacion_vagones.objects.filter(tipo_equipo_ferroviario=tipo_equipo, informe_operativo=informe)
-    for rotacion in rotaciones:
-        actualizar_datos_rotacion(rotacion, tipo_equipo, informe)
-        rotacion.save()
-        print(f"Se actualizó el registro de rotación: {rotacion.id}")
+    
 
     # Filtrar solo los vagones cargados/descargados para este tipo de equipo
 

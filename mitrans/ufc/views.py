@@ -114,7 +114,7 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
-        if request.user.groups.filter(name='RevisorUFC').exists():
+        if request.user.groups.filter(name='RevisorUFC').exists() and not request.user.groups.filter(name='OperadorUFC').exists():
             return Response(
                 {"detail": "No tiene permiso para realizar esta acción.\n Solo los Operadores UFC pueden crear partes"},
                 status=status.HTTP_403_FORBIDDEN

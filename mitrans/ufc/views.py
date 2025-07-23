@@ -490,8 +490,6 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         #permisos de acceso a la operacion
-        
-        
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)

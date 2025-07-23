@@ -516,9 +516,7 @@ export default {
           tipo_destino: this.formData.tipo_destino,
           destino: this.formData.destino,
           estado: this.formData.estado,
-          producto_ids: Array.isArray(this.formData.lista_productos)
-            ? this.formData.lista_productos
-            : [this.formData.lista_productos],
+          producto: this.formData.producto,
           plan_diario_carga_descarga: this.formData.plan_diario_carga_descarga,
           real_carga_descarga: this.formData.real_carga_descarga,
           operacion: this.formData.operacion,
@@ -536,15 +534,10 @@ export default {
 
         console.log("Payload a enviar:", payload); // Para depuración
 
-        const response = await axios.put(
+        const response = await axios.patch(
           `/ufc/vagones-cargados-descargados/${this.id}/`,
-          payload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              "X-CSRFToken": this.getCookie("csrftoken"),
-            },
-          }
+          payload
+      
         );
 
         await Swal.fire({
@@ -572,7 +565,7 @@ export default {
       }
     },
 
-    // Método auxiliar para obtener cookies Esto que co;o es
+    // Método auxiliar para obtener cookies Esto que co;o es NO TENGO NI PUTA IDEA QUIEN TIRO ESTO
     getCookie(name) {
       let cookieValue = null;
       if (document.cookie && document.cookie !== "") {

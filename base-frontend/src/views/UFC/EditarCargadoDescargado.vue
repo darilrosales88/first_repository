@@ -230,7 +230,7 @@
                 <th scope="col">Origen</th>
                 <th scope="col">Fecha de llegada</th>
                 <th scope="col">Observaciones</th>
-                <th scope="col">Acciones</th>
+                <!-- <th scope="col">Acciones</th> -->
               </tr>
               <tr v-if="registros_vagones_cargados.length == 0">
                 <td colspan="8" class="text-center text-muted py-4">
@@ -259,16 +259,16 @@
               <tr v-for="(item, index) in registros_vagones_cargados" :key="item.id" class="align-middle">
                 <td>{{ item.no_id || "Sin ID" }}</td>
                 <td>{{ item.fecha_despacho }}</td>
-                <td>{{ item.origen }}</td>
+                <td>{{ item.origen }}</td> 
                 <td>{{ item.fecha_llegada }}</td>
                 <td>{{ item.observaciones }}</td>
-                <td v-if="hasGroup('AdminUFC')">
+                <!-- <td v-if="hasGroup('AdminUFC')">
                   <div class="d-flex">
                     <button @click.prevent="confirmDeleteVagonAsignado(item)" class="btn btn-sm btn-outline-danger" title="Eliminar">
                       <i class="bi bi-trash"></i>
                     </button>
                   </div>
-                </td>
+                </td> -->
               </tr>
             </tbody>
           </table>

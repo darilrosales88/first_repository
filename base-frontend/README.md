@@ -26,5 +26,7 @@ Esto se pudiera evitar si de alguna manera se guardara en el localstorage de la 
 
 - En el editar del arrastre se pone el tipo de equipo pero no se ve el id ni la diferencia que puee haber entre uno u otro.
 
+- En la NavBar no se deberia ver Seguridad para los usuarios que no tengan el grupo admin
+
 ### Sobre el tiempo de respuesta al crear un usuario, 
 - [21/Jul/2025 22:09:01] "POST /apiAdmin/creacion-usuario/ HTTP/1.1" 201 "41" -> Este ultimo valor es el tiempo de respuesta en ms.

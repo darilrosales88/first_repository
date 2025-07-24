@@ -567,15 +567,9 @@ class registro_vagones_cargados_view_set(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         objeto_registro_vagones_cargados = serializer.save()
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Insertar vagón a estado cargado/descargado: {objeto_registro_vagones_cargados.id}",
-            navegador=navegador,
-        )
+
+        registrar_auditoria(request, f"Insertar vagón a estado cargado/descargado: {objeto_registro_vagones_cargados.id}")
+        
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -588,15 +582,8 @@ class registro_vagones_cargados_view_set(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         objeto_registro_vagones_cargados = serializer.save()
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Modificar vagón del estado cargado/descargado: {objeto_registro_vagones_cargados.id}",
-            navegador=navegador,
-        )
+
+        registrar_auditoria(request, f"Modificar vagón del estado cargado/descargado: {objeto_registro_vagones_cargados.id}")
 
         return Response(serializer.data)
 
@@ -606,30 +593,16 @@ class registro_vagones_cargados_view_set(viewsets.ModelViewSet):
         instance = self.get_object()
         id_objeto_registro_vagones_cargados = instance.id
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Eliminar vagón del estado cargado/descargado: {id_objeto_registro_vagones_cargados}",
-            navegador=navegador,
-        )
+
+        registrar_auditoria(request, f"Eliminar vagón del estado cargado/descargado: {id_objeto_registro_vagones_cargados}")
 
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
         
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de vagones del estado cargado/descargado",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        registrar_auditoria(request, "Visualizar lista de vagones del estado cargado/descargado")
+        
 
         return super().list(request, *args, **kwargs)
     
@@ -667,15 +640,8 @@ class en_trenes_view_set(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         objeto_en_trenes = serializer.save()
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Insertado formulario en trenes: {objeto_en_trenes.id}",
-            navegador=navegador,
-        )
+
+        registrar_auditoria(request, f"Insertado formulario en trenes: {objeto_en_trenes.id}")
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -688,15 +654,7 @@ class en_trenes_view_set(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         objeto_en_trenes = serializer.save()
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Modificar formulario en trenes: {objeto_en_trenes.id}",
-            navegador=navegador,
-        )
+        registrar_auditoria(request, f"Modificar formulario en trenes: {objeto_en_trenes.id}")
 
         return Response(serializer.data)
 
@@ -718,30 +676,15 @@ class en_trenes_view_set(viewsets.ModelViewSet):
                 print(f"Error al actualizar equipo {equipo.id}: {str(e)}")
                 continue
         
-        # 3. Registrar auditoría
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Eliminar formulario en trenes {id_objeto_en_trenes}",
-            navegador=navegador,
-        )
+
+        registrar_auditoria(request,f"Eliminar formulario en trenes {id_objeto_en_trenes}")
 
         # 4. Finalmente eliminar la instancia
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     def list(self, request, *args, **kwargs):
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de formularios en trenes",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        registrar_auditoria(request, "Visualizar lista de formularios en trenes")
 
         return super().list(request, *args, **kwargs)
     
@@ -766,14 +709,8 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
         objeto_producto_en_vagon = serializer.save()
 
         # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Insertado formulario en trenes: {objeto_producto_en_vagon.id}",
-            navegador=navegador,
-        )
+
+        registrar_auditoria(request, f"Insertado Productos en Vagon: {objeto_producto_en_vagon.id}")
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -786,15 +723,7 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         objeto_producto_en_vagon = serializer.save()
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Modificar formulario producto en vagon: {objeto_producto_en_vagon.id}",
-            navegador=navegador,
-        )
+        registrar_auditoria(request, f"Modificar formulario producto en vagon: {objeto_producto_en_vagon.id}")
 
         return Response(serializer.data)
 
@@ -804,15 +733,8 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
         instance = self.get_object()
         id_objeto_en_trenes = instance.id
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Eliminar formulario producto en vagon {id_objeto_en_trenes}",
-            navegador=navegador,
-        )
+
+        registrar_auditoria(request, f"Eliminar formulario producto en vagon {id_objeto_en_trenes}")
 
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -820,14 +742,7 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         
         # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de formularios productos en vagon",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        registrar_auditoria(request, "Visualizar lista de formularios productos en vagon")
 
         return super().list(request, *args, **kwargs)
 #*******************************************************************************************************
@@ -862,15 +777,8 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             objeto_por_situar = serializer.save()
 
-                # Registrar la acción en el modelo de Auditoria
-            navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-            direccion_ip = request.META.get('REMOTE_ADDR')
-            Auditoria.objects.create(
-                    usuario=request.user if request.user.is_authenticated else None,
-                    direccion_ip=direccion_ip,
-                    accion=f"Insertado formulario en Por Situar carga o descarga: {objeto_por_situar.id}",
-                    navegador=navegador,
-                )
+
+            registrar_auditoria(request, f"Insertado formulario en Por Situar carga o descarga: {objeto_por_situar.id}")
 
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -885,15 +793,8 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         objeto_por_situar = serializer.save()
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Modificar formulario Por situar carga o descarga: {objeto_por_situar.id}",
-            navegador=navegador,
-        )
+
+        registrar_auditoria(request,f"Modificar formulario Por situar carga o descarga: {objeto_por_situar.id}")
 
         return Response(serializer.data)
 
@@ -903,30 +804,15 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         id_objeto_por_situar = instance.id
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Eliminar formulario Por Situar carga y Descarga {id_objeto_por_situar}",
-            navegador=navegador,
-        )
+ 
+        registrar_auditoria(request, f"Eliminar formulario Por Situar carga y Descarga {id_objeto_por_situar}")
 
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
         
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de formularios Por Situar",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        registrar_auditoria(request, "Visualizar lista de formularios Por Situar")
 
         return super().list(request, *args, **kwargs)
     
@@ -958,15 +844,7 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         objeto_situado = serializer.save()
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Insertado formulario en Situado carga o descarga: {objeto_situado.id}",
-            navegador=navegador,
-        )
+        registrar_auditoria(request,f"Insertado formulario en Situado carga o descarga: {objeto_situado.id}")
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -979,15 +857,8 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         objeto_situado = serializer.save()
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Modificar formulario Situado: {objeto_situado.id}",
-            navegador=navegador,
-        )
+
+        registrar_auditoria(request, f"Modificar formulario Situado: {objeto_situado.id}")
 
         return Response(serializer.data)
 
@@ -996,29 +867,15 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
         instance = self.get_object()
         id_objeto_situado = instance.id
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Eliminar formulario Situado carga y Descarga {id_objeto_situado}",
-            navegador=navegador,
-        )
+
+        registrar_auditoria(request, f"Eliminar formulario Situado carga y Descarga {id_objeto_situado}")
 
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
         # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de formularios Situados",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        registrar_auditoria(request,"Visualizar lista de formularios Situados")
 
         return super().list(request, *args, **kwargs)
  
@@ -1041,15 +898,7 @@ class PendienteArrastreViewset(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         objeto_pendiente = serializer.save()
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Insertado formulario en Pendiente Arrastre: {objeto_pendiente.id}",
-            navegador=navegador,
-        )
+        registrar_auditoria(request, f"Insertado formulario en Pendiente Arrastre: {objeto_pendiente.id}")
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -1062,15 +911,7 @@ class PendienteArrastreViewset(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         objeto_pendiente = serializer.save()
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Modificar formulario Pendiente Arrastre: {objeto_pendiente.id}",
-            navegador=navegador,
-        )
+        registrar_auditoria(request, f"Modificar formulario Pendiente Arrastre: {objeto_pendiente.id}")
 
         return Response(serializer.data)
 
@@ -1080,30 +921,16 @@ class PendienteArrastreViewset(viewsets.ModelViewSet):
         instance = self.get_object()
         id_objeto_pediente = instance.id
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Eliminar formulario Pendiente Arrastre {id_objeto_pediente}",
-            navegador=navegador,
-        )
+
+        registrar_auditoria(request, f"Eliminar formulario Pendiente Arrastre {id_objeto_pediente}")
 
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
         
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de Rotacion de Vagones",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+ 
+        registrar_auditoria(request,"Visualizar lista de Rotacion de Vagones")
 
         return super().list(request, *args, **kwargs)
     
@@ -1146,15 +973,8 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         objeto_rotacion = serializer.save()
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Insertado formulario en Rotacion de vagones: {objeto_rotacion.id}",
-            navegador=navegador,
-        )
+
+        registrar_auditoria(request, f"Insertado formulario en Rotacion de vagones: {objeto_rotacion.id}")
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -1167,15 +987,8 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         objeto_rotacion = serializer.save()
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Modificar formulario Rotacion de vagones: {objeto_rotacion.id}",
-            navegador=navegador,
-        )
+
+        registrar_auditoria(request, f"Modificar formulario Rotacion de vagones: {objeto_rotacion.id}")
 
         return Response(serializer.data)
 
@@ -1185,15 +998,8 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         id_objeto_rotacion = instance.id
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            direccion_ip=direccion_ip,
-            accion=f"Eliminar formulario Rotacion de vagones {id_objeto_rotacion}",
-            navegador=navegador,
-        )
+
+        registrar_auditoria(request, f"Eliminar formulario Rotacion de vagones {id_objeto_rotacion}")
 
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -1201,14 +1007,8 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         
         # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de Rotacion de Vagones",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+
+        registrar_auditoria(request,"Visualizar lista de Rotacion de Vagones")
 
         return super().list(request, *args, **kwargs)
     

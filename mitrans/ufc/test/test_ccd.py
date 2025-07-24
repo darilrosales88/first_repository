@@ -110,7 +110,7 @@ class UFCInformeCCDTestCase(TestCase):
         self.assertEqual(informe.provincia, self.provincia)
 
         # Verificar el estado inicial del parte
-        self.assertEqual(informe.estado_parte, "Creado")
+        self.assertEqual(informe.estado_parte, "creado")
 
         # Verificar los comentarios
         self.assertEqual(informe.comentarios, "Este es un comentario de prueba.")

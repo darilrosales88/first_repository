@@ -801,7 +801,24 @@ const routes = [
   name: 'VisualizarInfoOperative', // Este nombre debe coincidir con el usado en el router-link
   component: () => import('@/views/UFC/VisualizarInfoOperativo.vue'),
   props: true
-}
+},
+/*A partir de aqui es GEMAR */
+  {
+    path: "/gemar_hecho_extraordinario",
+    name: "gemar_hecho_extraordinario",
+    component: () => import("../views/GEMAR/HechoExtraordinarioView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/gemar_hecho_extraordinario/add",
+    name: "add_gemar_hecho_extraordinario",
+    component: () => import("../views/GEMAR/AdicionarHE.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
   
 ];
 

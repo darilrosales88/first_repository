@@ -29,7 +29,8 @@ urlpatterns = [
     #clase include de django.urls y despues se genera el path
     path('api/', include('nomencladores.urls')),
     path('apiAdmin/', include('Administracion.urls')),    
-    path('ufc/', include('ufc.urls')),   
+    path('ufc/', include('ufc.urls')),  
+    path('gemar/', include('gemar.urls')), 
 ]
 
 if settings.DEBUG:

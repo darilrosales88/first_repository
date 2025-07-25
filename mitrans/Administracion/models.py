@@ -8,6 +8,7 @@ from nomencladores.models import nom_cargo, nom_entidades  # Asegúrate de que l
 class CustomUser(AbstractUser):
     ROLE_CHOICES = (
         ('ufc', 'UFC'),
+        ('gemar', 'GEMAR'),
         ('admin', 'Administrador'),
         ('operador', 'Operador'),
     )

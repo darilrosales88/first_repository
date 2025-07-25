@@ -6,7 +6,7 @@
     <br />
     <Navbar-Component />
     
-    <div class="form-container">
+    <div class="form-container" style="margin-left: 18em; width: 75%">
       <h3 style="color: #002A68;">Editar tipo de maniobra portuaria</h3>
       <form @submit.prevent="save_maniobra" class="form-grid">
         <!-- Campo Nombre de la Maniobra -->

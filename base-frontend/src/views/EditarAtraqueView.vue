@@ -6,7 +6,7 @@
     <br />
     <Navbar-Component />
 
-    <div class="form-container">
+    <div class="form-container" style="margin-left: 18em; width: 75%">
       <h3 style="color: #002a68">
         Editar atraque <strong>{{ atraque.nombre_atraque }}</strong>
       </h3>

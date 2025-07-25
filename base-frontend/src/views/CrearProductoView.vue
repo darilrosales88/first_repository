@@ -6,7 +6,7 @@
     <br />
     <Navbar-Component />
     
-    <div class="form-container">
+    <div class="form-container" style="margin-left: 18em; width: 75%">
       <h2>Adicionar producto</h2>
       <form @submit.prevent="save_producto" class="form-grid">
         <!-- Campo Código -->

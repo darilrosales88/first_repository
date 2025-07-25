@@ -566,13 +566,13 @@ export default {
 
       try {
         await axios.post('/apiAdmin/creacion-usuario/', userData);  // Envía los datos al backend
-        this.$router.push('/Usuarios');
         Swal.fire('Agregado!', 'El usuario ha sido creado exitosamente.', 'success');
       } catch (error) {
         console.log(error);
         Swal.fire('Error', 'Hubo un error al crear el usuario.', 'error');
       } finally {
         this.$store.commit('setIsLoading', false);
+        this.$router.push('/Usuarios');
       }
     }
   },

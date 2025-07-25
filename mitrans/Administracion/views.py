@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404
 from nomencladores.models import nom_cargo, nom_entidades  # Asegúrate de que los nombres sean correctos
 #Para la paginacion
 from rest_framework.pagination import PageNumberPagination
-from .permissions import IsAdmin
+
 # Usa get_user_model() para obtener el modelo de usuario activo
 User = get_user_model()
 
@@ -20,7 +20,7 @@ User = get_user_model()
 class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.all().order_by("-id")
     serializer_class = GroupSerializer
-    permission_classes = [IsAuthenticated,IsAdmin]  # Asegura que solo usuarios autenticados puedan acceder
+    permission_classes = [IsAuthenticated]  # Asegura que solo usuarios autenticados puedan acceder
 
 
     def get_queryset(self):
@@ -77,7 +77,7 @@ def obtener_grupo(request, grupo_id):
 
 # Vista para obtener todos los permisos
 @api_view(['GET'])
-@permission_classes([IsAuthenticated,IsAdmin])
+@permission_classes([IsAuthenticated])
 def obtener_permisos(request):
     permisos = Permission.objects.all().order_by("-id")
     data = [{'id': p.id, 'name': p.name} for p in permisos]
@@ -85,7 +85,7 @@ def obtener_permisos(request):
 
 # Vista para editar un grupo
 @api_view(['PATCH'])
-@permission_classes([IsAuthenticated,IsAdmin])
+@permission_classes([IsAuthenticated])
 def editar_grupo(request, grupo_id):
     grupo = Group.objects.get(id=grupo_id)
     permisos_ids = request.data.get('permissions', [])
@@ -183,7 +183,7 @@ class nom_user_view_set(viewsets.ModelViewSet):
     serializer_class = UserPermissionSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = user_filter  # Asegúrate de que esté correctamente referenciado
-    permission_classes = [IsAuthenticated,IsAdmin]
+
     def get_queryset(self):
         queryset = super().get_queryset()
         username = self.request.query_params.get('username')
@@ -264,7 +264,7 @@ def obtener_usuario(request, user_id):
 
 # Vista para editar un usuario
 @api_view(['PATCH'])
-@permission_classes(permission_classes = [IsAuthenticated,IsAdmin])
+@permission_classes([IsAuthenticated])
 def editar_usuario(request, user_id):
     try:
         user = CustomUser.objects.get(id=user_id)
@@ -305,4 +305,3 @@ class AuditoriaViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = auditoria_filter  # Usar el filtro personalizado
     pagination_class = CustomPagination
-    permission_classes = [IsAuthenticated,IsAdmin]

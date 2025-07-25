@@ -6,7 +6,7 @@
     <br />
     <Navbar-Component />
     
-    <div class="form-container">
+    <div class="form-container" style="margin-left: 18em; width: 75%">
       <h3 style="color: #002A68;">Editar unidad de medida: {{ u_medida.unidad_medida }}</h3>
       <form @submit.prevent="submitForm" class="form-grid">
         <!-- Campo Magnitud -->

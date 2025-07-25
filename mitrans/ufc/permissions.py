@@ -23,15 +23,3 @@ class IsVisualizadorUFCPermission(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return False
-
-class IsRevisorUFCPermission(permissions.BasePermission):
-    """
-    Permiso personalizado para permitir a los usuarios del grupo RevisorUFC
-    realizar operaciones de revisión.
-    """
-    message = "Solo miembros del grupo RevisorUFC pueden acceder a esta información"
-    def has_permission(self, request, view):
-        # Verifica que el usuario esté autenticado y pertenezca al grupo RevisorUFC
-        return request.user.is_authenticated and request.user.groups.filter(name='RevisorUFC').exists()
-
-    

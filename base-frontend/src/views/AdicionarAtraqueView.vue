@@ -5,7 +5,7 @@
     </div>
     <br />
     <Navbar-Component />
-    <div class="form-container">
+    <div class="form-container" style="margin-left: 18em; width: 75%">
       <h3 style="color: #002a68">Adicionar atraque:</h3>
       <form @submit.prevent="saveAtraque">
         <div class="form-row">

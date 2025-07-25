@@ -5,7 +5,7 @@ from rest_framework.pagination import PageNumberPagination
 #importacion de modelos
 from .models import vagon_cargado_descargado,producto_UFC,en_trenes
 from .models import registro_vagones_cargados,vagones_productos,HistorialVagonesProductos
-from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones,ufc_informe_operativo,vagones_dias
+from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones,ufc_informe_operativo
 #importacion de serializadores asociados a los modelos
 from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descargado_serializer, 
                         producto_vagon_serializer, en_trenes_serializer,PorSituarCargaDescargaSerializer, SituadoCargaDescargaSerializers, 
@@ -14,9 +14,8 @@ from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descarg
                         vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer,
                         ufc_informe_operativo_serializer,ufc_informe_operativo_filter,
                         HistorialVagonCargadoDescargado,HistorialVagonCargadoDescargadoSerializer,
-                        HistorialVagonesProductosSerializer,vagones_dias_serializer, rotacion_filter,PendienteArrastreFilter
-                        )
-from django.core.cache import cache
+                        HistorialVagonesProductosSerializer)
+
 from Administracion.models import Auditoria
 
 from rest_framework.response import Response
@@ -33,7 +32,7 @@ from django.utils import timezone
 #para usar el or
 
 #Actualizando el ModelViewSet para usar diferentes permisos según la acción
-from .permissions import IsAdminUFCPermission,IsVisualizadorUFCPermission,IsRevisorUFCPermission
+from .permissions import IsAdminUFCPermission,IsVisualizadorUFCPermission
 
 from rest_framework.decorators import action,api_view  # Importa el decorador action
 
@@ -42,12 +41,13 @@ from django.db.models.functions import TruncDate
 from django.db.models import DateField
 from datetime import datetime
 from django.db.models.functions import Cast
-
+from django.db import transaction
 
 from django.http import JsonResponse
-
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 import json
-
+from datetime import date
 
 # Verifica si el usuario tiene el rol "ufc"
 class IsUFCPermission(permissions.BasePermission):
@@ -63,56 +63,24 @@ class IsUFCPermission(permissions.BasePermission):
             permission_classes = [IsAdminUFCPermission]
         else:  # Para list y retrieve
             # Permitir tanto a AdminUFC como a VisualizadorUFC ver los registros
-            permission_classes = [IsAdminUFCPermission | IsVisualizadorUFCPermission | IsRevisorUFCPermission]
+            permission_classes = [IsAdminUFCPermission | IsVisualizadorUFCPermission]
         return [permission() for permission in permission_classes]
 
-#Funcion para actualizar el estado de los vagones deberia estar global
-def actualizar_estado_equipo_ferroviario( equipo_o_id, nuevo_estado, id=None):
-        """
-        Método auxiliar para actualizar el estado de un equipo ferroviario
-        """
-        try:
-            from nomencladores.models import nom_equipo_ferroviario
-            if (id) is not None:
-                equipo = nom_equipo_ferroviario.objects.get(id=id)
-                equipo.estado_actual=nuevo_estado
-                equipo.save()
-                return True
-            if isinstance(equipo_o_id, nom_equipo_ferroviario):
-                equipo = equipo_o_id
-            else:
-                equipo = nom_equipo_ferroviario.objects.filter(numero_identificacion=equipo_o_id).first()
-            if equipo:
-                equipo.estado_actual = nuevo_estado
-                equipo.save()
-        except Exception as e:
-            # No romper el flujo principal si hay error al actualizar el estado
-            print(f"Error al actualizar estado del equipo: {str(e)}")    
-             
-        
+
 #**********************************************************************************************************************************
 
 #Para Informe operativo
 class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
     queryset = ufc_informe_operativo.objects.all().order_by('-id')
     serializer_class = ufc_informe_operativo_serializer
-    permission_classes= [IsUFCPermission]
 
+    
 
     def get_queryset(self):
         queryset = super().get_queryset()
         
         # Filtrado por fecha de operación
         fecha_operacion = self.request.query_params.get('fecha_operacion')
-        search_term = self.request.query_params.get('search', None)
-        if search_term:
-           queryset = queryset.prefetch_related('entidad').filter(
-            Q(entidad_detalle__icontains=search_term) |
-            Q(estado_parte__icontains=search_term) 
-            
-).distinct()
-        return queryset
-            
         if fecha_operacion:
             try:
                 # Parsear la fecha ignorando la hora si está presente
@@ -204,16 +172,12 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
                 {"detail": "Se requiere el campo 'estado_parte'."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
             
         serializer = self.get_serializer(
             instance, 
-            data={'estado_parte': request.data['estado_parte']
-                  }, 
+            data={'estado_parte': request.data['estado_parte']}, 
             partial=True
         )
-        
-        
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
@@ -297,7 +261,6 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
 #Verificando que exista el informe creado antes de insertar
 @api_view(['GET'])
 def verificar_informe_existente(request):
-    entidad=request.user.entidad
     fecha_operacion = request.query_params.get('fecha_operacion')
     if not fecha_operacion:
         return Response({"error": "Parámetro fecha_operacion requerido"}, status=400)
@@ -305,20 +268,17 @@ def verificar_informe_existente(request):
     try:
         fecha_obj = datetime.strptime(fecha_operacion, '%Y-%m-%d').date()
         existe = ufc_informe_operativo.objects.filter(
-            fecha_operacion__date=fecha_obj,
-            entidad=entidad
+            fecha_operacion__date=fecha_obj
         ).exists()
-        print(existe)
+        
         if existe:
             informe = ufc_informe_operativo.objects.filter(
-                fecha_operacion__date=fecha_obj,
-                entidad=entidad
+                fecha_operacion__date=fecha_obj
             ).first()
             return Response({
                 "existe": True,
                 "id": informe.id,
-                "fecha_operacion": informe.fecha_operacion,
-                "estado":informe.estado_parte,
+                "fecha_operacion": informe.fecha_operacion
             })
         return Response({"existe": False})
     except ValueError:
@@ -332,30 +292,22 @@ from .models import ufc_informe_operativo
 from django.utils import timezone
 import json
 
-@require_http_methods(["PATCH"])
+@require_http_methods(["POST"])
 def actualizar_estado_parte(request):
     try:
         data = json.loads(request.body)
         nuevo_estado = data.get('nuevo_estado')
-        informe_id= data.get('id')
-        print("LOG #### ID: ",informe_id)
         
         if not nuevo_estado:
             return JsonResponse({'error': 'Estado no proporcionado'}, status=400)
-        
-        if not informe_id:
-            return JsonResponse({'error': 'No se esta pasando bien  el id'}, status=400)
         
         # Obtener la fecha actual
         hoy = timezone.now().date()
         
         # Buscar el informe del día actual
         informe = ufc_informe_operativo.objects.filter(
-            fecha_operacion__date=hoy,
-            id=informe_id
+            fecha_operacion__date=hoy
         ).first()
-        
-        
         
         if not informe:
             return JsonResponse({'error': 'No existe un informe operativo para la fecha actual'}, status=404)
@@ -379,7 +331,6 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
     queryset = vagones_productos.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = vagones_productos_serializer
     filter_class = vagones_productos_filter
-    permission_classes= [IsUFCPermission]
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -389,9 +340,6 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
         if search is not None:
             return self.filter_class({'origen_tipo_prod_tef': search}, queryset=queryset).qs
         
-        informe_id = self.request.query_params.get('informe')
-        if informe_id:
-            queryset = queryset.filter(informe_operativo__id=informe_id)
         return queryset
 
     def create(self, request, *args, **kwargs):
@@ -565,13 +513,10 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
     queryset = vagon_cargado_descargado.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = vagon_cargado_descargado_serializer
     filter_class = vagon_cargado_descargado_filter
-    permission_classes= [IsUFCPermission]
+    
     def get_queryset(self):
         queryset = super().get_queryset()
-        informe_id = self.request.query_params.get('informe')
         search = self.request.query_params.get('tef_prod_estado', None)
-        if informe_id:
-            queryset = queryset.filter(informe_operativo__id=informe_id)
         
         # Utiliza el filtro definido en vagon_cargado_descargado_filter
         if search is not None:
@@ -582,7 +527,7 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
         registros_asociados = instance.registros_vagones.all()
         
         for registro in registros_asociados:
-            actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
+            self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
         
         registros_asociados.delete()
         instance.delete()
@@ -774,7 +719,7 @@ class vagon_cargado_descargado_hoy_view_set(viewsets.ModelViewSet):
         registros_asociados = instance.registros_vagones.all()
         
         for registro in registros_asociados:
-            actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
+            self.actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
         
         registros_asociados.delete()
         instance.delete()
@@ -967,16 +912,14 @@ class en_trenes_view_set(viewsets.ModelViewSet):
     serializer_class = en_trenes_serializer
     filter_backends = [DjangoFilterBackend]
     filter_class = en_trenes_filter
-    permission_classes= [IsUFCPermission]
+
     ordering_fields = ['id'] 
     ordering = ['-id']  # Orden por defecto (descendente por id)    
 
     def get_queryset(self):
         queryset = super().get_queryset()
         search_term = self.request.query_params.get('search', None)
-        informe_id = self.request.query_params.get('informe')
-        if informe_id:
-            queryset = queryset.filter(informe_operativo__id=informe_id)
+
         if search_term:
             # Filtra por coincidencia en cualquiera de los campos
             queryset = queryset.prefetch_related('equipo_vagon','producto').filter(
@@ -1037,7 +980,6 @@ class en_trenes_view_set(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
-    # En views.py (en_trenes_view_set)
     def destroy(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
@@ -1047,20 +989,8 @@ class en_trenes_view_set(viewsets.ModelViewSet):
 
         instance = self.get_object()
         id_objeto_en_trenes = instance.id
-        
-        # 1. Primero obtener todos los equipos asociados
-        equipos_asociados = instance.equipo_vagon.all()
-        
-        # 2. Actualizar estado de cada equipo
-        for equipo in equipos_asociados:
-            try:
-                # Pasar el objeto completo en lugar de solo el número
-                actualizar_estado_equipo_ferroviario(equipo, "Disponible")
-            except Exception as e:
-                print(f"Error al actualizar equipo {equipo.id}: {str(e)}")
-                continue
-        
-        # 3. Registrar auditoría
+
+        # Registrar la acción en el modelo de Auditoria antes de eliminar
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
         direccion_ip = request.META.get('REMOTE_ADDR')
         Auditoria.objects.create(
@@ -1070,9 +1000,9 @@ class en_trenes_view_set(viewsets.ModelViewSet):
             navegador=navegador,
         )
 
-        # 4. Finalmente eliminar la instancia
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
     def list(self, request, *args, **kwargs):
         #si no pertenece a VisualizadorUFC o AdminUFC no puede realizar la accion
         if not request.user.groups.filter(name='AdminUFC').exists() and not request.user.groups.filter(name='VisualizadorUFC').exists():
@@ -1134,12 +1064,21 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
     queryset = producto_UFC.objects.all().order_by('-id') # Definir el queryset
     serializer_class = producto_vagon_serializer
     permission_classes = [IsUFCPermission]
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = producto_vagon_filter
 
-    search_fields=[
-        'tipo_equipo__tipo_equipo'
-    ]
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_term = self.request.query_params.get('buscar_producto', None)
+
+        if search_term:
+            # Filtra por coincidencia en cualquiera de los campos
+            queryset = queryset.select_related('producto').filter(
+            Q(id__icontains=search_term) |
+            Q(tpo_embalaje__icontains=search_term)|
+            Q(producto__nombre_producto__icontains=search_term)|
+            Q(producto___codigo_producto__icontains=search_term)
+            
+)
+        return queryset
 
     def create(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='AdminUFC').exists():
@@ -1212,6 +1151,7 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
+        print("mayeya")
         if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
             return Response(
                 {"detail": "No tiene permiso para realizar esta acción."},
@@ -1237,14 +1177,10 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
     queryset = por_situar.objects.all().order_by("-id")
     serializer_class = PorSituarCargaDescargaSerializer
     filter_backends = [DjangoFilterBackend]
-    permission_classes= [IsUFCPermission]
+    
     def get_queryset(self):
         queryset = super().get_queryset()
         tipo_equipo = self.request.query_params.get("tipo_equipo")
-        informe_id = self.request.query_params.get('informe')
-        if informe_id:
-            queryset = queryset.filter(informe_operativo__id=informe_id)
-        
         if tipo_equipo:
             if "," in tipo_equipo:
                 tipos = tipo_equipo.split(",")
@@ -1391,9 +1327,6 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         tipo_equipo = self.request.query_params.get("tipo_equipo")
-        informe_id = self.request.query_params.get('informe')
-        if informe_id:
-            queryset = queryset.filter(informe_operativo__id=informe_id)
         if tipo_equipo:
             if "," in tipo_equipo:
                 tipos = tipo_equipo.split(",")
@@ -1530,16 +1463,9 @@ class SituadoCargaDescarga_hoy_Viewset(viewsets.ModelViewSet):
     
 class PendienteArrastreViewset(viewsets.ModelViewSet):
     queryset = arrastres.objects.all()
+    a=arrastres.objects.create
     serializer_class = PendienteArrastreSerializer
     permission_classes = [IsUFCPermission] 
-    filter_class = PendienteArrastreFilter
-    
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        informe_id = self.request.query_params.get('informe')
-        if informe_id:
-            queryset = queryset.filter(informe_operativo__id=informe_id)
-        return queryset
     
     def create(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='AdminUFC').exists():
@@ -1665,37 +1591,16 @@ class PendienteArrastre_hoy_Viewset(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
     
     
-    
-    
-    
-#*************Registro de vagones Dia*******************
-class VagonesDiasViewSet(viewsets.ModelViewSet):
-    queryset=vagones_dias.objects.all()
-    serializer_class=vagones_dias_serializer
-    permission_classes = [IsUFCPermission]
-
 #*************Empieza View Rotacion de Vagones **********************
 class RotacionVagonesViewSet(viewsets.ModelViewSet):
     """
     Vista para gestionar registros de rotación de vagones.
     Permite listar, crear, actualizar y eliminar registros.
     """
-    
-    
     queryset = rotacion_vagones.objects.all()
     serializer_class = RotacionVagonesSerializer
     permission_classes = [IsUFCPermission] 
-    filter_class = rotacion_filter
 
-    ordering_fields = ['id'] 
-    ordering = ['-id']  # Orden por defecto (descendente por id)    
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        informe_id = self.request.query_params.get('informe')
-        if informe_id:
-            queryset = queryset.filter(informe_operativo__id=informe_id)
-        return queryset
-    
     def create(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='AdminUFC').exists():
             return Response(

@@ -1,11 +1,11 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from ufc.models import ufc_informe_ccd
-from nomencladores.models import nom_provincia, nom_entidades,nom_pais,nom_osde_oace_organismo,nom_territorio
+from ufc.models import ufc_informe_ccd,ccd_registro_vagones_cd
+from nomencladores.models import (nom_provincia, nom_entidades,nom_pais,nom_osde_oace_organismo,nom_territorio,nom_equipo_ferroviario,nom_tipo_equipo_ferroviario)
 from Administracion.models import CustomUser
 import logging
 
-log=logging.Logger(name="###LOG:")
+log=logging.Logger(name="log")
 
 class UFCInformeCCDTestCase(TestCase):
       
@@ -56,9 +56,32 @@ class UFCInformeCCDTestCase(TestCase):
             entidad=self.entidad
         )
     
+        #Crear Tipo Equipo
+        self.tipo_equipo=nom_tipo_equipo_ferroviario.objects.create(
+             tipo_equipo = "casilla",
+             longitud = 10,
+    peso_neto_sin_carga = 200,
+    peso_maximo_con_carga =344,
+    capacidad_cubica_maxima = 555,
+    descripcion = "Mostro",
+             
+        )
+        
+    def test_crear_tipo_equipo(self):
+        tipo_equipo=nom_tipo_equipo_ferroviario.objects.create(
+             longitud = 100,
+    peso_neto_sin_carga = 200,
+    peso_maximo_con_carga =344,
+    capacidad_cubica_maxima = 555,
+    descripcion = "Mostro", 
+        )
+        self.assertIsInstance(tipo_equipo,nom_tipo_equipo_ferroviario)
+        self.assertEqual(tipo_equipo.__str__(),'Tipo de equipo: casilla - Longitud: 100 - Peso neto sin carga: 200 - Peso máximo con carga: 344')
+        self.asser
     def test_crear_pais(self):
         """
         Prueba la creacion del pais
+        
         """
         self.pais= nom_pais.objects.create(
             nacionalidad="JAP",
@@ -71,6 +94,7 @@ class UFCInformeCCDTestCase(TestCase):
     def test_crear_informe_ccd(self):
         """
         Prueba la creación de una instancia de ufc_informe_ccd.
+        
         """
         informe = ufc_informe_ccd.objects.create(
             creado_por=self.user,
@@ -78,7 +102,8 @@ class UFCInformeCCDTestCase(TestCase):
         )
 
         # Verificar que la instancia fue creada
-        self.assertIsInstance(informe, ufc_informe_ccd)
+        self.assertIsInstance(informe, ufc_informe_ccd,msg="Pasado el test de Crear ufc_informe_ccd")
+        self.assertLogs(log.info("Test Pasado"))
 
         # Verificar que la entidad y la provincia se asignaron correctamente desde el usuario
         self.assertEqual(informe.entidad, self.entidad)
@@ -89,10 +114,11 @@ class UFCInformeCCDTestCase(TestCase):
 
         # Verificar los comentarios
         self.assertEqual(informe.comentarios, "Este es un comentario de prueba.")
-
+    
     def test_str_method(self):
         """
         Prueba el método __str__ del modelo ufc_informe_ccd.
+        
         """
         informe = ufc_informe_ccd.objects.create(
             creado_por=self.user
@@ -103,6 +129,7 @@ class UFCInformeCCDTestCase(TestCase):
     def test_aprobacion_informe(self):
         """
         Prueba la aprobación de un informe.
+        
         """
         aprobador = CustomUser.objects.create_user(
             username="aprobador",
@@ -118,3 +145,13 @@ class UFCInformeCCDTestCase(TestCase):
         self.assertEqual(informe.estado_parte, "Aprobado")
         self.assertEqual(informe.aprobado_por, aprobador)
 
+    # def test_ccd_registro_vagones_cd(self):
+    #     """
+    #     Prueba la creacion de un registro de vagon ccd
+    #     """
+    #     equipo_ferroviario= nom_equipo_ferroviario.objects.create(
+            
+    #     )
+    #     registro= ccd_registro_vagones_cd.objects.create(
+    #         equipo_ferroviario=equipo_ferroviario
+    #     )

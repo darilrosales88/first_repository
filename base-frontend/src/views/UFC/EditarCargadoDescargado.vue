@@ -140,48 +140,45 @@
 
               <!-- Campo: producto -->
               <div class="mb-3">
-                <label for="producto" class="form-label small fw-semibold text-secondary">Productos <span v-if="formData.estado === 'cargado'" ></span></label>
-                <div class="ufc-input-with-action">
-                  <div class="ufc-custom-select" @click="toggleProductosDropdown">
-                    <div class="ufc-select-display">
-                      {{ getSelectedProductosText() || 'Seleccione productos...' }}
-                    </div>
-                    <i class="bi bi-chevron-down ufc-select-arrow"></i>
-                    
-                    <div class="ufc-productos-dropdown" v-if="showProductosDropdown">
-                      <div class="ufc-productos-search-container">
-                        <input
-                          type="text"
-                          class="ufc-productos-search"
-                          placeholder="Buscar productos..."
-                          v-model="productoSearch"
-                          @input="filterProductos"
-                          @click.stop>
-                      </div>
-                      <div class="ufc-productos-options">
-                        <div
-                          v-for="producto in filteredProductos"
-                          :key="producto.id"
-                          class="ufc-producto-option"
-                          :class="{ 'selected': formData.lista_productos.includes(producto.id) }"
-                          @click.stop="toggleProductoSelection(producto.id)">
-                          {{ producto.id }}-{{ producto.producto_name }} - {{ producto.producto_codigo }}
-                          <template v-if="producto.tipo_embalaje">
-                            (Embalaje: {{ producto.tipo_embalaje.nombre || producto.tipo_embalaje.nombre_embalaje || 'N/A' }})
-                          </template>
-                        </div>
-                      </div>
-                    </div>
+                <div class="mb-3">
+                  
+                  <label
+                    for="productos"
+                    class="form-label small fw-semibold text-secondary"
+                    >Productos</label
+                  >
+                  <div class="ufc-input-with-action">
+                    <select
+                      class="form-select form-select-sm border-secondary"
+                      style="padding: 8px 12px"
+                      v-model="formData.producto"
+                      @change="buscarTipoEquipo"
+                      required
+                      oninvalid="this.setCustomValidity('Por favor, seleccione un Producto')"
+                      oninput="this.setCustomValidity('')"
+                    >
+                      <option value="" disabled>Seleccione un Producto</option>
+
+                      <option
+                        v-for="producto in productos"
+                        :key="producto.id"
+                        :value="producto.id"
+                      >
+                        <!-- Esto tambien hay que modificarlo en los demas y quitar las funciones basuras ademas de agregar esto mismo en los editar de cada uno @BZ-theFanG #-# -->
+                        {{ producto.producto_name }}-{{
+                          producto.producto_codigo
+                        }}-{{ producto.tipo_embalaje_name }}
+                      </option>
+                    </select>
+                    <button class="create-button ms-2" @click.stop.prevent="abrirModalAgregarProducto">
+                      <i class="bi bi-plus-circle large-icon"></i>
+                    </button>
                   </div>
-                  <button class="create-button ms-2" @click.stop.prevent="abrirModalAgregarProducto">
-                    <i class="bi bi-plus-circle large-icon"></i>
-                  </button>
                 </div>
               </div>
 
               <!-- Modal para agregar producto cargado/descargado -->
               <ModalAgregarProducto v-if="mostrarModalProducto" :visible="mostrarModalProducto" @cerrar-modal="cerrarModalAddProductoCargado"/>
-
               <!-- Modal para agregar vagon a estado cargado/descargado -->
               <ModalAgregarVagonCargado v-if="mostrarModalVagon" :visible="mostrarModalVagon" :tipo-equipo="formData.tipo_equipo_ferroviario" @cerrar-modal="cerrarModalAddVagonCargado" @vagon-agregado="handleVagonAgregado"/>
 
@@ -233,7 +230,7 @@
                 <th scope="col">Origen</th>
                 <th scope="col">Fecha de llegada</th>
                 <th scope="col">Observaciones</th>
-                <th scope="col">Acciones</th>
+                <!-- <th scope="col">Acciones</th> -->
               </tr>
               <tr v-if="registros_vagones_cargados.length == 0">
                 <td colspan="8" class="text-center text-muted py-4">
@@ -262,16 +259,16 @@
               <tr v-for="(item, index) in registros_vagones_cargados" :key="item.id" class="align-middle">
                 <td>{{ item.no_id || "Sin ID" }}</td>
                 <td>{{ item.fecha_despacho }}</td>
-                <td>{{ item.origen }}</td>
+                <td>{{ item.origen }}</td> 
                 <td>{{ item.fecha_llegada }}</td>
                 <td>{{ item.observaciones }}</td>
-                <td v-if="hasGroup('AdminUFC')">
+                <!-- <td v-if="hasGroup('AdminUFC')">
                   <div class="d-flex">
                     <button @click.prevent="confirmDeleteVagonAsignado(item)" class="btn btn-sm btn-outline-danger" title="Eliminar">
                       <i class="bi bi-trash"></i>
                     </button>
                   </div>
-                </td>
+                </td> -->
               </tr>
             </tbody>
           </table>
@@ -315,8 +312,7 @@ export default {
         tipo_destino: "ac_ccd",
         destino: "",
         estado: "cargado",
-        lista_productos: [],
-        original_productos: [],
+        producto:"",
         plan_diario_carga_descarga: "",
         real_carga_descarga: "",
         operacion: "",
@@ -400,12 +396,7 @@ export default {
           tipo_destino: vagonData.tipo_destino || "ac_ccd",
           destino: vagonData.destino || "",
           estado: vagonData.estado || "cargado",
-          lista_productos: Array.isArray(vagonData.producto)
-            ? vagonData.producto.map((p) => p.id || p)
-            : vagonData.producto_ids || [],
-          original_productos: Array.isArray(vagonData.producto)
-            ? vagonData.producto.filter((p) => p && p.id)
-            : [],
+          producto:vagonData.producto,
           plan_diario_carga_descarga:
             vagonData.plan_diario_carga_descarga || "",
           real_carga_descarga: vagonData.real_carga_descarga || "",
@@ -525,9 +516,7 @@ export default {
           tipo_destino: this.formData.tipo_destino,
           destino: this.formData.destino,
           estado: this.formData.estado,
-          producto_ids: Array.isArray(this.formData.lista_productos)
-            ? this.formData.lista_productos
-            : [this.formData.lista_productos],
+          producto: this.formData.producto,
           plan_diario_carga_descarga: this.formData.plan_diario_carga_descarga,
           real_carga_descarga: this.formData.real_carga_descarga,
           operacion: this.formData.operacion,
@@ -545,15 +534,10 @@ export default {
 
         console.log("Payload a enviar:", payload); // Para depuración
 
-        const response = await axios.put(
+        const response = await axios.patch(
           `/ufc/vagones-cargados-descargados/${this.id}/`,
-          payload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              "X-CSRFToken": this.getCookie("csrftoken"),
-            },
-          }
+          payload
+      
         );
 
         await Swal.fire({
@@ -581,7 +565,7 @@ export default {
       }
     },
 
-    // Método auxiliar para obtener cookies Esto que co;o es
+    // Método auxiliar para obtener cookies Esto que co;o es NO TENGO NI PUTA IDEA QUIEN TIRO ESTO
     getCookie(name) {
       let cookieValue = null;
       if (document.cookie && document.cookie !== "") {

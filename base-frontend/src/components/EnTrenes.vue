@@ -1,366 +1,357 @@
 <template>
-  <div class="por-situar-container">
-    <!-- Header con título y acciones -->
-    <div class="ps-header">
-      <h1 class="ps-title">
-        <i class="bi bi-train-front-fill ps-title-icon"></i>
-        Vagones en Tren
-      </h1>
-
-      <div class="ps-actions">
-        <button class="btn btn-link p-0">
-          <router-link to="/AdicionarVagon"
-            ><i class="bi bi-plus-circle fs-3"></i
-          ></router-link>
-        </button>
-
-        <!-- Buscador moderno -->
-        <div class="ps-search-container">
-          <i class="bi bi-search ps-search-icon"></i>
-          <input
-            type="search"
-            class="ps-search-input"
-            placeholder="Buscar registros..."
-            v-model="searchQuery"
-            @input="handleSearchInput"
-          />
-          <div class="ps-search-border"></div>
-        </div>
+  <div class="container py-3">
+    <div class="card border">
+      <div class="card-header bg-light border-bottom">
+        <h5 class="mb-0 text-dark fw-semibold">
+          <i class="bi bi-train-front-fill me-2"></i>Vagones en Tren
+        </h5>
       </div>
-    </div>
-
-    <!-- Tarjeta contenedora de la tabla -->
-    <div class="ps-card">
-      <!-- Tabla con diseño moderno -->
-      <div class="ps-table-container">
-        <table class="ps-table">
-          <thead>
-            <tr>
-              <th class="ps-th">Código Locomotora</th>
-              <th class="ps-th">Tipo de Equipo</th>
-              <th class="ps-th">Estado</th>
-              <th class="ps-th">Producto</th>
-              <th class="ps-th">Cant. Vagones</th>
-              <th class="ps-th">Origen</th>
-              <th class="ps-th">Destino</th>
-              <th class="ps-th" v-if="showNoId">Descripción</th>
-              <th class="ps-th ps-th-actions">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Estado de carga -->
-            <tr v-if="loading">
-              <td :colspan="showNoId ? 10 : 9" class="ps-loading-td">
-                <div class="ps-loading">
-                  <div class="ps-spinner"></div>
-                  <span>Cargando registros...</span>
-                </div>
-              </td>
-            </tr>
-
-            <!-- Filas de datos -->
-            <tr
-              v-for="(tren, index) in filteredRecords"
-              :key="tren.id"
-              class="ps-tr"
-            >
-              <td class="ps-td">
-                {{ tren.numero_identificacion_locomotora || "-" }}
-              </td>
-              <td class="ps-td">{{ tren.tipo_equipo_name || "-" }}</td>
-              <td class="ps-td">
-                <span
-                  :class="`ps-status ps-status-${getStatusClass(tren.estado)}`"
+      <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <router-link v-if="hasGroup(['AdminUFC', 'OperadorUFC']) && this.habilitado" to="/AdicionarVagon">
+            <button class="btn btn-sm btn-primary">
+              <i class="bi bi-plus-circle me-1"></i>Añadir
+            </button>
+          </router-link>
+          <form @submit.prevent="search_producto" class="search-container">
+            <div class="input-group">
+              <input
+                type="search"
+                class="form-control"
+                placeholder="Buscar en registros"
+                v-model="searchQuery"
+                @input="handleSearchInput"
+              />
+              <span
+                class="position-absolute top-50 start-0 translate-middle-y ps-2"
+              >
+                <i class="bi bi-search"></i>
+              </span>
+            </div>
+          </form>
+        </div>
+        <!-- Tabla responsive con mejoras -->
+        <div class="table table-responsive">
+          <table class="table table-sm table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th scope="col" style="width: 50px">No</th>
+                <th class="col">Código Locomotora</th>
+                <th class="col">Tipo de Equipo</th>
+                <th class="col">Estado</th>
+                <th class="col">Producto</th>
+                <th class="col">Cant. Vagones</th>
+                <th class="col">Origen</th>
+                <th class="col">Destino</th>
+                <th class="col" v-if="showContent">Descripción</th>
+                <th scope="col">Acciones</th>
+              </tr>
+              <tr v-if="!busqueda_existente && enTrenes.length != 0">
+                <td
+                  :colspan="showNoId ? 10 : 9"
+                  class="text-center text-muted py-4"
                 >
-                  {{ tren.estado || "-" }}
-                </span>
-              </td>
-              <td class="ps-td">
-                <span
-                  v-if="tren.productos_info && tren.productos_info.length > 0"
-                >
-                  {{ getNombresProductos(tren.productos_info) }}
-                </span>
-                <span v-else>-</span>
-              </td>
-              <td class="ps-td">
-                <span class="ps-badge">{{ tren.cantidad_vagones || "0" }}</span>
-              </td>
-              <td class="ps-td">{{ tren.origen || "-" }}</td>
-              <td class="ps-td">{{ tren.destino || "-" }}</td>
-              <td class="ps-td" v-if="showNoId">
-                {{ tren.descripcion || "-" }}
-              </td>
-
-              <!-- En el td de acciones de la tabla -->
-              <td class="ps-td ps-td-actions">
-                <div class="d-flex">
-                  <button
-                    @click="viewDetails(tren)"
-                    class="btn btn-sm btn-outline-info me-2"
-                    title="Ver detalles"
-                  >
-                    <i class="bi bi-eye-fill"></i>
-                  </button>
-                  <router-link
-                    :to="{
-                      name: 'EditarEnTren',
-                      params: { id: tren.id },
-                    }"
-                    class="btn btn-sm btn-outline-warning me-2"
-                    title="Editar"
-                  >
-                    <i class="bi bi-pencil-square"></i>
-                  </router-link>
-                  <button
-                    @click="confirmDelete(tren.id)"
-                    class="btn btn-sm btn-outline-danger"
-                    title="Eliminar"
-                    :disabled="loading"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-
-            <!-- Estado vacío -->
-            <tr v-if="!loading && filteredRecords.length === 0">
-              <td :colspan="showNoId ? 10 : 9" class="ps-empty-td">
-                <div class="ps-empty-state">
-                  <i class="bi bi-database-exclamation"></i>
-                  <h3>
-                    {{
-                      searchQuery ? "No hay coincidencias" : "No hay registros"
-                    }}
-                  </h3>
-                  <p>
-                    {{
-                      searchQuery
-                        ? `No encontramos resultados para "${searchQuery}"`
-                        : "No hay vagones registrados en este momento"
-                    }}
+                  <i class="bi bi-exclamation-circle fs-4"></i>
+                  <p class="mt-2">
+                    No se encontraron resultados para "{{ searchQuery }}"
                   </p>
-                  <router-link
-                    to="/AdicionarVagon"
-                    class="ps-empty-action"
-                    v-if="!searchQuery"
-                  >
-                    <i class="bi bi-plus-circle"></i> Crear primer registro
-                  </router-link>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+                </td>
+              </tr>
+              <tr v-if="enTrenes.length == 0">
+                <td
+                  :colspan="showNoId ? 10 : 9"
+                  class="text-center text-muted py-4"
+                >
+                  <div class="ps-loading" v-if="loading">
+                    <div class="ps-spinner"></div>
+                    <span>Cargando registros...</span>
+                  </div>
+                  <div v-else>
+                    <i class="bi bi-database-exclamation fs-4"></i>
+                    <p class="mt-2">No hay registros</p>
+                  </div>
+                </td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(item, index) in enTrenes"
+                :key="item.id"
+                class="align-middle"
+              >
+                <th scope="row">{{ index + 1 }}</th>
+                <td>{{ item.numero_identificacion_locomotora || "-" }}</td>
+                <td>{{ item.tipo_equipo_name || "-" }}</td>
+                <td>
+                  <span>
+                    {{ item.estado || "-" }}
+                  </span>
+                </td>
+                <td>{{ item.producto_name || "-" }}</td>
+                <td>{{ item.cantidad_vagones || "0" }}</td>
+                <td>{{ item.origen || "-" }}</td>
+                <td>{{ item.destino || "-" }}</td>
+                <td v-if="showContent">
+                  {{ item.descripcion || "-" }}
+                </td>
+                <td v-if="hasGroup(['AdminUFC', 'OperadorUFC'])">
+                  <div class="d-flex">
+                    <button
+                      @click="viewDetails(item)"
+                      class="btn btn-sm btn-outline-info me-2"
+                      title="Ver detalles">
+                      <i class="bi bi-eye-fill"></i>
+                    </button>
 
-    <!-- Paginación mejorada -->
-    <div class="ps-pagination">
-      <div class="text-muted small">
-        Mostrando {{ en_trenes.length }} de {{ totalItems }} registros
-      </div>
-      <nav aria-label="Page navigation">
-        <ul class="pagination pagination-sm mb-0">
-          <li class="page-item" :class="{ disabled: currentPage === 1 }">
-            <button class="page-link" @click="previousPage">
-              <i class="bi bi-chevron-left"></i>
-            </button>
-          </li>
-          <li class="page-item disabled">
-            <span class="page-link">
-              Página {{ currentPage }} de
-              {{ Math.ceil(totalItems / itemsPerPage) }}
-            </span>
-          </li>
-          <li
-            class="page-item"
-            :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
-          >
-            <button class="page-link" @click="nextPage">
-              <i class="bi bi-chevron-right"></i>
-            </button>
-          </li>
-        </ul>
-      </nav>
-    </div>
-    <!-- Fin Paginacion -->
+                    <button v-if="this.habilitado"
+                      @click="editVagonEnTren(item.id)"
+                      class="btn btn-sm btn-outline-warning me-2"
+                      title="Editar">
+                      <i class="bi bi-pencil-square"></i>
+                    </button>
 
-    <!-- Modal de detalles - Versión mejorada con más color -->
-    <div
-      v-if="showDetailsModal"
-      class="ps-modal-overlay"
-      @click.self="closeDetailsModal"
-    >
-      <div class="ps-modal">
-        <div class="ps-modal-header">
-          <div class="ps-modal-header-content">
-            <div class="ps-modal-icon-container">
-              <i class="bi bi-info-circle-fill ps-modal-icon"></i>
-            </div>
-            <div>
-              <h2>Detalles del Vagon</h2>
-              <p class="ps-modal-subtitle">
-                Información completa del registro seleccionado
-              </p>
-            </div>
-          </div>
-          <button class="ps-modal-close" @click="closeDetailsModal">
-            <i class="bi bi-x-lg"></i>
-          </button>
+                    <button v-if="this.habilitado"
+                      @click="confirmDelete(item.id)"
+                      class="btn btn-sm btn-outline-danger"
+                      title="Eliminar">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <div class="ps-modal-body">
-          <div class="ps-detail-grid">
-            <div class="ps-detail-card">
-              <div class="ps-detail-card-header">
-                <i class="bi bi-tag-fill"></i>
-                <h4>Información Básica</h4>
+        <!-- Paginación mejorada -->
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="text-muted small">
+            Mostrando {{ enTrenes.length }} de {{ totalItems }} registros
+          </div>
+          <nav aria-label="Page navigation">
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                <button class="page-link" @click="previousPage">
+                  <i class="bi bi-chevron-left"></i>
+                </button>
+              </li>
+              <li class="page-item disabled">
+                <span class="page-link">
+                  Página {{ currentPage }} de
+                  {{ Math.ceil(totalItems / itemsPerPage) }}
+                </span>
+              </li>
+              <li
+                class="page-item"
+                :class="{ disabled: currentPage * itemsPerPage >= totalItems }"
+              >
+                <button class="page-link" @click="nextPage">
+                  <i class="bi bi-chevron-right"></i>
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+        <!-- Termina la paginacion -->
+
+        <!-- Modal de detalles -->
+        <div
+          v-if="mostrarModalDetalles"
+          class="ps-modal-overlay"
+          @click.self="cerrarModalDetalles()"
+        >
+          <!-- Modal -->
+          <div class="ps-modal">
+            <!-- 1. Encabezado del Modal -->
+            <div class="ps-modal-header">
+              <div class="ps-modal-header-content">
+                <div class="ps-modal-icon-container">
+                  <i class="bi bi-info-circle-fill ps-modal-icon"></i>
+                </div>
+                <div>
+                  <h2>Detalles del Registro</h2>
+                  <p class="ps-modal-subtitle">
+                    Información completa del registro situado
+                  </p>
+                </div>
               </div>
-              <div class="ps-detail-card-body">
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">No Id Locomotora:</span>
-                  <span class="ps-detail-value">{{
-                    currentTren.numero_identificacion_locomotora || "N/A"
-                  }}</span>
+              <button class="ps-modal-close" @click="cerrarModalDetalles()">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+
+            <!-- 2. Cuerpo del Modal -->
+            <div class="ps-modal-body">
+              <div class="ps-detail-grid">
+                <!-- 2.1 Tarjeta - Información Básica -->
+                <div class="ps-detail-card">
+                  <div class="ps-detail-card-header">
+                    <i class="bi bi-tag-fill"></i>
+                    <h4>Información Básica</h4>
+                  </div>
+                  <div class="ps-detail-card-body">
+                    <!-- 2.1.2 Item - Origen -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-label">Locomotora:</span>
+                      <span class="ps-detail-value">
+                        {{
+                          vagonSeleccionado.numero_identificacion_locomotora ||
+                          "N/A"
+                        }}
+                      </span>
+                    </div>
+
+                    <!-- 2.1.2 Item - Origen -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-label">Origen:</span>
+                      <span class="ps-detail-value">
+                        {{ vagonSeleccionado.origen || "N/A" }}
+                      </span>
+                    </div>
+
+                    <!-- 2.1.3 Item - Tipo de Equipo -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-label">Tipo de Equipo:</span>
+                      <span class="ps-detail-value">
+                        {{ vagonSeleccionado.tipo_equipo_name || "N/A" }}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Tipo de equipo:</span>
-                  <span class="ps-detail-value">{{
-                    currentTren.tipo_equipo_name || "N/A"
-                  }}</span>
+                <!-- 2.2 Tarjeta - Estado y Producto -->
+                <div class="ps-detail-card">
+                  <div class="ps-detail-card-header">
+                    <i class="bi bi-clipboard2-data-fill"></i>
+                    <h4>Estado y Producto</h4>
+                  </div>
+                  <div class="ps-detail-card-body">
+                    <!-- 2.2.1 Item - Estado -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-label">Estado:</span>
+                      <span class="ps-detail-value">
+                        <span
+                          :class="`ps-status ps-status-${getStatusClass(
+                            vagonSeleccionado.estado
+                          )}`"
+                        >
+                          {{ vagonSeleccionado.estado || "N/A" }}
+                        </span>
+                      </span>
+                    </div>
+
+                    <!-- 2.2.3 Item - Productos (lista) -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-label">Productos:</span>
+                      <span class="ps-detail-value">
+                        <template
+                          v-if="
+                            vagonSeleccionado.productos_info &&
+                            vagonSeleccionado.productos_info.length > 0
+                          "
+                        >
+                          <div
+                            v-for="producto in vagonSeleccionado.productos_info"
+                            :key="producto.id"
+                            class="producto-item"
+                          >
+                            • {{ producto.nombre_producto }}
+                            <span v-if="producto.tipo_embalaje"
+                              >({{ producto.tipo_embalaje }})</span
+                            >
+                          </div>
+                        </template>
+                        <span v-else>N/A</span>
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Estado:</span>
-                  <span class="ps-detail-value">
-                    <span
-                      :class="`ps-status ps-status-${getStatusClass(
-                        currentTren.estado
-                      )}`"
-                    >
-                      {{ currentTren.estado || "N/A" }}
+                <!-- 2.3 Tarjeta - Cantidades (destacada) -->
+                <div class="ps-detail-card">
+                  <div class="ps-detail-card-header">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <h4>Cantidades</h4>
+                  </div>
+                  <div class="ps-detail-card-body">
+                    <!-- 2.3.1 Item - Vagones -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-label">Vagones:</span>
+                      <span
+                        class="ps-detail-value ps-highlight-value ps-badge-success"
+                      >
+                        {{ vagonSeleccionado.cantidad_vagones || "0" }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="ps-detail-card">
+                  <div class="ps-detail-card-header">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <h4>Destinos</h4>
+                  </div>
+                  <div class="ps-detail-card-body">
+                    <!-- 2.4.1 Item - Tipo Destino -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-label">Tipo Destino:</span>
+                      <span class="ps-detail-value">
+                        {{
+                          getTipoOrigenText(vagonSeleccionado.tipo_destino) ||
+                          "N/A"
+                        }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- 2.4.2 Item - Destino -->
+                  <div class="ps-detail-item">
+                    <span class="ps-detail-label">Destino:</span>
+                    <span class="ps-detail-value">
+                      {{ vagonSeleccionado.destino || "N/A" }}
                     </span>
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div class="ps-detail-card">
-              <div class="ps-detail-card-header">
-                <i class="bi bi-clipboard2-data-fill"></i>
-                <h4>Producto y Cantidad</h4>
-              </div>
-              <div class="ps-detail-card-body">
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Producto Id:</span>
-                  <span class="ps-detail-value">{{
-                    currentTren.producto || "N/A"
-                  }}</span>
+                  </div>
                 </div>
 
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Producto nombre:</span>
-                  <span class="ps-detail-value">{{
-                    getNombresProductos(currentTren.productos_info)
-                  }}</span>
+                <!-- 2.4 Tarjeta - Observaciones (ancho completo) -->
+                <div class="ps-detail-card ps-detail-card-full">
+                  <div class="ps-detail-card-header">
+                    <i class="bi bi-chat-square-text-fill"></i>
+                    <h4>Observaciones</h4>
+                  </div>
+                  <div class="ps-detail-card-body">
+                    <!-- 2.4.1 Item - Observaciones -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-value">
+                        {{
+                          vagonSeleccionado.observaciones ||
+                          "Ninguna observación registrada"
+                        }}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Cantidad de vagones:</span>
-                  <span class="ps-detail-value">{{
-                    currentTren.cantidad_vagones || "0"
-                  }}</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="ps-detail-card">
-              <div class="ps-detail-card-header">
-                <i class="bi bi-geo-alt-fill"></i>
-                <h4>Origen y Destino</h4>
-              </div>
-              <div class="ps-detail-card-body">
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Tipo de origen:</span>
-                  <span class="ps-detail-value">{{
-                    currentTren.tipo_origen || "N/A"
-                  }}</span>
-                </div>
-
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Origen:</span>
-                  <span class="ps-detail-value">{{
-                    currentTren.origen || "N/A"
-                  }}</span>
-                </div>
-
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Tipo de destino:</span>
-                  <span class="ps-detail-value">{{
-                    currentTren.tipo_destino || "N/A"
-                  }}</span>
-                </div>
-
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Destino:</span>
-                  <span class="ps-detail-value">{{
-                    currentTren.destino || "N/A"
-                  }}</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="ps-detail-card ps-detail-card-highlight">
-              <div class="ps-detail-card-header">
-                <i class="bi bi-gear-fill"></i>
-                <h4>Equipo</h4>
-              </div>
-              <div class="ps-detail-card-body">
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Equipo de carga:</span>
-                  <span class="ps-detail-value ps-highlight-value">
-                    {{ currentTren.equipo_carga_name || "N/A" }}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div class="ps-detail-card ps-detail-card-full">
-              <div class="ps-detail-card-header">
-                <i class="bi bi-chat-square-text-fill"></i>
-                <h4>Descripción y Observaciones</h4>
-              </div>
-              <div class="ps-detail-card-body">
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Descripción:</span>
-                  <span class="ps-detail-value">{{
-                    currentTren.descripcion || "Ninguna"
-                  }}</span>
-                </div>
-                <div class="ps-detail-item">
-                  <span class="ps-detail-label">Observaciones:</span>
-                  <span class="ps-detail-value">{{
-                    currentTren.observaciones || "Ninguna"
-                  }}</span>
+                <!-- 2.5 Tarjeta - Fecha de Creación -->
+                <div class="ps-detail-card">
+                  <div class="ps-detail-card-header">
+                    <i class="bi bi-calendar-event-fill"></i>
+                    <h4>Fecha de Creación</h4>
+                  </div>
+                  <div class="ps-detail-card-body">
+                    <!-- 2.5.1 Item - Fecha y Hora -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-label">Fecha y Hora:</span>
+                      <span class="ps-detail-value">
+                        {{ vagonSeleccionado.fecha_registro }}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
-        <div class="ps-modal-footer">
-          <button
-            class="ps-modal-btn ps-modal-btn-secondary"
-            @click="closeDetailsModal"
-          >
-            <i class="bi bi-x-circle"></i> Cerrar
-          </button>
-        </div>
       </div>
-
     </div>
   </div>
 </template>
@@ -371,9 +362,17 @@ import Swal from "sweetalert2";
 
 export default {
   name: "EnTrenes",
+  props: {
+    informeID: {
+      type: Number,
+      required: false,
+    },
+  },
   data() {
     return {
-      en_trenes: [],
+      enTrenes: [],
+      allRecords: [], // Copia completa de todos los registros para filtrado local
+      habilitado: true,
       currentPage: 1,
       itemsPerPage: 10,
       totalItems: 0,
@@ -383,184 +382,59 @@ export default {
       userPermissions: [],
       userGroups: [],
       showContent: false,
-      mostrarModal: false,
+      mostrarModalDetalles: false,
+      vagonSeleccionado: null,
       loading: false,
-      user_role: "",
-      showNoId: false,
-      showDetailsModal: false,
-      currentTren: {},
-      allRecords: [],
+      tipo_origen_options: [
+        { id: "puerto", text: "Puerto" },
+        { id: "ac_ccd", text: "Acceso Comercial/CCD" },
+      ],
     };
-  },
-
-  computed: {
-    filteredRecords() {
-      if (!this.searchQuery) return this.en_trenes;
-
-      const query = this.searchQuery.toLowerCase();
-      return this.en_trenes.filter((item) => {
-        const fieldsToSearch = [
-          item.numero_identificacion_locomotora,
-          item.tipo_equipo,
-          item.estado,
-          item.producto_name,
-          item.cantidad_vagones?.toString(),
-          item.origen,
-          item.destino,
-          item.descripcion,
-          item.observaciones,
-        ];
-
-        return fieldsToSearch.some(
-          (field) => field && field.toString().toLowerCase().includes(query)
-        );
-      });
-    },
-    hasPermission() {
-      if (this.user_role === "role") {
-        return true;
-      } else {
-        return this.user_role === "admin";
-      }
-    },
   },
 
   async mounted() {
     await this.getTrenes();
+    console.log(this.enTrenes)
     await this.fetchUserPermissionsAndGroups();
   },
 
   methods: {
-    toggleContentVisibility() {
-      this.showNoId = !this.showNoId;
+    getTipoOrigenText(id) {
+      const option = this.tipo_origen_options.find((o) => o.id === id);
+      return option ? option.text : id;
     },
+    toggleContentVisibility() {
+      this.showContent = !this.showContent;
+    },
+
     getNombresProductos(productos) {
       if (!productos || !Array.isArray(productos)) return "-";
       return productos
         .filter((p) => p && p.nombre_producto && p.codigo_producto)
         .map((p) => `${p.nombre_producto} (${p.codigo_producto})`)
         .join(", ");
-    },
+    }, 
 
-    hasGroup(group) {
-      return this.userGroups.some((g) => g.name === group);
-    },
+    hasGroup(groups) {
+  if (!Array.isArray(groups)) {
+    groups = [groups];
+  }
+  return this.userGroups.some((g) => groups.includes(g.name));
+},
 
     async fetchUserPermissionsAndGroups() {
       try {
         const userId = localStorage.getItem("userid");
         if (userId) {
-          const response = await axios.get(`/apiAdmin/users/${userId}/`);
+          const response = await axios.get(
+            `/apiAdmin/user/${userId}/permissions-and-groups/`
+          );
           this.userPermissions = response.data.permissions;
           this.userGroups = response.data.groups;
-          this.user_role = response.data.role;
         }
       } catch (error) {
         console.error("Error al obtener permisos y grupos:", error);
       }
-    },
-    async viewDetails(item) {
-      this.loading = true;
-      try {
-        this.currentTren = { ...item };
-        const response = await axios.get(
-          `http://127.0.0.1:8000/ufc/en-trenes/${item.id}/`
-        );
-        this.currentTren = response.data;
-        this.showDetailsModal = true;
-      } catch (error) {
-        console.error("Error al cargar detalles:", error);
-        this.showErrorToast("No se pudieron cargar los detalles completos");
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    async getTrenes() {
-      this.loading = true;
-      try {
-        const response = await axios.get("/ufc/en-trenes/", {
-          params: {
-            page: this.currentPage,
-            page_size: this.itemsPerPage,
-          },
-        });
-        this.en_trenes = response.data.results;
-        this.allRecords = response.data.results;
-        this.totalItems = response.data.count;
-      } catch (error) {
-        console.error("Error al obtener los trenes:", error);
-        this.showErrorToast("No se pudieron cargar los registros");
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    async searchTrenes() {
-      this.loading = true;
-      try {
-        const response = await axios.get("/ufc/en-trenes/", {
-          params: {
-            search: this.searchQuery,
-          },
-        });
-        this.en_trenes = response.data.results;
-        this.totalItems = response.data.count;
-        this.busqueda_existente = this.en_trenes.length > 0;
-      } catch (error) {
-        console.error("Error al buscar trenes", error);
-        this.busqueda_existente = false;
-        this.showErrorToast("Error al buscar registros");
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    handleSearchInput() {
-      clearTimeout(this.debounceTimeout);
-      this.debounceTimeout = setTimeout(() => {
-        this.searchTrenes();
-      }, 300);
-    },
-
-    previousPage() {
-      if (this.currentPage > 1) {
-        this.currentPage--;
-        this.getTrenes();
-      }
-    },
-
-    nextPage() {
-      if (this.currentPage * this.itemsPerPage < this.totalItems) {
-        this.currentPage++;
-        this.getTrenes();
-      }
-    },
-
-    goToPage(page) {
-      this.currentPage = page;
-      this.getTrenes();
-    },
-
-    async delete_tren(id) {
-      try {
-        await axios.delete(`/ufc/en-trenes/${id}/`);
-        this.en_trenes = this.en_trenes.filter((tren) => tren.id !== id);
-        this.showSuccessToast("Registro eliminado");
-      } catch (error) {
-        console.error("Error al eliminar el producto:", error);
-        this.showErrorToast("Error al eliminar el registro");
-      }
-    },
-
-    openVagonDetailsModal(tren) {
-      this.currentTren = { ...tren };
-      this.showDetailsModal = true;
-    },
-
-    closeDetailsModal() {
-      this.showDetailsModal = false;
-      this.currentTren = {};
     },
 
     getStatusClass(status) {
@@ -575,21 +449,144 @@ export default {
       return "info";
     },
 
+    async getTrenes() {
+      this.loading = true;
+      const today = new Date();
+      const fechaFormateada = `${today.getFullYear()}-${String(
+        today.getMonth() + 1
+      ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+      try {
+        const infoID = await axios.get(
+          `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
+        );
+        this.estado_parte = infoID.data.estado;
+        //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
+        if (this.informeID || infoID.data.id) {
+          const response = await axios.get("/ufc/en-trenes/", {
+            params: {
+              page: this.currentPage,
+              page_size: this.itemsPerPage,
+              informe: this.informeID ? this.informeID : infoID.data.id,
+            },
+          });
+                    
+          if(this.informeID){
+            this.habilitado = false;
+          }
+
+          this.enTrenes = response.data.results;
+          this.allRecords = response.data.results;
+          this.totalItems = response.data.count;
+        } else {
+          // this.showErrorToast("No hay ID para cargar");
+        }
+      } catch (error) {
+        console.error("Error al obtener los trenes:", error);
+        this.showErrorToast("No se pudieron cargar los registros");
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    handleSearchInput() {
+      clearTimeout(this.debounceTimeout);
+      this.debounceTimeout = setTimeout(() => {
+        if (!this.searchQuery.trim()) {
+          this.enTrenes = [...this.allRecords];
+          this.busqueda_existente = true;
+          return;
+        }
+
+        const query = this.searchQuery.toLowerCase();
+        this.enTrenes = this.allRecords.filter((item) => {
+          const tipoEquipo =
+            item.tipo_equipo_ferroviario_name?.toLowerCase() || "";
+          const tipoOrigen = item.origen?.toLowerCase() || "";
+          const productos = item.productos_list?.toLowerCase() || "";
+
+          return (
+            tipoEquipo.includes(query) ||
+            tipoOrigen.includes(query) ||
+            productos.includes(query)
+          );
+        });
+        this.busqueda_existente = this.enTrenes.length > 0;
+      }, 300);
+    },
+
+    // Métodos de paginación
+    previousPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+        this.getVagonesProductos();
+      }
+    },
+
+    nextPage() {
+      if (this.currentPage * this.itemsPerPage < this.totalItems) {
+        this.currentPage++;
+        this.getVagonesProductos();
+      }
+    },
+
+    goToPage(page) {
+      this.currentPage = page;
+      this.getVagonesProductos();
+    },
+
+    async deleteVagon(id) {
+      try {
+        await axios.delete(`/ufc/en-trenes/${id}/`);
+        this.enTrenes = this.enTrenes.filter((objeto) => objeto.id !== id);
+        Swal.fire(
+          "Eliminado!",
+          "El registro ha sido eliminado exitosamente.",
+          "success"
+        );
+      } catch (error) {
+        console.error("Error al eliminar el registro:", error);
+        Swal.fire("Error", "un error al eliminar el registro.", "error");
+      }
+    },
+
+    viewDetails(vagon) {
+      console.log(vagon);
+      this.vagonSeleccionado = vagon;
+      this.mostrarModalDetalles = true;
+    },
+
+    cerrarModalDetalles() {
+      this.mostrarModalDetalles = false;
+      this.vagonSeleccionado = null;
+    },
+
+    editVagonEnTren(id) {
+      // Aquí puedes implementar la navegación a la página de edición
+      this.$router.push({ name: "EditarEnTren", params: { id: id } });
+    },
+
+    async delete_tren(id) {
+      try {
+        await axios.delete(`/ufc/en-trenes/${id}/`);
+        this.enTrenes = this.enTrenes.filter((tren) => tren.id !== id);
+        this.showSuccessToast("El registro ha sido eliminado exitosamente.");
+      } catch (error) {
+        console.error("Error al eliminar el producto:", error);
+        this.showErrorToast("Hubo un error al eliminar el registro.");
+      }
+    },
+
     confirmDelete(id) {
       Swal.fire({
-        title: "¿Eliminar registro?",
-        text: "Esta acción no se puede deshacer",
-        icon: "question",
+        title: "¿Estás seguro?",
+        text: "¡No podrás revertir esta acción!",
+        icon: "warning",
         showCancelButton: true,
-        confirmButtonColor: "#ff4444",
-        cancelButtonColor: "#33b5e5",
-        confirmButtonText: "Sí, eliminar",
-        cancelButtonText: "Cancelar",
-        customClass: {
-          popup: "ps-swal-popup",
-          confirmButton: "ps-swal-confirm",
-          cancelButton: "ps-swal-cancel",
-        },
+        cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Cancelar',
+        cancelButtonColor: "#f1513f",
+        confirmButtonText: '<i class="bi bi-trash me-1"></i>Eliminar',
+        confirmButtonColor: "#007bff",
+        reverseButtons: true,
       }).then((result) => {
         if (result.isConfirmed) {
           this.delete_tren(id);
@@ -597,6 +594,19 @@ export default {
       });
     },
 
+    handleApiError(error, action) {
+      let errorMsg = `Error al ${action}`;
+      if (error.response) {
+        errorMsg += ` (${error.response.status})`;
+        if (error.response.data) {
+          errorMsg += `: ${JSON.stringify(error.response.data)}`;
+        }
+      } else {
+        errorMsg += `: ${error.message}`;
+      }
+      console.error(errorMsg, error);
+      Swal.fire("Error", errorMsg, "error");
+    },
     showSuccessToast(message) {
       const Toast = Swal.mixin({
         toast: true,
@@ -640,193 +650,15 @@ export default {
         title: message,
       });
     },
-
-    handleApiError(error, action) {
-      let errorMsg = `Error al ${action}`;
-      if (error.response) {
-        errorMsg += ` (${error.response.status})`;
-        if (error.response.data) {
-          errorMsg += `: ${JSON.stringify(error.response.data)}`;
-        }
-      } else {
-        errorMsg += `: ${error.message}`;
-      }
-      console.error(errorMsg, error);
-      this.showErrorToast(errorMsg);
-    },
   },
 };
 </script>
 
 <style scoped>
-/* Estilos para los botones */
-.btn-outline-info {
-  color: #0dcaf0;
-  border-color: #0dcaf0;
-}
-
-.btn-outline-warning {
-  color: #ffc107;
-  border-color: #ffc107;
-}
-
-.btn-outline-danger {
-  color: #dc3545;
-  border-color: #dc3545;
-}
-
-.btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
-  border-radius: 0.2rem;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.btn:hover {
-  transform: translateY(-1px);
-  opacity: 0.9;
-}
-
-.btn i {
-  font-size: 1rem;
-}
-
-.me-2 {
-  margin-right: 0.5rem !important;
-}
-
-.ps-td-actions {
-  white-space: nowrap;
-}
-/* Variables de color */
-:root {
-  --ps-primary: #4361ee;
-  --ps-primary-hover: #3a56d4;
-  --ps-secondary: #3f37c9;
-  --ps-accent: #4895ef;
-  --ps-danger: #f72585;
-  --ps-success: #4cc9f0;
-  --ps-warning: #f8961e;
-  --ps-info: #4895ef;
-  --ps-light: #f8f9fa;
-  --ps-dark: #212529;
-  --ps-gray: #6c757d;
-  --ps-light-gray: #e9ecef;
-  --ps-border-radius: 12px;
-  --ps-box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-  --ps-transition: all 0.3s ease;
-}
-
-/* Estilos base */
-.por-situar-container {
-  padding: 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* Header */
-.ps-header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  gap: 1.5rem;
-}
-
-.ps-title {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--ps-dark);
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.ps-title-icon {
-  color: var(--ps-primary);
-}
-
-.ps-actions {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-/* Botón de agregar como icono */
-.ps-add-icon {
-  background: var(--ps-primary);
-  color: white;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  transition: var(--ps-transition);
-  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
-  position: relative;
-  overflow: hidden;
-  border: none;
-}
-
-.ps-add-icon::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.3) 0%,
-    rgba(255, 255, 255, 0) 70%
-  );
-  opacity: 0;
-  transition: var(--ps-transition);
-}
-
-.ps-add-icon:hover {
-  transform: translateY(-3px) scale(1.1);
-  box-shadow: 0 6px 16px rgba(67, 97, 238, 0.4);
-}
-
-.ps-add-icon:hover::after {
-  opacity: 1;
-}
-
-/* Buscador */
-.ps-search-container {
-  position: relative;
-  width: 280px;
-}
-
-.ps-search-icon {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--ps-gray);
-  font-size: 1rem;
-}
-
-.ps-search-input {
-  width: 100%;
-  padding: 0.6rem 1rem 0.6rem 2.5rem;
-  border: 1px solid var(--ps-light-gray);
-  border-radius: var(--ps-border-radius);
-  font-size: 0.95rem;
-  transition: var(--ps-transition);
-  background-color: white;
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #e0e0e0 !important;
+  padding: 0.75rem 1.25rem;
 }
 
 .form-label {
@@ -857,13 +689,15 @@ export default {
   animation: spin 1s linear infinite;
 }
 
-.ps-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 0.75rem;
-  color: var(--ps-gray);
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Tabla */
+.table {
+  font-size: 0.875rem;
 }
 
 .table thead th {
@@ -969,6 +803,7 @@ export default {
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
   animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   overflow: hidden;
 }
@@ -978,7 +813,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, var(--ps-primary), var(--ps-secondary));
+  background-color: #0d6efd;
   color: white;
   position: relative;
 }
@@ -1074,7 +909,8 @@ export default {
 
 .ps-detail-card-header {
   padding: 1rem;
-  background: linear-gradient(to right, #f8f9fa, white);
+  background-color: #0d6efd;
+  color: white;
   border-bottom: 1px solid var(--ps-light-gray);
   display: flex;
   align-items: center;
@@ -1172,5 +1008,54 @@ export default {
 .ps-modal-btn-secondary:hover {
   background: #f1f3f5;
   color: var(--ps-dark);
+}
+
+.ps-modal-btn-primary {
+  background: var(--ps-primary);
+  color: white;
+  box-shadow: 0 2px 6px rgba(67, 97, 238, 0.2);
+}
+
+.ps-modal-btn-primary:hover {
+  background: var(--ps-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+}
+
+.btn-outline-info {
+  color: #17a2b8;
+  border-color: #17a2b8;
+}
+
+.btn-outline-warning {
+  color: #ffc107;
+  border-color: #ffc107;
+}
+
+.btn-outline-danger {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-outline-info:hover,
+.btn-outline-warning:hover,
+.btn-outline-danger:hover {
+  color: #fff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card-body {
+    padding: 1rem;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .d-flex {
+    flex-direction: column;
+    gap: 0.5rem !important;
+  }
 }
 </style>

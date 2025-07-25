@@ -6,7 +6,7 @@
     <br />
     <Navbar-Component />
     
-    <div class="form-container">
+    <div class="form-container" style="margin-left: 18em; width: 75%">
       <h3>Adicionar país:</h3>
       <form @submit.prevent="saveItem">
         <!-- Campo Nacionalidad -->
@@ -21,7 +21,7 @@
           <label for="nombre_pais" class="form-label">Nombre:<span style="color: red;">*</span></label>
           <input type="text" class="form-control" id="nombre_pais" v-model="nombre_pais" required />
         </div>
-</div>
+        </div>
         <!-- Botones -->
         <div class="form-buttons">
           <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>

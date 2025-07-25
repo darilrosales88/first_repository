@@ -6,7 +6,7 @@
     <br />
     <Navbar-Component />
     
-    <div class="form-container">
+    <div class="form-container" style="margin-left: 18em; width: 75%">
       <h2>Adicionar tipo de equipo ferroviario</h2>
       <form @submit.prevent="saveTipoEquipo" class="form-grid">
         <!-- Campo Tipo de Equipo -->

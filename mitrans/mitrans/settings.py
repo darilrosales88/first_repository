@@ -48,14 +48,14 @@ OWN_APPS = [
     'nomencladores.apps.NomencladoresConfig',
     'Administracion.apps.AdministracionConfig',
     'ufc.apps.UfcConfig',
-    
-    
-    
+    'gemar.apps.GemarConfig',
+       
 ]
 INSTALLED_APPS = BASE_APPS + THIRD_APPS + OWN_APPS
 
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -63,16 +63,18 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    
 ]
 
 #RUTAS PERMITIDAS POR DJANGO PARA ACCEDER AL PROYECTO
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:8080',
+    'http://127.0.0.1:8080',
     'http://localhost:8081',
     'http://127.0.0.1:8000',
-    
 ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 #METODOS PERMITIDOS POR DJANGO PARA ACCEDER DESDE OTRA RUTA
 CORS_ALLOW_METHODS = (
@@ -83,6 +85,18 @@ CORS_ALLOW_METHODS = (
     "POST",
     "PUT",
 )
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 #Modificando las configuracion por defecto del filtrado de django-rest-framework de forma global, con esto estoy 
 #permitiendo que DRF realice el filtrado (esto fue copiado de la doc oficial de DRF)

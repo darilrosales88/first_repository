@@ -1,4 +1,5 @@
 from rest_framework import permissions
+from rest_framework.permissions import BasePermission
 
 class IsAdmin(permissions.BasePermission):
     """
@@ -23,3 +24,25 @@ class IsVisualizador(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return False
+
+
+class IsGEMARUser(BasePermission):
+    """
+    Permiso para usuarios con rol GEMAR
+    """
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == 'gemar'
+
+class IsUFCUser(BasePermission):
+    """
+    Permiso para usuarios con rol UFC
+    """
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == 'ufc'
+
+class IsAdminUser(BasePermission):
+    """
+    Permiso para usuarios administradores
+    """
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.is_staff

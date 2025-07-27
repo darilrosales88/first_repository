@@ -801,6 +801,38 @@ const routes = [
       requireLogin: true,
     },
   },
+  {
+  path: "/GemarView",
+  name: "GemarView",
+  component: () => import("../views/GEMAR/GemarView.vue"),
+  meta: {
+    requireLogin: true,
+  },
+},
+  {
+    path: "/CargasViejas",
+    name: "CargasViejas",
+    component: () => import("../views/GEMAR/CargasViejas.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/ExistenciasMercancia",
+    name: "ExistenciasMercancia",
+    component: () => import("../views/GEMAR/ExistenciasMercancia.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/PartesPBIP",
+    name: "PartesPBIP",
+    component: () => import("../views/GEMAR/PartesPBIP.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  }
 ];
 
 const router = createRouter({

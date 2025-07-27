@@ -181,6 +181,8 @@ export default {
             { title: "Registro de Informes", route: "/ufc" },
             { title: "Informe Operativo", route: "/InfoOperativo" },
             { title: "CCD Producto", route: "" },
+            { title: "GEMAR", route: "/GemarView", icon: "clipboard-data" },
+            
           ],
         },
         {

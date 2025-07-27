@@ -8,8 +8,10 @@ from nomencladores.models import nom_cargo, nom_entidades  # Asegúrate de que l
 class CustomUser(AbstractUser):
     ROLE_CHOICES = (
         ('ufc', 'UFC'),
+        ('gemar', 'GEMAR'),
         ('admin', 'Administrador'),
         ('operador', 'Operador'),
+
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='operador',verbose_name="Rol que desempeña")
     entidad = models.ForeignKey(nom_entidades, on_delete=models.CASCADE, blank=True, null=True, verbose_name="Entidad")

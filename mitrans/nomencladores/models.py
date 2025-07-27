@@ -317,6 +317,7 @@ class nom_entidades(models.Model):
         ('acceso_comercial', 'Acceso comercial'),
         ('compania_naviera', 'Compañía naviera'),
         ('mitrans', 'Mitrans'),
+        ('ccd', 'Centro Carga/Descarga'),   
         ('otros', 'Otros')
     )
     tipo_entidad = models.CharField(choices=t_entidad, default="DC", help_text="Escoja una opción.",

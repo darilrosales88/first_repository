@@ -5,6 +5,8 @@ from .models import registro_vagones_cargados,por_situar,registro_vagones_cargad
 from .models import ufc_informe_operativo
 
 
+
+######Modelos de UFC
 admin.site.register(en_trenes)
 admin.site.register(Situado_Carga_Descarga)
 admin.site.register(arrastres)

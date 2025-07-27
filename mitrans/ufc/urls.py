@@ -54,6 +54,22 @@ router.register('pendiente-arrastre-hoy', PendienteArrastre_hoy_Viewset, basenam
 router.register("rotaciones", RotacionVagonesViewSet, basename="rotacion-vagones")
 
 
+
+############Aqui empiezan los router de CCDxPRODUCTO
+router.register("ccd-productos",ccd_productoViewSet, basename="ccd-productos")
+router.register("ccd-informe",ccd_informeViewSet, basename="ccd-informe")
+##Los 5 Estados
+router.register("ccd-arrastres",ccd_arrastresViewSet, basename="ccd-arrastres")
+router.register("ccd-situados",ccd_situadosViewSet, basename="ccd-situados")
+router.register("ccd-en-trenes",ccd_en_trenesViewSet, basename="ccd-en-trenes")
+router.register("ccd-por-situar",ccd_por_situarViewSet, basename="ccd-por-situar")
+router.register("ccd-vagones-cd",ccd_vagones_cdViewSet, basename="ccd-vagones-cd")
+
+
+
+
+
+
 #ahora declaramos el urlpatterns y lo igualamos a la propiedad urls de la variable creada de tipo routers
 # Ahora combinamos las rutas manuales con las del router
 urlpatterns += router.urls

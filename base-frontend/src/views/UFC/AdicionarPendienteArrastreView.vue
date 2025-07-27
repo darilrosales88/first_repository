@@ -537,7 +537,7 @@
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <button class="btn btn-primary" @click="abrirModalVagon()">
-            <i class="bi bi-plus-circle"></i> Agregar Vagon
+            <i class="bi bi-plus-circle"></i> Agregar Vagón
           </button>
         </div>
         <!-- Tabla responsive con mejoras -->
@@ -621,7 +621,7 @@ export default {
         tipo_equipo: "",
         operacion: "",
         estado: "cargado",
-        productos: [],
+        producto: "",
         cantidad_vagones: 1,
         observaciones: "",
         equipos_vagones: [],
@@ -651,13 +651,10 @@ export default {
         { id: "ac_ccd", text: "comercial/AccesoCCD" },
         { id: "puerto", text: "Puerto" },
       ],
+
       tipo_destino_options: [
         { id: "ac_ccd", text: "comercial/AccesoCCD" },
         { id: "puerto", text: "Puerto" },
-      ],
-      t_operacion_options: [
-        { id: "carga", text: "Carga" },
-        { id: "descarga", text: "Descarga" },
       ],
     };
   },
@@ -668,6 +665,18 @@ export default {
     this.getEquipos();
     this.filteredProductos = this.productos;
     this.closeDropdownsOnClickOutside();
+  },
+  watch: {
+    "formData.estado": {
+      immediate: true,
+      handler(newVal) {
+        if (newVal === "vacio") {
+          this.formData.operacion = "carga";
+        } else if (newVal === "cargado") {
+          this.formData.operacion = "descarga";
+        }
+      },
+    },
   },
   computed: {
     formattedFechaRegistro() {
@@ -726,20 +735,6 @@ export default {
       }
     },
 
-    async verificarEstadoInforme() {
-      try {
-        if (!this.informeOperativoId) return false;
-
-        const response = await axios.get(
-          `/ufc/informe-operativo/${this.informeOperativoId}/`
-        );
-        return response.data.estado_parte !== "Aprobado";
-      } catch (error) {
-        console.error("Error al verificar estado del informe:", error);
-        return false;
-      }
-    },
-
     async abrirModalVagon() {
       if (this.equipos_vagones.length == 0) {
         Swal.fire({
@@ -779,8 +774,8 @@ export default {
       }
     },
     agregarNuevoVagon() {
-      if (!this.nuevoVagon.equipo_ferroviario || !this.nuevoVagon.cant_dias) {
-        Swal.fire("Error", "Debe completar todos los campos", "error");
+      if (this.nuevoVagon.equipo_ferroviario == '') {
+        this.showErrorToast("Debe completar todos los campos");
         return;
       }
 
@@ -794,11 +789,7 @@ export default {
       );
 
       if (yaExistente) {
-        Swal.fire({
-          title: "Error",
-          text: "Este vagón ya ha sido agregado a la lista",
-          icon: "error",
-        });
+        this.showErrorToast("Este vagón ya ha sido agregado a la lista");
         return;
       }
 
@@ -810,13 +801,11 @@ export default {
           equipo_vagon: equipoSeleccionado.numero_identificacion,
         },
       };
-
       this.vagonesAgregados.push(vagonAgregado);
-      this.formData.cantidad_vagones = this.vagonesAgregados.length;
       this.cerrarModalVagon();
-
-      Swal.fire("Éxito", "Vagón agregado correctamente", "success");
+      this.showSuccessToast("Vagón agregado correctamente");
     },
+
     async getEquipos() {
       try {
         const response = await axios.get("/api/tipo-e-f-no-locomotora/");
@@ -928,8 +917,8 @@ export default {
 
     async submitForm() {
       try {
-        const existeInforme = await this.verificarInformeOperativo();
 
+        const existeInforme = await this.verificarInformeOperativo();
         if (!existeInforme) {
           Swal.fire(
             "Error",
@@ -968,6 +957,22 @@ export default {
           return;
         }
 
+        if (this.vagonesAgregados.length !== this.formData.cantidad_vagones) {
+          Swal.fire({
+            title: "Advertencia",
+            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de "Por Situar" (${this.formData.cantidad_vagones}). ¿Desea actualizar el campo "Situados" para que coincida?`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, actualizar",
+            cancelButtonText: "No, corregir manualmente",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.formData.cantidad_vagones = this.vagonesAgregados.length;
+            }
+          });
+          return;
+        }
+
         const payload = {
           tipo_origen: this.formData.tipo_origen,
           origen: this.formData.origen,
@@ -976,7 +981,7 @@ export default {
           tipo_equipo: this.formData.tipo_equipo,
           operacion: this.formData.operacion,
           estado: this.formData.estado,
-          producto: this.formData.productos,
+          producto: this.formData.producto,
           cantidad_vagones: this.vagonesAgregados.length,
           observaciones: this.formData.observaciones,
           informe_operativo: this.informeOperativoId,
@@ -1002,7 +1007,7 @@ export default {
         this.$router.push({ name: "InfoOperativo" });
       } catch (error) {
         console.error("Error al enviar el formulario:", error);
-
+        this.showErrorToast(error.message);
         let errorMessage = "Hubo un error al enviar el formulario";
         if (error.response) {
           // Error de respuesta del servidor
@@ -1078,25 +1083,25 @@ export default {
     },
 
     toggleProductoSelection(productoId) {
-      const index = this.formData.productos.indexOf(productoId);
+      const index = this.formData.producto.indexOf(productoId);
       if (index === -1) {
-        this.formData.productos.push(productoId);
+        this.formData.producto.push(productoId);
       } else {
-        this.formData.productos.splice(index, 1);
+        this.formData.producto.splice(index, 1);
       }
     },
 
     getSelectedProductosText() {
-      if (this.formData.productos.length === 0) return "";
-      if (this.formData.productos.length === 1) {
+      if (this.formData.producto.length === 0) return "";
+      if (this.formData.producto.length === 1) {
         const producto = this.productos.find(
-          (p) => p.id === this.formData.productos[0]
+          (p) => p.id === this.formData.producto
         );
         return producto
           ? `${producto.id}-${producto.producto_name}`
           : "1 producto seleccionado";
       }
-      return `${this.formData.productos.length} productos seleccionados`;
+      return `${this.formData.producto.length} productos seleccionados`;
     },
 
     closeDropdownsOnClickOutside() {
@@ -1106,15 +1111,14 @@ export default {
         }
       });
     },
+
     eliminarVagon(index) {
       this.vagonesAgregados.splice(index, 1);
-      this.formData.cantidad_vagones = this.vagonesAgregados.length;
-      Swal.fire({
-        title: "Éxito",
-        text: "Vagón eliminado correctamente.",
-        icon: "success",
-        confirmButtonText: "Aceptar",
-      });
+      localStorage.setItem(
+        "vagonesAgregados",
+        JSON.stringify(this.vagonesAgregados)
+      );
+      this.showSuccessToast("Vagón eliminado correctamente.");
     },
 
     volver_principal() {
@@ -1136,6 +1140,62 @@ export default {
           this.$router.push({ name: "InfoOperativo" });
         }
       });
+    },
+    showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
+      });
+    },
+    async verificarEstadoInforme() {
+      try {
+        if (!this.informeOperativoId) return false;
+
+        const response = await axios.get(
+          `/ufc/informe-operativo/${this.informeOperativoId}/`
+        );
+        return response.data.estado_parte !== "Aprobado";
+      } catch (error) {
+        console.error("Error al verificar estado del informe:", error);
+        return false;
+      }
     },
   },
 };

@@ -324,7 +324,7 @@
               <tr v-for="(vagon, index) in vagonesAgregados" :key="index">
                 <td>{{ index + 1 }}</td>
                 <td>
-                  {{ vagon["datos"]["equipo_vagon"] }}
+                  {{ vagon.vagon_codigo}}
                 </td>
                 <td>
                   <button class="btn btn-sm btn-outline-danger" @click="eliminarVagon(index)">
@@ -415,18 +415,23 @@ export default {
   },
 
   methods: {
-    confirmCancel() {
+    volver_principal() {
+      event.preventDefault();
+      event.stopPropagation();
       Swal.fire({
-        title: "¿Está seguro de que quiere cancelar la operación?",
+        title: "¿Volver a la página principal?",
+        text: "Los datos no guardados se perderán",
         icon: "warning",
         showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        cancelmButtonText: "Cancelar",
-        confirmButtonText: "Aceptar",
+        cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Continuar',
+        cancelButtonColor: "#f1513f",
+        confirmButtonText: '<i class="bi bi-box-arrow-right me-1"></i>Volver',
+        confirmButtonColor: "#007bff",
+        reverseButtons: true,
       }).then((result) => {
         if (result.isConfirmed) {
-          window.history.back();
+          this.resetForm();
+          this.$router.push({ name: "InfoOperativo" });
         }
       });
     },
@@ -443,27 +448,41 @@ export default {
         destino: "",
         producto: "",
         observaciones: "",
-        equipo_vagon: "",
+        equipo_vagon: [],
       };
 
       // Restablecer el número de identificación seleccionado
 
       // Opcional: Limpiar el localStorage si es necesario
     },
+    
     async getTren() {
       const vagon_id = this.$route.params.id;
       try {
         const response = await axios.get(`/ufc/en-trenes/${vagon_id}/`);
+        console.log("Hola",response.data);
         this.vagon = response.data;
         this.formData = {
           ...this.vagon,
           producto: this.vagon.producto ? [this.vagon.producto] : [],
         };
         this.formData.producto = [];
+        const datosVagon = JSON.parse(JSON.stringify(this.formData));
+
+        for(let i = 0; i < response.data.vagones_info.length; i++) {
+          let vagon = {
+              vagon_id: response.data.vagones_info[i].id,
+              vagon_codigo: response.data.vagones_info[i].numero_identificacion,
+              datos: datosVagon,
+          };
+          this.vagonesAgregados.push(vagon);
+        }
+
       } catch (error) {
         console.error("Error al obtener el vagon:", error);
       }
     },
+
     async submitForm() {
       try {
         console.log(this.formData.producto);
@@ -617,6 +636,7 @@ export default {
       this.mostrarModal = false;
       this.getProductos();
     },
+
     agregarVagon() {
       if (this.vagonesAgregados.length >= this.formData.cantidad_vagones) {
         Swal.fire({
@@ -658,6 +678,7 @@ export default {
         icon: "success",
         confirmButtonText: "Aceptar",
       });
+      
     },
     /* Acciones del producto */
     toggleProductosDropdown() {

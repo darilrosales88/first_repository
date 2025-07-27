@@ -43,7 +43,10 @@ class EnTrenesTests(APITestCase):
         # Crear datos necesarios para las pruebas
         self.tipo_equipo = nom_tipo_equipo_ferroviario.objects.create(
             tipo_equipo='locomotora',
-            tipo_carga='carga_general'
+            tipo_carga='carga_general',
+            longitud=10.0,
+            peso_neto_sin_carga=100.0,
+            peso_maximo_con_carga=200.0
         )
         
         self.equipo = nom_equipo_ferroviario.objects.create(
@@ -226,7 +229,7 @@ class ProductoUFCTests(APITestCase):
         )
         
         self.tipo_embalaje = nom_tipo_embalaje.objects.create(
-            tipo_embalaje='Embalaje Test'
+            clave='Embalaje Test'
         )
         
         self.unidad_medida = nom_unidad_medida.objects.create(

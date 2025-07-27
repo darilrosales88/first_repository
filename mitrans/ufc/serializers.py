@@ -5,10 +5,7 @@ from django_filters import rest_framework as filters
 from django.db.models import Q,Sum
 
 #Importando modelos de UFC
-from .models import (ufc_informe_operativo, vagon_cargado_descargado,producto_UFC, en_trenes,nom_equipo_ferroviario
-                    ,por_situar,Situado_Carga_Descarga,arrastres,HistorialVagonesProductos 
-                    ,registro_vagones_cargados,vagones_productos,rotacion_vagones,HistorialVagonCargadoDescargado
-                     )
+from .models import(en_trenes,Situado_Carga_Descarga,producto_UFC,registro_vagones_cargados,por_situar,vagones_productos,rotacion_vagones,arrastres,ufc_informe_operativo)
 
 from Administracion.models import Auditoria 
 from rest_framework.response import Response
@@ -19,8 +16,8 @@ from rest_framework import status
 from django.db import transaction 
 import json
 from django.utils import timezone
-from .models import HistorialVagonCargadoDescargado, vagon_cargado_descargado, registro_vagones_cargados,vagones_dias
-from nomencladores.models import nom_equipo_ferroviario,nom_tipo_equipo_ferroviario,nom_provincia
+from .models import  vagon_cargado_descargado,vagones_dias
+from nomencladores.models import nom_equipo_ferroviario,nom_tipo_equipo_ferroviario
 from Administracion.models import CustomUser
 
 #######Importamos serializadores externos para poder tener una lectura mas detallada
@@ -32,7 +29,21 @@ from Administracion.serializers import UserPermissionSerializer
 #nom_pais_filter es una clase que se implementa para definir sobre qué campos quiero filtrar los registros de mi API, 
 #hereda de filters.FilterSet
 
+#### USADO POR CCD
+## Modelos de CCD
+from .models import (ccd_arrastres,ccd_en_trenes,ccd_vagones_cd,ccd_por_situar,ccd_registro_vagones_cd,ccd_situados,ccd_casillas_productos,ccd_producto,ufc_informe_ccd)
 
+from nomencladores.serializers import (
+    nom_producto_serializer,
+    nom_tipo_embalaje_serializer,
+    nom_unidad_medida_serializer,
+    nom_tipo_equipo_ferroviario_serializer
+)
+from nomencladores.models import (
+    nom_producto,
+    nom_tipo_embalaje,
+    nom_unidad_medida,
+    nom_tipo_equipo_ferroviario)
 
 #****************-------------------------********************--------------------***************-----------------********************************
 #Funcion para actualizar el estado de los vagones deberia estar global
@@ -67,7 +78,35 @@ class DateTimeToDateField(serializers.ReadOnlyField):
         return None
 
 #****************-------------------------********************--------------------***************-----------------********************************
-
+#******************-Producto UFC en vagones-*********************************#
+class producto_vagon_filter(filters.FilterSet):
+    tipo_equipo= filters.NumberFilter(field_name='tipo_equipo__id')
+    tipo_equipo_nombre = filters.CharFilter(
+        field_name='tipo_equipo__tipo_equipo', 
+        lookup_expr='icontains'
+    )
+    class Meta:
+        model = producto_UFC
+        fields = ['tipo_equipo']                 
+                
+#serializador de productoUFC
+class producto_vagon_serializer(serializers.ModelSerializer):
+   # tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
+   # estado_name = serializers.ReadOnlyField(source='get_estado_display')
+   # tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
+    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
+    producto_codigo = serializers.ReadOnlyField(source='producto.codigo_producto')
+    tipo_embalaje_name=serializers.ReadOnlyField(source='tipo_embalaje.nombre_tipo_embalaje')
+    unidad_medida_name=serializers.ReadOnlyField(source='unidad_medida.unidad_medida')
+    estado_name=serializers.ReadOnlyField(source='get_estado_display')
+    tipo_equipo_nombre = serializers.CharField(source='tipo_equipo.tipo_equipo', read_only=True)
+    class Meta:
+        model = producto_UFC
+        fields = '__all__'
+        filterset_class=producto_vagon_filter
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+        
 #Serializador para Modelo dVagones por dias de situados, por situar, Arrastres
 class vagones_dias_serializer(serializers.ModelSerializer):
     # Mantenemos los campos existentes para lectura
@@ -95,6 +134,7 @@ class vagones_dias_serializer(serializers.ModelSerializer):
 class vagones_productos_filter(filters.FilterSet):
     origen_tipo_prod_tef = filters.CharFilter(method='filtrado_por_origen_tipo_prod_tef', lookup_expr='icontains')
     informe = filters.NumberFilter(field_name='informe_operativo__id')
+    
     def filtrado_por_origen_tipo_prod_tef(self, queryset, name, value):        
         return queryset.filter(
             Q(tipo_equipo_ferroviario_name__icontains=value) | 
@@ -142,15 +182,14 @@ class vagones_productos_serializer(serializers.ModelSerializer):
         try:
             with transaction.atomic():
                 # Extraer datos para relaciones
-                productos_ids = validated_data.pop('producto_ids', [])
+                
                 registros_data = validated_data.pop('registros_vagones_data', [])
                 
                 # Crear instancia principal
                 instance = super().create(validated_data)
                 
                 # Asignar productos
-                if productos_ids:
-                    instance.producto.set(productos_ids)
+                
                 
                 return instance
                 
@@ -187,134 +226,7 @@ class vagones_productos_serializer(serializers.ModelSerializer):
         
         return Response(status=status.HTTP_204_NO_CONTENT)
     
-class HistorialVagonesProductosSerializer(serializers.ModelSerializer):
-    fecha_creacion = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S')
-    informe_operativo_fecha = DateTimeToDateField(source='informe_operativo.fecha_operacion')
-    
-    # Campos JSON con parseo seguro
-    datos_vagon_producto = serializers.SerializerMethodField()
-    datos_productos = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = HistorialVagonesProductos
-        fields = '__all__'
-    
-    def get_datos_vagon_producto(self, obj):
-        try:
-            data = obj.datos_vagon_producto
-            if isinstance(data, str):
-                data = json.loads(data)
-            
-            if isinstance(data, dict):
-                # Convertir campos de fecha si existen
-                if 'fecha' in data and isinstance(data['fecha'], str):
-                    try:
-                        data['fecha'] = timezone.datetime.strptime(data['fecha'], '%Y-%m-%d %H:%M:%S.%f').date()
-                    except ValueError:
-                        pass
-                
-                # Asegurar que los campos numéricos sean correctos
-                numeric_fields = [
-                    'plan_mensual', 'plan_dia', 'vagones_situados', 'vagones_cargados',
-                    'plan_acumulado_actual', 'real_acumulado_actual', 'plan_acumulado_anual',
-                    'real_acumulado_anual', 'plan_aseguramiento_proximos_dias', 'plan_anual',
-                    'plan_acumulado_dia_anterior', 'real_acumulado_dia_anterior'
-                ]
-                
-                for field in numeric_fields:
-                    if field in data and not isinstance(data[field], (int, float)):
-                        try:
-                            data[field] = int(data[field])
-                        except (ValueError, TypeError):
-                            data[field] = 0
-                
-                # Manejar el campo tipo_equipo_ferroviario correctamente
-                if 'tipo_equipo_ferroviario' in data:
-                    if isinstance(data['tipo_equipo_ferroviario'], str):
-                        # Si es un string, podría ser el nombre del equipo
-                        try:
-                            equipo = nom_tipo_equipo_ferroviario.objects.get(tipo_equipo=data['tipo_equipo_ferroviario'])
-                            data['tipo_equipo_ferroviario_id'] = equipo.id
-                            data['tipo_equipo_ferroviario_name'] = equipo.get_tipo_equipo_display()
-                        except nom_tipo_equipo_ferroviario.DoesNotExist:
-                            data['tipo_equipo_ferroviario_id'] = None
-                            data['tipo_equipo_ferroviario_name'] = data['tipo_equipo_ferroviario']
-                    elif isinstance(data['tipo_equipo_ferroviario'], dict):
-                        # Si es un diccionario, extraer id y nombre
-                        data['tipo_equipo_ferroviario_id'] = data['tipo_equipo_ferroviario'].get('id')
-                        data['tipo_equipo_ferroviario_name'] = data['tipo_equipo_ferroviario'].get('name', '')
-                
-                # Agregar nombres descriptivos para los choices
-                if 'tipo_origen' in data:
-                    data['tipo_origen_name'] = dict(vagones_productos.TIPO_ORIGEN_CHOICES).get(
-                        data['tipo_origen'], data.get('tipo_origen', ''))
-                
-                if 'tipo_producto' in data:
-                    data['tipo_producto_name'] = dict(vagones_productos.TIPO_PRODUCTO_CHOICES).get(
-                        data['tipo_producto'], data.get('tipo_producto', ''))
-                
-                if 'tipo_combustible' in data:
-                    data['tipo_combustible_name'] = dict(vagones_productos.TIPO_COMBUSTIBLE_CHOICES).get(
-                        data['tipo_combustible'], data.get('tipo_combustible', ''))
-            
-            return data
-        except (json.JSONDecodeError, TypeError, KeyError) as e:
-            print(f"Error al parsear datos_vagon_producto: {str(e)}")
-            return {
-                'error': 'Error al parsear los datos del vagon producto',
-                'detalle': str(e)
-            }
-    
-    def get_datos_productos(self, obj):
-        try:
-            data = obj.datos_productos
-            if isinstance(data, str):
-                data = json.loads(data)
-            
-            if isinstance(data, list):
-                for producto in data:
-                    # Asegurar que la cantidad sea un número
-                    if 'cantidad' in producto and not isinstance(producto['cantidad'], (int, float)):
-                        try:
-                            producto['cantidad'] = int(producto['cantidad'])
-                        except (ValueError, TypeError):
-                            producto['cantidad'] = 0
-                    
-                    # Manejar producto como diccionario o ID
-                    if 'producto' in producto:
-                        if isinstance(producto['producto'], dict):
-                            producto['producto_id'] = producto['producto'].get('id')
-                            producto['producto_name'] = producto['producto'].get('nombre_producto', '')
-                        elif isinstance(producto['producto'], int):
-                            producto['producto_id'] = producto['producto']
-                            producto['producto_name'] = 'Producto ID: ' + str(producto['producto'])
-                    
-                    # Manejar tipo_embalaje
-                    if 'tipo_embalaje' in producto:
-                        if isinstance(producto['tipo_embalaje'], dict):
-                            producto['tipo_embalaje_id'] = producto['tipo_embalaje'].get('id')
-                            producto['tipo_embalaje_name'] = producto['tipo_embalaje'].get('nombre_tipo_embalaje', '')
-                        elif isinstance(producto['tipo_embalaje'], int):
-                            producto['tipo_embalaje_id'] = producto['tipo_embalaje']
-                            producto['tipo_embalaje_name'] = 'Embalaje ID: ' + str(producto['tipo_embalaje'])
-                    
-                    # Manejar unidad_medida
-                    if 'unidad_medida' in producto:
-                        if isinstance(producto['unidad_medida'], dict):
-                            producto['unidad_medida_id'] = producto['unidad_medida'].get('id')
-                            producto['unidad_medida_name'] = producto['unidad_medida'].get('unidad_medida', '')
-                            producto['unidad_medida_simbolo'] = producto['unidad_medida'].get('simbolo', '')
-                        elif isinstance(producto['unidad_medida'], int):
-                            producto['unidad_medida_id'] = producto['unidad_medida']
-                            producto['unidad_medida_name'] = 'Unidad ID: ' + str(producto['unidad_medida'])
-            
-            return data
-        except (json.JSONDecodeError, TypeError, KeyError) as e:
-            print(f"Error al parsear datos_productos: {str(e)}")
-            return [{
-                'error': 'Error al parsear los datos de productos',
-                'detalle': str(e)
-            }]
+
 #**************************************************************************************************************************************
 #serializador para el estado de vagones cargados/descargados
 class vagon_cargado_descargado_filter(filters.FilterSet):
@@ -345,16 +257,12 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
     estado_name = serializers.ReadOnlyField(source='get_estado_display')
     operacion_name = serializers.ReadOnlyField(source='get_operacion_display')
     tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
-    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
-    productos_list = serializers.SerializerMethodField()  # Campo custom para nombres
-
-    producto_ids = serializers.PrimaryKeyRelatedField(
-        many=True,
+    producto = serializers.PrimaryKeyRelatedField(
+        many=False,
         queryset=producto_UFC.objects.all(),
-        source='producto',  # Esto mapea al campo ManyToManyField
-        write_only=True,
         required=False
     )
+    producto_detalle=producto_vagon_serializer(many=False,source='producto', read_only=True)
     
     registros_vagones_data = serializers.ListField(
         child=serializers.DictField(),
@@ -378,7 +286,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
         try:
             with transaction.atomic():
                 # Extraer datos para relaciones
-                productos_data = validated_data.pop('producto', None)
+               
                 registros_data = validated_data.pop('registros_vagones_data', [])
                 
                 # Actualizar campos directos
@@ -387,9 +295,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 instance.save()
                 
                 # Actualizar productos si se proporcionaron
-                if productos_data is not None:
-                    instance.producto.set(productos_data)
-                
+              
                 # Manejar registros de vagones
                 if registros_data:
                     # Eliminar registros antiguos no incluidos
@@ -423,7 +329,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
         except Exception as e:
             raise serializers.ValidationError(f"Error al actualizar el registro: {str(e)}")
         
-    
+    #Esto es una cosa que no me gusta, pero es necesario para que el serializer funcione
     def validate(self, data):
         # Validación para causas_incumplimiento
         data['causas_incumplimiento'] = data.get('causas_incumplimiento', '')
@@ -440,7 +346,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
         try:
             with transaction.atomic():
                 # Extraer datos para relaciones
-                productos_ids = validated_data.pop('producto_ids', [])
+        
                 registros_data = validated_data.pop('registros_vagones_data', [])
 
                 # Asegurar que real_carga_descarga no sea sobrescrito
@@ -452,8 +358,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 instance = super().create(validated_data)
                 
                 # Asignar productos
-                if productos_ids:
-                    instance.producto.set(productos_ids)
+                
                 
                 # Crear y asociar registros de vagones
                 for registro_data in registros_data:
@@ -476,151 +381,6 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
             if hasattr(p, 'producto')
         ])  
 
-#serializador para el historial de vagon_cargado_descargado**************************************************
-
-
-class HistorialVagonCargadoDescargadoSerializer(serializers.ModelSerializer):
-    fecha_creacion = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S')
-    informe_operativo_fecha = DateTimeToDateField(source='informe_operativo.fecha_operacion')
-    
-    # Campos JSON con parseo seguro
-    datos_vagon = serializers.SerializerMethodField()
-    datos_productos = serializers.SerializerMethodField()
-    datos_registros_vagones = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = HistorialVagonCargadoDescargado
-        fields = '__all__'
-
-    def get_datos_vagon(self, obj):
-        """
-        Método para procesar y enriquecer los datos del vagón almacenados en formato JSON.
-        Recibe el objeto serializado (obj) y devuelve un diccionario con los datos procesados.
-        """
-        try:
-            # 1. Obtener los datos del vagón desde el objeto
-            data = obj.datos_vagon
-            
-            # 2. Verificar si los datos están en formato string (JSON serializado)
-            if isinstance(data, str):
-                # 3. Si es string, convertirlo a diccionario Python
-                data = json.loads(data)
-            
-            # 4. Verificar si los datos son un diccionario
-            if isinstance(data, dict):
-                # 5. Procesamiento de fecha (si existe en los datos)
-                if 'fecha' in data and isinstance(data['fecha'], str):
-                    try:
-                        # 6. Convertir string de fecha a objeto date
-                        data['fecha'] = timezone.datetime.strptime(
-                            data['fecha'], 
-                            '%Y-%m-%d %H:%M:%S.%f'
-                        ).date()
-                    except ValueError:
-                        # 7. Si falla la conversión, continuar sin modificar la fecha
-                        pass
-                
-                # 8. Establecer valores por defecto para campos numéricos si no existen
-                data.setdefault('plan_diario_carga_descarga', 0)
-                data.setdefault('real_carga_descarga', 0)
-                data.setdefault('causas_incumplimiento', '')
-                
-                # 9. Agregar nombres descriptivos para campos con choices
-                
-                # 9.1. Nombre descriptivo para tipo_origen
-                data['tipo_origen_name'] = dict(
-                    vagon_cargado_descargado.TIPO_ORIGEN_DESTINO_CHOICES
-                ).get(data.get('tipo_origen'), '')
-                
-                # 9.2. Nombre descriptivo para estado
-                data['estado_name'] = dict(
-                    vagon_cargado_descargado.ESTADO_CHOICES
-                ).get(data.get('estado'), '')
-                
-                # 9.3. Nombre descriptivo para operación
-                data['operacion_name'] = dict(
-                    vagon_cargado_descargado.OPERACION_CHOICES
-                ).get(data.get('operacion'), '')
-                
-                # 9.4. Nombre descriptivo para tipo_destino
-                data['tipo_destino_name'] = dict(
-                    vagon_cargado_descargado.TIPO_DESTINO_CHOICES
-                ).get(data.get('tipo_destino'), '')
-                
-                # 10. Procesamiento especial para el tipo de equipo ferroviario
-                if 'tipo_equipo_ferroviario_id' in data:
-                    try:
-                        # 10.1. Obtener el equipo ferroviario completo desde la base de datos
-                        equipo = nom_equipo_ferroviario.objects.get(
-                            pk=data['tipo_equipo_ferroviario_id']
-                        )
-                        
-                        # 10.2. Obtener el nombre legible del tipo de equipo
-                        # usando get_tipo_equipo_display() que es generado automáticamente
-                        # por Django para campos con choices
-                        data['tipo_equipo_ferroviario_name'] = equipo.tipo_equipo.get_tipo_equipo_display()
-                        
-                    except nom_equipo_ferroviario.DoesNotExist:
-                        # 10.3. Si no existe el equipo, establecer nombre vacío
-                        data['tipo_equipo_ferroviario_name'] = ''
-            
-            # 11. Devolver los datos procesados
-            return data
-        
-        except (json.JSONDecodeError, TypeError, KeyError):
-            # 12. Manejo de errores: si hay problemas al procesar los datos,
-            # devolver un diccionario con valores por defecto
-            return {
-                'plan_diario_carga_descarga': 0,
-                'real_carga_descarga': 0,
-                'causas_incumplimiento': ''
-            }
-    
-
-    def get_datos_productos(self, obj):
-        try:
-            data = obj.datos_productos
-            if isinstance(data, str):
-                data = json.loads(data)
-            
-            if isinstance(data, list):
-                for producto in data:
-                    if 'unidad_medida' in producto and isinstance(producto['unidad_medida'], dict):
-                        producto['unidad_medida_name'] = producto['unidad_medida'].get('nombre', '')
-                    if 'tipo_embalaje' in producto and isinstance(producto['tipo_embalaje'], dict):
-                        producto['tipo_embalaje_name'] = producto['tipo_embalaje'].get('nombre', '')
-                    if 'producto_name' in producto and isinstance(producto['producto_name'], dict):
-                        producto['producto_name'] = "isisco"
-                        #producto['producto_name'] = producto['producto'].get('nombre_producto', '')
-                        
-            
-            return data
-        except (json.JSONDecodeError, TypeError):
-            return []
-    
-    def get_datos_registros_vagones(self, obj):
-        try:
-            data = obj.datos_registros_vagones
-            if isinstance(data, str):
-                data = json.loads(data)
-            
-            if isinstance(data, list):
-                for registro in data:
-                    if 'tipo_origen' in registro:
-                        registro['tipo_origen_name'] = dict(registro_vagones_cargados.TIPO_ORIGEN_CHOICES).get(
-                            registro['tipo_origen'], '')
-                    
-                    # Convertir campos de fecha si existen
-                    for field in ['fecha_despacho', 'fecha_llegada']:
-                        if field in registro and isinstance(registro[field], str):
-                            try:
-                                registro[field] = timezone.datetime.strptime(registro[field], '%Y-%m-%d').date()
-                            except ValueError:
-                                pass
-            
-            return data
-        except (json.JSONDecodeError, TypeError):
-            return []
 
 
 #serializador para los vagones asignados al estado vagones cargados/descargados
@@ -718,13 +478,16 @@ class en_trenes_serializer(serializers.ModelSerializer):
     producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')
     tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
    # equipo_vagon_id=serializers.ReadOnlyField(source='equipo_vagon.numero_identificacion')
-    productos_info = serializers.SerializerMethodField()
+    # productos_info = serializers.SerializerMethodField()
     vagones_info=serializers.SerializerMethodField()
+    
     producto = serializers.PrimaryKeyRelatedField(
-        many=True,
+        many=False,
         queryset=producto_UFC.objects.all(),
         required=False
     )
+    producto_detalle=producto_vagon_serializer(many=False,source='producto', read_only=True)
+    
 
     equipo_vagon = serializers.PrimaryKeyRelatedField(
         many=True,
@@ -749,25 +512,25 @@ class en_trenes_serializer(serializers.ModelSerializer):
             'tipo_destino',  
             'destino', 
             'producto', 
-            'productos_info',
             'producto_name',
+            'producto_detalle',
             'cantidad_vagones',
             'observaciones',
             'informe_operativo',
         )
         
-    def get_productos_info(self, obj):
-        productos = obj.producto.all()
-        return [{
-            'id': p.id,
-            'nombre_producto': p.producto.nombre_producto,
-            'codigo_producto': p.producto.codigo_producto,
-            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
-            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
-            'cantidad': p.cantidad,
-            'estado': p.estado,
-            'contiene': p.contiene
-        } for p in productos]
+    # def get_productos_info(self, obj):
+    #     p = obj.producto
+    #     return {
+    #         'id': p.id,
+    #         'nombre_producto': p.producto.nombre_producto,
+    #         'codigo_producto': p.producto.codigo_producto,
+    #         'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
+    #         'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
+    #         'cantidad': p.cantidad,
+    #         'estado': p.estado,
+    #         'contiene': p.contiene
+    #     }
         
     def get_vagones_info(self, obj):
         equipo_vagon = obj.equipo_vagon.all()
@@ -780,10 +543,9 @@ class en_trenes_serializer(serializers.ModelSerializer):
         } for e in equipo_vagon]
 
     def create(self, validated_data):
-        productos_data = validated_data.pop('producto', [])
         equipo_vagon_data=validated_data.pop('equipo_vagon',[])
         instance = en_trenes.objects.create(**validated_data)
-        instance.producto.set(productos_data)
+    
         instance.equipo_vagon.set(equipo_vagon_data)
         
         for equipo in equipo_vagon_data:    
@@ -794,13 +556,11 @@ class en_trenes_serializer(serializers.ModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        productos_data = validated_data.pop('producto', None)
+        
         equipo_vagon_data=validated_data.pop('equipo_vagon',None)
         print("###**Log: ",equipo_vagon_data)
         #instance = super().update(instance, validated_data)
-        print("###**Log: ",productos_data)
-        if productos_data is not None:
-            instance.producto.set(productos_data)
+       
             
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -854,25 +614,9 @@ class en_trenes_serializer(serializers.ModelSerializer):
        #         raise serializers.ValidationError("La combinación de tipo de equipo y número de identificación de locomotora ya existe.")
                 
                 
-#serializador de productoUFC
-class producto_vagon_serializer(serializers.ModelSerializer):
-   # tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
-   # estado_name = serializers.ReadOnlyField(source='get_estado_display')
-   # tipo_destino_name = serializers.ReadOnlyField(source='get_tipo_destino_display')
-    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
-    producto_codigo = serializers.ReadOnlyField(source='producto.codigo_producto')
-    tipo_embalaje_name=serializers.ReadOnlyField(source='tipo_embalaje.nombre_tipo_embalaje')
-    unidad_medida_name=serializers.ReadOnlyField(source='unidad_medida.unidad_medida')
-    estado_name=serializers.ReadOnlyField(source='get_estado_display')
-    
-    class Meta:
-        model = producto_UFC
-        fields = '__all__'
-        filterset_class=en_trenes_filter
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-        
-  
+                
+                
+
     
 class SituadoCargaDescargaFilter(filters.FilterSet):
     tipo_equipo = filters.CharFilter(lookup_expr='icontains')  # Filtro exacto (puedes usar 'icontains' para parcial
@@ -884,14 +628,16 @@ class SituadoCargaDescargaFilter(filters.FilterSet):
         
         
 class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
-    productos_info = serializers.SerializerMethodField()
+   # productos_info = serializers.SerializerMethodField()
     tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
     tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
     producto = serializers.PrimaryKeyRelatedField(
-        many=True,
+        many=False,
         queryset=producto_UFC.objects.all(),
         required=False
     )
+    producto_detalle=producto_vagon_serializer(many=False,source='producto', read_only=True)
+    
     equipo_vagon = serializers.ListField(
         child=serializers.DictField(),
         write_only=True,
@@ -909,18 +655,18 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
             'observaciones': {'required': False, 'allow_null': True}
         }
 
-    def get_productos_info(self, obj):
-        productos = obj.producto.all()
-        return [{
-            'id': p.id,
-            'nombre_producto': p.producto.nombre_producto,
-            'codigo_producto': p.producto.codigo_producto,
-            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
-            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
-            'cantidad': p.cantidad,
-            'estado': p.estado,
-            'contiene': p.contiene
-        } for p in productos] # (truco) Esta bueno este truquito para evitar errores si el objeto no tiene el atributo
+    # def get_productos_info(self, obj):
+    #     p = obj.producto
+    #     return {
+    #         'id': p.id,
+    #         'nombre_producto': p.producto.nombre_producto,
+    #         'codigo_producto': p.producto.codigo_producto,
+    #         'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
+    #         'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
+    #         'cantidad': p.cantidad,
+    #         'estado': p.estado,
+    #         'contiene': p.contiene
+    #     }  # (truco) Esta bueno este truquito para evitar errores si el objeto no tiene el atributo
         
     def to_internal_value(self, data):
         # Convertir los valores de string a integer antes de la validación
@@ -937,15 +683,11 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        productos_data = validated_data.pop('producto', [])
+        
         vagones_data = validated_data.pop('equipo_vagon', [])
         instance = super().create(validated_data)
         
         # Asociar productos MANUALMENTE después de crear la instancia
-        if productos_data:
-            instance.producto.set(productos_data)
-            instance.save()  # Guardar explícitamente
-        
         for vagon_data in vagones_data:
             equipo=nom_equipo_ferroviario.objects.get(id=vagon_data['equipo_ferroviario'])
             vagon = vagones_dias.objects.create(
@@ -960,7 +702,6 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        productos_data = validated_data.pop('producto', None)   
         vagones_data = validated_data.pop('equipo_vagon', None)
         
         for attr, value in validated_data.items():
@@ -982,9 +723,7 @@ class SituadoCargaDescargaSerializers(serializers.ModelSerializer):
                 )
                 instance.equipo_vagon.add(vagon)
                 
-        if productos_data is not None:
-            instance.producto.set(productos_data)
-            instance.save()
+       
         
         return instance        
         
@@ -1005,15 +744,18 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
         read_only=True,  # Solo lectura, no necesita write_only
         help_text="Fecha y hora en que se creó el registro (automático)"
     )
-    productos_info = serializers.SerializerMethodField()
+   # productos_info = serializers.PrimaryKeyRelatedField(,many=True)
     tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')
     tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
+    
     producto = serializers.PrimaryKeyRelatedField(
-        write_only=True,
-        many=True,
+        many=False,
         queryset=producto_UFC.objects.all(),
         required=False
     )
+    producto_detalle=producto_vagon_serializer(many=False,source='producto', read_only=True)
+    #-#
+    
     equipo_vagon = serializers.ListField(
         child=serializers.DictField(),
         write_only=True,
@@ -1029,23 +771,10 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
             'observaciones': {'required': False, 'allow_null': True}
         }
 
-    def get_productos_info(self, obj):
-        productos = obj.producto.all()
-        return [{
-            'id': p.id,
-            'nombre_producto': p.producto.nombre_producto,
-            'codigo_producto': p.producto.codigo_producto,
-            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
-            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
-            'cantidad': p.cantidad,
-            'estado': p.estado,
-            'contiene': p.contiene
-        } for p in productos]
 
     def create(self, validated_data):
         # Extraer datos de vagones
         vagones_data = validated_data.pop('equipo_vagon', [])
-        productos_data = validated_data.pop('producto', [])
         
         # Crear instancia principal
         instance = super().create(validated_data)
@@ -1062,14 +791,12 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
             instance.equipo_vagon.add(vagon)
         
         # Asociar productos
-        instance.producto.set(productos_data)
         
         return instance
 
 ###Tanke
 
     def update(self, instance:por_situar, validated_data):
-        productos_data = validated_data.pop('producto', None)
         vagones_data = validated_data.pop('equipo_vagon', None)
         
         
@@ -1093,8 +820,7 @@ class PorSituarCargaDescargaSerializer(serializers.ModelSerializer):
                 instance.equipo_vagon.add(vagon)
         
         # Actualizar productos si se proporcionan
-        if productos_data is not None:
-            instance.producto.set(productos_data)
+       
         
         print(validated_data)
         instance.save()
@@ -1116,12 +842,15 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
         help_text="Fecha y hora en que se creó el registro (automático)"
     )
     tipo_equipo_name=serializers.ReadOnlyField(source='tipo_equipo.get_tipo_equipo_display')
-    productos_info = serializers.SerializerMethodField()
+    # productos_info = serializers.SerializerMethodField()
+    
     producto = serializers.PrimaryKeyRelatedField(
-        many=True,
+        many=False,
         queryset=producto_UFC.objects.all(),
         required=False
     )
+    producto_detalle=producto_vagon_serializer(many=False,source='producto', read_only=True)
+    
     equipo_vagon = serializers.ListField(
         child=serializers.DictField(),
         write_only=True,
@@ -1133,23 +862,23 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
         fields = '__all__'
         filterset_class = PendienteArrastreFilter
 
-    def get_productos_info(self, obj):
-        productos = obj.producto.all()
-        return [{
-           'id': p.id,
-            'nombre_producto': p.producto.nombre_producto,
-            'codigo_producto': p.producto.codigo_producto,
-            'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
-            'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
-            'cantidad': p.cantidad,
-            'estado': p.estado,
-            'contiene': p.contiene
-        } for p in productos]
+    # def get_productos_info(self, obj):
+    #     p = obj.producto
+    #     return {
+    #        'id': p.id,
+    #         'nombre_producto': p.producto.nombre_producto,
+    #         'codigo_producto': p.producto.codigo_producto,
+    #         'tipo_embalaje': p.tipo_embalaje.nombre if hasattr(p.tipo_embalaje, 'nombre') else str(p.tipo_embalaje),
+    #         'unidad_medida': p.unidad_medida.nombre if hasattr(p.unidad_medida, 'nombre') else str(p.unidad_medida),
+    #         'cantidad': p.cantidad,
+    #         'estado': p.estado,
+    #         'contiene': p.contiene
+    #     }
 
     def create(self, validated_data):
         # Extraer datos de vagones
         vagones_data = validated_data.pop('equipo_vagon', [])
-        productos_data = validated_data.pop('producto', [])
+       
         
         # Crear instancia principal
         instance = super().create(validated_data)
@@ -1166,13 +895,12 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
             instance.equipo_vagon.add(vagon)
         
         # Asociar productos
-        instance.producto.set(productos_data)
-        
+    
         return instance
 
     def update(self, instance:arrastres, validated_data):
         vagones_data = validated_data.pop('equipo_vagon', None)
-        productos_data = validated_data.pop('producto', None)
+    
         
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -1194,8 +922,7 @@ class PendienteArrastreSerializer(serializers.ModelSerializer):
                 instance.equipo_vagon.add(vagon)
         
         # Actualizar productos si se proporcionan
-        if productos_data is not None:
-            instance.producto.set(productos_data)
+       
         
         return instance
 
@@ -1450,4 +1177,188 @@ class ufc_informe_operativo_serializer(serializers.ModelSerializer):
 
         
     #     return nom_equipo_ferroviario_serializer(equipos_list, many=True).data
+
+
+
+#######Aqui empiezan los serializadores de CCDxProducto###########
+#######Los Filtros se ponen en la view o viewSet #########
+
+def create_nested_field_pair(serializer_class, model_class, field_name, allow_null=False,many=False):
+    """
+    Crea un par de campos (read/write) para relaciones anidadas.
     
+    return read_field, write_field
+
+    """
+    read_field = serializer_class(read_only=True,many=many)
+    write_field = serializers.PrimaryKeyRelatedField(
+        queryset=model_class.objects.all(),
+        source=field_name,
+        write_only=True,
+        allow_null=allow_null
+    )
+    return read_field, write_field
+
+class ccd_productoSerializer(serializers.ModelSerializer):
+
+    
+    #### Usando la nueva estructura creada
+    producto, producto_id = create_nested_field_pair(
+        nom_producto_serializer, nom_producto, 'producto'
+    )
+    
+    tipo_embalaje, tipo_embalaje_id = create_nested_field_pair(
+        nom_tipo_embalaje_serializer, nom_tipo_embalaje, 'tipo_embalaje'
+    )
+    
+    unidad_medida, unidad_medida_id = create_nested_field_pair(
+        nom_unidad_medida_serializer, nom_unidad_medida, 'unidad_medida'
+    )
+    
+    tipo_equipo, tipo_equipo_id = create_nested_field_pair(
+        nom_tipo_equipo_ferroviario_serializer, 
+        nom_tipo_equipo_ferroviario, 
+        'tipo_equipo',
+        allow_null=True
+    )
+    ##@darilrosales88 Este campo permite hacer cositas para anidar las ForeignKey
+    class Meta:
+        model=ccd_producto
+        fields="__all__"
+
+
+    def validate(self, data):
+        # Validar que el producto sea opcional
+        print ("###**Log: ",data)
+        
+        
+        return data
+        
+
+class ccd_arrastresSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model=ccd_arrastres
+        fields="__all__"
+        
+
+
+class ccd_en_trenesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_en_trenes
+        fields="__all__"
+        
+    
+
+class ccd_por_situarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_por_situar
+        fields="__all__"
+        
+    
+#####
+class ccd_situadosSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_situados
+        fields="__all__"
+        
+    def validate_tipo_equipo(self, value):
+        if value and getattr(value, "tipo_equipo", "").lower() == "locomotora":
+            raise serializers.ValidationError("No se permite seleccionar 'locomotora' como tipo de equipo ferroviario.")
+        return value
+    
+    def validate(self, data):
+        # Validar que el producto sea opcional
+        print ("###**Log: ",data)
+        if data["tipo_equipo"]["tipo_equipo"].lower() == "locomotora":
+            raise serializers.ValidationError("No se permite seleccionar 'locomotora' como tipo de equipo ferroviario.")
+        
+        return data
+    
+
+class ccd_registro_vagones_cdSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_registro_vagones_cd
+        fields="__all__"
+       
+    
+    
+
+class ccd_vagones_cdSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_vagones_cd
+        fields="__all__"
+        
+
+class ccd_casillas_productosSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ccd_casillas_productos
+        fields="__all__"
+      
+
+
+class ufc_informe_ccdSerializer(serializers.ModelSerializer):
+    arrastres_list = serializers.SerializerMethodField()
+    en_trenes_list = serializers.SerializerMethodField()
+    vagones_cargados_descargados_list = serializers.SerializerMethodField()
+    situados_carga_descarga_list = serializers.SerializerMethodField()
+    por_situar_list = serializers.SerializerMethodField()
+    entidad_detalle=serializers.ReadOnlyField(source = 'entidad.nombre') 
+#    equipos_list=serializers.SerializerMethodField()
+    creado_por = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(), 
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    
+    aprobado_por = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(), 
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    
+    
+    creado_por_detalle=UserPermissionSerializer(source='creado_por', read_only=True)
+    aprobado_por_detalle=UserPermissionSerializer(source='aprobado_por', read_only=True)
+    class Meta:
+        model = ufc_informe_ccd   
+        fields="__all__"    
+  
+    
+    #OK Arrastres
+    def get_arrastres_list(self, obj):
+        """Obtiene todos los arrastres asociados al informe operativo."""
+        arrastres_queryset = obj.arrastres_ccd.all()
+        return ccd_arrastresSerializer(arrastres_queryset, many=True).data
+    #OK En Trenes
+    def get_en_trenes_list(self, obj):
+        """Obtiene todos los trenes asociados al informe operativo."""
+        en_trenes_queryset = obj.en_trenes_ccd.all()
+        return ccd_en_trenesSerializer(en_trenes_queryset, many=True).data
+    #OK vagones C/D
+    def get_vagones_cargados_descargados_list(self, obj):
+        """Obtiene todos los vagones cargados/descargados asociados al informe operativo."""
+        vagones_cargados_descargados_queryset = obj.vagones_cd_ccd.all()
+        return ccd_vagones_cdSerializer(vagones_cargados_descargados_queryset, many=True).data
+    #OK Situados
+    def get_situados_carga_descarga_list(self, obj):
+        """Obtiene todos los situados de carga/descarga asociados al informe operativo."""
+        situados_carga_descarga_queryset = obj.situados_ccd.all()
+        return ccd_situadosSerializer(situados_carga_descarga_queryset, many=True).data
+    #OK Por Situar
+    def get_por_situar_list(self, obj):
+        """Obtiene todos los registros por situar asociados al informe operativo."""
+        por_situar_queryset = obj.por_situar_ccd.all()
+        return ccd_por_situarSerializer(por_situar_queryset, many=True).data
+
+    def get_vagones_productos_list(self, obj):
+        """Obtiene todos los productos de vagones asociados al informe operativo."""
+        vagones_productos_queryset = obj.vagones_productos.all()
+        return vagones_productos_serializer(vagones_productos_queryset, many=True).data
+
+    def get_rotacion_vagones_list(self, obj):
+        """Obtiene todas las rotaciones de vagones asociadas al informe operativo."""
+        rotacion_vagones_queryset = obj.rotacion.all()
+        return RotacionVagonesSerializer(rotacion_vagones_queryset, many=True).data

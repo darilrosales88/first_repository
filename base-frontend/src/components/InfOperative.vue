@@ -2,10 +2,10 @@
   <div class="container py-3">
     <div class="card border">
       <div class="card-header bg-light border-bottom">
-        <h5 class="mb-0 text-dark fw-semibold">
+        <h6 class="mb-0 text-dark fw-semibold">
           <i class="bi bi-clipboard-data me-2"></i>Registros de operaciones -
           UFC
-        </h5>
+        </h6>
       </div>
 
       <div class="card-body p-3">
@@ -16,17 +16,16 @@
               <div class="form-group">
                 <label
                   for="planMensualTotal"
-                  class="form-label small fw-semibold text-secondary"
-                >
+                  class="form-label small fw-semibold text-secondary">
                   <i class="bi bi-calendar-month me-2 text-primary"></i>Plan
                   Mensual Total
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   class="form-control form-control-sm border-secondary mt-2"
                   id="planMensualTotal"
                   v-model="formData.plan_mensual_total"
-                  :disabled="isExistingRecord"
+                  :disabled="isExistingRecord" readonly
                 />
               </div>
             </div>
@@ -41,11 +40,11 @@
                   Diario Total
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   class="form-control form-control-sm border-secondary mt-2"
                   id="planDiarioTotal"
                   v-model="formData.plan_diario_total_vagones_cargados"
-                  :disabled="isExistingRecord"
+                  :disabled="isExistingRecord" readonly
                 />
               </div>
             </div>
@@ -60,11 +59,11 @@
                   >Real Total Vagones
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   class="form-control form-control-sm border-secondary mt-2"
                   id="realTotalVagones"
                   v-model="formData.real_total_vagones_cargados"
-                  :disabled="isExistingRecord"
+                  :disabled="isExistingRecord" readonly
                 />
               </div>
             </div>
@@ -79,11 +78,11 @@
                   Situados
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   class="form-control form-control-sm border-secondary mt-2"
                   id="totalVagonesSituados"
                   v-model="formData.total_vagones_situados"
-                  :disabled="isExistingRecord"
+                  :disabled="isExistingRecord" readonly
                 />
               </div>
             </div>
@@ -101,11 +100,11 @@
                   Acumulado
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   class="form-control form-control-sm border-secondary"
                   id="planTotalAcumulado"
                   v-model="formData.plan_total_acumulado_actual"
-                  :disabled="isExistingRecord"
+                  :disabled="isExistingRecord" readonly
                 />
               </div>
             </div>
@@ -120,25 +119,14 @@
                   Total Acumulado
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   class="form-control form-control-sm border-secondary"
                   id="realTotalAcumulado"
                   v-model="formData.real_total_acumulado_actual"
-                  :disabled="isExistingRecord"
+                  :disabled="isExistingRecord" readonly
                 />
               </div>
             </div>
-          </div>
-
-          <!-- Botones -->
-          <div class="d-flex justify-content-end gap-2 mt-4">
-            <button
-              type="submit"
-              class="btn btn-sm btn-primary"
-              :disabled="isExistingRecord || isLoading"
-            >
-              <i class="bi bi-save me-1"></i>Crear Informe
-            </button>
           </div>
         </form>
       </div>
@@ -306,30 +294,61 @@ export default {
         this.$emit("record-status-changed", {
           isExisting: true,
         });
-
-        await Swal.fire({
-          title: "¡Éxito!",
-          text: "Los datos operativos se han guardado correctamente.",
-          icon: "success",
-          confirmButtonText: "Aceptar",
-        });
+        
+        this.showSuccessToast("Informe creado correctamente");
       } catch (error) {
         console.error("Error al guardar operación:", error);
-
+        this.showErrorToast("Error al crear el informe");
         let errorMessage = "Ocurrió un error al guardar los datos.";
         if (error.response?.data) {
           errorMessage = Object.values(error.response.data).join("<br>");
         }
-
-        await Swal.fire({
-          title: "Error",
-          html: errorMessage,
-          icon: "error",
-          confirmButtonText: "Entendido",
-        });
       } finally {
         this.isLoading = false;
       }
+    },
+        showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
+      });
     },
   },
 };

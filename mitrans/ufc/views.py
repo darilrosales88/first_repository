@@ -4,23 +4,22 @@ from rest_framework import viewsets,generics,permissions
 from rest_framework.pagination import PageNumberPagination
 #importacion de modelos
 from .models import vagon_cargado_descargado,producto_UFC,en_trenes
-from .models import registro_vagones_cargados,vagones_productos,HistorialVagonesProductos
+from .models import registro_vagones_cargados,vagones_productos
 from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones,ufc_informe_operativo,vagones_dias
 #importacion de serializadores asociados a los modelos
 from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descargado_serializer, 
                         producto_vagon_serializer, en_trenes_serializer,PorSituarCargaDescargaSerializer, SituadoCargaDescargaSerializers, 
                         PendienteArrastreSerializer, registro_vagones_cargados_serializer,
-                        registro_vagones_cargados_filter, vagones_productos_filter, 
+                        registro_vagones_cargados_filter, vagones_productos_filter, producto_vagon_filter,
                         vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer,PorSituarCargaDescargaFilter,
                         ufc_informe_operativo_serializer,ufc_informe_operativo_filter,
-                        HistorialVagonCargadoDescargado,HistorialVagonCargadoDescargadoSerializer,
-                        HistorialVagonesProductosSerializer,vagones_dias_serializer, rotacion_filter,PendienteArrastreFilter
+                        vagones_dias_serializer, rotacion_filter,PendienteArrastreFilter
                         )
 from django.core.cache import cache
 from Administracion.models import Auditoria
 
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status,filters
 
 #para el filtrado
 from django_filters.rest_framework import DjangoFilterBackend
@@ -489,75 +488,6 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
 
         return super().list(request, *args, **kwargs) 
 
-class vagones_productos_hoy_viewset(viewsets.ModelViewSet):
-    queryset = vagones_productos.objects.all()
-    serializer_class = vagones_productos_serializer
-    
-    def get_queryset(self):
-        # Obtener la fecha actual (sin la hora)
-        hoy = timezone.now().date()
-        
-        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
-        return self.queryset.annotate(
-            fecha_dia=TruncDate('fecha', output_field=DateField())
-        ).filter(fecha_dia=hoy).order_by('-fecha')
-    
-    def list(self, request, *args, **kwargs):
-        # Verificar permisos como en la vista original
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de vagones cargados/descargados hoy",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        
-        return super().list(request, *args, **kwargs)  
-
-class HistorialVagonesProductosViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = HistorialVagonesProductos.objects.all().order_by('-fecha_creacion')
-    serializer_class = HistorialVagonesProductosSerializer
-    permission_classes = [IsUFCPermission]
-    pagination_class = PageNumberPagination
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        informe_id = self.request.query_params.get('informe_id')
-
-        if informe_id:
-            queryset = queryset.filter(informe_operativo_id=informe_id)
-
-        return queryset.select_related('informe_operativo')
-
-    def list(self, request, *args, **kwargs):
-        # Verificar permisos del grupo
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        # Auditoría
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar historial de vagones y productos",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return super().list(request, *args, **kwargs) 
-
 #/*********************************************************************************************************************************************
 #para el estado de vagones cargados/descargados
 #para el estado de vagones cargados/descargados
@@ -756,93 +686,6 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
                 {"error": f"No se pudieron obtener los registros completos: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-class vagon_cargado_descargado_hoy_view_set(viewsets.ModelViewSet):
-    queryset = vagon_cargado_descargado.objects.all()
-    serializer_class = vagon_cargado_descargado_serializer
-    
-    def get_queryset(self):
-        # Obtener la fecha actual (sin la hora)
-        hoy = timezone.now().date()
-        
-        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
-        return self.queryset.annotate(
-            fecha_dia=TruncDate('fecha', output_field=DateField())
-        ).filter(fecha_dia=hoy).order_by('-fecha')
-        
-        
-    def perform_destroy(self, instance):
-        registros_asociados = instance.registros_vagones.all()
-        
-        for registro in registros_asociados:
-            actualizar_estado_equipo_ferroviario(registro.no_id, 'Disponible')
-        
-        registros_asociados.delete()
-        instance.delete()
-
-    def actualizar_estado_equipo_ferroviario(self, no_id, nuevo_estado):
-        from nomencladores.models import nom_equipo_ferroviario
-        if no_id:
-            equipo = nom_equipo_ferroviario.objects.filter(numero_identificacion=no_id).first()
-            if equipo:
-                equipo.estado_actual = nuevo_estado
-                equipo.save()
-    
-    def list(self, request, *args, **kwargs):
-        # Verificar permisos como en la vista original
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de vagones cargados/descargados hoy",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        
-        return super().list(request, *args, **kwargs)
-    
-#vista para el historial de vagon_cargado_descargado
-class HistorialVagonCargadoDescargadoViewSet(viewsets.ModelViewSet):
-    queryset = HistorialVagonCargadoDescargado.objects.all().order_by('-fecha_creacion')
-    serializer_class = HistorialVagonCargadoDescargadoSerializer
-    permission_classes = [IsUFCPermission]
-    pagination_class = PageNumberPagination
-    
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        informe_id = self.request.query_params.get('informe_id')
-        
-        if informe_id:
-            queryset = queryset.filter(informe_operativo_id=informe_id)
-            
-        return queryset.select_related('informe_operativo')
-    
-    def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        # Auditoría
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar historial de vagones cargados/descargados",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        
-        return super().list(request, *args, **kwargs)
-#para productos de vagones y productos
 
 @api_view(['POST'])
 def verificar_productos(request):
@@ -1093,40 +936,6 @@ class en_trenes_view_set(viewsets.ModelViewSet):
 
         return super().list(request, *args, **kwargs)
     
-class en_trenes_hoy_viewset(viewsets.ModelViewSet):
-    queryset = en_trenes.objects.all()
-    serializer_class = en_trenes_serializer
-    
-    def get_queryset(self):
-        # Obtener la fecha actual (sin la hora)
-        hoy = timezone.now().date()
-        
-        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
-        return self.queryset.annotate(
-            fecha_dia=TruncDate('fecha', output_field=DateField())
-        ).filter(fecha_dia=hoy).order_by('-fecha')
-    
-    def list(self, request, *args, **kwargs):
-        # Verificar permisos como en la vista original
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de vagones pendientes de arrastre hoy",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        
-        return super().list(request, *args, **kwargs)
-
 
 #***********************************************************************************************************
 
@@ -1134,21 +943,12 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
     queryset = producto_UFC.objects.all().order_by('-id') # Definir el queryset
     serializer_class = producto_vagon_serializer
     permission_classes = [IsUFCPermission]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = producto_vagon_filter
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        search_term = self.request.query_params.get('buscar_producto', None)
-
-        if search_term:
-            # Filtra por coincidencia en cualquiera de los campos
-            queryset = queryset.select_related('producto').filter(
-            Q(id__icontains=search_term) |
-            Q(tpo_embalaje__icontains=search_term)|
-            Q(producto__nombre_producto__icontains=search_term)|
-            Q(producto___codigo_producto__icontains=search_term)
-            
-)
-        return queryset
+    search_fields=[
+        'tipo_equipo__tipo_equipo'
+    ]
 
     def create(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='AdminUFC').exists():
@@ -1356,40 +1156,6 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
 
         return super().list(request, *args, **kwargs)
     
-class PorSituarCargaDescarga_hoy_ViewSet(viewsets.ModelViewSet):
-    queryset = por_situar.objects.all()
-    serializer_class = PorSituarCargaDescargaSerializer
-    
-    def get_queryset(self):
-        # Obtener la fecha actual (sin la hora)
-        hoy = timezone.now().date()
-        
-        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
-        return self.queryset.annotate(
-            fecha_dia=TruncDate('fecha', output_field=DateField())
-        ).filter(fecha_dia=hoy).order_by('-fecha')
-    
-    def list(self, request, *args, **kwargs):
-        # Verificar permisos como en la vista original
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de vagones por situar hoy",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        
-        return super().list(request, *args, **kwargs)
-    #**********************************************************************************************
 
 class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
     queryset = Situado_Carga_Descarga.objects.all().order_by("-id")
@@ -1500,43 +1266,7 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
         )
 
         return super().list(request, *args, **kwargs)
-class SituadoCargaDescarga_hoy_Viewset(viewsets.ModelViewSet):
-    queryset = Situado_Carga_Descarga.objects.all()
-    serializer_class = SituadoCargaDescargaSerializers
-    
-    def get_queryset(self):
-        # Obtener la fecha actual (sin la hora)
-        hoy = timezone.now().date()
-        
-        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
-        return self.queryset.annotate(
-            fecha_dia=TruncDate('fecha', output_field=DateField())
-        ).filter(fecha_dia=hoy).order_by('-fecha')
-    
-    def list(self, request, *args, **kwargs):
-        # Verificar permisos como en la vista original
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de vagones situados hoy",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        
-        return super().list(request, *args, **kwargs)
-    
-
- #***********************************************************************************************************************   
-    
+ 
 class PendienteArrastreViewset(viewsets.ModelViewSet):
     queryset = arrastres.objects.all()
     serializer_class = PendienteArrastreSerializer
@@ -1639,42 +1369,7 @@ class PendienteArrastreViewset(viewsets.ModelViewSet):
 
         return super().list(request, *args, **kwargs)
     
-class PendienteArrastre_hoy_Viewset(viewsets.ModelViewSet):
-    queryset = arrastres.objects.all()
-    serializer_class = PendienteArrastreSerializer
-    
-    def get_queryset(self):
-        # Obtener la fecha actual (sin la hora)
-        hoy = timezone.now().date()
-        
-        # Filtrar registros donde la fecha (truncada a día) sea igual a hoy
-        return self.queryset.annotate(
-            fecha_dia=TruncDate('fecha', output_field=DateField())
-        ).filter(fecha_dia=hoy).order_by('-fecha')
-    
-    def list(self, request, *args, **kwargs):
-        # Verificar permisos como en la vista original
-        if not request.user.groups.filter(name='VisualizadorUFC').exists() and not request.user.groups.filter(name='AdminUFC').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de vagones pendientes de arrastre hoy",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        
-        return super().list(request, *args, **kwargs)
-    
-    
-    
+
     
     
 #*************Registro de vagones Dia*******************
@@ -1795,3 +1490,156 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
     
 #*************Termina View Rotacion de Vagones **********************
+
+
+
+#*************Aqui empieza la ViewSet de CCDxPRODUCTO****************
+#************Imports****************
+from .serializers import (ccd_productoSerializer,ccd_arrastresSerializer,ccd_en_trenesSerializer,ccd_por_situarSerializer,ccd_registro_vagones_cdSerializer, ccd_situadosSerializer,ccd_vagones_cdSerializer, ufc_informe_ccdSerializer, ccd_casillas_productosSerializer)
+
+from .models import (ccd_vagones_cd,ccd_arrastres,ccd_en_trenes,ccd_por_situar,ccd_producto,ccd_registro_vagones_cd,ccd_situados,ccd_casillas_productos,ufc_informe_ccd)
+#***********************************
+
+#*************VIEWSSET**************
+#### View CCD Productos OK
+class ccd_productoViewSet(viewsets.ModelViewSet):
+    serializer_class=ccd_productoSerializer
+    queryset=ccd_producto.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+
+#### View CCD Informe general OK
+class ccd_informeViewSet(viewsets.ModelViewSet):
+    serializer_class=ufc_informe_ccdSerializer
+    queryset=ufc_informe_ccd.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
+    # search_fields = ['contiene', 'producto__nombre_producto', 'cantidad']
+    # filterset_fields = ['producto', 'tipo_embalaje', 'unidad_medida']
+    # ordering_fields = ['id', 'contiene', 'cantidad']
+    # ordering = ['-id']
+
+
+#### View Verificar OK
+@api_view(['GET'])
+def verificar_informe_ccd_existente(request):
+    entidad=request.user.entidad
+    
+    fecha_operacion = request.query_params.get('fecha_operacion')
+    
+    
+    try:
+        fecha_obj=""
+        if not fecha_operacion:
+            fecha_obj=datetime.now().date()
+        else:
+            fecha_obj = datetime.strptime(fecha_operacion, '%Y-%m-%d').date()
+        
+        existe = ufc_informe_ccd.objects.filter(
+            fecha_operacion__date=fecha_obj,
+            entidad=entidad
+        ).exists()
+        print(existe)
+        if existe:
+            informe = ufc_informe_ccd.objects.filter(
+                fecha_operacion__date=fecha_obj,
+                entidad=entidad
+            ).first()
+            return Response({
+                "existe": True,
+                "id": informe.id,
+                "fecha_operacion": informe.fecha_operacion,
+                "estado":informe.estado_parte,
+            })
+        return Response({"existe": False})
+    except ValueError:
+        return Response({"error": "Formato de fecha inválido"}, status=400)
+
+#### View CCD arrastres OK
+class ccd_arrastresViewSet(viewsets.ModelViewSet):
+    serializer_class=ccd_arrastresSerializer
+    queryset=ccd_arrastres.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
+    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+
+#### View CCD En Trenes OK
+class ccd_en_trenesViewSet(viewsets.ModelViewSet):
+    serializer_class=ccd_en_trenesSerializer
+    queryset=ccd_en_trenes.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
+    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+    
+#### View CCD Vagones Carga/Descarga OK
+class ccd_vagones_cdViewSet(viewsets.ModelViewSet):
+    serializer_class=ccd_vagones_cdSerializer
+    queryset=ccd_vagones_cd.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
+    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+    
+#### View CCD por Situar OK
+class ccd_por_situarViewSet(viewsets.ModelViewSet):
+    serializer_class=ccd_por_situarSerializer
+    queryset=ccd_por_situar.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
+    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+
+#### View CCD Situados OK
+class ccd_situadosViewSet(viewsets.ModelViewSet):
+    serializer_class=ccd_situadosSerializer
+    queryset=ccd_situados.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
+    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+    
+#### View CCD Casillas Productos
+class ccd_casillas_productosViewSet(viewsets.ModelViewSet):
+    serializer_class=ccd_casillas_productosSerializer
+    queryset=ccd_casillas_productos.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
+    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+    
+#### View CCD Registro Vagones Carga/Descarga
+class ccd_registro_vagones_cdViewSet(viewsets.ModelViewSet):
+    serializer_class=ccd_registro_vagones_cdSerializer
+    queryset=ccd_registro_vagones_cd.objects.order_by("-id").all()
+    permission_classes=[IsUFCPermission]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
+    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']

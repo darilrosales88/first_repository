@@ -16,9 +16,9 @@
     <div class="container py-3">
       <div class="card border">
         <div class="card-header bg-light border-bottom">
-          <h5 class="mb-0 text-dark fw-semibold">
+          <h6 class="mb-0 text-dark fw-semibold">
             <i class="bi bi-clipboard-data me-2"></i>Fechas de operaciones - UFC
-          </h5>
+          </h6>
         </div>
 
         <div class="card-body p-3">
@@ -62,6 +62,16 @@
                   />
                 </div>
               </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <button
+                type="submit"
+                class="btn btn-primary"
+                @click="crearInforme"
+                :disabled="isExistingRecord">
+                <i class="bi bi-save me-2"></i>Crear informe operativo
+              </button>
             </div>
           </form>
         </div>
@@ -138,6 +148,7 @@
 
   <div style="margin-left: 16em; width: 80%">
     <Inf-Operative
+      ref="infOperative"
       :fechaActual="formData.fecha_actual"
       :fechaOperacion="formData.fecha_operacion"
       @record-status-changed="handleRecordStatusChange"
@@ -174,7 +185,7 @@ import AdicionarVagonProducto from "@/views/UFC/AdicionarVagonesProductos.vue";
 import ConsultaRotacionVagones from "@/components/RotacionVagonesView.vue";
 
 export default {
-  name: "UFCView",
+  name: "InfoOperativeView",
   components: {
     NavbarComponent,
     PorSituarCarga_Descarga,
@@ -211,6 +222,12 @@ export default {
   },
 
   methods: {
+    async crearInforme() {
+      if (this.$refs.infOperative) {
+        await this.$refs.infOperative.submitForm();
+      }
+    },
+
     async rechazar() {
       if (!this.hasGroup("RevisorUFC")) {
         await Swal.fire({
@@ -402,14 +419,9 @@ export default {
           this.informeOperativoId = null;
           this.isExistingRecord = false; // No hay informe existente
           console.log("No existe un informe operativo para la fecha actual.");
+          
           // Opcional: Mostrar mensaje al usuario
-          Swal.fire({
-            icon: "info",
-            title: "Informe no encontrado",
-            text: "No existe un informe operativo para la fecha actual.",
-            confirmButtonColor: "#002a68",
-          });
-          this.$emit("record-status-changed", { isExisting: false });
+          this.showErrorToast("No existe un informe operativo para la fecha actual.");
         }
         return false;
       } catch (error) {
@@ -421,6 +433,28 @@ export default {
       this.isExistingRecord = payload.isExisting;
       // Opcional: Mostrar feedback
       console.log("Estado actualizado:", payload);
+    },
+    
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
+      });
     },
   },
 };

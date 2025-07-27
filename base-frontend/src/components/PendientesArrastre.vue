@@ -2,13 +2,13 @@
   <div class="container py-3">
     <div class="card border">
       <div class="card-header bg-light border-bottom">
-        <h5 class="mb-0 text-dark fw-semibold">
+        <h6 class="mb-0 text-dark fw-semibold">
           <i class="bi bi-inboxes-fill me-2"></i>Vagones Pendientes a Arrastre
-        </h5>
+        </h6>
       </div>
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <router-link v-if="hasGroup('AdminUFC')" to="/AdicionarArrastre">
+          <router-link v-if="hasGroup('AdminUFC') && this.habilitado" to="/AdicionarArrastre">
             <button class="btn btn-sm btn-primary">
               <i class="bi bi-plus-circle me-1"></i>Agregar nuevo vagón
               pendiente
@@ -19,7 +19,7 @@
               <input
                 type="search"
                 class="form-control"
-                placeholder="Tipo Origen,Origen,Tipo equipo,..."
+                placeholder="Buscar en registros"
                 v-model="searchQuery"
                 @input="handleSearchInput"
               />
@@ -101,23 +101,21 @@
                     <button
                       @click="viewDetails(item)"
                       class="btn btn-sm btn-outline-info me-2"
-                      title="Ver detalles"
-                    >
+                      title="Ver detalles">
                       <i class="bi bi-eye-fill"></i>
                     </button>
 
-                    <button
+                    <button v-if="this.habilitado"
                       @click="editPendienteArrastre(item)"
                       class="btn btn-sm btn-outline-warning me-2"
-                      title="Editar"
-                    >
+                      title="Editar">
                       <i class="bi bi-pencil-square"></i>
                     </button>
-                    <button
+
+                    <button v-if="this.habilitado"
                       @click="confirmDelete(item.id)"
                       class="btn btn-sm btn-outline-danger"
-                      title="Eliminar"
-                    >
+                      title="Eliminar">
                       <i class="bi bi-trash"></i>
                     </button>
                   </div>
@@ -329,12 +327,18 @@ import axios from "axios";
 import Swal from "sweetalert2";
 
 export default {
-  name: "RegistrosSituados",
-
+  name: "PendientesArrastre",
+  props: {
+    informeID: {
+      type: Number,
+      required: false,
+    },
+  },
   data() {
     return {
       arrastresPendientes: [], // Lista de vagones
       allRecords: [], // Copia completa de todos los registros para filtrado local
+      habilitado: true,
       currentPage: 1,
       itemsPerPage: 10,
       totalItems: 0,
@@ -435,6 +439,7 @@ export default {
         console.error("Error al obtener permisos y grupos:", error);
       }
     },
+
     /* 
     async getVagonesCargadosDescargados() {
       this.loading = true;
@@ -460,7 +465,8 @@ export default {
         this.loading = false;
       }
     },
- */
+    */
+    
     async getArrastres() {
       this.loading = true;
       const today = new Date();
@@ -472,19 +478,26 @@ export default {
           `/ufc/verificar-informe-existente/?fecha_operacion=${fechaFormateada}`
         );
         this.estado_parte = infoID.data.estado;
-        if (infoID.data.existe) {
-          //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
+
+        //Para la reutilizacion del componente se deberia usar el operador ternario en informe: props.informeId? props.informeId: infoID.data.id
+
+        if (this.informeID || infoID.data.id) {
           const response = await axios.get("/ufc/pendiente-arrastre/", {
             params: {
               page: this.currentPage,
               page_size: this.itemsPerPage,
-              informe: infoID.data.id,
+              informe: this.informeID ? this.informeID : infoID.data.id,
             },
           });
-
+          if(this.informeID){
+            this.habilitado = false;
+          }
           this.totalItems = response.data.count;
           this.arrastresPendientes = response.data.results;
+        } else {
+          this.showErrorToast("No hay ID para cargar");
         }
+        
       } catch (error) {
         console.error("Error al obtener datos:", error);
         this.errorLoading = true;
@@ -548,14 +561,10 @@ export default {
         this.arrastresPendientes = this.arrastresPendientes.filter(
           (objeto) => objeto.id !== id
         );
-        Swal.fire(
-          "Eliminado!",
-          "El producto ha sido eliminado exitosamente.",
-          "success"
-        );
+        this.showErrorToast("El registro ha sido eliminado exitosamente.");
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
-        Swal.fire("Error", "Hubo un error al eliminar el producto.", "error");
+        this.showErrorToast("Hubo un error al eliminar el registro.");
       }
     },
 
@@ -569,6 +578,7 @@ export default {
         name: "EditarArrastre",
         params: { id: vagon.id },
       });
+      console.log(vagon);
     },
 
     confirmDelete(id) {
@@ -602,6 +612,49 @@ export default {
       }
       console.error(errorMsg, error);
       Swal.fire("Error", errorMsg, "error");
+    },
+        showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
+      });
     },
   },
 };

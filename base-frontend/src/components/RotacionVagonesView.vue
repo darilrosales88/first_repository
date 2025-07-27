@@ -3,16 +3,16 @@
     <!-- Encabezado -->
     <div class="card border">
       <div class="card-header bg-light border-bottom">
-        <h5 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-search me-2"></i>Rotación de los vagones
-        </h5>
+        <h6 class="mb-0 text-dark fw-semibold">
+          Rotación de los vagones
+        </h6>
         <!-- Botón para abrir el modal -->
       </div>
 
       <!-- Cuerpo -->
       <div class="card-body p-3">
         <!-- Registro de rotación por tipo de equipo -->
-        <div class="mt-4">
+        <div>
           <h6
             class="d-flex justify-content-between align-items-center text-secondary fw-semibold mb-3"
             style="padding: 0.5rem 1rem"
@@ -24,7 +24,7 @@
             </span>
 
             <!-- Botón alineado a la derecha -->
-            <button class="btn btn-sm btn-primary" @click="mostrarModal = true">
+            <button class="btn btn-sm btn-primary" @click="mostrarModal = true" v-if="this.habilitado">
               <i class="bi bi-plus-circle me-1"></i>Adicionar rotación
             </button>
           </h6>
@@ -38,7 +38,7 @@
                 <th scope="col">Real carga</th>
                 <th scope="col">Plan rotación</th>
                 <th scope="col">Real rotación</th>
-                <th scope="col">Acciones</th>
+                <th scope="col" v-if="this.habilitado">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -53,11 +53,10 @@
                 <td>{{ equipo.real_carga }}</td>
                 <td>{{ equipo.plan_rotacion }}</td>
                 <td>{{ equipo.real_rotacion }}</td>
-                <td>
+                <td v-if="this.habilitado">
                   <button
                     class="btn btn-sm btn-outline-danger"
-                    @click="eliminarRotacion(equipo.id)"
-                  >
+                    @click="eliminarRotacion(equipo.id)">
                     <i class="bi bi-trash"></i>
                   </button>
                 </td>
@@ -272,6 +271,7 @@ export default {
         planRotacion: 0,
         realRotacion: 0,
       },
+      habilitado: true,
       registrosRotacion: [],
       mostrarModal: false, // Controla la visibilidad del modal
       nuevaRotacion: {
@@ -314,6 +314,9 @@ export default {
                 informe: this.informeID ? this.informeID : infoID.data.id, // Usa el ID del informe operativo
               },
             });
+            if(this.informeID){
+              this.habilitado = false;
+            }
             allRotaciones = [...allRotaciones, ...response.data.results]; // Agrega los resultados
             nextPage = response.data.next; // Actualiza la URL de la siguiente página
           }

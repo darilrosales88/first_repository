@@ -144,44 +144,41 @@
                 <input type="number" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.plan_diario_carga_descarga" id="plan_diario_carga_descarga" min="0" name="plan_diario_carga_descarga"/>
               </div>
 
-              <!-- Campo: producto -->
-              <div class="mb-3">
-                <label for="producto" class="form-label small fw-semibold text-secondary">Productos <span v-if="formData.estado === 'cargado'" ></span></label>
-                <div class="ufc-input-with-action">
-                  <div class="ufc-custom-select" @click="toggleProductosDropdown">
-                    <div class="ufc-select-display">
-                      {{ getSelectedProductosText() || 'Seleccione productos...' }}
-                    </div>
-                    <i class="bi bi-chevron-down ufc-select-arrow"></i>
-                    
-                    <div class="ufc-productos-dropdown" v-if="showProductosDropdown">
-                      <div class="ufc-productos-search-container">
-                        <input
-                          type="text"
-                          class="ufc-productos-search"
-                          placeholder="Buscar productos..."
-                          v-model="productoSearch"
-                          @input="filterProductos"
-                          @click.stop>
-                      </div>
-                      <div class="ufc-productos-options">
-                        <div
-                          v-for="producto in filteredProductos"
-                          :key="producto.id"
-                          class="ufc-producto-option"
-                          :class="{ 'selected': formData.lista_productos.includes(producto.id) }"
-                          @click.stop="toggleProductoSelection(producto.id)">
-                          {{ producto.id }}-{{ producto.producto_name }} - {{ producto.producto_codigo }}
-                          <template v-if="producto.tipo_embalaje">
-                            (Embalaje: {{ producto.tipo_embalaje.nombre || producto.tipo_embalaje.nombre_embalaje || 'N/A' }})
-                          </template>
-                        </div>
-                      </div>
-                    </div>
+               <div class="mb-3">
+                <!-- Campo: Productos-->
+                <div class="mb-3">
+                  
+                  <label
+                    for="productos"
+                    class="form-label small fw-semibold text-secondary"
+                    >Productos</label
+                  >
+                  <div class="ufc-input-with-action">
+                    <select
+                      class="form-select form-select-sm border-secondary"
+                      style="padding: 8px 12px"
+                      v-model="formData.producto"
+                      @change="buscarTipoEquipo"
+                      required
+                      oninvalid="this.setCustomValidity('Por favor, seleccione un Producto')"
+                      oninput="this.setCustomValidity('')"
+                    >
+                      <option value="" disabled>Seleccione un Producto</option>
+                      <option
+                        v-for="producto in productos"
+                        :key="producto.id"
+                        :value="producto.id"
+                      >
+                        <!-- Esto tambien hay que modificarlo en los demas y quitar las funciones basuras ademas de agregar esto mismo en los editar de cada uno @BZ-theFanG #-# -->
+                        {{ producto.producto_name }}-{{
+                          producto.producto_codigo
+                        }}-{{ producto.tipo_embalaje_name }}
+                      </option>
+                    </select>
+                    <button class="create-button ms-2" @click.stop.prevent="abrirModalAgregarProducto">
+                      <i class="bi bi-plus-circle large-icon"></i>
+                    </button>
                   </div>
-                  <button class="create-button ms-2" @click.stop.prevent="abrirModalAgregarProducto">
-                    <i class="bi bi-plus-circle large-icon"></i>
-                  </button>
                 </div>
               </div>
 
@@ -314,7 +311,7 @@ export default {
         tipo_destino: "",
         destino: "",
         estado: "cargado",
-        lista_productos: [],
+        producto: [],
         plan_diario_carga_descarga: "",
         real_carga_descarga: "",
         operacion: "",
@@ -354,7 +351,7 @@ export default {
     this.getProductos();
     this.getNoLocomotoras();
     this.getEntidades();
-    this.filteredProductos = this.lista_productos;
+    this.filteredProductos = this.producto;
     this.closeDropdownsOnClickOutside();
     this.getPuertos();
   },
@@ -372,14 +369,14 @@ export default {
       },
     },
 
-    "formData.lista_productos": {
-    handler(newVal, oldVal) {
-      if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
-        this.calcularRealCargaDescarga();
-      }
-    },
-    deep: true
-  }
+    "formData.producto": {
+      handler(newVal, oldVal) {
+        if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
+          this.calcularRealCargaDescarga();
+        }
+      },
+      deep: true
+    }
   },
   async created() {
     await this.fetchUserPermissionsAndGroups(); // Espera a que se carguen los permisos
@@ -442,8 +439,23 @@ export default {
           return;
         }
 
+        const informeNoAprobado = await this.verificarEstadoInforme();
+        if (!informeNoAprobado) {
+          Swal.fire(
+            "Error",
+            "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
+            "error"
+          );
+          return;
+        }
+
         if (this.registros_vagones_temporales.length === 0) {
           Swal.fire("Error", "Debe agregar al menos un vagón", "error");
+          return;
+        }
+
+        if (this.formData.estado === "cargado" && this.formData.producto.length === 0) {
+          this.showErrorToast("Debe seleccionar al menos un producto cuando el estado es Cargado");
           return;
         }
 
@@ -463,9 +475,7 @@ export default {
           operacion: this.formData.operacion,
           plan_diario_carga_descarga: Number(this.formData.plan_diario_carga_descarga),
           causas_incumplimiento: this.formData.causas_incumplimiento || 'Sin causas especificadas',
-          producto_ids: Array.isArray(this.formData.lista_productos) ? 
-                      this.formData.lista_productos : 
-                      [this.formData.lista_productos].filter(Boolean),
+          producto_ids: this.formData.producto,
           registros_vagones_data: this.registros_vagones_temporales.map(v => ({
             no_id: v.no_id,
             fecha_despacho: v.fecha_despacho,
@@ -481,19 +491,14 @@ export default {
         const response = await axios.post("/ufc/vagones-cargados-descargados/", datosEnvio);
         
         // Mostrar mensaje de éxito
-        Swal.fire({
-          title: "¡Éxito!",
-          text: "El registro ha sido creado correctamente",
-          icon: "success",
-          confirmButtonText: "OK",
-        })
+        this.showSuccessToast("El registro ha sido creado correctamente");
         this.resetForm();
         this.$router.push({ name: "InfoOperativo" });
         
       } catch (error) {
         console.error("Error detallado:", error.response?.data);
         let errorMsg = "Error al guardar el registro";
-        
+        this.showErrorToast("Error al guardar el registro");
         if (error.response?.data) {
           if (typeof error.response.data === 'object') {
             errorMsg += ": " + JSON.stringify(error.response.data);
@@ -506,7 +511,7 @@ export default {
       }
     },
     async calcularRealCargaDescarga() {
-      if (!this.formData.lista_productos?.length) {
+      if (!this.formData.producto?.length) {
         this.formData.real_carga_descarga = 0;
         return;
       }
@@ -514,7 +519,7 @@ export default {
       try {
         const response = await axios.post(
           "/ufc/vagones-cargados-descargados/calcular_total_vagones_por_productos/",
-          { producto_ids: [...this.formData.lista_productos] } // Enviar copia
+          { producto_ids: [...this.formData.producto] } // Enviar copia
         );
         this.formData.real_carga_descarga = response.data.total;
       } catch (error) {
@@ -531,7 +536,7 @@ export default {
         tipo_destino: "",
         destino: "",
         estado: "cargado",
-        lista_productos: [],
+        producto: [],
         plan_diario_carga_descarga: "",
         real_carga_descarga: "",
         operacion: "",
@@ -597,25 +602,25 @@ export default {
     },
 
     toggleProductoSelection(productoId) {
-      const index = this.formData.lista_productos.indexOf(productoId);
+      const index = this.formData.producto.indexOf(productoId);
       if (index === -1) {
-        this.formData.lista_productos.push(productoId);
+        this.formData.producto.push(productoId);
       } else {
-        this.formData.lista_productos.splice(index, 1);
+        this.formData.producto.splice(index, 1);
       }
     },
 
     getSelectedProductosText() {
-      if (this.formData.lista_productos.length === 0) return "";
-      if (this.formData.lista_productos.length === 1) {
+      if (this.formData.producto.length === 0) return "";
+      if (this.formData.producto.length === 1) {
         const producto = this.productos.find(
-          (p) => p.id === this.formData.lista_productos[0]
+          (p) => p.id === this.formData.producto[0]
         );
         return producto
           ? `${producto.id}-${producto.producto_name}`
           : "1 producto seleccionado";
       }
-      return `${this.formData.lista_productos.length} productos seleccionados`;
+      return `${this.formData.producto.length} productos seleccionados`;
     },
 
     closeDropdownsOnClickOutside() {
@@ -953,6 +958,62 @@ export default {
           htmlContainer: "custom-swal-html",
         },
       });
+    },
+        showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
+      });
+    },
+    async verificarEstadoInforme() {
+      try {
+        if (!this.informeOperativoId) return false;
+
+        const response = await axios.get(
+          `/ufc/informe-operativo/${this.informeOperativoId}/`
+        );
+        return response.data.estado_parte !== "Aprobado";
+      } catch (error) {
+        console.error("Error al verificar estado del informe:", error);
+        return false;
+      }
     },
   },
 };

@@ -6,7 +6,7 @@
     <br />
     <Navbar-Component />
     
-    <div class="form-container">
+    <div class="form-container" style="margin-left: 18em; width: 75%">
       <h2>Adicionar embarcación</h2>
       <form @submit.prevent="save_embarcacion" class="form-grid">
         <div class="mb-3">

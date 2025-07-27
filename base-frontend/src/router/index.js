@@ -654,6 +654,15 @@ const routes = [
   },
 
   {
+    path: "/ccdxproducto",
+    name: "ccdxproducto",
+    component: () => import("../views/CCDxProducto/CCDxProductoView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+
+  {
     path: "/InfoOperativo",
     name: "InfoOperativo",
     component: () => import("../views/UFC/InformeOperativoView.vue"),

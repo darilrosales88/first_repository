@@ -675,6 +675,14 @@ export default {
 
         await this.getProductos();
 
+        for(let i = 0; i < registro.equipo_vagon_detalle.length; i++) {
+          let vagon = {
+              equipo_ferroviario: registro.equipo_vagon_detalle[i].equipo_ferroviario_detalle,
+              cant_dias: registro.equipo_vagon_detalle[i].cant_dias,
+          };
+          this.vagonesAgregados.push(vagon);
+        }
+
         this.formData = {
           id: registro.id,
           tipo_origen: registro.tipo_origen,
@@ -688,6 +696,7 @@ export default {
           cantidad_vagones: registro.cantidad_vagones,
           observaciones: registro.observaciones,
         };
+        this.buscarEquipos();
       } catch (error) {
         throw new Error(error);
       } finally {

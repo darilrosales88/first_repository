@@ -336,7 +336,7 @@ export default {
         operacion: "",
         estado: "cargado",
         productos: [],
-        por_situar: "",
+        por_situar: 1,
         observaciones: "",
         equipos_vagones: [],
       },
@@ -396,7 +396,13 @@ export default {
         );
         const registro = response.data;
 
-        await this.getProductos();
+        for(let i = 0; i < registro.equipo_vagon_detalle.length; i++) {
+          let vagon = {
+              equipo_ferroviario: registro.equipo_vagon_detalle[i].equipo_ferroviario_detalle,
+              cant_dias: registro.equipo_vagon_detalle[i].cant_dias,
+          };
+          this.vagonesAgregados.push(vagon);
+        }
 
         this.formData = {
           id: registro.id,
@@ -409,6 +415,8 @@ export default {
           por_situar: registro.por_situar,
           observaciones: registro.observaciones,
         };
+        this.buscarEquipos();
+
       } catch (error) {
         // ... manejo de errores ...
       } finally {
@@ -755,6 +763,57 @@ export default {
         if (result.isConfirmed) {
           this.$router.push({ name: "InfoOperativo" });
         }
+      });
+    },
+    eliminarVagon(index) {
+      this.vagonesAgregados.splice(index, 1);
+      localStorage.setItem(
+        "vagonesAgregados",
+        JSON.stringify(this.vagonesAgregados)
+      );
+      this.showSuccessToast("Vagón eliminado correctamente.");
+    },
+    showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
       });
     },
   },

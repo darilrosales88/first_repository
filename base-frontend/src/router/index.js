@@ -663,15 +663,6 @@ const routes = [
   },
 
   {
-    path: "/ccdxproducto",
-    name: "ccdxproducto",
-    component: () => import("../views/CCDxProducto/CCDxProductoView.vue"),
-    meta: {
-      requireLogin: true,
-    },
-  },
-
-  {
     path: "/InfoOperativo",
     name: "InfoOperativo",
     component: () => import("../views/UFC/InformeOperativoView.vue"),
@@ -810,8 +801,8 @@ const routes = [
   name: 'VisualizarInfoOperative', // Este nombre debe coincidir con el usado en el router-link
   component: () => import('@/views/UFC/VisualizarInfoOperativo.vue'),
   props: true
-},
-/*A partir de aqui es GEMAR */
+  },
+  /*A partir de aqui es GEMAR */
   {
     path: "/gemar_hecho_extraordinario",
     name: "gemar_hecho_extraordinario",

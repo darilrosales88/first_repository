@@ -39,7 +39,7 @@
                       id="fechaActual"
                       v-model="formData.fecha_actual"
                       required
-                      :disabled="isExistingRecord"
+                      disabled
                     />
                   </div>
                 </div>
@@ -159,7 +159,7 @@ export default {
         ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
         const response = await axios.get("/gemar/gemar-verificar-informe-existente/", {
-          params: { fecha_operacion: fechaFormateada },
+          params: { fecha_actual: fechaFormateada },
         });
 
         if (response.data.existe) {
@@ -209,7 +209,7 @@ export default {
                 "/gemar/gemar-verificar-informe-existente/",
                 {
                     params: {
-                        fecha_operacion: this.formData.fecha_operacion
+                        fecha_actual: this.formData.fecha_actual
                     }
                 }
             );
@@ -219,7 +219,7 @@ export default {
                 await Swal.fire({
                     icon: "info",
                     title: "Informe existente",
-                    text: `Ya existe un informe para la fecha ${this.formData.fecha_operacion}`,
+                    text: `Ya existe un informe para la fecha ${this.formData.fecha_actual}`,
                     confirmButtonColor: "#002a68",
                 });
                 return;

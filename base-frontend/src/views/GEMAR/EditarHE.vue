@@ -7,7 +7,7 @@
     <div class="card border">
       <div class="card-header bg-light border-bottom">
         <h5 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-clipboard-data me-2"></i>Nuevo registro de hecho extraordinario
+          <i class="bi bi-clipboard-data me-2"></i>Editar registro de hecho extraordinario
         </h5>
       </div>
       <div class="card-body p-3">
@@ -268,7 +268,7 @@
                 <i class="bi bi-x-circle" me-1></i>Cancelar
               </button>
               <button type="submit" class="gemar-button primary">
-                <i class="bi bi-check-circle" me-1></i>Agregar
+                <i class="bi bi-check-circle" me-1></i>Guardar cambios
               </button>
             </div>
           </div>
@@ -284,13 +284,14 @@ import Swal from "sweetalert2";
 import NavbarComponent from "@/components/NavbarComponent.vue";
 
 export default {
-  name: "AdicionarHechoExtraordinario",
+  name: "EditarHechoExtraordinario",
   components: {
     NavbarComponent,
   },
   data() {
     return {
       formData: {
+        id: null,
         informado: "",
         garante: "",
         tipo_involucrado: "puerto",
@@ -326,38 +327,87 @@ export default {
     };
   },
 
-  watch: {
-    'formData.tipo_involucrado'(newVal) {
-      // Resetear el valor del involucrado cuando cambia el tipo
-      this.formData.involucrado = "";
-      
-      // Cargar los datos correspondientes según el tipo seleccionado
-      if (newVal === 'puerto') {
-        this.getPuertos();
-      } else if (newVal === 'entidad') {
-        // Las entidades ya están cargadas en mounted()
-      } else if (newVal === 'buque') {
-        this.getBuques();
-      }
-    }
-  },
-
   computed: {
     formattedFechaRegistro() {
       return new Date().toLocaleString();
     }
   },
 
-  mounted() {
-    this.getEntidades();
-    this.getProductos();
-    this.getEmbalajes();
-    this.getUnidadesMedida();
-    this.getIncidencias();
-    this.verificarExisteParteHE();
+  created() {
+    this.cargarDatosIniciales();
+    this.cargarHechoExtraordinario();
   },
 
   methods: {
+    async cargarDatosIniciales() {
+      try {
+        await Promise.all([
+          this.getEntidades(),
+          this.getProductos(),
+          this.getEmbalajes(),
+          this.getUnidadesMedida(),
+          this.getIncidencias(),
+        ]);
+      } catch (error) {
+        console.error("Error al cargar datos iniciales:", error);
+        this.showErrorToast("Error al cargar datos iniciales");
+      }
+    },
+
+    async cargarHechoExtraordinario() {
+      const hechoId = this.$route.params.id;
+      if (!hechoId) {
+        this.showErrorToast("ID de hecho extraordinario no proporcionado");
+        this.$router.push({ name: "gemar_hecho_extraordinario" });
+        return;
+      }
+
+      try {
+        const response = await axios.get(`/gemar/gemar-hechos-extraordinarios/${hechoId}/`);
+        const hecho = response.data;
+        
+        // Mapear los datos del API al formulario
+        this.formData = {
+          id: hecho.id,
+          informado: hecho.informado,
+          garante: hecho.garante,
+          tipo_involucrado: hecho.tipo_involucrado,
+          involucrado: hecho.involucrado,
+          tipo_origen: hecho.tipo_origen,
+          origen: hecho.origen,
+          destino: hecho.destino,
+          producto_involucrado: hecho.producto_involucrado,
+          embalaje: hecho.embalaje,
+          unidad_medida: hecho.unidad_medida,
+          tipo_diferencia: hecho.tipo_diferencia,
+          kg_diferencia: hecho.kg_diferencia,
+          cantidad_diferencia: hecho.cantidad_diferencia,
+          valor_diferencia: hecho.valor_diferencia,
+          averia: hecho.averia || "no",
+          kg_averia: hecho.kg_averia,
+          cantidad_averia: hecho.cantidad_averia,
+          valor_averia: hecho.valor_averia,
+          incidencia_involucrada: hecho.incidencia_involucrada,
+          descripcion_hecho: hecho.descripcion_hecho,
+          parte_hecho_extraordinario: hecho.parte_hecho_extraordinario,
+        };
+
+        // Cargar datos específicos según el tipo de involucrado/origen
+        if (this.formData.tipo_involucrado === 'puerto') {
+          await this.getPuertos();
+        } else if (this.formData.tipo_involucrado === 'buque') {
+          await this.getBuques();
+        }
+
+        if (this.formData.tipo_origen === 'puerto') {
+          await this.getPuertos();
+        }
+      } catch (error) {
+        console.error("Error al cargar el hecho extraordinario:", error);
+        this.showErrorToast("Error al cargar el hecho extraordinario");
+        this.$router.push({ name: "gemar_hecho_extraordinario" });
+      }
+    },
 
     validateForm() {
       this.errors = '';
@@ -439,78 +489,37 @@ export default {
       return valid;
     },
 
-    async verificarExisteParteHE() {
-      try {
-        const today = new Date();
-        const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-
-        const response = await axios.get('/gemar/gemar-verificar-informe-existente/', {
-          //enviando el parametro a la vista del backend
-            params: { fecha_actual: fechaFormateada }
-        });
-
-        if (response.data.existe) {
-          this.informeOperativoId = response.data.id;
-          this.formData.parte_hecho_extraordinario = response.data.id;
-          return true;
-        }
-        return false;
-      } catch (error) {
-        console.error("Error al verificar informe:", error);
-        return false;
-      }
-    },
-    
     async submitForm() {
       // Validar el formulario antes de enviarlo
       if (!this.validateForm()) {
         Swal.fire('Errores en la entrada de datos', this.errors, 'error');
-        
-        return; // Si la validación falla, no enviar el formulario
+        return;
       }
 
       try {
-        const existeInforme = await this.verificarExisteParteHE();
-        if (!existeInforme) {
-          Swal.fire(
-            "Error",
-            "No existe un informe de HE creado para la fecha actual. Debe crear uno primero.",
-            "error"
-          );
-          this.$router.push({ name: "gemar_hecho_extraordinario" });
-          return;
-        }
-
         // Validar campos requeridos
-        if (!this.formData.informado || !this.formData.garante || 
-            !this.formData.tipo_involucrado || !this.formData.involucrado || 
-            !this.formData.tipo_origen || !this.formData.origen || 
-            !this.formData.destino || !this.formData.producto_involucrado || 
-            !this.formData.embalaje || !this.formData.unidad_medida || 
-            !this.formData.tipo_diferencia || !this.formData.incidencia_involucrada || 
-            !this.formData.descripcion_hecho) {
-          this.showErrorToast("Por favor complete todos los campos requeridos");
+        if (!this.formData.id) {
+          this.showErrorToast("ID de hecho extraordinario no encontrado");
           return;
         }
 
         // Preparar datos para enviar
         const datosEnvio = {
           ...this.formData,
-          parte_hecho_extraordinario: this.informeOperativoId
+          parte_hecho_extraordinario: this.formData.parte_hecho_extraordinario
         };
 
-        // Enviar datos
-        const response = await axios.post("/gemar/gemar-hechos-extraordinarios/", datosEnvio);
+        // Enviar datos de actualización
+        await axios.put(`/gemar/gemar-hechos-extraordinarios/${this.formData.id}/`, datosEnvio);
         
         // Mostrar mensaje de éxito
-        this.showSuccessToast("El hecho extraordinario ha sido registrado correctamente");
-        this.resetForm();
+        this.showSuccessToast("El hecho extraordinario ha sido actualizado correctamente");
         this.$router.push({ name: "gemar_hecho_extraordinario" });
         
       } catch (error) {
         console.error("Error detallado:", error.response?.data);
-        let errorMsg = "Error al registrar el hecho extraordinario";
-        this.showErrorToast("Error al registrar el hecho extraordinario");
+        let errorMsg = "Error al actualizar el hecho extraordinario";
+        this.showErrorToast("Error al actualizar el hecho extraordinario");
         if (error.response?.data) {
           if (typeof error.response.data === 'object') {
             errorMsg += ": " + JSON.stringify(error.response.data);
@@ -521,32 +530,6 @@ export default {
         
         Swal.fire("Error", errorMsg, "error");
       }
-    },
-
-    resetForm() {
-      this.formData = {
-        informado: "",
-        garante: "",
-        tipo_involucrado: "puerto",
-        involucrado: "",
-        tipo_origen: "puerto",
-        origen: "",
-        destino: "",
-        producto_involucrado: "",
-        embalaje: "",
-        unidad_medida: "",
-        tipo_diferencia: "",
-        kg_diferencia: null,
-        cantidad_diferencia: null,
-        valor_diferencia: null,
-        averia: "no",
-        kg_averia: null,
-        cantidad_averia: null,
-        valor_averia: null,
-        incidencia_involucrada: "",
-        descripcion_hecho: "",
-        parte_hecho_extraordinario: null,
-      };
     },
 
     async getPuertos() {
@@ -624,7 +607,7 @@ export default {
       event.stopPropagation();
       Swal.fire({
         title: "¿Volver a la página principal?",
-        text: "Los datos no guardados se perderán",
+        text: "Los cambios no guardados se perderán",
         icon: "warning",
         showCancelButton: true,
         cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Continuar',
@@ -634,7 +617,6 @@ export default {
         reverseButtons: true,
       }).then((result) => {
         if (result.isConfirmed) {
-          this.resetForm();
           this.$router.push({ name: "gemar_hecho_extraordinario" });
         }
       });
@@ -686,7 +668,6 @@ export default {
   },
 };
 </script>
-
 <style scoped>
 /* Estilos para el select personalizado de productos */
 .gemar-custom-select {

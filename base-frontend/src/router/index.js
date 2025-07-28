@@ -819,6 +819,15 @@ const routes = [
       requireLogin: true,
     },
   },
+
+  {
+    path: "/gemar_hecho_extraordinario/edit/:id",
+    name: "editar_gemar_hecho_extraordinario",
+    component: () => import("../views/GEMAR/EditarHE.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
   
 ];
 

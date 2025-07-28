@@ -1743,11 +1743,16 @@ class tipo_equipo_ferroviario_no_locomotora(APIView):
 class nom_embarcacion_view_set(viewsets.ModelViewSet):
     queryset = nom_embarcacion.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = nom_embarcacion_serializer
-
+    
     def get_queryset(self):
         queryset = super().get_queryset()
 
         search = self.request.query_params.get('nombre_tipo_nacionalidad', None)
+
+        # Filtro por tipo de embarcación si se especifica
+        tipo_embarcacion = self.request.query_params.get('tipo_embarcacion', None)
+        if tipo_embarcacion:
+            queryset = queryset.filter(tipo_embarcacion=tipo_embarcacion)
 
         if search is not None:
 
@@ -1846,6 +1851,8 @@ class nom_embarcacion_view_set(viewsets.ModelViewSet):
         )
 
         return super().list(request, *args, **kwargs)
+    
+
 #/*********************************************************************************************************************************************
 
 #retorna todos los equipos ferroviarios excepto los de tipo "Locomotora", y que no se encuentren presentes

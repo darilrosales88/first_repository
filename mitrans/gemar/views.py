@@ -351,11 +351,11 @@ class gemar_hecho_extraordinario_view_set(viewsets.ModelViewSet):
 @api_view(['GET'])
 def verificar_informe_he_existente(request):
     try:
-        fecha_operacion = request.query_params.get('fecha_operacion')
-        if not fecha_operacion:
-            return Response({"error": "Parámetro fecha_operacion requerido"}, status=400)
+        fecha_actual = request.query_params.get('fecha_actual')
+        if not fecha_actual:
+            return Response({"error": "Parámetro fecha_actual requerido"}, status=400)
         
-        fecha_obj = datetime.strptime(fecha_operacion, '%Y-%m-%d').date()
+        fecha_obj = datetime.strptime(fecha_actual, '%Y-%m-%d').date()
         user = request.user
         
         # Verificar que el usuario esté autenticado y tenga entidad asociada
@@ -366,7 +366,7 @@ def verificar_informe_he_existente(request):
             return Response({"error": "El usuario no tiene entidad asociada"}, status=400)
         
         # Construir el filtro con todos los criterios
-        filtro = Q(fecha_operacion__date=fecha_obj)
+        filtro = Q(fecha_actual__date=fecha_obj)
         
         # Filtrar por entidad del usuario
         filtro &= Q(entidad=user.entidad)
@@ -386,7 +386,7 @@ def verificar_informe_he_existente(request):
             return Response({
                 "existe": True,
                 "id": informe.id,
-                "fecha_operacion": informe.fecha_operacion,
+                "fecha_actual": informe.fecha_actual,
                 "estado": informe.estado_parte,
                 "entidad": informe.entidad.id if informe.entidad else None,
                 "provincia": informe.provincia.id if informe.provincia else None,
@@ -395,7 +395,7 @@ def verificar_informe_he_existente(request):
             })     
         return Response({
             "existe": False,
-            "detalle": f"No existe parte para la fecha {fecha_operacion}, entidad {user.entidad} y provincia {getattr(user.entidad, 'provincia', None)}"
+            "detalle": f"No existe parte para la fecha {fecha_actual}, entidad {user.entidad} y provincia {getattr(user.entidad, 'provincia', None)}"
         })
         
     except ValueError:

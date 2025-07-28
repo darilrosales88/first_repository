@@ -59,8 +59,15 @@ class gemar_hecho_extraordinario_filter(filters.FilterSet):
         }
         
 class gemar_hecho_extraordinario_serializer(serializers.ModelSerializer):
-    #nombre_pais = serializers.ReadOnlyField(source = 'pais.nombre_pais')#pais.nombre_pais, aqui pais es el nombre de la variable ForeignKey
-                                                                        #del modelo nom_pais y nombre_pais es un atributo de este modelo     
+    producto_name = serializers.ReadOnlyField(source = 'producto_involucrado.nombre_producto')
+    incidencia_name = serializers.ReadOnlyField(source = 'incidencia_involucrada.nombre_incidencia') 
+    garante_name = serializers.ReadOnlyField(source = 'garante.nombre') 
+    embalaje_name = serializers.ReadOnlyField(source = 'embalaje.nombre_tipo_embalaje')
+    unidad_medida_name = serializers.ReadOnlyField(source = 'unidad_medida.unidad_medida')
+    incidencia_involucrada_name = serializers.ReadOnlyField(source = 'incidencia_involucrada.nombre_incidencia')
+    
+    
+
     class Meta:
         model = gemar_hecho_extraordinario       
         fields = '__all__'

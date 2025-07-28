@@ -68,14 +68,14 @@
                 <th scope="row">{{ index + 1 }}</th>
                 <td>{{ formatDate(item.fecha_operacion) }}</td>
                 <td>{{ item.informado }}</td>
-                <td>{{ item.garante?.nombre_entidad || 'N/A' }}</td>
-                <td>{{ item.producto_involucrado?.nombre_producto || 'N/A' }}</td>
+                <td>{{ item.garante_name || 'N/A' }}</td>
+                <td>{{ item.producto_name || 'N/A' }}</td>
                 <td class="ps-td">
                   <span :class="`ps-status ps-status-${getStatusClass(item.tipo_diferencia)}`">
                     {{ item.tipo_diferencia || 'N/A' }}
                   </span>
                 </td>
-                <td>{{ item.incidencia_involucrada?.nombre_incidencia || 'N/A' }}</td>
+                <td>{{ item.incidencia_name || 'N/A' }}</td>
                 <td>
                   <div class="d-flex">
                     <button 
@@ -193,7 +193,7 @@
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Garante:</span>
                       <span class="ps-detail-value">
-                        {{ currentRecord.garante?.nombre_entidad || "N/A" }}
+                        {{ currentRecord.garante_name || "N/A" }}
                       </span>
                     </div>
                   </div>
@@ -268,7 +268,7 @@
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Producto:</span>
                       <span class="ps-detail-value">
-                        {{ currentRecord.producto_involucrado?.nombre_producto || "N/A" }}
+                        {{ currentRecord.producto_name || "N/A" }}
                       </span>
                     </div>
 
@@ -276,7 +276,7 @@
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Embalaje:</span>
                       <span class="ps-detail-value">
-                        {{ currentRecord.embalaje?.nombre_embalaje || "N/A" }}
+                        {{ currentRecord.embalaje_name || "N/A" }}
                       </span>
                     </div>
 
@@ -284,7 +284,7 @@
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Unidad Medida:</span>
                       <span class="ps-detail-value">
-                        {{ currentRecord.unidad_medida?.nombre_unidad_medida || "N/A" }}
+                        {{ currentRecord.unidad_medida_name || "N/A" }}
                       </span>
                     </div>
                   </div>
@@ -383,7 +383,7 @@
                     <div class="ps-detail-item">
                       <span class="ps-detail-label">Incidencia:</span>
                       <span class="ps-detail-value">
-                        {{ currentRecord.incidencia_involucrada?.nombre_incidencia || "N/IA" }}
+                        {{ currentRecord.incidencia_involucrada_name || "N/A" }}
                       </span>
                     </div>
 
@@ -534,11 +534,12 @@ export default {
           this.hechosExtraordinarios = response.data.hechos;
           this.allRecords = [...response.data.hechos];
           this.totalItems = response.data.hechos.length;
+          console.log("Aqui estan los hechos ",this.hechosExtraordinarios);
         } else {
           this.hechosExtraordinarios = [];
           this.allRecords = [];
           this.totalItems = 0;
-          this.showInfoToast(response.data.detalle);
+          //this.showInfoToast(response.data.detalle);
         }
       } catch (error) {
         console.error("Error al obtener datos:", error);
@@ -600,7 +601,7 @@ export default {
 
     editHecho(item) {
       this.$router.push({
-        name: "EditarHechoExtraordinario",
+        name: "editar_gemar_hecho_extraordinario",
         params: { id: item.id },
       });
     },

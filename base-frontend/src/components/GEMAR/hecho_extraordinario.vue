@@ -8,8 +8,18 @@
       </div>
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <router-link v-if="hasGroup('AdminGEMAR')" to="/gemar_hecho_extraordinario/add">
-            <button class="btn btn-sm btn-primary">
+          <router-link 
+            v-if="hasGroup('AdminGEMAR')" 
+            to="/gemar_hecho_extraordinario/add"
+            custom
+            v-slot="{ navigate }"
+          >
+            <button 
+              class="btn btn-sm btn-primary"
+              @click="navigate"
+              :disabled="estadoParte === 'Aprobado'"
+              :title="estadoParte === 'Aprobado' ? 'No se pueden agregar HE a un parte aprobado' : ''"
+            >
               <i class="bi bi-plus-circle me-1"></i>Agregar nuevo HE
             </button>
           </router-link>
@@ -86,6 +96,8 @@
                     </button>
 
                     <button v-if="hasGroup('AdminGEMAR')"
+                      :disabled="estadoParte === 'Aprobado'"
+                      :title="estadoParte === 'Aprobado' ? 'No se puede modificar HE de un parte aprobado' : ''"
                       @click="editHecho(item)"
                       class="btn btn-sm btn-outline-warning me-2"
                       title="Editar">
@@ -93,6 +105,8 @@
                     </button>
 
                     <button v-if="hasGroup('AdminGEMAR')"
+                      :disabled="estadoParte === 'Aprobado'"
+                      :title="estadoParte === 'Aprobado' ? 'No se puede eliminar HE de un parte aprobado' : ''"
                       @click="confirmDelete(item.id)"
                       class="btn btn-sm btn-outline-danger"
                       title="Eliminar">
@@ -453,12 +467,14 @@ export default {
       loading: false,
       showDetailsModal: false,
       currentRecord: {},
+      estadoParte: "",//variable que almacena el estado del parte para deshabilitar las opciones de agregar/eliminar/actualizar HE
     };
   },
 
   async mounted() {
     await this.fetchHechosExtraordinarios();
     await this.fetchUserPermissionsAndGroups();
+    await this.fetchEstadoParte();
   },
 
   methods: {
@@ -520,7 +536,7 @@ export default {
     async fetchHechosExtraordinarios() {
       this.loading = true;
       try {
-        const fechaHoy = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+        const fechaHoy = new Date().toISOString().split('T')[0];
         const response = await axios.get("/gemar/gemar-hechos-extraordinarios/mis_hechos_extraordinarios/", {
           params: {
             fecha_operacion: fechaHoy,
@@ -534,18 +550,32 @@ export default {
           this.hechosExtraordinarios = response.data.hechos;
           this.allRecords = [...response.data.hechos];
           this.totalItems = response.data.hechos.length;
-          console.log("Aqui estan los hechos ",this.hechosExtraordinarios);
+          this.estadoParte = response.data.estado || ''; // Almacena el estado del parte          
         } else {
           this.hechosExtraordinarios = [];
           this.allRecords = [];
           this.totalItems = 0;
-          //this.showInfoToast(response.data.detalle);
+          this.estadoParte = '';
         }
       } catch (error) {
         console.error("Error al obtener datos:", error);
         this.showErrorToast("No existe aún el parte correspondiente a la fecha actual.");
+        this.estadoParte = '';
       } finally {
         this.loading = false;
+      }
+    },
+    //la siguiente funcion cambia el valor de la variable estadoParte a como esta en la BD en caso de que exista 
+    async fetchEstadoParte() {
+      try {
+        const fechaHoy = new Date().toISOString().split('T')[0];
+        const response = await axios.get("/gemar/gemar-verificar-informe-existente/", {
+          params: { fecha_actual: fechaHoy }
+        });
+        this.estadoParte = response.data.existe ? response.data.estado : '';
+      } catch (error) {
+        console.error("Error al obtener estado del parte:", error);
+        this.estadoParte = '';
       }
     },
 

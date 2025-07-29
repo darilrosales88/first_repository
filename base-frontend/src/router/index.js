@@ -804,6 +804,14 @@ const routes = [
   },
   /*A partir de aqui es GEMAR */
   {
+    path: "/gemar_listado_partes",
+    name: "ListaPartesGemar",
+    component: () => import("../views/GEMAR/ListaPartesGemar.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
     path: "/gemar_hecho_extraordinario",
     name: "gemar_hecho_extraordinario",
     component: () => import("../views/GEMAR/HechoExtraordinarioView.vue"),

@@ -182,6 +182,7 @@ export default {
             { title: "Informe Operativo", route: "/InfoOperativo" },
             { title: "CCD Producto", route: "/ccdxproducto" },
             { title: "Gemar-HE", route: "/gemar_hecho_extraordinario" },
+            { title: "Gemar-Listado-Partes", route: "/gemar_listado_partes" },
           ],
         },
         {

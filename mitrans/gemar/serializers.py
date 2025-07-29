@@ -32,6 +32,10 @@ class gemar_parte_hecho_extraordinario_serializer(serializers.ModelSerializer):
         required=False,
         allow_null=True
     )
+    creado_por_name = serializers.ReadOnlyField(source = 'creado_por.username')
+    aprobado_por_name = serializers.ReadOnlyField(source = 'aprobado_por.username')
+    entidad_name = serializers.ReadOnlyField(source = 'entidad.nombre')
+    provincia_name = serializers.ReadOnlyField(source = 'provincia.nombre_provincia')
     
     class Meta:
         model = gemar_parte_hecho_extraordinario

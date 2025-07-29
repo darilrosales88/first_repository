@@ -128,7 +128,7 @@ export default {
       userPermissions: [],
       userGroups: [],
       currentComponent: "hechos_extraordinarios",
-      informeOperativoId: null,
+      informeHEid: null,
       loadingPermissions: false,
       isExistingRecord: false,
       existingRecordData: null, // Nuevo campo para almacenar datos del registro existente
@@ -163,7 +163,7 @@ export default {
         });
 
         if (response.data.existe) {
-          this.informeOperativoId = response.data.id;
+          this.informeHEid = response.data.id;
           this.isExistingRecord = true;
           this.existingRecordData = response.data; // Almacenar datos completos
           
@@ -171,7 +171,7 @@ export default {
           //this.showExistingRecordNotification();
           return true;
         } else {
-          this.informeOperativoId = null;
+          this.informeHEid = null;
           this.isExistingRecord = false;
           this.existingRecordData = null;
         }
@@ -241,7 +241,7 @@ export default {
             // Manejar respuesta exitosa
             this.success = true;
             this.isExistingRecord = true;
-            this.informeOperativoId = response.data.id;
+            this.informeHEid = response.data.id;
 
             await Swal.fire({
                 icon: "success",
@@ -268,18 +268,18 @@ export default {
         }
     },
     async rechazar() {
-      if (!this.hasGroup("RevisorUFC")) {
+      if (!this.hasGroup("RevisorGEMAR")) {
         await Swal.fire({
           icon: "error",
           title: "Acceso denegado",
-          text: "No tienes permiso para rechazar informes operativos.",
+          text: "No tienes permiso para rechazar el parte de hechos extraordinarios.",
           confirmButtonColor: "#002a68",
         });
         return;
       }
       const result = await Swal.fire({
         title: "¿Estás seguro?",
-        text: "Está seguro que desea rechazar este informe operativo?",
+        text: "Está seguro que desea rechazar  el parte de hechos extraordinarios?",
         icon: "question",
         showCancelButton: true,
         confirmButtonColor: "#002a68",
@@ -295,11 +295,11 @@ export default {
     },
 
     async aprobar() {
-      if (!this.hasGroup("RevisorUFC")) {
+      if (!this.hasGroup("RevisorGEMAR")) {
         await Swal.fire({
           icon: "error",
           title: "Acceso denegado",
-          text: "No tienes permiso para aprobar informes operativos.",
+          text: "No tienes permiso para aprobar  el parte de hechos extraordinarios.",
           confirmButtonColor: "#002a68",
         });
         return;
@@ -308,7 +308,7 @@ export default {
       // Mostrar confirmación antes de aprobar
       const result = await Swal.fire({
         title: "¿Estás seguro?",
-        text: "Está seguro que desea aprobar este informe operativo?",
+        text: "Está seguro que desea aprobar  el parte de hechos extraordinarios?",
         icon: "question",
         showCancelButton: true,
         confirmButtonColor: "#002a68",
@@ -323,18 +323,18 @@ export default {
       }
     },
     async listo() {
-      if (!this.hasGroup("AdminUFC")) {
+      if (!this.hasGroup("AdminGEMAR")) {
         await Swal.fire({
           icon: "error",
           title: "Acceso denegado",
-          text: "No tienes permiso para cambiar el estado a Listo.",
+          text: "No tienes permiso para cambiar el estado  del parte de hechos extraordinarios a Listo.",
           confirmButtonColor: "#002a68",
         });
         return;
       }
       const result = await Swal.fire({
         title: "¿Estás seguro?",
-        text: "Está seguro que desea poner a 'Listo' este informe operativo?",
+        text: "Está seguro que desea poner a 'Listo' este parte de hechos extraordinarios?",
         icon: "question",
         showCancelButton: true,
         confirmButtonColor: "#002a68",
@@ -396,20 +396,18 @@ export default {
 
     async CambiarEstado(NuevoEstado) {
       try {
-        const existeInforme = await this.verificarInformeOperativo();
-
-        if (!existeInforme || !this.informeOperativoId) {
+        if (!this.informeHEid) {
           await Swal.fire({
             icon: "error",
             title: "Error",
-            text: "No existe un informe de HE para la fecha actual.",
+            text: "No se ha encontrado un parte para modificar.",
             confirmButtonColor: "#002a68",
           });
           return;
         }
 
         const response = await axios.patch(
-          `/ufc/informe-operativo/${this.informeOperativoId}/`,
+          `/gemar/gemar-partes-hechos-extraordinarios/${this.informeHEid}/`,
           { estado_parte: NuevoEstado },
           { headers: { "Content-Type": "application/json" } }
         );
@@ -432,12 +430,11 @@ export default {
         await Swal.fire({
           icon: "error",
           title: "Error",
-          text:
-            error.response?.data?.detail || "Error al actualizar el estado.",
+          text: error.response?.data?.detail || "Error al actualizar el estado.",
           confirmButtonColor: "#002a68",
         });
       }
-    },   
+    },  
     handleRecordStatusChange(payload) {
       this.isExistingRecord = payload.isExisting;
       // Opcional: Mostrar feedback
@@ -468,6 +465,7 @@ export default {
   },
 };
 </script>
+
 <style scoped>
 /* Estilos mejorados para los botones de acción */
 .action-buttons {

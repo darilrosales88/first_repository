@@ -50,9 +50,9 @@ class gemar_parte_hecho_extraordinario(models.Model):
 
     class Meta: 
         permissions = [
-            ("gemar_puede_rechazar_informe", "Puede rechazar hechos extraordinarios"),
-            ("gemar_puede_aprobar_informe", "Puede aprobar hechos extraordinarios"),
-            ("gemar_puede_cambiar_a_listo", "Puede cambiar el estado del informe a listo"),
+            ("gemar_puede_rechazar_informe", "Puede rechazar partes de hechos extraordinarios"),
+            ("gemar_puede_aprobar_informe", "Puede aprobar partes de hechos extraordinarios"),
+            ("gemar_puede_cambiar_informe_a_listo", "Puede cambiar el estado del informe de hechos extraordinarios a listo"),
         ]
                
         verbose_name = "Parte de hecho extraordinario"

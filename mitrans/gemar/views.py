@@ -54,6 +54,24 @@ from .permissions import IsAdminGemarPermission,IsVisualizadorGemarPermission
 
 from datetime import datetime
 
+def registrar_auditoria(request, accion):
+    """
+    Método centralizado para registrar acciones en el modelo Auditoria
+    
+    """
+    try:
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion=accion,
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+    except Exception as e:
+        # No romper el flujo principal si hay error al registrar auditoría
+        print(f"Error al registrar auditoría: {str(e)}")
+
 class gemar_parte_hecho_extraordinario_view_set(viewsets.ModelViewSet):
     queryset = gemar_parte_hecho_extraordinario.objects.all().order_by('-id')
     serializer_class = gemar_parte_hecho_extraordinario_serializer
@@ -112,6 +130,37 @@ class gemar_parte_hecho_extraordinario_view_set(viewsets.ModelViewSet):
             provincia=provincia,
             estado_parte='Creado'
         )
+    #Funcion para la actualizacion del estado del parte de HE
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        
+        # Solo permitir actualizar el estado_parte
+        if 'estado_parte' not in request.data:
+            return Response(
+                {"detail": "Se requiere el campo 'estado_parte'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Preparar datos para la actualización
+        update_data = {'estado_parte': request.data['estado_parte']}
+        
+        # Si el nuevo estado es "Aprobado", asignar el usuario actual a aprobado_por
+        if request.data['estado_parte'] == 'Aprobado':
+            update_data['aprobado_por'] = request.user.id
+        
+        serializer = self.get_serializer(
+            instance, 
+            data=update_data, 
+            partial=True
+        )
+        
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        # Auditoría centralizada
+        registrar_auditoria(request, f"Actualizar estado del HE a {serializer.data['estado_parte']}")
+
+        return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
         
@@ -127,14 +176,16 @@ class gemar_parte_hecho_extraordinario_view_set(viewsets.ModelViewSet):
         parte_hecho_extraordinario = serializer.save()
 
         # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar parte de hecho extraordinario: {parte_hecho_extraordinario.id}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        registrar_auditoria(request, f"Modificar parte de hecho extraordinario: {parte_hecho_extraordinario.id}")
+
+        #navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        #direccion_ip = request.META.get('REMOTE_ADDR')
+        #Auditoria.objects.create(
+            #usuario=request.user if request.user.is_authenticated else None,
+            #accion=f"Modificar parte de hecho extraordinario: {parte_hecho_extraordinario.id}",
+            #direccion_ip=direccion_ip,
+            #navegador=navegador,
+        #)
 
         return Response(serializer.data)
 
@@ -148,14 +199,16 @@ class gemar_parte_hecho_extraordinario_view_set(viewsets.ModelViewSet):
         id_hecho = instance.id
 
         # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar parte de hecho extraordinario: {id_hecho}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        registrar_auditoria(request, f"Eliminar parte de hecho extraordinario: {id_hecho}")
+
+        #navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        #direccion_ip = request.META.get('REMOTE_ADDR')
+        #Auditoria.objects.create(
+        #    usuario=request.user if request.user.is_authenticated else None,
+        #    accion=f"Eliminar parte de hecho extraordinario: {id_hecho}",
+        #    direccion_ip=direccion_ip,
+        #    navegador=navegador,
+        #)
 
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -167,14 +220,16 @@ class gemar_parte_hecho_extraordinario_view_set(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de partes de hechos extraordinarios.",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        registrar_auditoria(request, "Visualizar lista de partes de hechos extraordinarios.")
+
+        #navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        #direccion_ip = request.META.get('REMOTE_ADDR')
+        #Auditoria.objects.create(
+        #    usuario=request.user if request.user.is_authenticated else None,
+        #    accion="Visualizar lista de partes de hechos extraordinarios.",
+        #    direccion_ip=direccion_ip,
+        #    navegador=navegador,
+        #)
 
         return super().list(request, *args, **kwargs)
     
@@ -205,14 +260,16 @@ class gemar_hecho_extraordinario_view_set(viewsets.ModelViewSet):
         hecho_extraordinario = serializer.save()
 
         # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar hecho extraordinario: {hecho_extraordinario.id}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        registrar_auditoria(request, f"Insertar hecho extraordinario: {hecho_extraordinario.id}")
+        
+        #navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        #direccion_ip = request.META.get('REMOTE_ADDR')
+        #Auditoria.objects.create(
+        #    usuario=request.user if request.user.is_authenticated else None,
+         #   accion=f"Insertar hecho extraordinario: {hecho_extraordinario.id}",
+        #    direccion_ip=direccion_ip,
+        #    navegador=navegador,
+        #)
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -231,14 +288,16 @@ class gemar_hecho_extraordinario_view_set(viewsets.ModelViewSet):
         hecho_extraordinario = serializer.save()
 
         # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar hecho extraordinario: {hecho_extraordinario.id}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        registrar_auditoria(request, f"Modificar hecho extraordinario: {hecho_extraordinario.id}")
+
+        #navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        #direccion_ip = request.META.get('REMOTE_ADDR')
+        #Auditoria.objects.create(
+        #    usuario=request.user if request.user.is_authenticated else None,
+        #    accion=f"Modificar hecho extraordinario: {hecho_extraordinario.id}",
+        #    direccion_ip=direccion_ip,
+        #    navegador=navegador,
+        #)
 
         return Response(serializer.data)
 
@@ -252,14 +311,16 @@ class gemar_hecho_extraordinario_view_set(viewsets.ModelViewSet):
         id_hecho = instance.id
 
         # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar hecho extraordinario: {id_hecho}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        registrar_auditoria(request, f"Eliminar hecho extraordinario: {id_hecho}")
+        
+        #navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        #direccion_ip = request.META.get('REMOTE_ADDR')
+        #Auditoria.objects.create(
+        #    usuario=request.user if request.user.is_authenticated else None,
+        #    accion=f"Eliminar hecho extraordinario: {id_hecho}",
+        #    direccion_ip=direccion_ip,
+        #    navegador=navegador,
+        #)
 
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -271,14 +332,16 @@ class gemar_hecho_extraordinario_view_set(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de hechos extraordinarios.",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        registrar_auditoria(request, "Visualizar lista de hechos extraordinarios.")
+        
+        #navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        #direccion_ip = request.META.get('REMOTE_ADDR')
+        #Auditoria.objects.create(
+        #    usuario=request.user if request.user.is_authenticated else None,
+        #    accion="Visualizar lista de hechos extraordinarios.",
+        #    direccion_ip=direccion_ip,
+        #    navegador=navegador,
+        #)
 
         return super().list(request, *args, **kwargs)
     
@@ -327,14 +390,16 @@ class gemar_hecho_extraordinario_view_set(viewsets.ModelViewSet):
         serializer = self.get_serializer(hechos, many=True)
         
         # Registrar la acción en auditoría
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user,
-            accion=f"Visualizar hechos extraordinarios para parte del {fecha_obj}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
+        registrar_auditoria(request, f"Visualizar hechos extraordinarios para parte del {fecha_obj}")
+        
+        #navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        #direccion_ip = request.META.get('REMOTE_ADDR')
+        #Auditoria.objects.create(
+        #    usuario=request.user,
+        #    accion=f"Visualizar hechos extraordinarios para parte del {fecha_obj}",
+        #    direccion_ip=direccion_ip,
+        #    navegador=navegador,
+        #)
 
         return Response({
             "existe_parte": True,

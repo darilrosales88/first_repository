@@ -17,11 +17,11 @@
             <button 
               class="btn btn-sm btn-primary"
               @click="navigate"
-              :disabled="estadoParte === 'Aprobado'"
-              :title="estadoParte === 'Aprobado' ? 'No se pueden agregar HE a un parte aprobado' : ''"
+              :disabled="ActivarDesactivarBotonAgregar"
             >
               <i class="bi bi-plus-circle me-1"></i>Agregar nuevo HE
             </button>
+            
           </router-link>
           <form @submit.prevent="searchHechos" class="search-container">
             <div class="input-group">
@@ -97,7 +97,7 @@
 
                     <button v-if="hasGroup('AdminGEMAR')"
                       :disabled="estadoParte === 'Aprobado'"
-                      :title="estadoParte === 'Aprobado' ? 'No se puede modificar HE de un parte aprobado' : ''"
+                      :title="estadoParte === 'Aprobado' ? 'No se puede  HE a un parte aprobado' : ''"
                       @click="editHecho(item)"
                       class="btn btn-sm btn-outline-warning me-2"
                       title="Editar">
@@ -105,8 +105,6 @@
                     </button>
 
                     <button v-if="hasGroup('AdminGEMAR')"
-                      :disabled="estadoParte === 'Aprobado'"
-                      :title="estadoParte === 'Aprobado' ? 'No se puede eliminar HE de un parte aprobado' : ''"
                       @click="confirmDelete(item.id)"
                       class="btn btn-sm btn-outline-danger"
                       title="Eliminar">
@@ -452,8 +450,15 @@ import Swal from "sweetalert2";
 
 export default {
   name: "HechosExtraordinariosList",
+  props: {
+        estadoParte: {
+          type: String,
+          default: '',
+          required: true
+        }
+      },
   data() {
-    return {
+    return {      
       hechosExtraordinarios: [],
       allRecords: [], // Copia completa de todos los registros para filtrado local
       currentPage: 1,
@@ -467,15 +472,30 @@ export default {
       loading: false,
       showDetailsModal: false,
       currentRecord: {},
-      estadoParte: "",//variable que almacena el estado del parte para deshabilitar las opciones de agregar/eliminar/actualizar HE
-    };
+      existe_parte_mio:""
+      };
   },
+  // 3. Agregar un watcher para el estado
+    watch: {
+      estadoParte(newVal) {
+        console.log('Estado del parte actualizado:', newVal);
+        // Puedes forzar una actualización aquí si es necesario
+        this.fetchHechosExtraordinarios();
+      }
+    },
 
   async mounted() {
+    await this.ExisteParteMio();
     await this.fetchHechosExtraordinarios();
     await this.fetchUserPermissionsAndGroups();
-    await this.fetchEstadoParte();
   },
+
+  computed: {
+      ActivarDesactivarBotonAgregar() {
+        return this.estadoParte === 'Aprobado' || this.loading || !this.existe_parte_mio;
+      },
+      
+    },
 
   methods: {
     formatDate(dateString) {
@@ -532,6 +552,27 @@ export default {
         console.error("Error al obtener permisos y grupos:", error);
       }
     },
+
+    async ExisteParteMio() {
+      this.loading = true;
+      try {
+        const fechaHoy = new Date().toISOString().split('T')[0];
+        const response = await axios.get("/gemar/gemar-hechos-extraordinarios/mis_hechos_extraordinarios/", {
+          params: {
+            fecha_operacion: fechaHoy,
+            page: this.currentPage,
+            page_size: this.itemsPerPage,
+            search: this.searchQuery
+          },
+        });     
+        this.existe_parte_mio = response.data.existe_parte;
+      } catch (error) {
+        console.error("Error al obtener datos:", error);
+        this.showErrorToast("No existe aún el parte correspondiente a la fecha actual.");
+      } finally {
+        this.loading = false;
+      }
+    },
     
     async fetchHechosExtraordinarios() {
       this.loading = true;
@@ -545,37 +586,20 @@ export default {
             search: this.searchQuery
           },
         });
-        
         if (response.data.existe_parte) {
           this.hechosExtraordinarios = response.data.hechos;
           this.allRecords = [...response.data.hechos];
           this.totalItems = response.data.hechos.length;
-          this.estadoParte = response.data.estado || ''; // Almacena el estado del parte          
         } else {
           this.hechosExtraordinarios = [];
           this.allRecords = [];
           this.totalItems = 0;
-          this.estadoParte = '';
         }
       } catch (error) {
         console.error("Error al obtener datos:", error);
         this.showErrorToast("No existe aún el parte correspondiente a la fecha actual.");
-        this.estadoParte = '';
       } finally {
         this.loading = false;
-      }
-    },
-    //la siguiente funcion cambia el valor de la variable estadoParte a como esta en la BD en caso de que exista 
-    async fetchEstadoParte() {
-      try {
-        const fechaHoy = new Date().toISOString().split('T')[0];
-        const response = await axios.get("/gemar/gemar-verificar-informe-existente/", {
-          params: { fecha_actual: fechaHoy }
-        });
-        this.estadoParte = response.data.existe ? response.data.estado : '';
-      } catch (error) {
-        console.error("Error al obtener estado del parte:", error);
-        this.estadoParte = '';
       }
     },
 

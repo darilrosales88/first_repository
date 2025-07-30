@@ -158,7 +158,7 @@ class gemar_parte_hecho_extraordinario_view_set(viewsets.ModelViewSet):
         self.perform_update(serializer)
 
         # Auditoría centralizada
-        registrar_auditoria(request, f"Actualizar estado del HE a {serializer.data['estado_parte']}")
+        registrar_auditoria(request, f"Actualizar estado del parte de HE a {serializer.data['estado_parte']}")
 
         return Response(serializer.data)
 
@@ -432,7 +432,7 @@ def verificar_informe_he_existente(request):
         
         # Construir el filtro con todos los criterios
         filtro = Q(fecha_actual__date=fecha_obj)
-        
+
         # Filtrar por entidad del usuario
         filtro &= Q(entidad=user.entidad)
         
@@ -442,7 +442,7 @@ def verificar_informe_he_existente(request):
             print("Aqui es donde mostrara lo que tiene el filtro ",filtro )
         
         # También podemos filtrar por creado_por si es relevante
-        # filtro &= Q(creado_por=user)
+            filtro &= Q(creado_por=user)
         
         existe = gemar_parte_hecho_extraordinario.objects.filter(filtro).exists()
         

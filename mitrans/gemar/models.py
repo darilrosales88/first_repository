@@ -14,7 +14,8 @@ from nomencladores.models import nom_producto, nom_tipo_embalaje, nom_unidad_med
 
 class gemar_parte_hecho_extraordinario(models.Model):    
     fecha_operacion = models.DateTimeField( 
-        verbose_name="Fecha de operación"
+        verbose_name="Fecha de operación",
+        auto_now_add=False
     )
     fecha_actual = models.DateTimeField(
         auto_now=True, 
@@ -128,7 +129,7 @@ class gemar_hecho_extraordinario(models.Model):
         unique_together = ('garante', 'producto_involucrado','origen','destino','tipo_diferencia','descripcion_hecho')           
         verbose_name = "Hecho extraordinario"
         verbose_name_plural = "Hechos extraordinarios"
-        ordering = ["-id"]
+        ordering = ["-fecha_actual"]
     
    
     def __str__(self):

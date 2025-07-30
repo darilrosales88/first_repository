@@ -24,13 +24,13 @@
               <!-- Campo: Informado -->
               <div class="mb-3">
                 <label for="informado" class="form-label small fw-semibold text-secondary">Informado</label>
-                <input type="text" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.informado" id="informado" name="informado" required/>
+                <input type="text" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.informado" id="informado" name="informado" />
               </div>
 
               <!-- Campo: Garante -->
               <div class="mb-3">
-                <label for="garante" class="form-label small fw-semibold text-secondary">Garante</label>
-                <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" v-model="formData.garante" id="garante" name="garante" required>
+                <label for="garante" class="form-label small fw-semibold text-secondary">Garante/dueño</label>
+                <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" v-model="formData.garante" id="garante" name="garante" >
                   <option value="" disabled>Seleccione un garante</option>
                   <option v-for="entidad in entidades" :key="entidad.id" :value="entidad.id">
                     {{ entidad.id }}-{{ entidad.nombre }}
@@ -41,7 +41,7 @@
               <!-- Campo: Tipo de involucrado -->
               <div class="mb-3">
                 <label for="tipo_involucrado" class="form-label small fw-semibold text-secondary">Tipo de involucrado</label>
-                <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" v-model="formData.tipo_involucrado" id="tipo_involucrado" name="tipo_involucrado" required>
+                <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" v-model="formData.tipo_involucrado" id="tipo_involucrado" name="tipo_involucrado" >
                   <option value="" disabled>Seleccione un tipo</option>
                   <option value="puerto">Puerto</option>
                   <option value="entidad">Entidad</option>
@@ -58,7 +58,7 @@
                         v-model="formData.involucrado" 
                         id="involucrado" 
                         name="involucrado" 
-                        required>
+                        >
                   <option value="" disabled>Seleccione un puerto</option>
                   <option v-for="puerto in puertos" :key="puerto.nombre_puerto" :value="puerto.nombre_puerto">
                     {{ puerto.nombre_puerto }}
@@ -71,7 +71,7 @@
                         v-model="formData.involucrado" 
                         id="involucrado" 
                         name="involucrado" 
-                        required>
+                        >
                   <option value="" disabled>Seleccione una entidad</option>
                   <option v-for="entidad in entidades" :key="entidad.nombre" :value="entidad.nombre">
                     {{ entidad.nombre }}
@@ -84,7 +84,7 @@
                         v-model="formData.involucrado" 
                         id="involucrado" 
                         name="involucrado" 
-                        required>
+                        >
                   <option value="" disabled>Seleccione un buque</option>
                   <option v-for="buque in buques" :key="buque.id" :value="buque.id">
                     {{ buque.nombre_embarcacion }}
@@ -95,7 +95,7 @@
               <!-- Campo: Tipo de origen -->
               <div class="mb-3">
                 <label for="tipo_origen" class="form-label small fw-semibold text-secondary">Tipo de origen</label>
-                <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" v-model="formData.tipo_origen" id="tipo_origen" name="tipo_origen" required>
+                <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" v-model="formData.tipo_origen" id="tipo_origen" name="tipo_origen" >
                   <option value="" disabled>Seleccione un tipo</option>
                   <option value="puerto">Puerto</option>
                   <option value="entidad">Entidad</option>
@@ -114,7 +114,7 @@
                         v-model="formData.origen" 
                         id="origen" 
                         name="origen" 
-                        required>
+                        >
                   <option value="" disabled>Seleccione un puerto</option>
                   <option v-for="puerto in puertos" :key="puerto.nombre_puerto" :value="puerto.nombre_puerto">
                     {{ puerto.nombre_puerto }}
@@ -127,7 +127,7 @@
                         v-model="formData.origen" 
                         id="origen" 
                         name="origen" 
-                        required>
+                        >
                   <option value="" disabled>Seleccione una entidad</option>
                   <option v-for="entidad in entidades" :key="entidad.nombre" :value="entidad.nombre">
                     {{ entidad.nombre }}
@@ -138,13 +138,13 @@
               <!-- Campo: Destino -->
               <div class="mb-3">
                 <label for="destino" class="form-label small fw-semibold text-secondary">Destino</label>
-                <input type="text" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.destino" id="destino" name="destino" required/>
+                <input type="text" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.destino" id="destino" name="destino" />
               </div>
 
               <!-- Campo: Producto involucrado -->
               <div class="mb-3">
                 <label for="producto_involucrado" class="form-label small fw-semibold text-secondary">Producto involucrado</label>
-                <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" v-model="formData.producto_involucrado" id="producto_involucrado" name="producto_involucrado" required>
+                <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" v-model="formData.producto_involucrado" id="producto_involucrado" name="producto_involucrado" >
                   <option value="" disabled>Seleccione un producto</option>
                   <option v-for="producto in productos" :key="producto.id" :value="producto.id">
                     {{ producto.nombre_producto }}
@@ -155,7 +155,7 @@
               <!-- Campo: Embalaje -->
               <div class="mb-3">
                 <label for="embalaje" class="form-label small fw-semibold text-secondary">Embalaje</label>
-                <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" v-model="formData.embalaje" id="embalaje" name="embalaje" required>
+                <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" v-model="formData.embalaje" id="embalaje" name="embalaje" >
                   <option value="" disabled>Seleccione un embalaje</option>
                   <option v-for="embalaje in embalajes" :key="embalaje.id" :value="embalaje.id">
                     {{ embalaje.nombre_tipo_embalaje }}
@@ -166,7 +166,7 @@
               <!-- Campo: Unidad de medida -->
               <div class="mb-3">
                 <label for="unidad_medida" class="form-label small fw-semibold text-secondary">Unidad de medida</label>
-                <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" v-model="formData.unidad_medida" id="unidad_medida" name="unidad_medida" required>
+                <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" v-model="formData.unidad_medida" id="unidad_medida" name="unidad_medida" >
                   <option value="" disabled>Seleccione una unidad</option>
                   <option v-for="unidad in unidadesMedida" :key="unidad.id" :value="unidad.id">
                     {{ unidad.unidad_medida }}
@@ -184,7 +184,7 @@
               <!-- Campo: Tipo de diferencia -->
               <div class="mb-3">
                 <label for="tipo_diferencia" class="form-label small fw-semibold text-secondary">Tipo de diferencia</label>
-                <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" v-model="formData.tipo_diferencia" id="tipo_diferencia" name="tipo_diferencia" required>
+                <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" v-model="formData.tipo_diferencia" id="tipo_diferencia" name="tipo_diferencia" >
                   <option value="" disabled>Seleccione un tipo</option>
                   <option value="sobrante">Sobrante</option>
                   <option value="faltante">Faltante</option>
@@ -248,7 +248,7 @@
           <!-- Campo: Incidencia involucrada -->
           <div class="mb-3">
             <label for="incidencia_involucrada" class="form-label small fw-semibold text-secondary">Incidencia involucrada</label>
-            <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" v-model="formData.incidencia_involucrada" id="incidencia_involucrada" name="incidencia_involucrada" required>
+            <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" v-model="formData.incidencia_involucrada" id="incidencia_involucrada" name="incidencia_involucrada" >
               <option value="" disabled>Seleccione una incidencia</option>
               <option v-for="incidencia in incidencias" :key="incidencia.id" :value="incidencia.id">
                 {{ incidencia.id }}-{{ incidencia.nombre_incidencia }}
@@ -259,7 +259,7 @@
           <!-- Campo: Descripción del hecho -->
           <div class="mb-3">
             <label for="descripcion_hecho" class="form-label small fw-semibold text-secondary">Descripción del hecho</label>
-            <textarea class="form-control form-control-sm border-secondary" v-model="formData.descripcion_hecho" id="descripcion_hecho" name="descripcion_hecho" rows="4" required></textarea>
+            <textarea class="form-control form-control-sm border-secondary" v-model="formData.descripcion_hecho" id="descripcion_hecho" name="descripcion_hecho" rows="4" ></textarea>
           </div>
 
           <div class="modal-footer mt-3">
@@ -350,14 +350,14 @@ export default {
         ]);
       } catch (error) {
         console.error("Error al cargar datos iniciales:", error);
-        this.showErrorToast("Error al cargar datos iniciales");
+        this.MensajeTemporaldeError("Error al cargar datos iniciales");
       }
     },
 
     async cargarHechoExtraordinario() {
       const hechoId = this.$route.params.id;
       if (!hechoId) {
-        this.showErrorToast("ID de hecho extraordinario no proporcionado");
+        this.MensajeTemporaldeError("ID de hecho extraordinario no proporcionado");
         this.$router.push({ name: "gemar_hecho_extraordinario" });
         return;
       }
@@ -404,7 +404,7 @@ export default {
         }
       } catch (error) {
         console.error("Error al cargar el hecho extraordinario:", error);
-        this.showErrorToast("Error al cargar el hecho extraordinario");
+        this.MensajeTemporaldeError("Error al cargar el hecho extraordinario");
         this.$router.push({ name: "gemar_hecho_extraordinario" });
       }
     },
@@ -413,76 +413,66 @@ export default {
       this.errors = '';
       const validacion_regex = /^[\w\d\W ]{3,100}$/;
       let valid = true;
-
+      //agregando texto inicial a errors en caso de que existaalgun campo requerido vacio
+      if (!this.formData.informado || !this.formData.garante || 
+            !this.formData.tipo_involucrado || !this.formData.involucrado || 
+            !this.formData.tipo_origen || !this.formData.origen || 
+            !this.formData.destino || !this.formData.producto_involucrado || 
+            !this.formData.descripcion_hecho) {          
+          this.errors += 'Los siguientes campos son obligatorios:<br>';
+        }
       // Validar campo informado
       if (!this.formData.informado) {
-        this.errors += 'El campo "Informado" es requerido.\n';
-        valid = false;
-      } else if (!validacion_regex.test(this.formData.informado)) {
-        this.errors += 'El campo "Informado" acepta letras, números y caracteres especiales, entre 3 y 100 caracteres.\n';
+        this.errors += '- Informado.<br>';
         valid = false;
       }
 
       // Validar campo garante
       if (!this.formData.garante) {
-        this.errors += 'El campo "Garante/Dueño" es requerido.\n';
+        this.errors += '- Garante/Dueño.<br>';
         valid = false;
       }
 
       // Validar campo involucrado
       if (!this.formData.involucrado) {
-        this.errors += 'El campo "Involucrado" es requerido.\n';
+        this.errors += '- Involucrado.<br>';
         valid = false;
-      }
+      }     
 
       // Validar campo origen
       if (!this.formData.origen) {
-        this.errors += 'El campo "Origen" es requerido.\n';
+        this.errors += '- Origen.<br>';
         valid = false;
       }
 
       // Validar campo destino
       if (!this.formData.destino) {
-        this.errors += 'El campo "Destino" es requerido.\n';
+        this.errors += '- Destino.<br>';
         valid = false;
-      } else if (!validacion_regex.test(this.formData.destino)) {
-        this.errors += 'El campo "Destino" acepta letras, números y caracteres especiales, entre 3 y 100 caracteres.\n';
-        valid = false;
-      }
+      } 
 
       // Validar campo producto_involucrado
       if (!this.formData.producto_involucrado) {
-        this.errors += 'El campo "Producto involucrado" es requerido.\n';
-        valid = false;
-      }
-
-      // Validar campo embalaje
-      if (!this.formData.embalaje) {
-        this.errors += 'El campo "Embalaje" es requerido.\n';
-        valid = false;
-      }
-
-      // Validar campo unidad_medida
-      if (!this.formData.unidad_medida) {
-        this.errors += 'El campo "Unidad de medida" es requerido.\n';
-        valid = false;
-      }
-
-      // Validar campo tipo_diferencia
-      if (!this.formData.tipo_diferencia) {
-        this.errors += 'El campo "Tipo de diferencia" es requerido.\n';
-        valid = false;
-      }
-
-      // Validar campo incidencia_involucrada
-      if (!this.formData.incidencia_involucrada) {
-        this.errors += 'El campo "Incidencia involucrada" es requerido.\n';
+        this.errors += '- Producto.<br>';
         valid = false;
       }
 
       // Validar campo descripcion_hecho
       if (!this.formData.descripcion_hecho) {
-        this.errors += 'El campo "Descripción del hecho" es requerido.\n';
+        this.errors += '- Descripción del hecho.<br>';
+        valid = false;
+      }
+
+      if (!validacion_regex.test(this.formData.informado)) {
+        this.errors += 'El campo "Informado" acepta letras, números y caracteres especiales, entre 3 y 100 caracteres.<br>';
+        valid = false;
+      }      
+      if (!validacion_regex.test(this.formData.destino)) {
+        this.errors += 'El campo "Destino" acepta letras, números y caracteres especiales, entre 3 y 100 caracteres.<br>';
+        valid = false;
+      }
+      if (!validacion_regex.test(this.formData.descripcion_hecho)) {
+        this.errors += 'El campo "Descripción del hecho" es un campo de texto enriquecido. Admite números, letras y caracteres especiales.';
         valid = false;
       }
 
@@ -499,7 +489,7 @@ export default {
       try {
         // Validar campos requeridos
         if (!this.formData.id) {
-          this.showErrorToast("ID de hecho extraordinario no encontrado");
+          this.MensajeTemporaldeError("ID de hecho extraordinario no encontrado");
           return;
         }
 
@@ -519,7 +509,7 @@ export default {
       } catch (error) {
         console.error("Error detallado:", error.response?.data);
         let errorMsg = "Error al actualizar el hecho extraordinario";
-        this.showErrorToast("Error al actualizar el hecho extraordinario");
+        this.MensajeTemporaldeError("Error al actualizar el hecho extraordinario");
         if (error.response?.data) {
           if (typeof error.response.data === 'object') {
             errorMsg += ": " + JSON.stringify(error.response.data);
@@ -644,7 +634,7 @@ export default {
       });
     },
 
-    showErrorToast(message) {
+    MensajeTemporaldeError(message) {
       const Toast = Swal.mixin({
         toast: true,
         position: "top-end",
@@ -853,11 +843,6 @@ export default {
   font-weight: 500;
   color: #444;
 }
-
-.gemar-input-group .required {
-  color: #e74c3c;
-}
-
 .gemar-select,
 .gemar-input {
   width: 100%;

@@ -83,9 +83,19 @@
   </div>
 
   <div style="margin-left: 16em; width: 80%">
-        <!-- Contenedor para las tablas -->
+        <!-- Contenedor para las tablas
+        La siguientes lineas de codigo despues de component son para pasar el estado del parte como prop al componente hijo
+         :key="componentKey" forza a que se actualice el componente hijo
+        -->
     <div>
-      <component :is="currentComponent" />
+      <component       
+      :is="currentComponent" 
+      :estado-parte="existingRecordData?.estado || ''"
+      @estado-cambiado="handleEstadoCambiado"
+      :key="componentKey"
+      />
+      
+
     </div>
   </div>
   
@@ -121,10 +131,12 @@ export default {
     hechos_extraordinarios,   
   },
   data() {
+    
     const now = new Date();
     const offset = now.getTimezoneOffset() * 60000;
     const localISOTime = new Date(now - offset).toISOString().split("T")[0];
     return {
+      componentKey: 0,//vinculado a la actualizacion del componente hijo al cambiar el estado del parte
       userPermissions: [],
       userGroups: [],
       currentComponent: "hechos_extraordinarios",
@@ -146,12 +158,12 @@ export default {
 
   async created() {
     await this.fetchUserPermissionsAndGroups();
-    await this.verificarInformeOperativo();
+    await this.verificarParteHE();
   },
 
   methods: {
-    async verificarInformeOperativo() {
-      this.checkingExisting = true;
+    async verificarParteHE() {
+      this.checkingExisting = true;      
       try {
         const today = new Date();
         const fechaFormateada = `${today.getFullYear()}-${String(
@@ -159,7 +171,7 @@ export default {
         ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
         const response = await axios.get("/gemar/gemar-verificar-informe-existente/", {
-          params: { fecha_actual: fechaFormateada },
+          params: { fecha_actual: fechaFormateada},
         });
 
         if (response.data.existe) {
@@ -267,6 +279,14 @@ export default {
             this.loading = false;
         }
     },
+    //metodo para cambiar el valor del estado del parte
+    handleEstadoCambiado(nuevoEstado) {
+      if (this.existingRecordData) {
+        this.existingRecordData.estado = nuevoEstado;
+      }
+      this.estadoParte = nuevoEstado;
+    },
+
     async rechazar() {
       if (!this.hasGroup("RevisorGEMAR")) {
         await Swal.fire({
@@ -419,7 +439,13 @@ export default {
             text: `Estado actualizado a "${NuevoEstado}" correctamente.`,
             confirmButtonColor: "#002a68",
           });
-          this.$forceUpdate();
+
+          // Actualizar el estado y forzar recarga del componente
+          this.existingRecordData.estado = NuevoEstado;
+          this.componentKey += 1; // Esto forzará la recreación del componente hijo
+          
+          // Actualizar también el estado local para pasarlo como prop
+          this.estadoParte = NuevoEstado;
         }
       } catch (error) {
         console.error("Error al cambiar estado:", {
@@ -434,7 +460,7 @@ export default {
           confirmButtonColor: "#002a68",
         });
       }
-    },  
+    },
     handleRecordStatusChange(payload) {
       this.isExistingRecord = payload.isExisting;
       // Opcional: Mostrar feedback

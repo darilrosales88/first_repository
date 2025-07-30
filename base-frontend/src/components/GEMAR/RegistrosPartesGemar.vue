@@ -73,8 +73,8 @@
                 :key="parte.id"
                 class="io-tr"
               >
-                <td>{{ formatDate(parte.fecha_operacion) || "-" }}</td>
-                <td>{{ formatTime(parte.fecha_operacion) || "-" }}</td>
+                <td>{{ FormatoFecha(parte.fecha_actual) || "-" }}</td>
+                <td>{{ formatoHora(parte.fecha_actual) || "-" }}</td>
                 <td>Parte HE</td>
                 <td>{{ parte.entidad_detalle || "-" }}</td>
                 <td>{{ parte.provincia_detalle || "-" }}</td>
@@ -183,8 +183,8 @@ export default {
       const query = this.searchQuery.toLowerCase();
       return this.partes.filter((parte) => {
         const fieldsToSearch = [
-          this.formatDate(parte.fecha_operacion),
-          this.formatTime(parte.fecha_operacion),
+          this.FormatoFecha(parte.fecha_actual),
+          this.formatoHora(parte.fecha_actual),
           parte.estado_parte,
           parte.entidad_detalle?.nombre,
           parte.provincia_detalle?.nombre_provincia,
@@ -204,20 +204,25 @@ export default {
   },
 
   methods: {
-    formatDate(dateString) {
+    FormatoFecha(dateString) {
       if (!dateString) return "";
       const date = new Date(dateString);
       return date.toLocaleDateString("es-ES");
     },
 
-    formatTime(dateString) {
-      if (!dateString) return "";
+    formatoHora(dateString) {
+    if (!dateString) return "-";
+    try {
       const date = new Date(dateString);
-      return date.toLocaleTimeString("es-ES", {
-        hour: "2-digit",
-        minute: "2-digit",
+      return date.toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
       });
-    },
+    } catch {
+      return "-";
+    }
+  },
 
     getStatusClass(status) {
       if (!status) return "default";
@@ -260,7 +265,7 @@ export default {
     async searchPartes() {
       this.loading = true;
       try {
-        const response = await axios.get("/api/gemar-partes-hechos-extraordinarios/", {
+        const response = await axios.get("/gemar/gemar-partes-hechos-extraordinarios/", {
           params: {
             search: this.searchQuery,
           },

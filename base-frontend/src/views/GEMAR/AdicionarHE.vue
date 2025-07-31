@@ -194,19 +194,22 @@
               <!-- Campo: KG Diferencia -->
               <div class="mb-3">
                 <label for="kg_diferencia" class="form-label small fw-semibold text-secondary">KG Diferencia</label>
-                <input type="number" step="0.01" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.kg_diferencia" id="kg_diferencia" name="kg_diferencia"/>
+                <input type="text" step="0.01" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.kg_diferencia" id="kg_diferencia" 
+                name="kg_diferencia" @input="soloNumerosYDecimal($event, 'kg_diferencia')" placeholder="Ej: 10 | 43.55 | 36.3" />
               </div>
 
               <!-- Campo: Cantidad Diferencia -->
               <div class="mb-3">
                 <label for="cantidad_diferencia" class="form-label small fw-semibold text-secondary">Cantidad Diferencia</label>
-                <input type="number" step="0.01" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.cantidad_diferencia" id="cantidad_diferencia" name="cantidad_diferencia"/>
+                <input type="text" step="0.01" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.cantidad_diferencia" id="cantidad_diferencia" 
+                @input="soloNumerosYDecimal($event, 'cantidad_diferencia')" placeholder="Ej: 10 | 43.55 | 36.3" name="cantidad_diferencia"/>
               </div>
 
               <!-- Campo: Valor Diferencia -->
               <div class="mb-3">
                 <label for="valor_diferencia" class="form-label small fw-semibold text-secondary">Valor Diferencia</label>
-                <input type="number" step="0.01" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.valor_diferencia" id="valor_diferencia" name="valor_diferencia"/>
+                <input type="text" step="0.01" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" 
+                @input="soloNumerosYDecimal($event, 'valor_diferencia')" placeholder="Ej: 10 | 43.55 | 36.3" v-model="formData.valor_diferencia" id="valor_diferencia" name="valor_diferencia"/>
               </div>
             </div>
 
@@ -227,19 +230,22 @@
                 <!-- Campo: KG Avería -->
                 <div class="mb-3">
                   <label for="kg_averia" class="form-label small fw-semibold text-secondary">KG Avería</label>
-                  <input type="number" step="0.01" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.kg_averia" id="kg_averia" name="kg_averia"/>
+                  <input type="text" step="0.01" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" 
+                  @input="soloNumerosYDecimal($event, 'kg_averia')" placeholder="Ej: 10 | 43.55 | 36.3" v-model="formData.kg_averia" id="kg_averia" name="kg_averia"/>
                 </div>
 
                 <!-- Campo: Cantidad Avería -->
                 <div class="mb-3">
                   <label for="cantidad_averia" class="form-label small fw-semibold text-secondary">Cantidad Avería</label>
-                  <input type="number" step="0.01" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.cantidad_averia" id="cantidad_averia" name="cantidad_averia"/>
+                  <input type="text" step="0.01" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" 
+                  @input="soloNumerosYDecimal($event, 'cantidad_averia')" placeholder="Ej: 10 | 43.55 | 36.3" v-model="formData.cantidad_averia" id="cantidad_averia" name="cantidad_averia"/>
                 </div>
 
                 <!-- Campo: Valor Avería -->
                 <div class="mb-3">
                   <label for="valor_averia" class="form-label small fw-semibold text-secondary">Valor Avería</label>
-                  <input type="number" step="0.01" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.valor_averia" id="valor_averia" name="valor_averia"/>
+                  <input type="text" step="0.01" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" 
+                  @input="soloNumerosYDecimal($event, 'valor_averia')" placeholder="Ej: 10 | 43.55 | 36.3" v-model="formData.valor_averia" id="valor_averia" name="valor_averia"/>
                 </div>
               </template>
             </div>
@@ -339,7 +345,18 @@ export default {
       } else if (newVal === 'buque') {
         this.getBuques();
       }
+    },
+    'formData.tipo_origen'(newVal) {
+      // Resetear el valor del origen cuando cambia el tipo
+      this.formData.origen = "";
+      
+      // Cargar puertos si el tipo es puerto
+      if (newVal === 'puerto') {
+        this.getPuertos();
+      }
+      // No necesitamos hacer nada para 'entidad' porque ya están cargadas
     }
+    
   },
 
   computed: {
@@ -352,12 +369,32 @@ export default {
     this.getEntidades();
     this.getProductos();
     this.getEmbalajes();
+    this.getPuertos();
     this.getUnidadesMedida();
     this.getIncidencias();
     this.verificarExisteParteHE();
   },
 
   methods: {
+    //fucnion que garantiza la entrada de numeros enteros y decimales con hasta dos numeros despues de la coma
+    soloNumerosYDecimal(event, field) {
+        let value = event.target.value;
+        // Permite solo números y un punto decimal, con máximo dos dígitos después del punto
+        value = value.replace(/[^0-9.]/g, ''); // Elimina todo excepto números y puntos
+        
+        // Asegura que solo haya un punto decimal
+        const parts = value.split('.');
+        if (parts.length > 2) {
+            value = parts[0] + '.' + parts.slice(1).join('');
+        }
+        
+        // Limita a dos decimales después del punto
+        if (parts.length === 2 && parts[1].length > 2) {
+            value = parts[0] + '.' + parts[1].substring(0, 2);
+        }
+        
+        this.formData[field] = value;
+    },
 
     validateForm() {
       this.errors = '';
@@ -416,7 +453,8 @@ export default {
       if (!validacion_regex.test(this.formData.informado)) {
         this.errors += 'El campo "Informado" acepta letras, números y caracteres especiales, entre 3 y 100 caracteres.<br>';
         valid = false;
-      }      
+      } 
+
       if (!validacion_regex.test(this.formData.destino)) {
         this.errors += 'El campo "Destino" acepta letras, números y caracteres especiales, entre 3 y 100 caracteres.<br>';
         valid = false;
@@ -424,7 +462,7 @@ export default {
       if (!validacion_regex.test(this.formData.descripcion_hecho)) {
         this.errors += 'El campo "Descripción del hecho" es un campo de texto enriquecido. Admite números, letras y caracteres especiales.';
         valid = false;
-      }
+      }     
 
       return valid;
     },
@@ -484,7 +522,7 @@ export default {
         const response = await axios.post("/gemar/gemar-hechos-extraordinarios/", datosEnvio);
         
         // Mostrar mensaje de éxito
-        this.showSuccessToast("El hecho extraordinario ha sido registrado correctamente");
+        this.showSuccessToast("El contenido hecho extraordinario se ha adicionado satisfactoriamente.");
         this.resetForm();
         this.$router.push({ name: "gemar_hecho_extraordinario" });
         
@@ -531,6 +569,9 @@ export default {
     },
 
     async getPuertos() {
+      // Si ya tenemos los puertos cargados, no hacemos otra llamada
+      if (this.puertos.length > 0) return;
+      
       try {
         const response = await axios.get("/api/puertos/");
         this.puertos = response.data.results;

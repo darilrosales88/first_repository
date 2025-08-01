@@ -5,10 +5,11 @@
 from rest_framework import viewsets
 
 #importacion de modelos
-from .models import gemar_hecho_extraordinario,gemar_parte_hecho_extraordinario
+from .models import gemar_hecho_extraordinario,gemar_parte_hecho_extraordinario,gemar_programacion_maniobras
 
 #importacion de serializadores asociados a los modelos
-from .serializers import gemar_hecho_extraordinario_serializer,gemar_parte_hecho_extraordinario_serializer
+from .serializers import (gemar_hecho_extraordinario_serializer,gemar_parte_hecho_extraordinario_serializer,
+                          gemar_programacion_maniobras,gemar_programacion_maniobras_serializer)
 
 from Administracion.serializers import UserPermissionSerializer
 
@@ -469,3 +470,95 @@ def verificar_informe_he_existente(request):
         return Response({"error": str(e)}, status=500)
     
 #/*************************************************************************************************************************
+class gemar_programacion_maniobras_view_set(viewsets.ModelViewSet):
+    queryset = gemar_programacion_maniobras.objects.all().order_by('-id')
+    serializer_class = gemar_programacion_maniobras_serializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search = self.request.query_params.get('buque_puerto', None)
+
+        if search is not None:
+            queryset = queryset.filter(buque__icontains=search) | queryset.filter(puerto__nombre__icontains=search)
+
+        return queryset
+    
+    def create(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminGEMAR').exists():            
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        response = super().create(request, *args, **kwargs)
+        parte_programacion = gemar_programacion_maniobras.objects.get(id=response.data['id'])
+        
+        registrar_auditoria(request, f"Insertar programación de maniobras: {parte_programacion.id}")
+        return response
+    
+    def update(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminGEMAR').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        response = super().update(request, *args, **kwargs)
+        parte_programacion = self.get_object()
+        
+        registrar_auditoria(request, f"Modificar programación de maniobras: {parte_programacion.id}")
+        return response
+
+    def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminGEMAR').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        parte_programacion = self.get_object()
+        id_parte = parte_programacion.id
+        
+        registrar_auditoria(request, f"Eliminar programación de maniobras: {id_parte}")
+        
+        self.perform_destroy(parte_programacion)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorGEMAR').exists() and not request.user.groups.filter(name='AdminGEMAR').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        registrar_auditoria(request, "Visualizar lista de programación de maniobras.")
+        return super().list(request, *args, **kwargs)
+    
+    @action(detail=False, methods=['get'])
+    def programacion_por_fecha(self, request):
+        """
+        Endpoint para obtener la programación de maniobras por fecha
+        """
+        fecha_str = request.query_params.get('fecha', None)
+        
+        try:
+            if fecha_str:
+                fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+            else:
+                fecha = timezone.now().date()
+                
+            queryset = self.get_queryset().filter(
+                Q(fecha_eta=fecha) | Q(fecha_ets=fecha)
+            ).order_by('hora_eta', 'hora_ets')
+            
+            serializer = self.get_serializer(queryset, many=True)
+            
+            registrar_auditoria(request, f"Visualizar programación de maniobras para fecha {fecha}")
+            
+            return Response({
+                "fecha": fecha,
+                "resultados": serializer.data
+            })
+            
+        except ValueError:
+            return Response({"error": "Formato de fecha inválido. Use YYYY-MM-DD"}, status=400)

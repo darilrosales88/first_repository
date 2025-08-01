@@ -6,7 +6,7 @@ from django_filters import rest_framework as filters
 
 from django.db.models import Q
 
-from .models import gemar_hecho_extraordinario,gemar_parte_hecho_extraordinario
+from .models import gemar_hecho_extraordinario,gemar_parte_hecho_extraordinario,gemar_programacion_maniobras
 
 from Administracion.models import CustomUser
 
@@ -76,5 +76,28 @@ class gemar_hecho_extraordinario_serializer(serializers.ModelSerializer):
         model = gemar_hecho_extraordinario       
         fields = '__all__'
         filterset_class: gemar_hecho_extraordinario_filter #esto es para que se aplique al serializador el filtro
+
+#***************************************************************************************************************************
+class gemar_programacion_maniobras_filter(filters.FilterSet):
+    buque_puerto = filters.CharFilter(method='filtrado_por_buque_puerto', lookup_expr='icontains')
+
+    def filtrado_por_buque_puerto(self, queryset, value):        
+        return queryset.filter(buque__icontains=value) | queryset.filter(puerto__nombre__icontains=value)
+    
+    class Meta:  
+        model = gemar_programacion_maniobras    
+        fields = []
+
+class gemar_programacion_maniobras_serializer(serializers.ModelSerializer):
+    puerto_name = serializers.ReadOnlyField(source='puerto.nombre_puerto')
+    terminal_name = serializers.ReadOnlyField(source='terminal.nombre_terminal')
+    atraque_name = serializers.ReadOnlyField(source='atraque.nombre_atraque')
+    puerto_procedencia_name = serializers.ReadOnlyField(source='puerto_procedencia.nombre_puerto')
+    tipo_maniobra_name = serializers.ReadOnlyField(source='tipo_maniobra.tipo_maniobra')
+    
+    class Meta:
+        model = gemar_programacion_maniobras
+        fields = '__all__'
+        filterset_class = gemar_programacion_maniobras_filter
 
 

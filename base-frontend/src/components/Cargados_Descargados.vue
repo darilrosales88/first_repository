@@ -3,7 +3,7 @@
     <div class="card border">
       <div class="card-header bg-light border-bottom">
         <h6 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-clipboard-data me-2"></i>Vagones Cargados/descargados
+          <i class="bi bi-clipboard-data me-2"></i> Vagones Cargados/descargados
         </h6>
       </div>
       <div class="card-body p-3">
@@ -599,7 +599,7 @@ export default {
         this.cargados_descargados = this.cargados_descargados.filter(
           (objeto) => objeto.id !== id
         );
-        this.showSuccessToast("El registro ha sido eliminado exitosamente.");
+       this.showSuccessToast("Registro elimiando");
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
         this.showErrorToast("Hubo un error al eliminar el producto.");

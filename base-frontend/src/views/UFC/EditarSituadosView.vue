@@ -391,8 +391,6 @@ export default {
       },
       userGroups: [],
       userPermissions: [],
-      productoSearch: "",
-      showProductosDropdown: false,
       entidades: [],
       puertos: [],
       productos: [],
@@ -422,7 +420,6 @@ export default {
     if (this.registroId) {
       this.cargarRegistro();
     }
-    this.getProductos();
     this.getEntidades();
     this.getPuertos();
     this.getEquipos();
@@ -465,7 +462,7 @@ export default {
           pendiente_proximo_dia: parseInt(registro.pendiente_proximo_dia) || 0,
           observaciones: registro.observaciones || "",
         };
-        console.log("Aqui2",this.formData)
+        this.getProductoXEquipo();
         this.buscarEquipos();
       } catch (error) {
         console.error("Error al cargar el registro:", error);
@@ -596,16 +593,15 @@ export default {
         return [];
       }
     },
-    async getProductos() {
+
+    async getProductoXEquipo() {
       this.loading = true;
+      
       try {
-        const response = await axios.get("/ufc/producto-vagon/", {
-          params: {
-            include_details: true, 
-          },
-        });
+        const response = await axios.get(`/ufc/producto-vagon/?tipo_equipo=${this.formData.tipo_equipo}`);
 
         this.productos = response.data.results.map((p) => {
+          // Asegurar que tipo_embalaje esté definido
           const tipoEmbalaje = p.tipo_embalaje || {};
           return {
             ...p,
@@ -624,6 +620,7 @@ export default {
         this.loading = false;
       }
     },
+
     async getPuertos() {
       try {
         let allPuertos = [];
@@ -646,7 +643,7 @@ export default {
     },
     cerrarModal() {
       this.mostrarModal = false;
-      this.getProductos();
+      this.getProductoXEquipo();
     },
     async submitForm() {
   

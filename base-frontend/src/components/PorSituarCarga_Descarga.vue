@@ -3,13 +3,13 @@
     <div class="card border">
       <div class="card-header bg-light border-bottom">
         <h6 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-inboxes-fill me-2"></i>Registros Por Situar
+          <i class="bi bi-inboxes-fill me-2"></i>Vagones Por Situar
         </h6>
       </div>
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <router-link v-if="hasGroup(['AdminUFC', 'OperadorUFC']) && this.habilitado" to="/AdicionarPorSituar">
-            <button class="btn btn-sm btn-primary">
+            <button class="btn btn-primary">
               <i class="bi bi-plus-circle me-1"></i>Añadir
             </button>
           </router-link>
@@ -548,7 +548,7 @@ export default {
         this.porSituarCarga_Descarga = this.porSituarCarga_Descarga.filter(
           (objeto) => objeto.id !== id
         );
-        this.showSuccessToast("El registro ha sido eliminado correctamente");
+        this.showSuccessToast("Registro elimiando");
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
         this.showErrorToast("Hubo un error al eliminar el producto.");

@@ -375,7 +375,6 @@ export default {
     
     this.getEntidades();
     this.getPuertos();
-    this.getProductos();
     this.getEquipos();
   },
 
@@ -422,7 +421,7 @@ export default {
         };
         
         this.buscarEquipos();
-
+        this.getProductoXEquipo();
       } catch (error) {
         // ... manejo de errores ...
       } finally {
@@ -472,7 +471,6 @@ export default {
           });
           return;
         }
-        this.isDisable=false;
         this.equipos_vagones = response.data;
       } catch (error) {
         console.error("Error al obtener los equipos ferroviarios:", error);
@@ -539,14 +537,11 @@ export default {
       this.showSuccessToast("Vagón añadido");
     },
 
-    async getProductos() {
+    async getProductoXEquipo() {
       this.loading = true;
+      
       try {
-        const response = await axios.get("/ufc/producto-vagon/", {
-          params: {
-            include_details: true, 
-          },
-        });
+        const response = await axios.get(`/ufc/producto-vagon/?tipo_equipo=${this.formData.tipo_equipo}`);
 
         this.productos = response.data.results.map((p) => {
           // Asegurar que tipo_embalaje esté definido
@@ -568,6 +563,7 @@ export default {
         this.loading = false;
       }
     },
+
 
     async getPuertos() {
       try {
@@ -593,7 +589,7 @@ export default {
 
     cerrarModal() {
       this.mostrarModal = false;
-      this.getProductos();
+      this.getProductoXEquipo();
     },
 
     async submitForm() {

@@ -226,29 +226,32 @@
                   <label
                     for="productos"
                     class="form-label small fw-semibold text-secondary"
-                    >Productos</label
-                  >
+                    >Productos</label>
                   <div class="ufc-input-with-action">
-                    <select
+                    <select v-if="formData.tipo_equipo"
                       class="form-select form-select-sm border-secondary"
                       style="padding: 8px 12px"
                       v-model="formData.producto"
                       @change="buscarTipoEquipo"
                       required
                       oninvalid="this.setCustomValidity('Por favor, seleccione un Producto')"
-                      oninput="this.setCustomValidity('')"
-                    >
+                      oninput="this.setCustomValidity('')">
                       <option value="" disabled>Seleccione un Producto</option>
                       <option
                         v-for="producto in productos"
                         :key="producto.id"
-                        :value="producto.id"
-                      >
-                        <!-- Esto tambien hay que modificarlo en los demas y quitar las funciones basuras ademas de agregar esto mismo en los editar de cada uno @BZ-theFanG #-# -->
+                        :value="producto.id">
                         {{ producto.producto_name }}-{{
                           producto.producto_codigo
                         }}-{{ producto.tipo_embalaje_name }}
                       </option>
+                    </select>
+                    <select
+                      v-else
+                      class="form-select form-select-sm border-secondary"
+                      style="padding: 8px 12px"
+                      disabled>
+                      <option value="">Seleccione primero el tipo de equipo</option>
                     </select>
                     <button class="create-button ms-2" @click.stop.prevent="abrirModalAgregarProducto">
                       <i class="bi bi-plus-circle large-icon"></i>
@@ -470,7 +473,6 @@ export default {
     };
   },
   mounted() {
-    this.getProductos();
     this.getEntidades();
     this.getPuertos();
     this.getEquipos();
@@ -545,20 +547,25 @@ export default {
     },
 
     async abrirModalVagon() {
-      if (this.equipos_vagones.length==0) {
+      if (this.equipos_vagones.length == 0) {
         Swal.fire({
           title: "Error",
           text: "Seleccione el tipo de equipo ferroviario",
           icon: "error",
+          showCancelButton: false,
+          confirmButtonText: "Aceptar",
+          confirmButtonColor: "#ff4444"
         });
         return;
       }
-      
-      if (this.vagonesAgregados.length==this.formData.cantidad_vagones) {
+      if (this.vagonesAgregados.length == this.formData.cantidad_vagones) {
         Swal.fire({
           title: "Error",
-          text: "Ya añadió todos los vagones según la cantidad de vagones situados definida. Si lo desea aumente la cantidad de vagones situados",
+          text: "Ya añadió todos los vagones según la cantidad de vagones definida",
           icon: "error",
+          showCancelButton: false,
+          confirmButtonText: "Aceptar",
+          confirmButtonColor: "#ff4444"
         });
         return;
       }
@@ -618,6 +625,33 @@ export default {
         Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
       }
     },
+    async getProductoXEquipo() {
+      this.loading = true;
+      
+      try {
+        const response = await axios.get(`/ufc/producto-vagon/?tipo_equipo=${this.formData.tipo_equipo}`);
+
+        this.productos = response.data.results.map((p) => {
+          // Asegurar que tipo_embalaje esté definido
+          const tipoEmbalaje = p.tipo_embalaje || {};
+          return {
+            ...p,
+            tipo_embalaje: {
+              nombre:
+                tipoEmbalaje.nombre ||
+                tipoEmbalaje.nombre_embalaje ||
+                "Sin embalaje",
+            },
+          };
+        });
+      } catch (error) {
+        console.error("Error al obtener productos:", error);
+        Swal.fire("Error", "No se pudieron cargar los productos", "error");
+      } finally {
+        this.loading = false;
+      }
+    }, 
+
     async buscarEquipos() {
       try {
         let url = "/api/e-f-no-locomotora/";
@@ -642,6 +676,7 @@ export default {
           return;
         }
         this.isDisable=false;
+        this.getProductoXEquipo();
         this.equipos_vagones = response.data;
       } catch (error) {
         console.error("Error al obtener los equipos ferroviarios:", error);
@@ -653,36 +688,6 @@ export default {
             this.cerrarModal();
           },
         });
-      }
-    },
-
-    async getProductos() {
-      this.loading = true;
-      try {
-        const response = await axios.get("/ufc/producto-vagon/", {
-          params: {
-            include_details: true, // Asegúrate que tu backend incluya los datos relacionados
-          },
-        });
-
-        this.productos = response.data.results.map((p) => {
-          // Asegurar que tipo_embalaje esté definido
-          const tipoEmbalaje = p.tipo_embalaje || {};
-          return {
-            ...p,
-            tipo_embalaje: {
-              nombre:
-                tipoEmbalaje.nombre ||
-                tipoEmbalaje.nombre_embalaje ||
-                "Sin embalaje",
-            },
-          };
-        });
-      } catch (error) {
-        console.error("Error al obtener productos:", error);
-        Swal.fire("Error", "No se pudieron cargar los productos", "error");
-      } finally {
-        this.loading = false;
       }
     },
 
@@ -710,7 +715,7 @@ export default {
 
     cerrarModal() {
       this.mostrarModal = false;
-      this.getProductos();
+      this.getProductoXEquipo();
     },
 
     async submitForm() {
@@ -759,7 +764,7 @@ export default {
         if (this.vagonesAgregados.length !== this.formData.cantidad_vagones) {
           Swal.fire({
             title: "Advertencia",
-            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de "Situados" (${this.formData.situados}). ¿Desea actualizar el campo "Situados" para que coincida?`,
+            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de vagones (${this.formData.cantidad_vagones}).`,
             icon: "warning",
             showCancelButton: false,
             confirmButtonText: "Aceptar",
@@ -793,7 +798,7 @@ export default {
 
         // Mostrar mensaje de éxito
         this.$router.push({ name: "InfoOperativo" });
-        this.showSuccessToast("El registro ha sido creado correctamente");
+        this.showSuccessToast("Registro Creado");
         this.resetForm();
 
       } catch (error) {
@@ -814,7 +819,7 @@ export default {
           title: "Error",
           text: errorMessage,
           icon: "error",
-          confirmButtonText: "Entendido",
+          confirmButtonText: "EAceptar",
         });
       }
     },

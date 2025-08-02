@@ -498,7 +498,7 @@ export default {
 
     editProgramacion(item) {
       this.$router.push({
-        name: "editar_gemar_programacion_maniobras",
+        name: "editar_gemar_programacion_maniobra",
         params: { id: item.id },
       });
     },

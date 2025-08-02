@@ -2,8 +2,9 @@ from django.db import models
 from Administracion.models import CustomUser
 from nomencladores.models import( nom_producto,nom_tipo_embalaje,nom_unidad_medida,
                                  nom_entidades,nom_incidencia,nom_provincia,nom_terminal,nom_atraque,
-                                 nom_tipo_maniobra_portuaria,nom_puerto
+                                 nom_tipo_maniobra_portuaria,nom_puerto,nom_osde_oace_organismo
                                  )
+
 from django.dispatch import receiver
 from django.db.models.signals import pre_save, post_save, post_delete,pre_delete
 
@@ -12,8 +13,13 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from Administracion.models import CustomUser
 from nomencladores.models import nom_producto, nom_tipo_embalaje, nom_unidad_medida, nom_entidades, nom_incidencia, nom_provincia
-
-class gemar_parte_hecho_extraordinario(models.Model):    
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+class gemar_parte_hecho_extraordinario(models.Model):
+    tipo_parte = models.CharField(
+        default="Parte de hecho extraordinario", 
+        max_length=14
+    )    
     fecha_operacion = models.DateTimeField( 
         verbose_name="Fecha de operación",
         auto_now_add=False
@@ -44,6 +50,15 @@ class gemar_parte_hecho_extraordinario(models.Model):
         null=True,
         blank=True,
         verbose_name="Entidad"
+    )   
+    
+    organismo = models.ForeignKey(
+        nom_osde_oace_organismo,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Organismo",
+        editable=False  # No se edita manualmente
     )
 
     def save(self, *args, **kwargs):
@@ -136,55 +151,67 @@ class gemar_hecho_extraordinario(models.Model):
     def __str__(self):
         return self.tipo_diferencia
     #******************************************************************************************************************************
-class gemar_parte_programacion_maniobras(models.Model):    
-    fecha_operacion = models.DateTimeField( 
+class gemar_parte_programacion_maniobras(models.Model): 
+    tipo_parte = models.CharField(
+        default="Parte de programación de maniobras", 
+        max_length=14
+    ) 
+    fecha_operacion = models.DateTimeField(
         verbose_name="Fecha de operación",
-        auto_now_add=False,           
+        auto_now_add=False,          
     )
     fecha_actual = models.DateTimeField(
-        auto_now=True, 
+        auto_now=True,
         verbose_name="Fecha actual"
     )
     
     estado_parte = models.CharField(
-        default="Creado", 
+        default="Creado",
         max_length=14
     )
     provincia = models.ForeignKey(
-        nom_provincia, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
+        nom_provincia,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         verbose_name="Provincia"
     )
-    creado_por = models.ForeignKey(CustomUser,on_delete=models.CASCADE, blank=True, null=True, verbose_name="Creado por: ", 
-                                   related_name="gemar_parte_programacion_maniobras_creador" )
+    creado_por = models.ForeignKey(CustomUser, on_delete=models.CASCADE,
+        blank=True, null=True, verbose_name="Creado por: ",
+        related_name="gemar_parte_programacion_maniobras_creador")
     
-    aprobado_por = models.ForeignKey(CustomUser,on_delete=models.CASCADE, blank=True, null=True, verbose_name="Aprobado por: ", 
-                                     related_name="gemar_parte_programacion_maniobras_aprobador" )
+    aprobado_por = models.ForeignKey(CustomUser, on_delete=models.CASCADE,
+        blank=True, null=True, verbose_name="Aprobado por: ",
+        related_name="gemar_parte_programacion_maniobras_aprobador")
     
     entidad = models.ForeignKey(
         nom_entidades,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        verbose_name="Entidad"
+        verbose_name="Entidad",
+        editable=False  # No se edita manualmente
+    )
+    
+    organismo = models.ForeignKey(
+        nom_osde_oace_organismo,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Organismo",
+        editable=False  # No se edita manualmente
     )
 
-    def save(self, *args, **kwargs):
-        # Solo para asegurar que los campos no sean nulos si vienen de la vista
-        super().save(*args, **kwargs)
-
-    class Meta: 
+    class Meta:
         permissions = [
             ("gemar_puede_rechazar_parte_programacion_maniobras", "Puede rechazar partes de programación de maniobras"),
             ("gemar_puede_aprobar_parte_programacion_maniobras", "Puede aprobar partes de programación de maniobras"),
             ("gemar_puede_cambiar__parte_programacion_maniobras_a_listo", "Puede cambiar el estado del de programación de maniobras a listo"),
         ]
-               
+                
         verbose_name = "Parte de programación de maniobras"
-        verbose_name_plural = "Partes  de programación de maniobras"
-        ordering = ["-fecha_operacion"]
+        verbose_name_plural = "Partes de programación de maniobras"
+        ordering = ["-fecha_actual"]
     
     def __str__(self):
         return f"Fecha actual: {self.fecha_actual} - fecha de operación {self.fecha_operacion}"
@@ -328,3 +355,4 @@ class gemar_programacion_maniobras(models.Model):
     
     def __str__(self):
         return f"Buque {self.buque} - puerto {self.puerto} ({self.fecha_eta})"
+    

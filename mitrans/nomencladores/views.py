@@ -939,15 +939,20 @@ class nom_terminal_view_set(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-
-        # Filtrado por tipo de estructura de ubicacion
-        search = self.request.query_params.get('puerto_nombre_terminal', None)
-
-        if search is not None:
-
-            queryset = queryset.filter( Q(nombre_terminal__icontains=search) | Q(puerto_name__icontains=search) 
-            | Q(codigo_producto__exact=search) )      
-
+        
+        # Filtrado por puerto (ID del puerto)
+        puerto_id = self.request.query_params.get('puerto', None)
+        if puerto_id is not None:
+            queryset = queryset.filter(puerto__id=puerto_id)
+        
+        # Filtrado opcional por nombre de terminal (si se necesita)
+        search_term = self.request.query_params.get('search', None)
+        if search_term is not None:
+            queryset = queryset.filter(
+                Q(nombre_terminal__icontains=search_term) |
+                Q(puerto__nombre_puerto__icontains=search_term)
+            )
+        
         return queryset
 
     def create(self, request, *args, **kwargs):
@@ -1053,6 +1058,11 @@ class nom_atraque_view_set(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+
+        # Filtrado por terminal (ID de terminal)
+        terminal_id = self.request.query_params.get('terminal', None)
+        if terminal_id is not None:
+            queryset = queryset.filter(terminal__id=terminal_id)
 
         # Filtrado por nombre_atraque
         search = self.request.query_params.get('nombre_atraque', None)
@@ -1745,14 +1755,14 @@ class nom_embarcacion_view_set(viewsets.ModelViewSet):
     serializer_class = nom_embarcacion_serializer
     
     def get_queryset(self):
-        queryset = super().get_queryset()
-
-        search = self.request.query_params.get('nombre_tipo_nacionalidad', None)
+        queryset = super().get_queryset()        
 
         # Filtro por tipo de embarcación si se especifica
         tipo_embarcacion = self.request.query_params.get('tipo_embarcacion', None)
         if tipo_embarcacion:
             queryset = queryset.filter(tipo_embarcacion=tipo_embarcacion)
+        
+        search = self.request.query_params.get('nombre_tipo_nacionalidad', None)
 
         if search is not None:
 

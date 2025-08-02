@@ -108,11 +108,15 @@ class gemar_parte_hecho_extraordinario_view_set(viewsets.ModelViewSet):
         # Obtener la provincia de la entidad si existe
         provincia = entidad.provincia if entidad and hasattr(entidad, 'provincia') else None
         
+        # Obtener el organismo de la entidad si existe
+        organismo = entidad.osde_oace_organismo if entidad and hasattr(entidad, 'osde_oace_organismo') else None
+        
         # Asignar valores al serializer
         instance = serializer.save(
             creado_por=user,
             entidad=entidad,
             provincia=provincia,
+            organismo=organismo,  # Añadir esta línea
             estado_parte='Creado'
         )
     #Funcion para la actualizacion del estado del parte de HE
@@ -432,11 +436,15 @@ class gemar_parte_programacion_maniobras_view_set(viewsets.ModelViewSet):
         # Obtener la provincia de la entidad si existe
         provincia = entidad.provincia if entidad and hasattr(entidad, 'provincia') else None
         
+        # Obtener el organismo de la entidad si existe
+        organismo = entidad.osde_oace_organismo if entidad and hasattr(entidad, 'osde_oace_organismo') else None
+        
         # Asignar valores al serializer
         instance = serializer.save(
             creado_por=user,
             entidad=entidad,
             provincia=provincia,
+            organismo=organismo,  # Añadir esta línea
             estado_parte='Creado'
         )
     #Funcion para la actualizacion del estado del parte de HE
@@ -640,7 +648,7 @@ class gemar_programacion_maniobras_view_set(viewsets.ModelViewSet):
         # Obtener las programaciones de maniobras asociadas al parte
         programaciones = gemar_programacion_maniobras.objects.filter(
             parte_programacion_maniobra=parte_existente
-        ).order_by('-fecha_eta')
+        ).order_by('-id')
 
         # Serializar los resultados
         serializer = self.get_serializer(programaciones, many=True)
@@ -708,4 +716,74 @@ def verificar_parte_programacion_maniobra_existente(request):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 #**********************************************************************************************************************
+#LISTA DE TODOS LOS PARTES (HE Y PROGRAMACION DE MANIOBRAS)
+@api_view(['GET'])
+def listar_partes_combinados(request):
+    """
+    Endpoint para listar todos los partes (hechos extraordinarios y programación de maniobras)
+    ordenados por fecha_actual descendente (incluyendo hora).
+    """
+    try:
+        # Obtener parámetros opcionales de filtrado
+        fecha_inicio = request.query_params.get('fecha_inicio', None)
+        fecha_fin = request.query_params.get('fecha_fin', None)
+        estado = request.query_params.get('estado', None)
+        
+        # Validar permisos
+        if not request.user.groups.filter(name__in=['VisualizadorGEMAR', 'AdminGEMAR']).exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Obtener partes de hechos extraordinarios
+        hechos_extraordinarios = gemar_parte_hecho_extraordinario.objects.all()
+        # Obtener partes de programación de maniobras
+        programacion_maniobras = gemar_parte_programacion_maniobras.objects.all()
+        
+        # Aplicar filtros si existen
+        if fecha_inicio:
+            try:
+                fecha_inicio_obj = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+                hechos_extraordinarios = hechos_extraordinarios.filter(fecha_actual__date__gte=fecha_inicio_obj)
+                programacion_maniobras = programacion_maniobras.filter(fecha_actual__date__gte=fecha_inicio_obj)
+            except ValueError:
+                return Response({"error": "Formato de fecha_inicio inválido. Use YYYY-MM-DD"}, status=400)
+        
+        if fecha_fin:
+            try:
+                fecha_fin_obj = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+                hechos_extraordinarios = hechos_extraordinarios.filter(fecha_actual__date__lte=fecha_fin_obj)
+                programacion_maniobras = programacion_maniobras.filter(fecha_actual__date__lte=fecha_fin_obj)
+            except ValueError:
+                return Response({"error": "Formato de fecha_fin inválido. Use YYYY-MM-DD"}, status=400)
+        
+        if estado:
+            hechos_extraordinarios = hechos_extraordinarios.filter(estado_parte=estado)
+            programacion_maniobras = programacion_maniobras.filter(estado_parte=estado)
+        
+        # Serializar los datos
+        hechos_serializer = gemar_parte_hecho_extraordinario_serializer(hechos_extraordinarios, many=True)
+        programacion_serializer = gemar_parte_programacion_maniobras_serializer(programacion_maniobras, many=True)
+        
+        # Combinar los resultados
+        combined_data = hechos_serializer.data + programacion_serializer.data
+        
+        # Ordenar por fecha_actual descendente (más reciente primero)
+        combined_data_sorted = sorted(
+            combined_data,
+            key=lambda x: x['fecha_actual'],
+            reverse=True
+        )
+        
+        # Registrar auditoría
+        registrar_auditoria(request, "Visualización de lista combinada de partes")
+        
+        return Response({
+            "count": len(combined_data_sorted),
+            "results": combined_data_sorted
+        })
+        
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
 

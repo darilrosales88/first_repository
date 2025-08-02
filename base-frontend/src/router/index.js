@@ -853,6 +853,22 @@ const routes = [
       requireLogin: true,
     },
   },
+  {
+    path: "/gemar_programacion_maniobra/edit/:id",
+    name: "editar_gemar_programacion_maniobra",
+    component: () => import("../views/GEMAR/EditarProgramacionManiobra.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/listar_partes_combinados",
+    name: "listar_partes_combinados",
+    component: () => import("../components/GEMAR/RegistrosPartesCombinados.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
 ];
 
 const router = createRouter({

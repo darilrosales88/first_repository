@@ -37,6 +37,7 @@ class gemar_parte_hecho_extraordinario_serializer(serializers.ModelSerializer):
     aprobado_por_name = serializers.ReadOnlyField(source = 'aprobado_por.username')
     entidad_name = serializers.ReadOnlyField(source = 'entidad.nombre')
     provincia_name = serializers.ReadOnlyField(source = 'provincia.nombre_provincia')
+    organismo_name = serializers.ReadOnlyField(source = 'organismo.nombre')
     
     class Meta:
         model = gemar_parte_hecho_extraordinario
@@ -104,7 +105,8 @@ class gemar_parte_programacion_maniobras_serializer(serializers.ModelSerializer)
     creado_por_name = serializers.ReadOnlyField(source='creado_por.username')
     aprobado_por_name = serializers.ReadOnlyField(source='aprobado_por.username')
     entidad_name = serializers.ReadOnlyField(source='entidad.nombre')
-    provincia_name = serializers.ReadOnlyField(source='provincia.nombre_provincia')
+    provincia_name = serializers.ReadOnlyField(source='provincia.nombre_provincia')    
+    organismo_name = serializers.ReadOnlyField(source = 'organismo.nombre')
     
     class Meta:
         model = gemar_parte_programacion_maniobras
@@ -126,6 +128,7 @@ class gemar_programacion_maniobras_filter(filters.FilterSet):
         fields = []
 
 class gemar_programacion_maniobras_serializer(serializers.ModelSerializer):
+    buque_name = serializers.ReadOnlyField(source='puerto.nombre_puerto')
     puerto_name = serializers.ReadOnlyField(source='puerto.nombre_puerto')
     terminal_name = serializers.ReadOnlyField(source='terminal.nombre_terminal')
     atraque_name = serializers.ReadOnlyField(source='atraque.nombre_atraque')

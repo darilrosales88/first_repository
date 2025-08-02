@@ -182,8 +182,9 @@ export default {
             { title: "Informe Operativo", route: "/InfoOperativo" },
             { title: "CCD Producto", route: "/ccdxproducto" },
             { title: "Gemar-HE", route: "/gemar_hecho_extraordinario" },
-            { title: "Gemar-Listado-Partes", route: "/gemar_listado_partes" },
-            { title: "Gemar-AdicionarProgramacionManiobras", route: "/gemar_parte_programacion_maniobras" },
+            { title: "Partes HE", route: "/gemar_listado_partes" },
+            { title: "Gemar-ProgramacionManiobras", route: "/gemar_parte_programacion_maniobras" },
+            { title: "Listado de Partes - Gemar", route: "/listar_partes_combinados" },
           ],
         },
         {

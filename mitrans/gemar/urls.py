@@ -6,12 +6,13 @@ from rest_framework import routers
 from .views import (gemar_parte_hecho_extraordinario_view_set, 
                     gemar_hecho_extraordinario_view_set,verificar_informe_he_existente,
                     gemar_programacion_maniobras_view_set,verificar_parte_programacion_maniobra_existente,
-                    gemar_parte_programacion_maniobras_view_set)
+                    gemar_parte_programacion_maniobras_view_set,listar_partes_combinados)
     
 
 from django.urls import path
 
 urlpatterns = [
+    path('gemar-partes-combinados/', listar_partes_combinados, name='listar-partes-combinados'),
     path('gemar-verificar-informe-existente/', verificar_informe_he_existente, name='verificar-informe'),
     path('gemar-verificar-informe-programacion-maniobra-existente/', verificar_parte_programacion_maniobra_existente, name='verificar-informe-programacion-maniobra'),
     

@@ -7,7 +7,7 @@
     <div class="card border">
       <div class="card-header bg-light border-bottom">
         <h5 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-clipboard-data me-2"></i>Nuevo registro de programación de maniobras
+          <i class="bi bi-clipboard-data me-2"></i>Editar registro de programación de maniobras
         </h5>
       </div>
       <div class="card-body p-3">
@@ -15,12 +15,12 @@
           <div class="row">
             <!-- Columna 1 -->
             <div class="col-md-6">
-             <!-- Campo: Puerto -->
+              <!-- Campo: Puerto -->
               <div class="mb-3">
                 <label for="puerto" class="form-label small fw-semibold text-secondary">Puerto</label>
                 <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" 
                         v-model="formData.puerto" id="puerto" name="puerto" @change="getTerminalesPorPuerto" required>
-                  <option value="" disabled selected>Seleccione un puerto</option>
+                  <option value="" disabled>Seleccione un puerto</option>
                   <option v-for="puerto in puertos" :key="puerto.id" :value="puerto.id">
                     {{ puerto.nombre_puerto }}
                   </option>
@@ -32,7 +32,7 @@
                 <label for="terminal" class="form-label small fw-semibold text-secondary">Terminal</label>
                 <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" 
                         v-model="formData.terminal" id="terminal" name="terminal" @change="getAtraquesPorTerminal" required>
-                  <option value="" disabled selected>Seleccione una terminal</option>
+                  <option value="" disabled>Seleccione una terminal</option>
                   <option v-for="terminal in terminales" :key="terminal.id" :value="terminal.id">
                     {{ terminal.nombre_terminal }}
                   </option>
@@ -44,7 +44,7 @@
                 <label for="atraque" class="form-label small fw-semibold text-secondary">Atraque</label>
                 <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" 
                         v-model="formData.atraque" id="atraque" name="atraque" required>
-                  <option value="" disabled selected>Seleccione un atraque</option>
+                  <option value="" disabled>Seleccione un atraque</option>
                   <option v-for="atraque in atraques" :key="atraque.id" :value="atraque.id">
                     {{ atraque.nombre_atraque }}
                   </option>
@@ -59,7 +59,7 @@
                 <label for="buque" class="form-label small fw-semibold text-secondary">Buque</label>
                 <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" 
                         v-model="formData.buque" id="buque" name="buque" required>
-                  <option value="" disabled selected>Seleccione un buque</option>
+                  <option value="" disabled>Seleccione un buque</option>
                   <option v-for="buque in buques" :key="buque.nombre_embarcacion" :value="buque.nombre_embarcacion">
                     {{ buque.nombre_embarcacion }}
                   </option>
@@ -71,7 +71,7 @@
                 <label for="puerto_procedencia" class="form-label small fw-semibold text-secondary">Puerto de procedencia</label>
                 <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" 
                         v-model="formData.puerto_procedencia" id="puerto_procedencia" name="puerto_procedencia">
-                  <option value="" disabled selected>Seleccione un puerto</option>
+                  <option value="" disabled>Seleccione un puerto</option>
                   <option v-for="puerto in puertos" :key="puerto.id" :value="puerto.id">
                     {{ puerto.nombre_puerto }}
                   </option>
@@ -83,7 +83,7 @@
                 <label for="tipo_maniobra" class="form-label small fw-semibold text-secondary">Tipo de maniobra</label>
                 <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" 
                         v-model="formData.tipo_maniobra" id="tipo_maniobra" name="tipo_maniobra" required>
-                  <option value="" disabled selected>Seleccione un tipo</option>
+                  <option value="" disabled>Seleccione un tipo</option>
                   <option v-for="maniobra in tiposManiobra" :key="maniobra.id" :value="maniobra.id">
                     {{ maniobra.nombre_maniobra }}
                   </option>
@@ -95,7 +95,7 @@
                 <label for="cantidad_remolcadores" class="form-label small fw-semibold text-secondary">Cantidad de remolcadores</label>
                 <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" 
                         v-model="formData.cantidad_remolcadores" id="cantidad_remolcadores" name="cantidad_remolcadores" required>
-                  <option value="" disabled selected>Seleccione cantidad</option>
+                  <option value="" disabled>Seleccione cantidad</option>
                   <option v-for="n in 11" :key="n" :value="n-1">{{ n-1 }}</option>
                 </select>
               </div>
@@ -112,7 +112,7 @@
                 <label for="formato_eta" class="form-label small fw-semibold text-secondary">Formato ETA</label>
                 <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" 
                         v-model="formData.formato_eta" id="formato_eta" name="formato_eta" @change="handleFormatoEtaChange" required>
-                  <option value="" disabled selected>Seleccione formato</option>
+                  <option value="" disabled>Seleccione formato</option>
                   <option value="1">24 horas</option>
                   <option value="2">AM/PM</option>
                   <option value="3">SIN DETERMINAR</option>
@@ -138,7 +138,7 @@
                 <label for="hora_eta_am_pm" class="form-label small fw-semibold text-secondary">Hora ETA (AM/PM)</label>
                 <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" 
                         v-model="formData.hora_eta_am_pm" id="hora_eta_am_pm" name="hora_eta_am_pm">
-                  <option value="" disabled selected>Seleccione</option>
+                  <option value="" disabled>Seleccione</option>
                   <option value="1">AM</option>
                   <option value="2">PM</option>
                 </select>
@@ -154,7 +154,7 @@
                 <label for="formato_ets" class="form-label small fw-semibold text-secondary">Formato ETS</label>
                 <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" 
                         v-model="formData.formato_ets" id="formato_ets" name="formato_ets" @change="handleFormatoEtsChange" required>
-                  <option value="" disabled selected>Seleccione formato</option>
+                  <option value="" disabled>Seleccione formato</option>
                   <option value="1">24 horas</option>
                   <option value="2">AM/PM</option>
                   <option value="3">SIN DETERMINAR</option>
@@ -180,7 +180,7 @@
                 <label for="hora_ets_am_pm" class="form-label small fw-semibold text-secondary">Hora ETS (AM/PM)</label>
                 <select class="form-select form-select-sm border-secondary" style="padding: 8px 12px;" 
                         v-model="formData.hora_ets_am_pm" id="hora_ets_am_pm" name="hora_ets_am_pm">
-                  <option value="" disabled selected>Seleccione</option>
+                  <option value="" disabled>Seleccione</option>
                   <option value="1">AM</option>
                   <option value="2">PM</option>
                 </select>
@@ -201,7 +201,7 @@
                 <i class="bi bi-x-circle" me-1></i>Cancelar
               </button>
               <button type="submit" class="gemar-button primary">
-                <i class="bi bi-check-circle" me-1></i>Agregar
+                <i class="bi bi-check-circle" me-1></i>Actualizar
               </button>
             </div>
           </div>
@@ -217,7 +217,7 @@ import Swal from "sweetalert2";
 import NavbarComponent from "@/components/NavbarComponent.vue";
 
 export default {
-  name: "AdicionarProgramacionManiobras",
+  name: "EditarProgramacionManiobras",
   components: {
     NavbarComponent,
   },
@@ -227,6 +227,8 @@ export default {
     const localISOTime = new Date(now - offset).toISOString().split("T")[0];
     return {
       formData: {
+        id: null,
+        fecha_actual: localISOTime,
         puerto: "",
         terminal: "",
         atraque: "",
@@ -266,9 +268,56 @@ export default {
     this.getBuques();
     this.getTiposManiobra();
     this.verificarExistePartePM();
+    this.loadManiobraData();
   },
 
   methods: {
+    async loadManiobraData() {
+      const id = this.$route.params.id;
+      if (!id) {
+        this.$router.push({ name: "gemar_parte_programacion_maniobras" });
+        return;
+      }
+
+      try {
+        const response = await axios.get(`/gemar/gemar-programacion-maniobras/${id}/`);
+        const data = response.data;
+        
+        // Asignar los datos al formulario
+        this.formData.id = data.id;
+        this.formData.puerto = data.puerto;
+        this.formData.terminal = data.terminal;
+        this.formData.atraque = data.atraque;
+        this.formData.buque = data.buque;
+        this.formData.puerto_procedencia = data.puerto_procedencia;
+        this.formData.tipo_maniobra = data.tipo_maniobra;
+        this.formData.formato_eta = data.formato_eta;
+        this.formData.fecha_eta = data.fecha_eta;
+        this.formData.hora_eta = data.hora_eta;
+        this.formData.hora_eta_am_pm = data.hora_eta_am_pm;
+        this.formData.formato_ets = data.formato_ets;
+        this.formData.fecha_ets = data.fecha_ets;
+        this.formData.hora_ets = data.hora_ets;
+        this.formData.hora_ets_am_pm = data.hora_ets_am_pm;
+        this.formData.cantidad_remolcadores = data.cantidad_remolcadores;
+        this.formData.observaciones = data.observaciones;
+        this.formData.parte_programacion_maniobra = data.parte_programacion_maniobra;
+        
+        // Cargar terminales y atraques según el puerto seleccionado
+        if (data.puerto) {
+          await this.getTerminalesPorPuerto();
+          if (data.terminal) {
+            await this.getAtraquesPorTerminal();
+          }
+        }
+        
+      } catch (error) {
+        console.error("Error al cargar los datos de la maniobra:", error);
+        Swal.fire("Error", "No se pudo cargar la información de la maniobra.", "error");
+        this.$router.push({ name: "gemar_parte_programacion_maniobras" });
+      }
+    },
+
     handleFormatoEtaChange() {
       if (this.formData.formato_eta === '3') {
         this.formData.fecha_eta = "";
@@ -295,8 +344,8 @@ export default {
           !this.formData.formato_eta || !this.formData.formato_ets || 
           !this.formData.cantidad_remolcadores) {          
         this.errors += 'Los siguientes campos son obligatorios:<br>';
-      }      
-
+      }
+      
       if (!this.formData.puerto) {
         this.errors += '- Puerto.<br>';
         valid = false;
@@ -377,9 +426,6 @@ export default {
       try {
         const response = await axios.get(`/api/terminales/?puerto=${this.formData.puerto}`);
         this.terminales = response.data.results;
-        this.formData.terminal = "";
-        this.formData.atraque = "";
-        this.atraques = [];
       } catch (error) {
         console.error("Error al obtener las terminales:", error);
         Swal.fire("Error", "Hubo un error al obtener las terminales.", "error");
@@ -392,7 +438,6 @@ export default {
       try {
         const response = await axios.get(`/api/atraques/?terminal=${this.formData.terminal}`);
         this.atraques = response.data.results;
-        this.formData.atraque = "";
       } catch (error) {
         console.error("Error al obtener los atraques:", error);
         Swal.fire("Error", "Hubo un error al obtener los atraques.", "error");
@@ -442,6 +487,7 @@ export default {
           ...this.formData,
           parte_programacion_maniobra: this.informeOperativoId
         };
+        
         // Si el formato ETA es "SIN DETERMINAR", no enviar fecha y hora
         if (this.formData.formato_eta === '3') {
           datosEnvio.fecha_eta = null;
@@ -460,20 +506,18 @@ export default {
           datosEnvio.hora_ets = null;
           datosEnvio.hora_ets_am_pm = null;
         }
-        console.log("Datos a enviar, ", datosEnvio);
 
-        // Enviar datos
-        const response = await axios.post("/gemar/gemar-programacion-maniobras/", datosEnvio);
+        // Enviar datos de actualización
+        await axios.put(`/gemar/gemar-programacion-maniobras/${this.formData.id}/`, datosEnvio);
         
         // Mostrar mensaje de éxito
-        this.showSuccessToast("La programación de maniobras se ha adicionado satisfactoriamente.");
-        this.resetForm();
+        this.showSuccessToast("La programación de maniobras se ha actualizado satisfactoriamente.");
         this.$router.push({ name: "gemar_parte_programacion_maniobras" });
         
       } catch (error) {
         console.error("Error detallado:", error.response?.data);
-        let errorMsg = "Error al registrar la programación de maniobras";
-        this.MensajeTemporaldeError("Error al registrar la programación de maniobras");
+        let errorMsg = "Error al actualizar la programación de maniobras";
+        this.MensajeTemporaldeError("Error al actualizar la programación de maniobras");
         if (error.response?.data) {
           if (typeof error.response.data === 'object') {
             errorMsg += ": " + JSON.stringify(error.response.data);
@@ -486,35 +530,12 @@ export default {
       }
     },
 
-    resetForm() {
-      this.formData = {       
-        fecha_actual: "",
-        puerto: "",
-        terminal: "",
-        atraque: "",
-        buque: "",
-        puerto_procedencia: "",
-        tipo_maniobra: "",
-        formato_eta: "",
-        fecha_eta: "",
-        hora_eta: "",
-        hora_eta_am_pm: "",
-        formato_ets: "",
-        fecha_ets: "",
-        hora_ets: "",
-        hora_ets_am_pm: "",
-        cantidad_remolcadores: "",
-        observaciones: "",
-        parte_programacion_maniobra: null,
-      };
-    },
-
     volver_principal() {
       event.preventDefault();
       event.stopPropagation();
       Swal.fire({
         title: "¿Volver a la página principal?",
-        text: "Los datos no guardados se perderán",
+        text: "Los cambios no guardados se perderán",
         icon: "warning",
         showCancelButton: true,
         cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Continuar',
@@ -524,7 +545,6 @@ export default {
         reverseButtons: true,
       }).then((result) => {
         if (result.isConfirmed) {
-          this.resetForm();
           this.$router.push({ name: "gemar_parte_programacion_maniobras" });
         }
       });

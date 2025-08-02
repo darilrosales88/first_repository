@@ -182,8 +182,8 @@ class gemar_parte_programacion_maniobras(models.Model):
             ("gemar_puede_cambiar__parte_programacion_maniobras_a_listo", "Puede cambiar el estado del de programación de maniobras a listo"),
         ]
                
-        verbose_name = "Parte de hecho extraordinario"
-        verbose_name_plural = "Partes de hechos extraordinarios"
+        verbose_name = "Parte de programación de maniobras"
+        verbose_name_plural = "Partes  de programación de maniobras"
         ordering = ["-fecha_operacion"]
     
     def __str__(self):
@@ -249,7 +249,7 @@ class gemar_programacion_maniobras(models.Model):
     )
     
     # Campos ETA (Estimated Time of Arrival)
-    formato_eta = models.PositiveSmallIntegerField(
+    formato_eta = models.CharField(max_length=5,
         choices=FORMATO_HORA_CHOICES,
         verbose_name='Formato ETA'
     )
@@ -266,7 +266,7 @@ class gemar_programacion_maniobras(models.Model):
         null=True
     )
     
-    hora_eta_am_pm = models.PositiveSmallIntegerField(
+    hora_eta_am_pm = models.CharField(max_length=5,
         choices=AM_PM_CHOICES,
         verbose_name='Hora ETA (AM/PM)',
         blank=True,
@@ -274,7 +274,7 @@ class gemar_programacion_maniobras(models.Model):
     )
     
     # Campos ETS (Estimated Time of Sailing)
-    formato_ets = models.PositiveSmallIntegerField(
+    formato_ets = models.CharField(max_length=5,
         choices=FORMATO_HORA_CHOICES,
         verbose_name='Formato ETS'
     )
@@ -291,7 +291,7 @@ class gemar_programacion_maniobras(models.Model):
         null=True
     )
     
-    hora_ets_am_pm = models.PositiveSmallIntegerField(
+    hora_ets_am_pm = models.CharField(max_length=5,
         choices=AM_PM_CHOICES,
         verbose_name='Hora ETS (AM/PM)',
         blank=True,
@@ -311,6 +311,13 @@ class gemar_programacion_maniobras(models.Model):
         verbose_name='Observaciones',
         blank=True,
         null=True
+    )
+
+    parte_programacion_maniobra = models.ForeignKey(
+        gemar_parte_programacion_maniobras,
+        on_delete=models.CASCADE,
+        related_name='parte_programacion_maniobra',
+        null=True, blank=True
     )
     
     # Metadata

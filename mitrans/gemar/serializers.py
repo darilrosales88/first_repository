@@ -6,7 +6,8 @@ from django_filters import rest_framework as filters
 
 from django.db.models import Q
 
-from .models import gemar_hecho_extraordinario,gemar_parte_hecho_extraordinario,gemar_programacion_maniobras
+from .models import (gemar_hecho_extraordinario,gemar_parte_hecho_extraordinario,gemar_programacion_maniobras,
+                     gemar_parte_programacion_maniobras)
 
 from Administracion.models import CustomUser
 
@@ -77,6 +78,42 @@ class gemar_hecho_extraordinario_serializer(serializers.ModelSerializer):
         fields = '__all__'
         filterset_class: gemar_hecho_extraordinario_filter #esto es para que se aplique al serializador el filtro
 
+#***************************************************************************************************************************
+class gemar_parte_programacion_maniobras_filter(filters.FilterSet):
+    fecha_entidad = filters.CharFilter(method='filtrado_por_fecha_entidad')
+    
+    def filtrado_por_fecha_entidad(self, queryset, name, value):        
+        return queryset.filter(
+            Q(fecha_operacion__icontains=value) | 
+            Q(entidad__nombre__icontains=value)
+        )
+    
+    class Meta:  
+        model = gemar_parte_programacion_maniobras    
+        fields = {
+            'fecha_operacion': ['exact', 'contains'],
+            'entidad__nombre': ['exact', 'contains'],
+        }
+
+class gemar_parte_programacion_maniobras_serializer(serializers.ModelSerializer):
+    creado_por = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(),
+        required=False,
+        allow_null=True
+    )
+    creado_por_name = serializers.ReadOnlyField(source='creado_por.username')
+    aprobado_por_name = serializers.ReadOnlyField(source='aprobado_por.username')
+    entidad_name = serializers.ReadOnlyField(source='entidad.nombre')
+    provincia_name = serializers.ReadOnlyField(source='provincia.nombre_provincia')
+    
+    class Meta:
+        model = gemar_parte_programacion_maniobras
+        fields = '__all__'
+        extra_kwargs = {
+            'creado_por': {'required': False},
+            'entidad': {'required': False},
+            'provincia': {'required': False},
+        }
 #***************************************************************************************************************************
 class gemar_programacion_maniobras_filter(filters.FilterSet):
     buque_puerto = filters.CharFilter(method='filtrado_por_buque_puerto', lookup_expr='icontains')

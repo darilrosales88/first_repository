@@ -3,14 +3,14 @@
     <div class="card border">
       <div class="card-header bg-light border-bottom">
         <h6 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-inboxes-fill me-2"></i>Registros de hechos extraordinarios
+          <i class="bi bi-calendar-event me-2"></i>Programación de Maniobras
         </h6>
       </div>
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <router-link 
             v-if="hasGroup('AdminGEMAR')" 
-            to="/gemar_hecho_extraordinario/add"
+            to="/gemar_programacion_maniobras/add"
             custom
             v-slot="{ navigate }"
           >
@@ -19,16 +19,15 @@
               @click="navigate"
               :disabled="ActivarDesactivarBotonAgregar"
             >
-              <i class="bi bi-plus-circle me-1"></i>Agregar nuevo HE
+              <i class="bi bi-plus-circle me-1"></i>Agregar nueva programación
             </button>
-            
           </router-link>
-          <form @submit.prevent="searchHechos" class="search-container">
+          <form @submit.prevent="searchProgramaciones" class="search-container">
             <div class="input-group">
               <input
                 type="search"
                 class="form-control"
-                placeholder="Buscar por informado o garante"
+                placeholder="Buscar por buque o puerto"
                 v-model="searchQuery"
                 @input="handleSearchInput"/>
               <span
@@ -44,15 +43,15 @@
             <thead class="table-light">
               <tr>
                 <th scope="col" style="width: 50px">No</th>
-                <th scope="col">Fecha Operación</th>
-                <th scope="col">Informado</th>
-                <th scope="col">Garante</th>
-                <th scope="col">Producto</th>
-                <th scope="col">Tipo Diferencia</th>
-                <th scope="col">Incidencia</th>
+                <th scope="col">Buque</th>
+                <th scope="col">Puerto</th>
+                <th scope="col">Terminal</th>
+                <th scope="col">Atraque</th>
+                <th scope="col">Tipo Maniobra</th>
+                <th scope="col">Fecha ETA</th>
                 <th scope="col">Acciones</th>
               </tr>
-              <tr v-if="!busqueda_existente && hechosExtraordinarios.length != 0">
+              <tr v-if="!busqueda_existente && programaciones.length != 0">
                 <td colspan="8" class="text-center text-muted py-4">
                   <i class="bi bi-exclamation-circle fs-4"></i>
                   <p class="mt-2">
@@ -60,7 +59,7 @@
                   </p>
                 </td>
               </tr>
-              <tr v-if="hechosExtraordinarios.length == 0">
+              <tr v-if="programaciones.length == 0">
                 <td colspan="8" class="text-center text-muted py-4">
                   <div class="ps-loading" v-if="loading">
                     <div class="ps-spinner"></div>
@@ -68,24 +67,20 @@
                   </div>
                   <div v-else>
                     <i class="bi bi-database-exclamation fs-4"></i>
-                    <p class="mt-2">No hay registros de hechos extraordinarios</p>
+                    <p class="mt-2">No hay registros de programaciones de maniobras</p>
                   </div>
                 </td>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(item, index) in hechosExtraordinarios" :key="item.id" class="align-middle">
+              <tr v-for="(item, index) in programaciones" :key="item.id" class="align-middle">
                 <th scope="row">{{ index + 1 }}</th>
-                <td>{{ formatDate(item.fecha_operacion) }}</td>
-                <td>{{ item.informado }}</td>
-                <td>{{ item.garante_name || 'N/A' }}</td>
-                <td>{{ item.producto_name || 'N/A' }}</td>
-                <td class="ps-td">
-                  <span :class="`ps-status ps-status-${getStatusClass(item.tipo_diferencia)}`">
-                    {{ item.tipo_diferencia || 'N/A' }}
-                  </span>
-                </td>
-                <td>{{ item.incidencia_name || 'N/A' }}</td>
+                <td>{{ item.buque || 'N/A' }}</td>
+                <td>{{ item.puerto_name || 'N/A' }}</td>
+                <td>{{ item.terminal_name || 'N/A' }}</td>
+                <td>{{ item.atraque_name || 'N/A' }}</td>
+                <td>{{ item.tipo_maniobra_name || 'N/A' }}</td>
+                <td>{{ formatDate(item.fecha_eta) }}</td>
                 <td>
                   <div class="d-flex">
                     <button 
@@ -97,8 +92,8 @@
 
                     <button v-if="hasGroup('AdminGEMAR')"
                       :disabled="estadoParte === 'Aprobado'"
-                      :title="estadoParte === 'Aprobado' ? 'No se puede  HE a un parte aprobado' : ''"
-                      @click="editHecho(item)"
+                      :title="estadoParte === 'Aprobado' ? 'No se puede editar una programación de un parte aprobado' : ''"
+                      @click="editProgramacion(item)"
                       class="btn btn-sm btn-outline-warning me-2"
                       title="Editar">
                       <i class="bi bi-pencil-square"></i>
@@ -120,7 +115,7 @@
         <!-- Paginación mejorada -->
         <div class="d-flex justify-content-between align-items-center">
           <div class="text-muted small">
-            Mostrando {{ hechosExtraordinarios.length }} de
+            Mostrando {{ programaciones.length }} de
             {{ totalItems }} registros
           </div>
           <nav aria-label="Page navigation">
@@ -163,7 +158,7 @@
                   <i class="bi bi-info-circle-fill ps-modal-icon"></i>
                 </div>
                 <div>
-                  <h2>Detalles del Hecho Extraordinario</h2>
+                  <h2>Detalles de Programación de Maniobras</h2>
                   <p class="ps-modal-subtitle">
                     Información completa del registro seleccionado
                   </p>
@@ -181,246 +176,128 @@
                 <!-- Tarjeta 1: Información Básica -->
                 <div class="ps-detail-card">
                   <div class="ps-detail-card-header">
-                    <i class="bi bi-tag-fill"></i>
-                    <h4>Información Básica</h4>
+                    <i class="bi bi-ship"></i>
+                    <h4>Información del Buque</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    <!-- Fecha Operación -->
+                    <!-- Buque -->
                     <div class="ps-detail-item">
-                      <span class="ps-detail-label">Fecha Operación:</span>
+                      <span class="ps-detail-label">Buque:</span>
                       <span class="ps-detail-value">
-                        {{ formatDate(currentRecord.fecha_operacion) || "N/A" }}
+                        {{ currentRecord.buque || "N/A" }}
                       </span>
                     </div>
 
-                    <!-- Informado -->
+                    <!-- Puerto -->
                     <div class="ps-detail-item">
-                      <span class="ps-detail-label">Informado:</span>
+                      <span class="ps-detail-label">Puerto:</span>
                       <span class="ps-detail-value">
-                        {{ currentRecord.informado || "N/A" }}
+                        {{ currentRecord.puerto_name || "N/A" }}
                       </span>
                     </div>
 
-                    <!-- Garante -->
+                    <!-- Terminal -->
                     <div class="ps-detail-item">
-                      <span class="ps-detail-label">Garante:</span>
+                      <span class="ps-detail-label">Terminal:</span>
                       <span class="ps-detail-value">
-                        {{ currentRecord.garante_name || "N/A" }}
+                        {{ currentRecord.terminal_name || "N/A" }}
+                      </span>
+                    </div>
+
+                    <!-- Atraque -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-label">Atraque:</span>
+                      <span class="ps-detail-value">
+                        {{ currentRecord.atraque_name || "N/A" }}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <!-- Tarjeta 2: Involucrados -->
+                <!-- Tarjeta 2: Fechas -->
                 <div class="ps-detail-card">
                   <div class="ps-detail-card-header">
-                    <i class="bi bi-people-fill"></i>
-                    <h4>Involucrados</h4>
+                    <i class="bi bi-calendar-date"></i>
+                    <h4>Fechas</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    <!-- Tipo Involucrado -->
+                    <!-- Fecha ETA -->
                     <div class="ps-detail-item">
-                      <span class="ps-detail-label">Tipo Involucrado:</span>
+                      <span class="ps-detail-label">Fecha ETA:</span>
                       <span class="ps-detail-value">
-                        {{ currentRecord.tipo_involucrado || "N/A" }}
+                        {{ formatDate(currentRecord.fecha_eta) || "N/A" }}
                       </span>
                     </div>
 
-                    <!-- Involucrado -->
+                    <!-- Hora ETA -->
                     <div class="ps-detail-item">
-                      <span class="ps-detail-label">Involucrado:</span>
+                      <span class="ps-detail-label">Hora ETA:</span>
                       <span class="ps-detail-value">
-                        {{ currentRecord.involucrado || "N/A" }}
+                        {{ currentRecord.hora_eta || "N/A" }}
                       </span>
                     </div>
 
-                    <!-- Tipo Origen -->
+                    <!-- Fecha ETS -->
                     <div class="ps-detail-item">
-                      <span class="ps-detail-label">Tipo Origen:</span>
+                      <span class="ps-detail-label">Fecha ETS:</span>
                       <span class="ps-detail-value">
-                        {{ currentRecord.tipo_origen || "N/A" }}
+                        {{ formatDate(currentRecord.fecha_ets) || "N/A" }}
+                      </span>
+                    </div>
+
+                    <!-- Hora ETS -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-label">Hora ETS:</span>
+                      <span class="ps-detail-value">
+                        {{ currentRecord.hora_ets || "N/A" }}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <!-- Tarjeta 3: Ubicaciones -->
-                <div class="ps-detail-card">
-                  <div class="ps-detail-card-header">
-                    <i class="bi bi-geo-alt-fill"></i>
-                    <h4>Ubicaciones</h4>
-                  </div>
-                  <div class="ps-detail-card-body">
-                    <!-- Origen -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Origen:</span>
-                      <span class="ps-detail-value">
-                        {{ currentRecord.origen || "N/A" }}
-                      </span>
-                    </div>
-
-                    <!-- Destino -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Destino:</span>
-                      <span class="ps-detail-value">
-                        {{ currentRecord.destino || "N/A" }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Tarjeta 4: Producto -->
-                <div class="ps-detail-card">
-                  <div class="ps-detail-card-header">
-                    <i class="bi bi-box-seam-fill"></i>
-                    <h4>Producto</h4>
-                  </div>
-                  <div class="ps-detail-card-body">
-                    <!-- Producto Involucrado -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Producto:</span>
-                      <span class="ps-detail-value">
-                        {{ currentRecord.producto_name || "N/A" }}
-                      </span>
-                    </div>
-
-                    <!-- Embalaje -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Embalaje:</span>
-                      <span class="ps-detail-value">
-                        {{ currentRecord.embalaje_name || "N/A" }}
-                      </span>
-                    </div>
-
-                    <!-- Unidad Medida -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Unidad Medida:</span>
-                      <span class="ps-detail-value">
-                        {{ currentRecord.unidad_medida_name || "N/A" }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Tarjeta 5: Diferencias -->
+                <!-- Tarjeta 3: Detalles de Maniobra -->
                 <div class="ps-detail-card ps-detail-card-highlight">
                   <div class="ps-detail-card-header">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                    <h4>Diferencias</h4>
+                    <i class="bi bi-gear"></i>
+                    <h4>Detalles de Maniobra</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    <!-- Tipo Diferencia -->
+                    <!-- Tipo Maniobra -->
                     <div class="ps-detail-item">
-                      <span class="ps-detail-label">Tipo Diferencia:</span>
+                      <span class="ps-detail-label">Tipo de Maniobra:</span>
                       <span class="ps-detail-value ps-highlight-value">
-                        {{ currentRecord.tipo_diferencia || "N/A" }}
+                        {{ currentRecord.tipo_maniobra_name || "N/A" }}
                       </span>
                     </div>
 
-                    <!-- Cantidad Diferencia -->
+                    <!-- Puerto Procedencia -->
                     <div class="ps-detail-item">
-                      <span class="ps-detail-label">Cantidad:</span>
+                      <span class="ps-detail-label">Puerto Procedencia:</span>
                       <span class="ps-detail-value">
-                        {{ currentRecord.cantidad_diferencia || "0" }}
+                        {{ currentRecord.puerto_procedencia_name || "N/A" }}
                       </span>
                     </div>
 
-                    <!-- KG Diferencia -->
+                    <!-- Cantidad Remolcadores -->
                     <div class="ps-detail-item">
-                      <span class="ps-detail-label">KG Diferencia:</span>
+                      <span class="ps-detail-label">Remolcadores:</span>
                       <span class="ps-detail-value">
-                        {{ currentRecord.kg_diferencia || "0" }}
-                      </span>
-                    </div>
-
-                    <!-- Valor Diferencia -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Valor Diferencia:</span>
-                      <span class="ps-detail-value">
-                        {{ currentRecord.valor_diferencia || "0" }}
+                        {{ currentRecord.cantidad_remolcadores || "0" }}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <!-- Tarjeta 6: Averías -->
-                <div class="ps-detail-card">
-                  <div class="ps-detail-card-header">
-                    <i class="bi bi-tools"></i>
-                    <h4>Averías</h4>
-                  </div>
-                  <div class="ps-detail-card-body">
-                    <!-- Avería -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Avería:</span>
-                      <span class="ps-detail-value">
-                        {{ currentRecord.averia === 'si' ? 'Sí' : 'No' }}
-                      </span>
-                    </div>
-
-                    <!-- Cantidad Avería -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Cantidad Avería:</span>
-                      <span class="ps-detail-value">
-                        {{ currentRecord.cantidad_averia || "0" }}
-                      </span>
-                    </div>
-
-                    <!-- KG Avería -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">KG Avería:</span>
-                      <span class="ps-detail-value">
-                        {{ currentRecord.kg_averia || "0" }}
-                      </span>
-                    </div>
-
-                    <!-- Valor Avería -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Valor Avería:</span>
-                      <span class="ps-detail-value">
-                        {{ currentRecord.valor_averia || "0" }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Tarjeta 7: Incidencia y Descripción -->
+                <!-- Tarjeta 4: Observaciones -->
                 <div class="ps-detail-card ps-detail-card-full">
                   <div class="ps-detail-card-header">
-                    <i class="bi bi-chat-square-text-fill"></i>
-                    <h4>Incidencia y Descripción</h4>
+                    <i class="bi bi-chat-square-text"></i>
+                    <h4>Observaciones</h4>
                   </div>
                   <div class="ps-detail-card-body">
-                    <!-- Incidencia -->
                     <div class="ps-detail-item">
-                      <span class="ps-detail-label">Incidencia:</span>
                       <span class="ps-detail-value">
-                        {{ currentRecord.incidencia_involucrada_name || "N/A" }}
-                      </span>
-                    </div>
-
-                    <!-- Descripción -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Descripción:</span>
-                      <span class="ps-detail-value">
-                        {{ currentRecord.descripcion_hecho || "Ninguna descripción registrada" }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Tarjeta 8: Meta Información -->
-                <div class="ps-detail-card">
-                  <div class="ps-detail-card-header">
-                    <i class="bi bi-calendar-event-fill"></i>
-                    <h4>Meta Información</h4>
-                  </div>
-                  <div class="ps-detail-card-body">
-                    <!-- Fecha Creación -->
-                    <div class="ps-detail-item">
-                      <span class="ps-detail-label">Fecha Registro:</span>
-                      <span class="ps-detail-value">
-                        {{ formatDate(currentRecord.fecha_actual) || "N/A" }}
+                        {{ currentRecord.observaciones || "Ninguna observación registrada" }}
                       </span>
                     </div>
                   </div>
@@ -449,18 +326,18 @@ import axios from "axios";
 import Swal from "sweetalert2";
 
 export default {
-  name: "HechosExtraordinariosList",
+  name: "ProgramacionManiobra",
   props: {
-        estadoParte: {
-          type: String,
-          default: '',
-          required: true
-        }
-      },
+    estadoParte: {
+      type: String,
+      default: '',
+      required: true
+    }
+  },
   data() {
     return {      
-      hechosExtraordinarios: [],
-      allRecords: [], // Copia completa de todos los registros para filtrado local
+      programaciones: [],
+      allRecords: [],
       currentPage: 1,
       itemsPerPage: 10,
       totalItems: 0,
@@ -472,45 +349,31 @@ export default {
       loading: false,
       showDetailsModal: false,
       currentRecord: {},
-      };
+    };
   },
-  // 3. Agregar un watcher para el estado
-    watch: {
-      estadoParte(newVal) {
-        console.log('Estado del parte actualizado:', newVal);
-        // Puedes forzar una actualización aquí si es necesario
-        this.fetchHechosExtraordinarios();
-      }
-    },
+  watch: {
+    estadoParte(newVal) {
+      console.log('Estado del parte actualizado:', newVal);
+      this.fetchProgramacionesManiobras();
+    }
+  },
 
   async mounted() {
-    //await this.ExisteParteMio();
-    await this.fetchHechosExtraordinarios();
+    await this.fetchProgramacionesManiobras();
     await this.fetchUserPermissionsAndGroups();
   },
 
   computed: {
-      ActivarDesactivarBotonAgregar() {
-        return this.estadoParte === 'Aprobado' || this.loading;
-      },
-      
+    ActivarDesactivarBotonAgregar() {
+      return this.estadoParte === 'Aprobado' || this.loading;
     },
+  },
 
   methods: {
     formatDate(dateString) {
       if (!dateString) return 'N/A';
       const date = new Date(dateString);
-      return date.toLocaleString();
-    },
-
-    getStatusClass(status) {
-      if (!status) return "default";
-      const statusLower = status.toLowerCase();
-
-      if (statusLower.includes("sobrante")) return "success";
-      if (statusLower.includes("faltante")) return "danger";
-
-      return "info";
+      return date.toLocaleDateString();
     },
 
     hasGroup(group) {
@@ -525,8 +388,7 @@ export default {
     async viewDetails(item) {
       this.loading = true;
       try {
-        // Hacer una solicitud para obtener detalles completos si es necesario
-        const response = await axios.get(`/gemar/gemar-hechos-extraordinarios/${item.id}/`);
+        const response = await axios.get(`/gemar/gemar-programacion-maniobras/${item.id}/`);
         this.currentRecord = response.data;
         this.showDetailsModal = true;
       } catch (error) {
@@ -551,48 +413,29 @@ export default {
         console.error("Error al obtener permisos y grupos:", error);
       }
     },
-
-    /* async ExisteParteMio() {
-      this.loading = true;
-      try {
-        const fechaHoy = new Date().toISOString().split('T')[0];
-        const response = await axios.get("/gemar/gemar-hechos-extraordinarios/mis_hechos_extraordinarios/", {
-          params: {
-            fecha_operacion: fechaHoy,
-            page: this.currentPage,
-            page_size: this.itemsPerPage,
-            search: this.searchQuery
-          },
-        });     
-        this.existe_parte_mio = response.data.existe_parte;
-      } catch (error) {
-        console.error("Error al obtener datos:", error);
-        this.showErrorToast("No existe aún el parte correspondiente a la fecha actual.");
-      } finally {
-        this.loading = false;
-      }
-    }, */
     
-    async fetchHechosExtraordinarios() {
+    async fetchProgramacionesManiobras() {
       this.loading = true;
       try {
-        // Obtener la fecha local del usuario
         const now = new Date();
-        const fechaHoy = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-        const response = await axios.get("/gemar/gemar-hechos-extraordinarios/mis_hechos_extraordinarios/", {
+        const fechaHoy = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];            
+        const response = await axios.get("/gemar/gemar-programacion-maniobras/mis_programaciones_maniobras/", {
           params: {
-            fecha_operacion: fechaHoy,
+            fecha_actual: fechaHoy,
             page: this.currentPage,
             page_size: this.itemsPerPage,
             search: this.searchQuery
           },
         });
+        
+        console.log("Datos recibidos:", response.data);
+        
         if (response.data.existe_parte) {
-          this.hechosExtraordinarios = response.data.hechos;
-          this.allRecords = [...response.data.hechos];
-          this.totalItems = response.data.hechos.length;
+          this.programaciones = response.data.programaciones;
+          this.allRecords = [...response.data.programaciones];
+          this.totalItems = response.data.programaciones.length;
         } else {
-          this.hechosExtraordinarios = [];
+          this.programaciones = [];
           this.allRecords = [];
           this.totalItems = 0;
         }
@@ -608,68 +451,67 @@ export default {
       clearTimeout(this.debounceTimeout);
       this.debounceTimeout = setTimeout(() => {
         if (!this.searchQuery.trim()) {
-          this.hechosExtraordinarios = [...this.allRecords];
+          this.programaciones = [...this.allRecords];
           this.busqueda_existente = true;
           return;
         }
 
         const query = this.searchQuery.toLowerCase();
-        this.hechosExtraordinarios = this.allRecords.filter((item) => {
-          const informado = item.informado?.toLowerCase() || "";
-          const garante = item.garante?.nombre_entidad?.toLowerCase() || "";
-          const producto = item.producto_involucrado?.nombre_producto?.toLowerCase() || "";
+        this.programaciones = this.allRecords.filter((item) => {
+          const buque = item.buque?.toLowerCase() || "";
+          const puerto = item.puerto_name?.toLowerCase() || "";
+          const terminal = item.terminal_name?.toLowerCase() || "";
 
           return (
-            informado.includes(query) ||
-            garante.includes(query) ||
-            producto.includes(query)
+            buque.includes(query) ||
+            puerto.includes(query) ||
+            terminal.includes(query)
           );
         });
 
-        this.busqueda_existente = this.hechosExtraordinarios.length > 0;
+        this.busqueda_existente = this.programaciones.length > 0;
       }, 300);
     },
 
-    async searchHechos() {
-      await this.fetchHechosExtraordinarios();
+    async searchProgramaciones() {
+      await this.fetchProgramacionesManiobras();
     },
 
-    // Métodos de paginación
     previousPage() {
       if (this.currentPage > 1) {
         this.currentPage--;
-        this.fetchHechosExtraordinarios();
+        this.fetchProgramacionesManiobras();
       }
     },
 
     nextPage() {
       if (this.currentPage * this.itemsPerPage < this.totalItems) {
         this.currentPage++;
-        this.fetchHechosExtraordinarios();
+        this.fetchProgramacionesManiobras();
       }
     },
 
     goToPage(page) {
       this.currentPage = page;
-      this.fetchHechosExtraordinarios();
+      this.fetchProgramacionesManiobras();
     },
 
-    editHecho(item) {
+    editProgramacion(item) {
       this.$router.push({
-        name: "editar_gemar_hecho_extraordinario",
+        name: "editar_gemar_programacion_maniobras",
         params: { id: item.id },
       });
     },
 
-    async deleteHecho(id) {
+    async deleteProgramacion(id) {
       try {
-        await axios.delete(`/gemar/gemar-hechos-extraordinarios/${id}/`);
-        this.hechosExtraordinarios = this.hechosExtraordinarios.filter(
+        await axios.delete(`/gemar/gemar-programacion-maniobras/${id}/`);
+        this.programaciones = this.programaciones.filter(
           (objeto) => objeto.id !== id
         );
         this.showSuccessToast("El registro ha sido eliminado correctamente");
       } catch (error) {
-        console.error("Error al eliminar el hecho extraordinario:", error);
+        console.error("Error al eliminar la programación:", error);
         this.showErrorToast("Hubo un error al eliminar el registro.");
       }
     },
@@ -687,24 +529,9 @@ export default {
         reverseButtons: true,
       }).then((result) => {
         if (result.isConfirmed) {
-          this.deleteHecho(id);
+          this.deleteProgramacion(id);
         }
       });
-    },
-
-    // Método para manejar errores
-    handleApiError(error, action) {
-      let errorMsg = `Error al ${action}`;
-      if (error.response) {
-        errorMsg += ` (${error.response.status})`;
-        if (error.response.data) {
-          errorMsg += `: ${JSON.stringify(error.response.data)}`;
-        }
-      } else {
-        errorMsg += `: ${error.message}`;
-      }
-      console.error(errorMsg, error);
-      Swal.fire("Error", errorMsg, "error");
     },
 
     showSuccessToast(message) {

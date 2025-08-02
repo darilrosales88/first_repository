@@ -836,7 +836,23 @@ const routes = [
       requireLogin: true,
     },
   },
-  
+  //Programacion de maniobras - GEMAR 
+  {
+    path: "/gemar_parte_programacion_maniobras",
+    name: "gemar_parte_programacion_maniobras",
+    component: () => import("../views/GEMAR/ProgramacionManiobraView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/gemar_programacion_maniobras/add",
+    name: "add_gemar_programacion_maniobras",
+    component: () => import("../views/GEMAR/AdicionarProgramacionManiobra.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
 ];
 
 const router = createRouter({

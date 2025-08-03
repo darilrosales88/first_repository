@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="card border" style="margin-left: 15.8em; width: 79%">
-       <Navbar-Component />
+      <Navbar-Component />
       <div class="card-header bg-light border-bottom">
         <h6 class="mb-0 text-dark fw-semibold">
           Sistema de Partes Controlados
@@ -23,6 +23,7 @@
                 type="date" 
                 v-model="fechaOperacion" 
                 class="form-control form-control-sm"
+                @change="cargarExistencias"
               >
             </div>
             <label class="col-sm-2 col-form-label">Fecha actual:</label>
@@ -37,120 +38,85 @@
           </div>
         </div>
 
-        <!-- Tabla de Terminales -->
+        <!-- Tabla de Existencias -->
         <div class="table-section">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="text-dark fw-semibold mb-0">Mercancia</h6>
             <button @click="navigateToAddMercancia" class="btn btn-sm btn-primary">
-      <i class="bi bi-plus-circle me-1"></i> Agregar Mercancia
-    </button>
+              <i class="bi bi-plus-circle me-1"></i> Agregar Mercancia
+            </button>
           </div>
           
+          <!-- Filtros de Productos -->
+          <div class="p-3 mb-3 bg-light rounded">
+            <h6 class="text-dark fw-semibold mb-2">Filtrar por tipo:</h6>
+            <div class="btn-group" role="group">
+              <button 
+                @click="setTipoProducto('importacion')" 
+                :class="['btn btn-sm', tipoProducto === 'importacion' ? 'btn-primary' : 'btn-outline-primary']"
+              >
+                Importación
+              </button>
+              <button 
+                @click="setTipoProducto('exportacion')" 
+                :class="['btn btn-sm', tipoProducto === 'exportacion' ? 'btn-primary' : 'btn-outline-primary']"
+              >
+                Exportación
+              </button>
+            </div>
+          </div>
+
           <div class="table-responsive">
             <table class="table table-sm table-bordered table-hover">
               <thead class="table-light">
                 <tr>
                   <th scope="col">No.</th>
                   <th scope="col">Terminal</th>
-                  <th scope="col">Capacidad Importación</th>
-                  <th scope="col">Capacidad Exportación</th>
-                  <th scope="col">Existencia Importación</th>
-                  <th scope="col">Existencia Exportación</th>
+                  <th scope="col">Tipo Producto</th>
+                  <th scope="col">Producto</th>
+                  <th scope="col">Unidad Medida</th>
+                  <th scope="col">Existencia</th>
+                  <th scope="col">Estado</th>
                   <th scope="col">Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(terminal, index) in terminales" :key="index">
+                <tr v-for="(existencia, index) in existenciasFiltradas" :key="existencia.id">
                   <td>{{ index + 1 }}</td>
+                  <td>{{ existencia.terminal.nombre_terminal }}</td>
+                  <td>{{ existencia.tipo_producto_display }}</td>
+                  <td>{{ existencia.producto.nombre_producto }}</td>
+                  <td>{{ existencia.unidad_medida.unidad_medida }} ({{ existencia.unidad_medida.simbolo }})</td>
+                  <td>{{ existencia.existencia }}</td>
+                  <td>{{ existencia.estado_display || '-' }}</td>
                   <td>
-                    <select v-model="terminal.terminal_id" class="form-select form-select-sm">
-                      <option value="">Seleccione...</option>
-                      <option 
-                        v-for="term in listaTerminales" 
-                        :value="term.id"
-                        :key="term.id"
+                    <div class="d-flex gap-1">
+                      <button 
+                        @click="editarMercancia(existencia.id)" 
+                        class="btn btn-sm btn-outline-primary"
                       >
-                        {{ term.nombre }}
-                      </option>
-                    </select>
+                        <i class="bi bi-pencil"></i> 
+                      </button>
+                      <button 
+                        @click="eliminarExistencia(existencia.id)" 
+                        class="btn btn-sm btn-outline-danger"
+                      >
+                        <i class="bi bi-trash"></i> 
+                      </button>
+                    </div>
                   </td>
-                  <td>
-                    <input 
-                      type="number" 
-                      v-model="terminal.capacidad_importacion" 
-                      class="form-control form-control-sm"
-                      step="0.01"
-                      min="0"
-                    >
-                  </td>
-                  <td>
-                    <input 
-                      type="number" 
-                      v-model="terminal.capacidad_exportacion" 
-                      class="form-control form-control-sm"
-                      step="0.01"
-                      min="0"
-                    >
-                  </td>
-                  <td>
-                    <input 
-                      type="number" 
-                      v-model="terminal.existencia_importacion" 
-                      class="form-control form-control-sm"
-                      step="0.01"
-                      min="0"
-                    >
-                  </td>
-                  <td>
-                    <input 
-                      type="number" 
-                      v-model="terminal.existencia_exportacion" 
-                      class="form-control form-control-sm"
-                      step="0.01"
-                      min="0"
-                    >
-                  </td>
-                  <td>
-  <div class="d-flex gap-1">
-    <button 
-      @click="editarMercancia(terminal.terminal_id || index)" 
-      class="btn btn-sm btn-outline-primary"
-    >
-      <i class="bi bi-pencil"></i> 
-    </button>
-    <button 
-      @click="saveTerminal(index)" 
-      class="btn btn-sm btn-outline-success me-2"
-    >
-      <i class="bi bi-check-circle"></i> Guardar
-    </button>
-    <button 
-      @click="removeTerminal(index)" 
-      class="btn btn-sm btn-outline-danger"
-    >
-      <i class="bi bi-trash"></i> 
-    </button>
-  </div>
-</td>
+                </tr>
+                <tr v-if="existenciasFiltradas.length === 0">
+                  <td colspan="8" class="text-center">No hay registros para mostrar</td>
                 </tr>
               </tbody>
             </table>
           </div>
           
-          <!-- Lista de Mercancias disponibles -->
-          <div class="mt-3 p-3 bg-light rounded">
-            <h6 class="text-dark fw-semibold mb-2">Mercancias disponibles:</h6>
-            <div class="d-flex flex-wrap gap-2">
-              <span v-for="term in listaMercansias" :key="term.id" class="badge bg-secondary">
-                {{ term.nombre }}
-              </span>
-            </div>
-          </div>
-          
           <!-- Paginación -->
           <div class="io-pagination d-flex justify-content-between align-items-center mt-3">
             <div class="text-muted small">
-              Mostrando 1-15 de 30 registros
+              Mostrando {{ existenciasFiltradas.length }} de {{ existencias.length }} registros
             </div>
             <nav aria-label="Page navigation">
               <ul class="pagination pagination-sm mb-0">
@@ -161,7 +127,7 @@
                 </li>
                 <li class="page-item disabled">
                   <span class="page-link">
-                    Página 1 de 2
+                    Página 1 de 1
                   </span>
                 </li>
                 <li class="page-item">
@@ -171,25 +137,6 @@
                 </li>
               </ul>
             </nav>
-          </div>
-        </div>
-
-        <!-- Filtros de Productos -->
-        <div class="p-3 mb-4 bg-light rounded">
-          <h6 class="text-dark fw-semibold mb-3">Productos</h6>
-          <div class="btn-group" role="group">
-            <button 
-              @click="setTipoProducto('importacion')" 
-              :class="['btn btn-sm', tipoProducto === 'importacion' ? 'btn-primary' : 'btn-outline-primary']"
-            >
-              Importación
-            </button>
-            <button 
-              @click="setTipoProducto('exportacion')" 
-              :class="['btn btn-sm', tipoProducto === 'exportacion' ? 'btn-primary' : 'btn-outline-primary']"
-            >
-              Exportación
-            </button>
           </div>
         </div>
 
@@ -211,6 +158,7 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 import NavbarComponent from "@/components/NavbarComponent.vue";
+
 export default {
   name: 'ExistenciasMercancia',
   components: {
@@ -218,15 +166,11 @@ export default {
   },
   data() {
     return {
-      fechaOperacion: '',
+      fechaOperacion: new Date().toISOString().split('T')[0],
       fechaActual: new Date().toISOString().slice(0, 16),
-      terminales: [],
-      listaMercansias: [],
-      tipoProducto: 'importacion',
-      loading: false,
-      debugInfo: {
-        terminalesResponse: null
-      }
+      existencias: [],
+      tipoProducto: 'importacion', // 'importacion' o 'exportacion'
+      loading: false
     }
   },
   computed: {
@@ -237,32 +181,17 @@ export default {
     isGemarUser() {
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
       return userData.rol === 'GEMAR' || userData.is_superuser;
+    },
+    existenciasFiltradas() {
+      const tipo = this.tipoProducto === 'importacion' ? 1 : 2;
+      return this.existencias.filter(e => e.tipo === tipo);
     }
   },
   async created() {
-    await this.cargarDatosIniciales();
-    console.log('Datos cargados:', {
-      terminales: this.listaTerminales,
-      debugInfo: this.debugInfo
-    });
+    await this.cargarExistencias();
   },
   methods: {
-    editarMercancia(id) {
-    // Navegar a la página de edición con el ID de la terminal
-    if (!id) {
-      this.mostrarError('No se puede editar una terminal sin ID');
-      return;
-    }
-    
-    this.$router.push({ 
-      name: 'EditarExistenciaMercancia', 
-      params: { id: id } 
-    });
-  },
-    navigateToAddMercancia() {
-      this.$router.push({ name: 'AgregarExistenciaMercancia' });
-    },
-    async cargarDatosIniciales() {
+    async cargarExistencias() {
       try {
         this.loading = true;
         const token = localStorage.getItem('token');
@@ -272,87 +201,65 @@ export default {
           return;
         }
         
-        const headers = { 
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json'
-        };
-        
-        const instance = axios.create({
-          baseURL: 'http://127.0.0.1:8000',
-          headers: headers,
-          withCredentials: true
+        const response = await axios.get('/api/gemar/existencias-mercancia/', {
+          params: {
+            fecha_operacion: this.fechaOperacion
+          },
+          headers: { 
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json'
+          }
         });
         
-        const response = await instance.get('/api/terminales/');
-        this.debugInfo.terminalesResponse = response.data;
-        this.listaTerminales = response.data.results || [];
-        
-        this.listaTerminales = this.listaTerminales.map(t => ({
-          id: t.id,
-          nombre: t.nombre || t.nombre_terminal || '',
-        }));
-        
+        this.existencias = response.data.results || [];
       } catch (error) {
-        console.error('Error al cargar terminales:', error);
-        let errorMessage = 'Error al cargar terminales';
-        if (error.response) {
-          console.error('Detalles del error:', error.response.data);
-          if (error.response.status === 403) {
-            errorMessage = 'No tiene permisos para acceder a estos datos';
-          } else if (error.response.data?.detail) {
-            errorMessage = error.response.data.detail;
-          }
-        }
-        this.mostrarError(errorMessage);
+        console.error('Error al cargar existencias:', error);
+        this.mostrarError('Error al cargar las existencias de mercancía');
       } finally {
         this.loading = false;
       }
     },
-
-    addTerminal() {
-      this.terminales.push({
-        terminal_id: null,
-        capacidad_importacion: 0,
-        capacidad_exportacion: 0,
-        existencia_importacion: 0,
-        existencia_exportacion: 0
+    
+    setTipoProducto(tipo) {
+      this.tipoProducto = tipo;
+    },
+    
+    navigateToAddMercancia() {
+      this.$router.push({ name: 'AgregarExistenciaMercancia' });
+    },
+    
+    editarMercancia(id) {
+      this.$router.push({ 
+        name: 'EditarExistenciaMercancia', 
+        params: { id: id } 
       });
     },
     
-    removeTerminal(index) {
-      if (this.terminales.length > 1) {
-        this.terminales.splice(index, 1);
-      } else {
-        this.mostrarError('Debe haber al menos una terminal');
-      }
-    },
-    
-    async saveTerminal(index) {
+    async eliminarExistencia(id) {
       try {
-        const terminal = this.terminales[index];
+        const result = await Swal.fire({
+          title: '¿Está seguro?',
+          text: "Esta acción no se puede deshacer",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: 'Sí, eliminar',
+          cancelButtonText: 'Cancelar'
+        });
         
-        if (!terminal.terminal_id) {
-          this.mostrarError('Debe seleccionar una terminal');
-          return;
+        if (result.isConfirmed) {
+          const token = localStorage.getItem('token');
+          await axios.delete(`/api/gemar/existencias-mercancia/${id}/`, {
+            headers: { 'Authorization': `Token ${token}` }
+          });
+          
+          this.mostrarExito('Existencia eliminada correctamente');
+          await this.cargarExistencias();
         }
-        
-        // Validar que los valores numéricos no sean negativos
-        if (terminal.capacidad_importacion < 0 || 
-            terminal.capacidad_exportacion < 0 || 
-            terminal.existencia_importacion < 0 || 
-            terminal.existencia_exportacion < 0) {
-          this.mostrarError('Los valores no pueden ser negativos');
-          return;
-        }
-        
-        // Aquí podrías implementar lógica adicional para validar
-        // que las existencias no superen las capacidades, etc.
-        
-        this.mostrarExito('Datos de la terminal validados correctamente');
-        
       } catch (error) {
-        console.error('Error al validar terminal:', error);
-        this.mostrarError('Error al validar los datos de la terminal');
+        console.error('Error al eliminar existencia:', error);
+        this.mostrarError('Error al eliminar la existencia');
       }
     },
     
@@ -368,81 +275,18 @@ export default {
           return;
         }
         
-        // Primero validamos todas las terminales
-        for (const terminal of this.terminales) {
-          if (!terminal.terminal_id) {
-            this.mostrarError('Todas las terminales deben estar seleccionadas');
-            return;
-          }
-        }
-        
-        const token = localStorage.getItem('token');
-        const headers = { 
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json'
-        };
-        
-        const payload = {
-          fecha_operacion: this.fechaOperacion,
-          terminales: this.terminales.filter(t => t.terminal_id).map(t => ({
-            terminal_id: t.terminal_id,
-            capacidad_importacion: t.capacidad_importacion,
-            capacidad_exportacion: t.capacidad_exportacion,
-            existencia_importacion: t.existencia_importacion,
-            existencia_exportacion: t.existencia_exportacion,
-            tipo: this.tipoProducto === 'importacion' ? 1 : 2
-          }))
-        };
-        
-        if (payload.terminales.length === 0) {
-          this.mostrarError('Debe agregar al menos una terminal válida');
-          return;
-        }
-        
-        const instance = axios.create({
-          baseURL: 'http://127.0.0.1:8000',
-          headers: headers,
-          withCredentials: true
-        });
-        
-        const response = await instance.post('/api/gemar/existencias-mercancia/', payload);
-        
-        if (response.status === 201) {
-          this.mostrarExito('Existencias de mercancía guardadas correctamente');
-          this.terminales = [{
-            terminal_id: null,
-            capacidad_importacion: 0,
-            capacidad_exportacion: 0,
-            existencia_importacion: 0,
-            existencia_exportacion: 0
-          }];
-          this.$emit('parte-creado');
-        } else {
-          this.mostrarError('Error inesperado al guardar las existencias');
-        }
+        this.mostrarExito('Datos guardados correctamente');
+        await this.cargarExistencias();
       } catch (error) {
         console.error('Error al guardar:', error);
-        let errorMessage = 'Error al guardar las existencias de mercancía';
-        if (error.response) {
-          if (error.response.status === 400) {
-            errorMessage = error.response.data.detail || 'Datos inválidos';
-          } else if (error.response.status === 403) {
-            errorMessage = 'No tiene permisos para realizar esta acción';
-          }
-        }
-        this.mostrarError(errorMessage);
+        this.mostrarError('Error al guardar los datos');
       }
     },
     
-    //cancelar() {
-      //this.terminales = [{
-        //terminal_id: null,
-        //capacidad_importacion: 0,
-        //capacidad_exportacion: 0,
-        //existencia_importacion: 0,
-        //existencia_exportacion: 0
-      //}];
-    //},
+    cancelar() {
+      this.fechaOperacion = new Date().toISOString().split('T')[0];
+      this.cargarExistencias();
+    },
     
     mostrarError(mensaje) {
       Swal.fire({
@@ -461,8 +305,7 @@ export default {
         confirmButtonText: 'Aceptar'
       });
     }
-    
-}
+  }
 }
 </script>
 
@@ -605,9 +448,6 @@ export default {
 }
 
 /* Hacer que las columnas numéricas sean más estrechas */
-.table-sm td:nth-child(3),
-.table-sm td:nth-child(4),
-.table-sm td:nth-child(5),
 .table-sm td:nth-child(6) {
   width: 1%;
   white-space: nowrap;

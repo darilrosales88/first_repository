@@ -346,10 +346,7 @@ export default {
   computed: {
     terminalesFiltradas() {
       if (!this.carga.puerto_id) return [];
-      return this.terminales.filter(t => {
-        const puertoId = t.puerto?.id || t.puerto_id;
-        return puertoId == this.carga.puerto_id;
-      });
+      return this.terminales.filter(t => t.puerto_id == this.carga.puerto_id);
     }
   },
   async created() {
@@ -379,8 +376,7 @@ export default {
           axios.get('/api/terminales/', { 
             headers,
             params: { 
-              limit: 1000,
-              expand: 'puerto'
+              limit: 1000
             }
           }),
           axios.get('/api/gemar/partes-pbip/', { 
@@ -412,19 +408,12 @@ export default {
         }));
 
         // Procesar terminales
-        this.terminales = (terminalesRes.data.results || terminalesRes.data || []).map(t => {
-          const puerto = t.puerto || {};
-          return {
-            id: t.id,
-            nombre_terminal: t.nombre_terminal || t.nombre || 'Sin nombre',
-            puerto: {
-              id: puerto.id || t.puerto_id,
-              nombre: puerto.nombre_puerto || puerto.nombre || 'Sin nombre'
-            },
-            puerto_id: puerto.id || t.puerto_id,
-            puerto_name: puerto.nombre_puerto || puerto.nombre || 'Sin puerto'
-          };
-        });
+        this.terminales = (terminalesRes.data.results || terminalesRes.data || []).map(t => ({
+          id: t.id,
+          nombre_terminal: t.nombre_terminal || t.nombre || 'Sin nombre',
+          puerto_id: t.puerto?.id || t.puerto_id || null,
+          puerto_name: t.puerto?.nombre_puerto || t.puerto?.nombre || 'Sin puerto'
+        }));
 
         // Procesar partes PBIP
         this.partesPBIP = (partesRes.data.results || partesRes.data || []).map(p => {
@@ -452,7 +441,7 @@ export default {
         this.loading = false;
       }
     },
-    
+        
     async cargarDatosParte() {
       if (!this.carga.parte_id) return;
       

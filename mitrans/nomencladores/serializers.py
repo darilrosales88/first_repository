@@ -522,7 +522,7 @@ class nom_tipo_embalaje_serializer(serializers.ModelSerializer):
     class Meta:
         model = nom_tipo_embalaje       
         fields = ('id', 'nombre_tipo_embalaje')
-        filterset_class: nom_tipo_embalaje_filter
+        filterset_class = nom_tipo_embalaje_filter
 #****************-------------------------********************--------------------***************-----------------********************************
 class nom_incidencia_filter(filters.FilterSet):
     nombre_codigo = filters.CharFilter(method='filtrado_por_nombre_codigo',lookup_expr = 'icontains')  

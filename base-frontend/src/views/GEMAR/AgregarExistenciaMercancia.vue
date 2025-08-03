@@ -1,102 +1,194 @@
 <template>
-  <div> <!-- Elemento raíz único -->
+  <div>
     <div class="ufc-header">
-      <h6>Agregar Mercancia</h6>
+      <h6>Agregar Existencia de Mercancía</h6>
     </div>
     <Navbar-Component />
     <div class="container py-3" style="margin-left: 20em; width: 70%">
       <div class="card border">
         <div class="card-header bg-light border-bottom">
           <h5 class="mb-0 text-dark fw-semibold">
-            <i class="bi bi-building me-2"></i> Agregar Mercancia
+            <i class="bi bi-box-seam me-2"></i> Agregar Existencia de Mercancía
           </h5>
         </div>
         <div class="card-body p-3">
-          <form @submit.prevent="guardarTerminal">
+          <form @submit.prevent="guardarExistencia">
             <div class="row">
               <!-- Columna Izquierda -->
               <div class="col-md-6">
-                <!-- Campo: Nombre -->
+                <!-- Campo: Terminal -->
                 <div class="mb-3">
-                  <label
-                    for="nombre"
-                    class="form-label small fw-semibold text-secondary"
-                    >Nombre de la Terminal*</label
-                  >
-                  <input
-                    type="text"
-                    class="form-control form-control-sm border-secondary"
+                  <label for="terminal" class="form-label small fw-semibold text-secondary">
+                    Terminal*
+                  </label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
                     style="padding: 8px 12px"
-                    v-model="terminal.nombre"
-                    id="nombre"
-                    name="nombre"
+                    v-model="existencia.terminal_id"
                     required
-                    oninvalid="this.setCustomValidity('Por favor, ingrese el nombre de la terminal')"
-                    oninput="this.setCustomValidity('')"
-                  />
+                  >
+                    <option value="" disabled>Seleccione una terminal</option>
+                    <option
+                      v-for="terminal in terminales"
+                      :key="terminal.id"
+                      :value="terminal.id"
+                    >
+                      {{ terminal.nombre_terminal }}
+                    </option>
+                  </select>
                 </div>
 
-                <!-- Campo: Código -->
+                <!-- Campo: Tipo -->
                 <div class="mb-3">
-                  <label
-                    for="codigo"
-                    class="form-label small fw-semibold text-secondary"
-                    >Código</label
-                  >
-                  <input
-                    type="text"
-                    class="form-control form-control-sm border-secondary"
+                  <label for="tipo" class="form-label small fw-semibold text-secondary">
+                    Tipo*
+                  </label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
                     style="padding: 8px 12px"
-                    v-model="terminal.codigo"
-                    id="codigo"
-                    name="codigo"
-                  />
+                    v-model="existencia.tipo"
+                    required
+                  >
+                    <option value="" disabled>Seleccione un tipo</option>
+                    <option value="1">Importación</option>
+                    <option value="2">Exportación</option>
+                  </select>
+                </div>
+
+                <!-- Campo: Tipo de Producto -->
+                <div class="mb-3">
+                  <label for="tipo_producto" class="form-label small fw-semibold text-secondary">
+                    Tipo de Producto*
+                  </label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="existencia.tipo_producto"
+                    required
+                    @change="actualizarCamposPorTipo"
+                  >
+                    <option value="" disabled>Seleccione un tipo</option>
+                    <option value="1">Producto</option>
+                    <option value="2">Contenedor</option>
+                  </select>
+                </div>
+
+                <!-- Campo: Producto -->
+                <div class="mb-3">
+                  <label for="producto" class="form-label small fw-semibold text-secondary">
+                    Producto*
+                  </label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="existencia.producto_id"
+                    required
+                  >
+                    <option value="" disabled>Seleccione un producto</option>
+                    <option
+                      v-for="producto in productos"
+                      :key="producto.id"
+                      :value="producto.id"
+                    >
+                      {{ producto.nombre_producto }}
+                    </option>
+                  </select>
                 </div>
               </div>
 
               <!-- Columna Derecha -->
               <div class="col-md-6">
-                <!-- Campo: Ubicación -->
-                <div class="mb-3">
-                  <label
-                    for="ubicacion"
-                    class="form-label small fw-semibold text-secondary"
-                    >Ubicación</label
-                  >
-                  <input
-                    type="text"
-                    class="form-control form-control-sm border-secondary"
-                    style="padding: 8px 12px"
-                    v-model="terminal.ubicacion"
-                    id="ubicacion"
-                    name="ubicacion"
-                  />
-                </div>
-
-                <!-- Campo: Puerto -->
-                <div class="mb-3">
-                  <label
-                    for="puerto"
-                    class="form-label small fw-semibold text-secondary"
-                    >Puerto*</label
-                  >
+                <!-- Campo: Tipo de Embalaje (condicional) -->
+                <div class="mb-3" v-if="existencia.tipo_producto == 1">
+                  <label for="tipo_embalaje" class="form-label small fw-semibold text-secondary">
+                    Tipo de Embalaje
+                  </label>
                   <select
                     class="form-select form-select-sm border-secondary"
                     style="padding: 8px 12px"
-                    v-model="terminal.puerto_id"
-                    required
-                    oninvalid="this.setCustomValidity('Por favor, seleccione un puerto')"
-                    oninput="this.setCustomValidity('')"
+                    v-model="existencia.tipo_embalaje_id"
                   >
-                    <option value="" disabled>Seleccione un puerto</option>
+                    <option value="" disabled>Seleccione un tipo de embalaje</option>
                     <option
-                      v-for="puerto in puertos"
-                      :key="puerto.id"
-                      :value="puerto.id"
+                      v-for="embalaje in tiposEmbalaje"
+                      :key="embalaje.id"
+                      :value="embalaje.id"
                     >
-                      {{ puerto.id }}-{{ puerto.nombre_puerto }}
+                      {{ embalaje.nombre_tipo_embalaje }}
                     </option>
                   </select>
+                </div>
+
+                <!-- Campo: Estado del Contenedor (condicional) -->
+                <div class="mb-3" v-if="existencia.tipo_producto == 2">
+                  <label for="estado" class="form-label small fw-semibold text-secondary">
+                    Estado del Contenedor*
+                  </label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="existencia.estado"
+                    required
+                  >
+                    <option value="" disabled>Seleccione un estado</option>
+                    <option value="1">Vacío</option>
+                    <option value="2">Lleno</option>
+                  </select>
+                </div>
+
+                <!-- Campo: Contenido (condicional) -->
+                <div class="mb-3" v-if="existencia.tipo_producto == 2 && existencia.estado == 2">
+                  <label for="contiene" class="form-label small fw-semibold text-secondary">
+                    Contenido*
+                  </label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="existencia.contiene"
+                    required
+                  >
+                    <option value="" disabled>Seleccione contenido</option>
+                    <option value="1">Alimentos</option>
+                    <option value="2">Productos varios</option>
+                  </select>
+                </div>
+
+                <!-- Campo: Unidad de Medida -->
+                <div class="mb-3">
+                  <label for="unidad_medida" class="form-label small fw-semibold text-secondary">
+                    Unidad de Medida*
+                  </label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="existencia.unidad_medida_id"
+                    required
+                  >
+                    <option value="" disabled>Seleccione una unidad</option>
+                    <option
+                      v-for="unidad in unidadesMedida"
+                      :key="unidad.id"
+                      :value="unidad.id"
+                    >
+                      {{ unidad.unidad_medida }} ({{ unidad.simbolo }})
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Campo: Existencia -->
+                <div class="mb-3">
+                  <label for="existencia" class="form-label small fw-semibold text-secondary">
+                    Existencia*
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    class="form-control form-control-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="existencia.existencia"
+                    required
+                  />
                 </div>
               </div>
             </div>
@@ -125,70 +217,139 @@ import Swal from "sweetalert2";
 import NavbarComponent from "@/components/NavbarComponent.vue";
 
 export default {
-  name: 'AgregarTerminal',
+  name: 'AgregarExistenciaMercancia',
   components: {
     NavbarComponent
   },
   data() {
     return {
-      terminal: {
-        nombre: '',
-        codigo: '',
-        ubicacion: '',
-        puerto_id: ''
+      existencia: {
+        fecha_operacion: new Date().toISOString().split('T')[0],
+        terminal_id: '',
+        tipo: '',
+        tipo_producto: '',
+        producto_id: '',
+        tipo_embalaje_id: null,
+        unidad_medida_id: '',
+        estado: null,
+        contiene: null,
+        existencia: 0
       },
-      puertos: [],
+      terminales: [],
+      productos: [],
+      tiposEmbalaje: [],
+      unidadesMedida: [],
       loading: false
     }
   },
   async created() {
-    await this.cargarPuertos();
+    await this.cargarDatosIniciales();
   },
   methods: {
-    async cargarPuertos() {
+    async cargarDatosIniciales() {
       try {
         this.loading = true;
         const token = localStorage.getItem('token');
-        const response = await axios.get('/api/puertos/', {
-          headers: {
-            'Authorization': `Token ${token}`
-          }
-        });
         
-        this.puertos = response.data.results || [];
+        // Cargar terminales
+        const terminalesResponse = await axios.get('/api/terminales/', {
+          headers: { 'Authorization': `Token ${token}` }
+        });
+        this.terminales = terminalesResponse.data.results || [];
+        
+        // Cargar productos
+        const productosResponse = await axios.get('/api/productos/', {
+          headers: { 'Authorization': `Token ${token}` }
+        });
+        this.productos = productosResponse.data.results || [];
+        
+        // Cargar tipos de embalaje
+        const embalajesResponse = await axios.get('/api/embalajes/', {
+          headers: { 'Authorization': `Token ${token}` }
+        });
+        this.tiposEmbalaje = embalajesResponse.data.results || [];
+        
+        // Cargar unidades de medida
+        const unidadesResponse = await axios.get('/api/unidades_medida/', {
+          headers: { 'Authorization': `Token ${token}` }
+        });
+        this.unidadesMedida = unidadesResponse.data.results || [];
+        
       } catch (error) {
-        console.error('Error al cargar puertos:', error);
-        this.mostrarError('Error al cargar la lista de puertos');
+        console.error('Error al cargar datos iniciales:', error);
+        this.mostrarError('Error al cargar los datos iniciales');
       } finally {
         this.loading = false;
       }
     },
     
-    async guardarTerminal() {
+    actualizarCamposPorTipo() {
+      if (this.existencia.tipo_producto == 1) { // Producto
+        this.existencia.estado = null;
+        this.existencia.contiene = null;
+      } else { // Contenedor
+        this.existencia.tipo_embalaje_id = null;
+      }
+    },
+    
+    async guardarExistencia() {
       try {
         this.loading = true;
         const token = localStorage.getItem('token');
         
         // Validación básica
-        if (!this.terminal.nombre || !this.terminal.puerto_id) {
-          this.mostrarError('Los campos marcados con * son obligatorios');
+        if (!this.existencia.terminal_id || !this.existencia.tipo || 
+            !this.existencia.tipo_producto || !this.existencia.producto_id || 
+            !this.existencia.unidad_medida_id || this.existencia.existencia < 0) {
+          this.mostrarError('Los campos marcados con * son obligatorios y la existencia no puede ser negativa');
           return;
         }
         
-        const response = await axios.post('/api/terminales/', this.terminal, {
-          headers: {
-            'Authorization': `Token ${token}`,
-            'Content-Type': 'application/json'
+        // Validaciones específicas para contenedores
+        if (this.existencia.tipo_producto == 2) {
+          if (!this.existencia.estado) {
+            this.mostrarError('Para contenedores debe especificar el estado');
+            return;
           }
-        });
+          if (this.existencia.estado == 2 && !this.existencia.contiene) {
+            this.mostrarError('Para contenedores llenos debe especificar qué contienen');
+            return;
+          }
+        }
+        
+        // Preparar los datos para enviar
+        const datosParaEnviar = {
+          fecha_operacion: this.existencia.fecha_operacion,
+          terminal_id: this.existencia.terminal_id,
+          tipo: parseInt(this.existencia.tipo),
+          tipo_producto: parseInt(this.existencia.tipo_producto),
+          producto_id: this.existencia.producto_id,
+          tipo_embalaje_id: this.existencia.tipo_embalaje_id,
+          unidad_medida_id: this.existencia.unidad_medida_id,
+          estado: this.existencia.estado ? parseInt(this.existencia.estado) : null,
+          contiene: this.existencia.contiene ? parseInt(this.existencia.contiene) : null,
+          existencia: parseFloat(this.existencia.existencia),
+          creado_por: this.$store.state.user.id // Asegúrate de tener el ID del usuario en el store
+        };
+        
+        const response = await axios.post(
+          '/api/gemar/existencias-mercancia/', 
+          datosParaEnviar, 
+          {
+            headers: {
+              'Authorization': `Token ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
         
         if (response.status === 201) {
-          this.mostrarExito('Terminal creada correctamente');
+          this.mostrarExito('Existencia de mercancía creada correctamente');
           this.$router.push({ name: 'ExistenciasMercancia' });
         }
       } catch (error) {
-        console.error('Error al guardar terminal:', error);
-        let errorMessage = 'Error al guardar la terminal';
+        console.error('Error al guardar existencia:', error);
+        let errorMessage = 'Error al guardar la existencia de mercancía';
         if (error.response?.data) {
           errorMessage = Object.values(error.response.data).join(', ');
         }
@@ -199,8 +360,6 @@ export default {
     },
     
     confirmCancel() {
-      event.preventDefault();
-      event.stopPropagation();
       Swal.fire({
         title: "¿Volver a la página principal?",
         text: "Los datos no guardados se perderán",
@@ -213,7 +372,6 @@ export default {
         reverseButtons: true,
       }).then((result) => {
         if (result.isConfirmed) {
-         
           this.$router.go(-1);
         }
       });

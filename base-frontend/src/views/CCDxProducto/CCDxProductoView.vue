@@ -177,7 +177,7 @@ export default {
         console.log(fechaFormateada)
         if (response.data.existe) {
           this.informeCCDxProductoId = response.data.id;
-
+          this.isExistingRecord = true;
           //this.deleteInforme(response.data.id)//Aqui mandas a borrar el id del informe
           //Esto aqui deberia ser que si existe el informe se desactiva el boton 
         } else {
@@ -203,7 +203,6 @@ export default {
         const response = await axios.post("/ufc/ccd-informe/",dataToSend);
         console.log(response)
         this.informeOperativoId = response.data.id;
-        this.isExistingRecord = true;
         
         this.showSuccessToast("Informe creado correctamente");
       } catch (error) {

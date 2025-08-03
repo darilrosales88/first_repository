@@ -578,7 +578,7 @@ Con sus respectivos CRUD
 ## CCD-VAGONES-CD
     
   ### GET
-    ```json
+  ```json
     {
   "id": 4,
   "producto": {
@@ -675,7 +675,7 @@ Con sus respectivos CRUD
 }
     ``` 
   ### POST/PUT
-    ```json
+  ```json
     {
   "fecha_registro": "2025-07-18",
   "estado": "cargado",
@@ -704,8 +704,8 @@ Con sus respectivos CRUD
 
 ## CCD-EN-TRENES
   ### GET
-    ```json
-    {
+  ```json
+      {
   "id": 1,
   "producto": {
     "id": 2,
@@ -797,9 +797,9 @@ Con sus respectivos CRUD
     26
   ]
 }
-    ```
+  ```
   ### POST/PUT
-    ```json
+  ```json
     {
   "fecha_registro": "2025-07-18",
   "estado": "cargado",

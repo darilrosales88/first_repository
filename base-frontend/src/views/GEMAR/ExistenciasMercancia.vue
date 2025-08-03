@@ -1,10 +1,15 @@
 <template>
   <div>
-    <div class="card border">
+    <div class="card border" style="margin-left: 15.8em; width: 79%">
+       <Navbar-Component />
       <div class="card-header bg-light border-bottom">
         <h6 class="mb-0 text-dark fw-semibold">
           Sistema de Partes Controlados
         </h6>
+        <button class="btn btn-sm btn-outline-secondary" style="margin-top: 10px;" 
+          @click="$router.push({ name: 'GEMAR' })" >
+          <i class="bi bi-arrow-left me-1"></i> Volver a GEMAR
+        </button>
       </div>
       <div class="card-body p-3">
         <!-- Formulario de Existencias -->
@@ -35,10 +40,10 @@
         <!-- Tabla de Terminales -->
         <div class="table-section">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="text-dark fw-semibold mb-0">Terminal</h6>
-            <button @click="addTerminal" class="btn btn-sm btn-primary">
-              <i class="bi bi-plus-circle me-1"></i> Agregar Terminal
-            </button>
+            <h6 class="text-dark fw-semibold mb-0">Mercancia</h6>
+            <button @click="navigateToAddMercancia" class="btn btn-sm btn-primary">
+      <i class="bi bi-plus-circle me-1"></i> Agregar Mercancia
+    </button>
           </div>
           
           <div class="table-responsive">
@@ -106,23 +111,37 @@
                     >
                   </td>
                   <td>
-                    <button @click="saveTerminal(index)" class="btn btn-sm btn-outline-success me-2">
-                      <i class="bi bi-check-circle"></i> Guardar
-                    </button>
-                    <button @click="removeTerminal(index)" class="btn btn-sm btn-outline-danger">
-                      <i class="bi bi-trash"></i> Eliminar
-                    </button>
-                  </td>
+  <div class="d-flex gap-1">
+    <button 
+      @click="editarMercancia(terminal.terminal_id || index)" 
+      class="btn btn-sm btn-outline-primary"
+    >
+      <i class="bi bi-pencil"></i> 
+    </button>
+    <button 
+      @click="saveTerminal(index)" 
+      class="btn btn-sm btn-outline-success me-2"
+    >
+      <i class="bi bi-check-circle"></i> Guardar
+    </button>
+    <button 
+      @click="removeTerminal(index)" 
+      class="btn btn-sm btn-outline-danger"
+    >
+      <i class="bi bi-trash"></i> 
+    </button>
+  </div>
+</td>
                 </tr>
               </tbody>
             </table>
           </div>
           
-          <!-- Lista de terminales disponibles -->
+          <!-- Lista de Mercancias disponibles -->
           <div class="mt-3 p-3 bg-light rounded">
-            <h6 class="text-dark fw-semibold mb-2">Terminales disponibles:</h6>
+            <h6 class="text-dark fw-semibold mb-2">Mercancias disponibles:</h6>
             <div class="d-flex flex-wrap gap-2">
-              <span v-for="term in listaTerminales" :key="term.id" class="badge bg-secondary">
+              <span v-for="term in listaMercansias" :key="term.id" class="badge bg-secondary">
                 {{ term.nombre }}
               </span>
             </div>
@@ -177,7 +196,7 @@
         <!-- Botones de acción -->
         <div class="d-flex justify-content-center gap-3 mt-4">
           <button @click="guardar" class="btn btn-sm btn-primary">
-            <i class="bi bi-save me-1"></i> Guardar
+            <i class="bi bi-save me-1"></i> Guardar Todo
           </button>
           <button @click="cancelar" class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-x me-1"></i> Cancelar
@@ -191,55 +210,105 @@
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
-
+import NavbarComponent from "@/components/NavbarComponent.vue";
 export default {
   name: 'ExistenciasMercancia',
+  components: {
+    NavbarComponent
+  },
   data() {
     return {
       fechaOperacion: '',
       fechaActual: new Date().toISOString().slice(0, 16),
-      terminales: [{
-        terminal_id: null,
-        capacidad_importacion: 0,
-        capacidad_exportacion: 0,
-        existencia_importacion: 0,
-        existencia_exportacion: 0
-      }],
-      listaTerminales: [],
+      terminales: [],
+      listaMercansias: [],
       tipoProducto: 'importacion',
-      loading: false
+      loading: false,
+      debugInfo: {
+        terminalesResponse: null
+      }
     }
-  },
-  async created() {
-    await this.cargarTerminales();
   },
   computed: {
     isAdmin() {
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-      return userData.is_superuser || false;
+      return userData.is_superuser;
     },
     isGemarUser() {
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-      return !userData.is_superuser; // O la lógica específica para GEMAR
+      return userData.rol === 'GEMAR' || userData.is_superuser;
     }
-},
+  },
+  async created() {
+    await this.cargarDatosIniciales();
+    console.log('Datos cargados:', {
+      terminales: this.listaTerminales,
+      debugInfo: this.debugInfo
+    });
+  },
   methods: {
-    async cargarTerminales() {
+    editarMercancia(id) {
+    // Navegar a la página de edición con el ID de la terminal
+    if (!id) {
+      this.mostrarError('No se puede editar una terminal sin ID');
+      return;
+    }
+    
+    this.$router.push({ 
+      name: 'EditarExistenciaMercancia', 
+      params: { id: id } 
+    });
+  },
+    navigateToAddMercancia() {
+      this.$router.push({ name: 'AgregarExistenciaMercancia' });
+    },
+    async cargarDatosIniciales() {
       try {
         this.loading = true;
         const token = localStorage.getItem('token');
-        const headers = { Authorization: `Bearer ${token}` };
         
-        const response = await axios.get('/api/terminales/', { headers });
-        this.listaTerminales = response.data;
+        if (!token) {
+          this.mostrarError('No se encontró el token de autenticación');
+          return;
+        }
+        
+        const headers = { 
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        };
+        
+        const instance = axios.create({
+          baseURL: 'http://127.0.0.1:8000',
+          headers: headers,
+          withCredentials: true
+        });
+        
+        const response = await instance.get('/api/terminales/');
+        this.debugInfo.terminalesResponse = response.data;
+        this.listaTerminales = response.data.results || [];
+        
+        this.listaTerminales = this.listaTerminales.map(t => ({
+          id: t.id,
+          nombre: t.nombre || t.nombre_terminal || '',
+        }));
+        
       } catch (error) {
         console.error('Error al cargar terminales:', error);
-        this.mostrarError('No se pudieron cargar las terminales');
+        let errorMessage = 'Error al cargar terminales';
+        if (error.response) {
+          console.error('Detalles del error:', error.response.data);
+          if (error.response.status === 403) {
+            errorMessage = 'No tiene permisos para acceder a estos datos';
+          } else if (error.response.data?.detail) {
+            errorMessage = error.response.data.detail;
+          }
+        }
+        this.mostrarError(errorMessage);
       } finally {
         this.loading = false;
       }
     },
-    
+
     addTerminal() {
       this.terminales.push({
         terminal_id: null,
@@ -251,50 +320,65 @@ export default {
     },
     
     removeTerminal(index) {
-      this.terminales.splice(index, 1);
-    },
-    
-    setTipoProducto(tipo) {
-      this.tipoProducto = tipo;
+      if (this.terminales.length > 1) {
+        this.terminales.splice(index, 1);
+      } else {
+        this.mostrarError('Debe haber al menos una terminal');
+      }
     },
     
     async saveTerminal(index) {
       try {
         const terminal = this.terminales[index];
+        
         if (!terminal.terminal_id) {
           this.mostrarError('Debe seleccionar una terminal');
           return;
         }
         
-        const token = localStorage.getItem('token');
-        const headers = { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        };
+        // Validar que los valores numéricos no sean negativos
+        if (terminal.capacidad_importacion < 0 || 
+            terminal.capacidad_exportacion < 0 || 
+            terminal.existencia_importacion < 0 || 
+            terminal.existencia_exportacion < 0) {
+          this.mostrarError('Los valores no pueden ser negativos');
+          return;
+        }
         
-        const payload = {
-          ...terminal,
-          fecha_operacion: this.fechaOperacion
-        };
+        // Aquí podrías implementar lógica adicional para validar
+        // que las existencias no superen las capacidades, etc.
         
-        await axios.post('/api/gemar/existencias-mercancia/', payload, { headers });
-        this.mostrarExito('Datos de terminal guardados correctamente');
+        this.mostrarExito('Datos de la terminal validados correctamente');
+        
       } catch (error) {
-        console.error('Error al guardar terminal:', error);
-        this.mostrarError('Error al guardar los datos de la terminal');
+        console.error('Error al validar terminal:', error);
+        this.mostrarError('Error al validar los datos de la terminal');
       }
     },
     
     async guardar() {
+      if (!this.isGemarUser) {
+        this.mostrarError('No tiene permisos para realizar esta acción');
+        return;
+      }
+      
       try {
         if (!this.fechaOperacion) {
           this.mostrarError('La fecha de operación es requerida');
           return;
         }
         
+        // Primero validamos todas las terminales
+        for (const terminal of this.terminales) {
+          if (!terminal.terminal_id) {
+            this.mostrarError('Todas las terminales deben estar seleccionadas');
+            return;
+          }
+        }
+        
         const token = localStorage.getItem('token');
         const headers = { 
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Token ${token}`,
           'Content-Type': 'application/json'
         };
         
@@ -310,31 +394,55 @@ export default {
           }))
         };
         
-        await axios.post('/api/gemar/existencias-mercancia/', payload, { headers });
-        this.mostrarExito('Existencias guardadas correctamente');
-        this.terminales = [{
-          terminal_id: null,
-          capacidad_importacion: 0,
-          capacidad_exportacion: 0,
-          existencia_importacion: 0,
-          existencia_exportacion: 0
-        }];
-        this.$emit('parte-creado'); // Emitir evento para actualizar la vista principal
+        if (payload.terminales.length === 0) {
+          this.mostrarError('Debe agregar al menos una terminal válida');
+          return;
+        }
+        
+        const instance = axios.create({
+          baseURL: 'http://127.0.0.1:8000',
+          headers: headers,
+          withCredentials: true
+        });
+        
+        const response = await instance.post('/api/gemar/existencias-mercancia/', payload);
+        
+        if (response.status === 201) {
+          this.mostrarExito('Existencias de mercancía guardadas correctamente');
+          this.terminales = [{
+            terminal_id: null,
+            capacidad_importacion: 0,
+            capacidad_exportacion: 0,
+            existencia_importacion: 0,
+            existencia_exportacion: 0
+          }];
+          this.$emit('parte-creado');
+        } else {
+          this.mostrarError('Error inesperado al guardar las existencias');
+        }
       } catch (error) {
         console.error('Error al guardar:', error);
-        this.mostrarError('Error al guardar las existencias');
+        let errorMessage = 'Error al guardar las existencias de mercancía';
+        if (error.response) {
+          if (error.response.status === 400) {
+            errorMessage = error.response.data.detail || 'Datos inválidos';
+          } else if (error.response.status === 403) {
+            errorMessage = 'No tiene permisos para realizar esta acción';
+          }
+        }
+        this.mostrarError(errorMessage);
       }
     },
     
-    cancelar() {
-      this.terminales = [{
-        terminal_id: null,
-        capacidad_importacion: 0,
-        capacidad_exportacion: 0,
-        existencia_importacion: 0,
-        existencia_exportacion: 0
-      }];
-    },
+    //cancelar() {
+      //this.terminales = [{
+        //terminal_id: null,
+        //capacidad_importacion: 0,
+        //capacidad_exportacion: 0,
+        //existencia_importacion: 0,
+        //existencia_exportacion: 0
+      //}];
+    //},
     
     mostrarError(mensaje) {
       Swal.fire({
@@ -353,7 +461,8 @@ export default {
         confirmButtonText: 'Aceptar'
       });
     }
-  }
+    
+}
 }
 </script>
 
@@ -448,6 +557,7 @@ export default {
 }
 
 .btn-outline-success {
+  margin-left: 10px ;
   color: #28a745;
   border-color: #28a745;
 }

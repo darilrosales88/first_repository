@@ -8,7 +8,7 @@
       <div class="card border">
         <div class="card-header bg-light border-bottom">
           <h6 class="mb-0 text-dark fw-semibold">
-            Listado de equpos ferroviarios
+            Listado de atraques
           </h6>
         </div>
         <div class="card-body p-3">
@@ -23,7 +23,7 @@
                 <input
                   type="search"
                   class="form-control"
-                  placeholder="Buscar por tipo, número o territorio"
+                  placeholder="Buscar por tipo, numero o territorio"
                   v-model="searchQuery"
                   @input="handleSearchInput"/>
                 <span class="position-absolute top-50 start-0 translate-middle-y ps-2">

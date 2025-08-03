@@ -85,6 +85,7 @@
                   oninvalid="this.setCustomValidity('Por favor, seleccione un origen')"
                   oninput="this.setCustomValidity('')"
                 >
+                  
                   <option value="" disabled>Seleccione un origen</option>
                   <option
                     v-for="entidad in entidades"
@@ -206,34 +207,22 @@
                 <select
                   class="form-select form-select-sm border-secondary"
                   style="padding: 8px 12px"
-                  v-model="formData.estado"
-                >
+                  v-model="formData.estado">
                   <option value="cargado">Cargado</option>
                   <option value="vacio">Vacio</option>
                 </select>
               </div>
 
               <!-- Campo: operacion -->
-              <div style="margin-bottom: 12px">
-                <label
-                  for="operacion"
-                  class="form-label small fw-semibold text-secondary"
-                  >Operación</label
-                >
-                <input
-                  type="text"
-                  class="form-control form-control-sm border-secondary"
-                  style="padding: 8px 12px"
-                  v-model="formData.operacion"
-                  id="operacion"
-                  name="operacion"
-                  readonly
-                />
+              <div  style="margin-bottom: 12px;">
+                <label for="operacion" class="form-label small fw-semibold text-secondary">Operación</label>
+                <input type="text" class="form-control form-control-sm border-secondary" style="padding: 8px 12px;" v-model="formData.operacion" id="operacion" name="operacion" readonly/>
               </div>
 
               <div class="mb-3">
                 <!-- Campo: Productos-->
                 <div class="mb-3">
+                  
                   <label
                     for="productos"
                     class="form-label small fw-semibold text-secondary"
@@ -261,10 +250,7 @@
                         }}-{{ producto.tipo_embalaje_name }}
                       </option>
                     </select>
-                    <button
-                      class="create-button ms-2"
-                      @click.stop.prevent="abrirModalAgregarProducto"
-                    >
+                    <button class="create-button ms-2" @click.stop.prevent="abrirModalAgregarProducto">
                       <i class="bi bi-plus-circle large-icon"></i>
                     </button>
                   </div>
@@ -381,15 +367,13 @@
           <button
             type="button"
             class="ufc-button secondary"
-            @click="cerrarModalVagon"
-          >
+            @click="cerrarModalVagon">
             <i class="bi bi-x-circle"></i> Cancelar
           </button>
           <button
             type="button"
             class="ufc-button primary"
-            @click="agregarNuevoVagon()"
-          >
+            @click="agregarNuevoVagon()">
             <i class="bi bi-check-circle"></i> Agregar
           </button>
         </div>
@@ -489,14 +473,14 @@ export default {
         tipo_equipo: "",
         estado: "cargado",
         operacion: "",
-        producto: "", //Estaba escrito productos , en el form se llena producto
+        productos: "",
         situados: 1,
         pendiente_proximo_dia: 0,
         observaciones: "",
         equipos_vagones: [],
       },
       isDisable: true,
-      userGroups: [],
+      userGroups: [], 
       userPermissions: [], // Inicializa como array vacío
       productoSearch: "",
       filteredProductos: [],
@@ -540,7 +524,6 @@ export default {
   },
 
   mounted() {
-    this.verificarInformeOperativo(); // Esto tu vo que ser agregado, ya que se estaba buscando un ID que no existia
     this.getProductos();
     this.getEntidades();
     this.getPuertos();
@@ -559,7 +542,7 @@ export default {
       return new Date().toLocaleString("es-ES");
     },
   },
-
+  
   methods: {
     async verificarInformeOperativo() {
       try {
@@ -623,16 +606,14 @@ export default {
     },
 
     agregarNuevoVagon() {
-      if (this.nuevoVagon.equipo_ferroviario == "") {
+      
+      if (this.nuevoVagon.equipo_ferroviario == '') {
         this.showErrorToast("Debe completar todos los campos");
         return;
       }
-      const equipoSeleccionado = this.equipos_vagones.find(
-        (e) => e.id === this.nuevoVagon.equipo_ferroviario
-      );
+      const equipoSeleccionado = this.equipos_vagones.find((e) => e.id === this.nuevoVagon.equipo_ferroviario);
       const yaExistente = this.vagonesAgregados.some(
-        (vagon) =>
-          vagon.equipo_ferroviario.id === this.nuevoVagon.equipo_ferroviario
+        (vagon) => vagon.equipo_ferroviario.id === this.nuevoVagon.equipo_ferroviario
       );
 
       if (yaExistente) {
@@ -643,12 +624,13 @@ export default {
       const vagonAgregado = {
         equipo_ferroviario: equipoSeleccionado,
         cant_dias: this.nuevoVagon.cant_dias,
+        // Agrega otros datos necesarios para mantener consistencia
         datos: {
           equipo_vagon: equipoSeleccionado.numero_identificacion,
         },
       };
 
-      this.vagonesAgregados.push(vagonAgregado); // Usando vagonesAgregados
+      this.vagonesAgregados.push(vagonAgregado);
       this.cerrarModalVagon();
       this.showSuccessToast("Vagón agregado correctamente");
     },
@@ -709,6 +691,7 @@ export default {
       );
       this.showSuccessToast("Vagón eliminado correctamente.");
     },
+
 
     cerrarModalVagon() {
       this.mostrarModalVagon = false;
@@ -785,8 +768,8 @@ export default {
     },
     async submitForm() {
       try {
+
         const informeNoAprobado = await this.verificarEstadoInforme();
-        console.log("Estado: ", informeNoAprobado);
         if (!informeNoAprobado) {
           Swal.fire(
             "Error",
@@ -806,7 +789,7 @@ export default {
           return;
         }
 
-        if (this.vagonesAgregados.length == 0) {
+        if (this.vagonesAgregados.length==0) {
           Swal.fire({
             title: "Error",
             text: "Debe añadir al menos un vagón",
@@ -815,15 +798,11 @@ export default {
           return;
         }
 
-        if (
-          this.formData.estado === "cargado" &&
-          this.formData.producto.length === 0
-        ) {
-          this.showErrorToast(
-            "Debe seleccionar al menos un producto cuando el estado es Cargado"
-          );
+        if (this.formData.estado === "cargado" && this.formData.producto.length === 0) {
+          this.showErrorToast("Debe seleccionar al menos un producto cuando el estado es Cargado");
           return;
         }
+
 
         if (this.vagonesAgregados.length !== this.formData.situados) {
           Swal.fire({
@@ -872,7 +851,7 @@ export default {
       } catch (error) {
         console.error("Error al enviar el formulario:", error);
         this.showErrorToast(error.message);
-      }
+      } 
     },
     resetForm() {
       this.formData = {
@@ -881,7 +860,7 @@ export default {
         tipo_equipo: "",
         estado: "cargado",
         operacion: "",
-        producto: "", //Hay que revisar los reset de todos los estados. @BZ-theFanG
+        productos: [],
         situados: 1,
         pendiente_proximo_dia: 0,
         observaciones: "",
@@ -949,6 +928,7 @@ export default {
       }
       return `${this.formData.producto.length} productos seleccionados`;
     },
+
 
     closeDropdownsOnClickOutside() {
       document.addEventListener("click", (e) => {
@@ -1023,13 +1003,12 @@ export default {
     },
     async verificarEstadoInforme() {
       try {
-        console.log("Hay id del informe", this.informeOperativoId); // @BZ-theFanG el id no existia entonces esto siempre retornaba false
         if (!this.informeOperativoId) return false;
 
         const response = await axios.get(
           `/ufc/informe-operativo/${this.informeOperativoId}/`
         );
-        return response.data.estado_parte === "Creado"; // Aqui se tuvo que cambiar la logica Revisalo en los otros componentes
+        return response.data.estado_parte !== "Aprobado";
       } catch (error) {
         console.error("Error al verificar estado del informe:", error);
         return false;
@@ -1040,7 +1019,144 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos para el select con búsqueda */
+/* Estilos para la sección de vagones asociados */
+.ufc-vagones-container {
+  margin-top: 30px;
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+}
+
+.ufc-vagones-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.ufc-vagones-header h3 {
+  color: #002a68;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.ufc-button.small {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+.ufc-vagones-table-container {
+  overflow-x: auto;
+}
+
+.ufc-vagones-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ufc-vagones-table th {
+  background-color: #002a68;
+  color: white;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.ufc-vagones-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  font-size: 0.85rem;
+}
+
+.ufc-vagones-table tr:hover {
+  background-color: #f8f9fa;
+}
+
+.ufc-actions-cell {
+  display: flex;
+  gap: 8px;
+}
+
+.ufc-icon-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ufc-icon-button i {
+  font-size: 0.9rem;
+}
+
+.ufc-icon-button.warning {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.ufc-icon-button.warning:hover {
+  background-color: #e0a800;
+}
+
+.ufc-icon-button.danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.ufc-icon-button.danger:hover {
+  background-color: #c82333;
+}
+
+/* Estilo para estado vacío */
+.ufc-vagones-empty {
+  margin-top: 20px;
+  text-align: center;
+  padding: 30px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.ufc-empty-state {
+  color: #6c757d;
+}
+
+.ufc-empty-state i {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  color: #adb5bd;
+}
+
+.ufc-empty-state p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Estilos para el modal de vagón */
+.ufc-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.ufc-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+/* Estilos para el select personalizado de productos */
 .ufc-custom-select {
   position: relative;
   width: 100%;
@@ -1122,20 +1238,6 @@ export default {
 .ufc-producto-option:hover {
   background-color: #f5f5f5;
 }
-/* Estilos para el grid dentro del modal */
-.ufc-modal-body .ufc-form-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-/* Ajustes para los botones del modal */
-.ufc-modal-body .ufc-form-actions {
-  border-top: 1px solid #eee;
-  padding-top: 15px;
-  margin-top: 0;
-}
 
 .ufc-producto-option.selected {
   background-color: #002a68;
@@ -1147,13 +1249,47 @@ export default {
   margin-left: 8px;
 }
 
-/* Para navegadores que soportan datalist */
-input[list] {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.85rem;
+.ufc-select[multiple] {
+  height: auto;
+  min-height: 100px;
+  padding: 8px;
+}
+
+.ufc-select[multiple] option {
+  padding: 6px 8px;
+  margin: 2px 0;
+  border-radius: 4px;
+}
+
+.ufc-select[multiple] option:checked {
+  background-color: #002a68;
+  color: white;
+}
+
+.ufc-selected-products {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 5px;
+}
+
+.ufc-form-container {
+  font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+  color: #333;
+  padding-bottom: 20px;
+}
+
+.ufc-header {
+  background-color: #002a68;
+  color: white;
+  text-align: right;
+  padding: 10px 15px;
+  margin-bottom: 20px;
+}
+
+.ufc-header h6 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
 }
 .ufc-vagones-agregados {
   margin-top: 30px;
@@ -1197,43 +1333,6 @@ input[list] {
 
 .ufc-table tr:hover {
   background-color: #f5f5f5;
-}
-
-.ufc-select[multiple] {
-  height: auto;
-  min-height: 100px;
-  padding: 8px;
-}
-
-.ufc-select[multiple] option {
-  padding: 6px 8px;
-  margin: 2px 0;
-  border-radius: 4px;
-}
-
-.ufc-select[multiple] option:checked {
-  background-color: #002a68;
-  color: white;
-}
-
-.ufc-form-container {
-  font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
-  color: #333;
-  padding-bottom: 20px;
-}
-
-.ufc-header {
-  background-color: #002a68;
-  color: white;
-  text-align: right;
-  padding: 10px 15px;
-  margin-bottom: 20px;
-}
-
-.ufc-header h6 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 500;
 }
 
 .ufc-form-wrapper {

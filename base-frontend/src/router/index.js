@@ -643,6 +643,87 @@ const routes = [
       requireLogin: true,
     },
   },
+{
+    path: "/GEMAR",
+    name: "GEMAR",
+    component: () => import("../views/GEMAR/GemarView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/CargasViejas",
+    name: "CargasViejas",
+    component: () => import("../views/GEMAR/CargasViejas.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/AgregarCarga",
+    name: "AgregarCarga",
+    component: () => import("../views/GEMAR/AgregarCarga.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  
+  {
+    path: "/EditarCarga",
+    name: "EditarCarga",
+    component: () => import("../views/GEMAR/EditarCargaVieja.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/ExistenciasMercancia",
+    name: "ExistenciasMercancia",
+    component: () => import("../views/GEMAR/ExistenciasMercancia.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/AgregarExistenciaMercancia",
+    name: "AgregarExistenciaMercancia",
+    component: () => import("../views/GEMAR/AgregarExistenciaMercancia.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/EditarExistenciaMercancia",
+    name: "EditarExistenciaMercancia",
+    component: () => import("../views/GEMAR/EditarExistenciaMercancia.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/PartesPBIP",
+    name: "PartesPBIP",
+    component: () => import("../views/GEMAR/PartesPBIP.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/AgregarBuque",
+    name: "AgregarBuque",
+    component: () => import("../views/GEMAR/AgregarBuque.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/EditarPartePBIP",
+    name: "EditarPartePBIP",
+    component: () => import("../views/GEMAR/EditarPartePBIP.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
 
   {
     path: "/ufc",
@@ -797,51 +878,12 @@ const routes = [
     },
   },
   {
-    path: "/VisualizarInfoOperative/:id",
-    name: "VisualizarInfoOperative", // Este nombre debe coincidir con el usado en el router-link
-    component: () => import("@/views/UFC/VisualizarInfoOperativo.vue"),
-    props: true,
-  },
-  {
-    path: "/CCD-Producto",
-    name: "CCD-Producto",
-    component: () => import("../views/UFC/CCD-ProductoView.vue"),
-    meta: {
-      requireLogin: true,
-    },
-  },
-  {
-  path: "/GemarView",
-  name: "GemarView",
-  component: () => import("../views/GEMAR/GemarView.vue"),
-  meta: {
-    requireLogin: true,
-  },
-},
-  {
-    path: "/CargasViejas",
-    name: "CargasViejas",
-    component: () => import("../views/GEMAR/CargasViejas.vue"),
-    meta: {
-      requireLogin: true,
-    },
-  },
-  {
-    path: "/ExistenciasMercancia",
-    name: "ExistenciasMercancia",
-    component: () => import("../views/GEMAR/ExistenciasMercancia.vue"),
-    meta: {
-      requireLogin: true,
-    },
-  },
-  {
-    path: "/PartesPBIP",
-    name: "PartesPBIP",
-    component: () => import("../views/GEMAR/PartesPBIP.vue"),
-    meta: {
-      requireLogin: true,
-    },
-  }
+  path: '/VisualizarInfoOperative/:id',
+  name: 'VisualizarInfoOperative', // Este nombre debe coincidir con el usado en el router-link
+  component: () => import('@/views/UFC/VisualizarInfoOperativo.vue'),
+  props: true
+}
+  
 ];
 
 const router = createRouter({

@@ -1,50 +1,80 @@
 <template>
   <div>
-    <div style=" background-color: #002A68; color: white; text-align: right;">
+    <div style="background-color: #002A68; color: white; text-align: right;">
       <h6>Bienvenido:</h6>
     </div>  
     <br />
     <Navbar-Component />
     
-    <div class="form-container">
-      <h3>Adicionar contenedor</h3>
+    <div class="form-container" style="margin-left: 18em; width: 75%">
+      <h2>Adicionar contenedor</h2>
       <form @submit.prevent="save_contenedor" class="form-grid">
-        <!-- Campo Id del Contenedor -->
-        
         <div class="mb-3">
           <label for="id_contenedor" class="form-label">Id:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="id_contenedor" v-model="id_contenedor" required />
+          <input 
+            type="text" 
+            class="form-control" 
+            id="id_contenedor" 
+            v-model="id_contenedor" 
+            required 
+          />
         </div>
 
-        <!-- Campo Tipo de Contenedor -->
         <div class="mb-3">
           <label for="tipo_contenedor" class="form-label">Tipo de contenedor:<span style="color: red;">*</span></label>
-          <select class="form-control" id="tipo_contenedor" v-model="tipo_contenedor" required>
-            <option v-for="t_contenedor in contenedores_options" :value="t_contenedor.value" :key="t_contenedor.value">
+          <select 
+            class="form-control" 
+            id="tipo_contenedor" 
+            v-model="tipo_contenedor" 
+            required
+          >
+            <option 
+              v-for="t_contenedor in contenedores_options" 
+              :value="t_contenedor.value" 
+              :key="t_contenedor.value"
+            >
               {{ t_contenedor.text }}
             </option>
           </select>
         </div>
 
-        <!-- Campo Longitud -->
         <div class="mb-3">
           <label for="longitud" class="form-label">Longitud:<span style="color: red;">*</span></label>
-          <select class="form-control" id="longitud" v-model="longitud" required>
-            <option v-for="longit in longitud_options" :value="longit.value" :key="longit.value">
+          <select 
+            class="form-control" 
+            id="longitud" 
+            v-model="longitud" 
+            required
+          >
+            <option 
+              v-for="longit in longitud_options" 
+              :value="longit.value" 
+              :key="longit.value"
+            >
               {{ longit.text }}
             </option>
           </select>
         </div>
 
-        <!-- Campo Código ISO -->
         <div class="mb-3">
           <label for="codigo_iso" class="form-label">Código ISO:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="codigo_iso" v-model="codigo_iso" required />
+          <input 
+            type="text" 
+            class="form-control" 
+            id="codigo_iso" 
+            v-model="codigo_iso" 
+            required 
+          />
         </div>
 
-        <!-- Botones -->
         <div class="form-buttons">
-          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button 
+            type="button" 
+            @click="confirmCancel" 
+            style="color:white;text-decoration:none"
+          >
+            Cancelar
+          </button>
           <button type="submit">Aceptar</button>
         </div>
       </form>
@@ -66,7 +96,7 @@ body {
   background-color: rgb(245, 245, 245);
 }
 
-h3 {
+h2 {
   text-align: left;
   margin-bottom: 20px;
   font-size: 18px;
@@ -79,7 +109,7 @@ h3 {
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 2 columnas de igual tamaño */
+  grid-template-columns: repeat(3, 1fr); /* 3 columnas de igual tamaño */
   gap: 15px; /* Espacio entre los elementos */
 }
 
@@ -99,7 +129,7 @@ h3 {
 }
 
 .form-buttons {
-  grid-column: span 3; /* Los botones ocupan las 2 columnas */
+  grid-column: span 3; /* Los botones ocupan las 3 columnas */
   display: flex;
   justify-content: flex-end;
   font-size: 14px;

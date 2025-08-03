@@ -1,43 +1,76 @@
 <template>
   <div>
-    <div style=" background-color: #002A68; color: white; text-align: right;">
+    <div style="background-color: #002a68; color: white; text-align: right">
       <h6>Bienvenido:</h6>
-    </div>  
+    </div>
     <br />
     <Navbar-Component />
-    
-    <div class="form-container">
-      <h3 style="color: #002A68;">Editar Incidencia</h3>
-      <form @submit.prevent="update_incidencia" class="form-grid">
-        <!-- Campo Código de Incidencia -->
-        <div class="mb-3">
-          <label for="codigo_incidencia" class="form-label">Código de Incidencia:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="codigo_incidencia" v-model="codigo_incidencia" required />
-        </div>
 
-        <!-- Campo Nombre de Incidencia -->
-        <div class="mb-3">
-          <label for="nombre_incidencia" class="form-label">Nombre:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="nombre_incidencia" v-model="nombre_incidencia" required />
-        </div>
+    <div class="form-container" style="margin-left: 18em; width: 75%">
+      <h3 style="color: #002a68">
+        Editar Incidencia <strong>{{ nombre_incidencia }}</strong>
+      </h3>
+      <form @submit.prevent="update_incidencia">
+        <div class="form-row">
+          <!-- Campo Código de Incidencia -->
+          <div class="mb-3">
+            <label for="codigo_incidencia" class="form-label"
+              >Código de Incidencia:<span style="color: red">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="codigo_incidencia"
+              v-model="codigo_incidencia"
+              required
+            />
+          </div>
 
-        <!-- Campo Tipo Imputable -->
-        <div class="mb-3">
-          <label for="tipo_imputable" class="form-label">Tipo Imputable:<span style="color: red;">*</span></label>
-          <select class="form-control" id="tipo_imputable" v-model="tipo_imputable" required>
-            <option value="-">-</option>
-            <option value="imputables_buque">Imputables al buque</option>
-            <option value="imputables_puerto">Imputables al puerto</option>
-            <option value="imputables_receptor">Imputables al receptor</option>
-            <option value="imputables_otras_causas">Imputables a otras causas</option>
-            <option value="imputables_imp_exp">Imputables al importador / exportador</option>
-            <option value="imputables_aut_portuarias">Imputables a las autoridades portuarias</option>
-          </select>
+          <!-- Campo Nombre de Incidencia -->
+          <div class="mb-3">
+            <label for="nombre_incidencia" class="form-label"
+              >Nombre:<span style="color: red">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="nombre_incidencia"
+              v-model="nombre_incidencia"
+              required
+            />
+          </div>
+
+          <!-- Campo Tipo Imputable -->
+          <div class="mb-3">
+            <label for="tipo_imputable" class="form-label"
+              >Tipo Imputable:<span style="color: red">*</span></label
+            >
+            <select
+              class="form-control"
+              id="tipo_imputable"
+              v-model="tipo_imputable"
+              required
+            >
+              <option value="-">-</option>
+              <option value="imputables_buque">Imputables al buque</option>
+              <option value="imputables_puerto">Imputables al puerto</option>
+              <option value="imputables_receptor">Imputables al receptor</option>
+              <option value="imputables_otras_causas">Imputables a otras causas</option>
+              <option value="imputables_imp_exp">Imputables al importador / exportador</option>
+              <option value="imputables_aut_portuarias">Imputables a las autoridades portuarias</option>
+            </select>
+          </div>
         </div>
 
         <!-- Botones -->
         <div class="form-buttons">
-          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button
+            type="button"
+            @click="confirmCancel"
+            style="color: white; text-decoration: none"
+          >
+            Cancelar
+          </button>
           <button type="submit">Aceptar</button>
         </div>
       </form>
@@ -47,17 +80,16 @@
 
 <style scoped>
 body {
-  background-color: #F2F2F2;
+  background-color: #f2f2f2;
 }
 
 .form-container {
-  max-width: 680px; /* Ancho reducido */
+  max-width: 600px; /* Ancho reducido */
   margin: 20px; /* Centra el formulario */
   padding: 20px;
   margin-left: 220px;
   background-color: rgb(245, 245, 245);
   border-radius: 8px;
- 
 }
 
 h3 {
@@ -77,17 +109,16 @@ form {
   gap: 15px;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 2 columnas de igual tamaño */
-  gap: 15px; /* Espacio entre los elementos */
+.form-row {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
 }
 
 .mb-3 {
   width: 200px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
 }
 
 .form-control {
@@ -106,7 +137,6 @@ select option {
 }
 
 .form-buttons {
-  grid-column: span 3; /* Los botones ocupan las 2 columnas */
   display: flex;
   justify-content: flex-end;
   font-size: 14px;

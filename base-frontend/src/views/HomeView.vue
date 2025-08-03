@@ -119,7 +119,7 @@
           <i class="bi bi-file-earmark-text"></i> <span class="d-lg-inline d-none">Partes</span>
         </a>
         <ul class="dropdown-menu dropdown-menu-dark w-100 scrollable-menu" aria-labelledby="navbarDropdown">
-            <li><a class="dropdown-item" href="#">GEMAR</a></li>
+            <li><router-link class="dropdown-item" to="/GEMAR">GEMAR</router-link></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="#">EMCARGA</a></li>
             <li><hr class="dropdown-divider"></li>

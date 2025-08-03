@@ -1,7 +1,7 @@
 <template>
   <div>
     <NavbarComponent />
-    <div class="container py-3" style="margin-left: 17em; width: 79%">
+    <div class="container py-3" style="margin-left: 15.8em; width: 79%">
       <div class="card border">
         <div class="card-header bg-light border-bottom">
           <h6 class="mb-0 text-dark fw-semibold">
@@ -17,9 +17,9 @@
                   <i class="bi bi-plus-circle me-1"></i>Tipos de Partes
                 </button>
                 <div v-if="showMenu" class="menu-options" style="position: absolute; top: 100%; left: 0; z-index: 1000;">
-                  <a href="#" @click.prevent="selectPart('CargasViejas')" class="dropdown-item">Cargas Viejas</a>
-                  <a href="#" @click.prevent="selectPart('ExistenciasMercancia')" class="dropdown-item">Existencias Mercancía</a>
-                  <a href="#" @click.prevent="selectPart('PartesPBIP')" class="dropdown-item">Partes PBIP</a>
+                  <a href="/CargasViejas" class="dropdown-item">Cargas Viejas</a>
+                  <a href="/ExistenciasMercancia" class="dropdown-item">Existencias Mercancía</a>
+                  <a href="/PartesPBIP" class="dropdown-item">Partes PBIP</a>
                 </div>
               </div>
               <form @submit.prevent="handleSearch" class="search-container">

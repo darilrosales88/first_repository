@@ -1,31 +1,61 @@
 <template>
   <div>
-    <div style=" background-color: #002A68; color: white; text-align: right;">
+    <div style="background-color: #002a68; color: white; text-align: right">
       <h6>Bienvenido:</h6>
-    </div>  
+    </div>
     <br />
     <Navbar-Component />
-    
-    <div class="form-container">
-      <h3 style="color: #002A68;">Editar estado técnico {{ estado_tecnico.nombre_estado_tecnico }}</h3>
-      <form @submit.prevent="submitForm" class="form-grid">
-        <!-- Campo Código -->
-        <div class="mb-3">
-          <label for="código" class="form-label">Código:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="código" v-model="estado_tecnico.codigo_estado_tecnico" required />
-          <p v-if="codigo_estado_tecnico_error" class="help is-danger">{{ codigo_estado_tecnico_error }}</p>
-        </div>
 
-        <!-- Campo Nombre -->
-        <div class="mb-3">
-          <label for="nombre" class="form-label">Nombre:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="nombre" v-model="estado_tecnico.nombre_estado_tecnico" required />
-          <p v-if="nombre_estado_tecnico_error" class="help is-danger">{{ nombre_estado_tecnico_error }}</p>
+    <div class="form-container" style="margin-left: 18em; width: 75%">
+      <h3 style="color: #002a68">
+        Editar estado técnico <strong>{{ estado_tecnico.nombre_estado_tecnico }}</strong>
+      </h3>
+      <form @submit.prevent="submitForm">
+        <div class="form-row">
+          <!-- Campo Código -->
+          <div class="mb-3">
+            <label for="código" class="form-label"
+              >Código:<span style="color: red">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="código"
+              v-model="estado_tecnico.codigo_estado_tecnico"
+              required
+            />
+            <p v-if="codigo_estado_tecnico_error" class="help is-danger">
+              {{ codigo_estado_tecnico_error }}
+            </p>
+          </div>
+
+          <!-- Campo Nombre -->
+          <div class="mb-3">
+            <label for="nombre" class="form-label"
+              >Nombre:<span style="color: red">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="nombre"
+              v-model="estado_tecnico.nombre_estado_tecnico"
+              required
+            />
+            <p v-if="nombre_estado_tecnico_error" class="help is-danger">
+              {{ nombre_estado_tecnico_error }}
+            </p>
+          </div>
         </div>
 
         <!-- Botones -->
         <div class="form-buttons">
-          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button
+            type="button"
+            @click="confirmCancel"
+            style="color: white; text-decoration: none"
+          >
+            Cancelar
+          </button>
           <button type="submit">Aceptar</button>
         </div>
       </form>
@@ -35,7 +65,7 @@
 
 <style scoped>
 body {
-  background-color: #F2F2F2;
+  background-color: #f2f2f2;
 }
 
 .form-container {
@@ -59,23 +89,21 @@ h3 {
 }
 
 form {
-  
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 2 columnas de igual tamaño */
-  gap: 15px; /* Espacio entre los elementos */
+.form-row {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
 }
 
 .mb-3 {
   width: 200px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
 }
 
 .form-control {
@@ -94,7 +122,6 @@ select option {
 }
 
 .form-buttons {
-  grid-column: span 3; /* Los botones ocupan las 3 columnas */
   display: flex;
   justify-content: flex-end;
   font-size: 14px;
@@ -118,12 +145,6 @@ button[type="button"] {
 button[type="submit"] {
   background-color: #007bff;
   color: white;
-}
-
-.help.is-danger {
-  color: red;
-  font-size: 12px;
-  margin-top: 5px;
 }
 </style>
 

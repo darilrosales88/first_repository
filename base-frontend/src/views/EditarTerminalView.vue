@@ -1,45 +1,84 @@
 <template>
   <div>
-    <div style=" background-color: #002A68; color: white; text-align: right;">
+    <div style="background-color: #002A68; color: white; text-align: right;">
       <h6>Bienvenido:</h6>
     </div>  
     <br />
     <Navbar-Component />
     
-    <div class="form-container">
-      <h3 style="color: #002A68;">Editar Terminal</h3>
+    <div class="form-container" style="margin-left: 18em; width: 75%">
+      <h3 style="color: #002A68;">Editar Terminal <strong>{{ nombre_terminal }}</strong></h3>
       <form @submit.prevent="updateTerminal" class="form-grid">
         <!-- Campo Nombre -->
         <div class="mb-3">
           <label for="nombre" class="form-label">Nombre:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="nombre" v-model="nombre_terminal" required />
+          <input 
+            type="text" 
+            class="form-control" 
+            id="nombre" 
+            v-model="nombre_terminal" 
+            required 
+          />
         </div>
 
         <!-- Campo Puerto -->
         <div class="mb-3">
           <label for="puerto" class="form-label">Puerto:<span style="color: red;">*</span></label>
-          <select class="form-control" id="puerto" v-model="puerto" required>
+          <select 
+            class="form-control" 
+            id="puerto" 
+            v-model="puerto" 
+            required
+          >
             <option value="">-Seleccione-</option>
-            <option v-for="item in puertoOptions" :key="item.id" :value="item.id">{{ item.nombre_puerto }}</option>
+            <option 
+              v-for="item in puertoOptions" 
+              :key="item.id" 
+              :value="item.id"
+            >
+              {{ item.nombre_puerto }}
+            </option>
           </select>
         </div>
 
         <!-- Campo Capacidad Almacén Importación -->
         <div class="mb-3">
-          <label for="capacidad_almacen_importacion" class="form-label">Cap. almacén importación:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="capacidad_almacen_importacion" v-model="capacidad_almacen_importacion" required />
+          <label for="capacidad_almacen_importacion" class="form-label">
+            Cap. almacén importación:<span style="color: red;">*</span>
+          </label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="capacidad_almacen_importacion" 
+            v-model="capacidad_almacen_importacion" 
+            required 
+          />
         </div>
 
         <!-- Campo Capacidad Almacén Exportación -->
         <div class="mb-3">
-          <label for="capacidad_almacen_exportacion" class="form-label">Cap. almacén exportación:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="capacidad_almacen_exportacion" v-model="capacidad_almacen_exportacion" required />
+          <label for="capacidad_almacen_exportacion" class="form-label">
+            Cap. almacén exportación:<span style="color: red;">*</span>
+          </label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="capacidad_almacen_exportacion" 
+            v-model="capacidad_almacen_exportacion" 
+            required 
+          />
         </div>
 
         <!-- Botones -->
         <div class="form-buttons">
-          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
-          <button type="submit">Aceptar</button>
+          <button 
+            type="button" 
+            @click="confirmCancel" 
+            style="color:white;text-decoration:none"
+          >
+            Cancelar
+          </button>
+          <button type="submit">Actualizar</button>
         </div>
       </form>
     </div>
@@ -52,13 +91,13 @@ body {
 }
 
 .form-container {
-  max-width: 680px; /* Ancho reducido */
+  max-width: 600px; /* Ancho reducido */
   margin: 20px; /* Centra el formulario */
   padding: 20px;
   margin-left: 220px;
-  background-color: rgb(245, 245, 245);
+  background-color: white;
   border-radius: 8px;
-  
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 h3 {
@@ -80,12 +119,11 @@ form {
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 columnas de igual tamaño */
+  grid-template-columns: repeat(3, 1fr); /* 2 columnas de igual tamaño */
   gap: 15px; /* Espacio entre los elementos */
 }
 
 .mb-3 {
-  width: 200px;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -107,10 +145,11 @@ select option {
 }
 
 .form-buttons {
-  grid-column: span 3; /* Los botones ocupan las 2 columnas */
+  grid-column: span 3; /* Los botones ocupan las 3 columnas */
   display: flex;
   justify-content: flex-end;
   font-size: 14px;
+  margin-top: 20px;
 }
 
 button {

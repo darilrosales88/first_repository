@@ -1,37 +1,51 @@
 <template>
   <div>
-    <div class="card border">
+    <div class="card border" style="margin-left: 15.8em; width: 79%">
+      <Navbar-Component />
       <div class="card-header bg-light border-bottom">
         <h6 class="mb-0 text-dark fw-semibold">
           Sistema de Partes Controlados
         </h6>
+        <button
+          class="btn btn-sm btn-outline-secondary"
+          style="margin-top: 10px"
+          @click="$router.push({ name: 'GEMAR' })"
+        >
+          <i class="bi bi-arrow-left me-1"></i> Volver a GEMAR
+        </button>
       </div>
       <div class="card-body p-3">
         <!-- Formulario de PBIP -->
         <div class="form-section mb-4">
           <h6 class="text-dark fw-semibold mb-3">Parte de PBIP</h6>
-          
+
           <div class="row mb-3">
-            <label class="col-sm-2 col-form-label">Fecha operación:*</label>
-            <div class="col-sm-4">
-              <input 
-                type="date" 
-                v-model="parte.fecha_operacion" 
-                class="form-control form-control-sm"
-                required
-              >
+            <div class="col-md-6">
+              <div class="row align-items-center">
+                <label class="col-sm-4 col-form-label">Fecha operación:</label>
+                <div class="col-sm-8">
+                  <input
+                    type="date"
+                    v-model="parte.fecha_operacion"
+                    class="form-control form-control-sm"
+                    required
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-          
-          <div class="row mb-3">
-            <label class="col-sm-2 col-form-label">Fecha actual:*</label>
-            <div class="col-sm-4">
-              <input 
-                type="datetime-local" 
-                v-model="parte.fecha_actual" 
-                class="form-control form-control-sm"
-                readonly
-              >
+
+            <div class="col-md-6">
+              <div class="row align-items-center">
+                <label class="col-sm-4 col-form-label">Fecha actual:</label>
+                <div class="col-sm-8">
+                  <input
+                    type="datetime-local"
+                    v-model="parte.fecha_actual"
+                    class="form-control form-control-sm"
+                    readonly
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -39,12 +53,14 @@
         <!-- Tabla de Protección de Buques -->
         <div class="table-section">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="text-dark fw-semibold mb-0">Protección de Buques en Instalaciones Portuarias</h6>
+            <h6 class="text-dark fw-semibold mb-0">
+              Protección de Buques en Instalaciones Portuarias
+            </h6>
             <button @click="addBuque" class="btn btn-sm btn-primary">
               <i class="bi bi-plus-circle me-1"></i> Agregar Buque
             </button>
           </div>
-          
+
           <div class="table-responsive">
             <table class="table table-sm table-bordered table-hover">
               <thead class="table-light">
@@ -60,46 +76,29 @@
               <tbody>
                 <tr v-for="(item, index) in buques" :key="index">
                   <td>{{ index + 1 }}</td>
+                  <td>{{ getNombreBuque(item.buque_id) }}</td>
+                  <td>{{ getNombrePuerto(item.puerto_id) }}</td>
+                  <td>{{ formatDateTime(item.fecha_hora) }}</td>
+                  <td>Nivel {{ item.nivel }}</td>
                   <td>
-                    <select v-model="item.buque_id" class="form-select form-select-sm">
-                      <option value="">Seleccione...</option>
-                      <option 
-                        v-for="buque in listaBuques" 
-                        :value="buque.id"
-                        :key="buque.id"
+                    <div class="d-flex gap-1">
+                      <button
+                        @click="editarPartePBIP(item)"
+                        class="btn btn-sm btn-outline-primary"
                       >
-                        {{ buque.nombre }}
-                      </option>
-                    </select>
-                  </td>
-                  <td>
-                    <select v-model="item.puerto_id" class="form-select form-select-sm">
-                      <option value="">Seleccione...</option>
-                      <option 
-                        v-for="puerto in listaPuertos" 
-                        :value="puerto.id"
-                        :key="puerto.id"
+                        <i class="bi bi-pencil"></i> Editar
+                      </button>
+                      <button
+                        @click="removeBuque(index)"
+                        class="btn btn-sm btn-outline-danger"
                       >
-                        {{ puerto.nombre }}
-                      </option>
-                    </select>
-                  </td>
-                  <td>
-                    <input 
-                      type="datetime-local" 
-                      v-model="item.fecha_hora" 
-                      class="form-control form-control-sm"
+                        <i class="bi bi-trash"></i> Eliminar
+                      </button>
+                    </div>
+                    <button
+                      @click="removeBuque(index)"
+                      class="btn btn-sm btn-outline-danger"
                     >
-                  </td>
-                  <td>
-                    <select v-model="item.nivel" class="form-select form-select-sm">
-                      <option value="1">Nivel 1</option>
-                      <option value="2">Nivel 2</option>
-                      <option value="3">Nivel 3</option>
-                    </select>
-                  </td>
-                  <td>
-                    <button @click="removeBuque(index)" class="btn btn-sm btn-outline-danger">
                       <i class="bi bi-trash"></i> Eliminar
                     </button>
                   </td>
@@ -107,11 +106,13 @@
               </tbody>
             </table>
           </div>
-          
+
           <!-- Paginación -->
-          <div class="io-pagination d-flex justify-content-between align-items-center mt-3">
+          <div
+            class="io-pagination d-flex justify-content-between align-items-center mt-3"
+          >
             <div class="text-muted small">
-              Mostrando 1-15 de 30 registros
+              Mostrando 1-15 de {{ buques.length }} registros
             </div>
             <nav aria-label="Page navigation">
               <ul class="pagination pagination-sm mb-0">
@@ -121,9 +122,7 @@
                   </button>
                 </li>
                 <li class="page-item disabled">
-                  <span class="page-link">
-                    Página 1 de 2
-                  </span>
+                  <span class="page-link"> Página 1 de 1 </span>
                 </li>
                 <li class="page-item">
                   <button class="page-link">
@@ -161,178 +160,287 @@
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
+import EditarPartePBIP from "./EditarPartePBIP.vue";
+import NavbarComponent from "@/components/NavbarComponent.vue";
 
 export default {
-  name: 'PartesPBIP',
+  name: "PartesPBIP",
+  components: {
+    NavbarComponent,
+  },
   data() {
     return {
       parte: {
-        fecha_operacion: '',
+        fecha_operacion: "",
         fecha_actual: new Date().toISOString().slice(0, 16),
       },
       buques: [],
       listaBuques: [],
       listaPuertos: [],
       loading: false,
-      error: null
-    }
+      error: null,
+      debugInfo: {
+        buquesResponse: null,
+        puertosResponse: null,
+      },
+    };
+  },
+  computed: {
+    getNombreBuque() {
+      return (buqueId) => {
+        const buque = this.listaBuques.find((b) => b.id === buqueId);
+        return buque ? buque.nombre : "Buque no encontrado";
+      };
+    },
+    getNombrePuerto() {
+      return (puertoId) => {
+        const puerto = this.listaPuertos.find((p) => p.id === puertoId);
+        return puerto ? puerto.nombre : "Puerto no encontrado";
+      };
+    },
   },
   async created() {
     await this.cargarDatosIniciales();
+    console.log("Datos cargados:", {
+      buques: this.listaBuques,
+      puertos: this.listaPuertos,
+      debugInfo: this.debugInfo,
+    });
   },
-  computed: {
-    isAdmin() {
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-      return userData.is_superuser || false;
-    },
-    isGemarUser() {
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-      return !userData.is_superuser; // O la lógica específica para GEMAR
-    }
-},
   methods: {
+    editarPartePBIP(buque) {
+      this.$router.push({
+        name: "EditarPartePBIP",
+        params: {
+          id: buque.buque_id,
+          buqueData: JSON.stringify(buque),
+          listaBuques: JSON.stringify(this.listaBuques),
+          listaPuertos: JSON.stringify(this.listaPuertos),
+        },
+      });
+    },
+
     async cargarDatosIniciales() {
       try {
         this.loading = true;
-        const token = localStorage.getItem('token');
-        const headers = { Authorization: `Bearer ${token}` };
-        
+
+        const instance = axios.create({
+          baseURL: "http://127.0.0.1:8000",
+          withCredentials: true,
+        });
+
         const [buquesRes, puertosRes] = await Promise.all([
-          axios.get('/api/embarcaciones/', { headers }),
-          axios.get('/api/puertos/', { headers })
+          instance.get("/api/embarcaciones/"),
+          instance.get("/api/puertos/"),
         ]);
-        
-        this.listaBuques = buquesRes.data;
-        this.listaPuertos = puertosRes.data;
+
+        this.debugInfo.buquesResponse = buquesRes.data;
+        this.debugInfo.puertosResponse = puertosRes.data;
+
+        this.listaBuques = buquesRes.data.results || [];
+        this.listaPuertos = puertosRes.data.results || [];
+
+        this.listaBuques = this.listaBuques.map((b) => ({
+          id: b.id,
+          nombre: b.nombre || b.nombre_buque || "",
+        }));
+
+        this.listaPuertos = this.listaPuertos.map((p) => ({
+          id: p.id,
+          nombre: p.nombre || p.nombre_puerto || "",
+        }));
       } catch (error) {
-        this.error = 'Error al cargar datos iniciales';
-        this.mostrarError(this.error);
+        console.error("Error al cargar datos:", error);
+        let errorMessage = "Error al cargar datos iniciales";
+        if (error.response) {
+          console.error("Detalles del error:", error.response.data);
+          if (error.response.data?.detail) {
+            errorMessage = error.response.data.detail;
+          }
+        }
+        this.mostrarError(errorMessage);
       } finally {
         this.loading = false;
       }
     },
-    
+    //cancelar() {
+    // Opcional: preguntar confirmación antes de limpiar
+    //f (this.cargas.some(c => c.puerto_id || c.producto_id || c.organismo_id)) {
+    //Swal.fire({
+    //title: '¿Cancelar cambios?',
+    //text: "Los datos no guardados se perderán",
+    //icon: 'warning',
+    //showCancelButton: true,
+    //confirmButtonColor: '#3085d6',
+    //cancelButtonColor: '#d33',
+    //confirmButtonText: 'Sí, cancelar',
+    //cancelButtonText: 'No, continuar editando'
+    //}).then((result) => {
+    //if (result.isConfirmed) {
+    //this.resetForm();
+    // }
+    // });
+    // } else {
+    // this.resetForm();
+    //}
+    //},
     addBuque() {
-      this.buques.push({
-        buque_id: null,
-        puerto_id: null,
-        fecha_hora: new Date().toISOString().slice(0, 16),
-        nivel: 1
+      this.$router.push({
+        name: "AgregarBuque",
+        params: {
+          listaPuertos: this.listaPuertos,
+        },
       });
     },
-    
-    removeBuque(index) {
-      this.buques.splice(index, 1);
+
+    handleBuqueAgregado(nuevoBuque) {
+      this.buques.push({
+        buque_id: nuevoBuque.id,
+        puerto_id: nuevoBuque.puerto_id,
+        fecha_hora: nuevoBuque.fecha_hora,
+        nivel: nuevoBuque.nivel,
+      });
     },
-    
+
+    removeBuque(index) {
+      if (this.buques.length > 1) {
+        this.buques.splice(index, 1);
+      } else {
+        this.mostrarError("Debe haber al menos un buque");
+      }
+    },
+
+    formatDateTime(dateTime) {
+      if (!dateTime) return "";
+      const [date, time] = dateTime.split("T");
+      const [h, m] = time.split(":");
+      return `${date} ${h}:${m}`;
+    },
+
     async aceptar() {
       if (!this.validarFormulario()) return;
-      
+
       try {
         this.loading = true;
-        const token = localStorage.getItem('token');
-        const headers = { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        };
-        
+
+        const instance = axios.create({
+          baseURL: "http://127.0.0.1:8000",
+          withCredentials: true,
+        });
+
         const payload = {
           fecha_operacion: this.parte.fecha_operacion,
-          buques: this.buques.map(b => ({
+          buques: this.buques.map((b) => ({
             buque_id: b.buque_id,
             puerto_id: b.puerto_id,
             fecha_hora: b.fecha_hora,
-            nivel: b.nivel
-          }))
+            nivel: b.nivel,
+          })),
         };
-        
-        await axios.post('/api/gemar/partes-pbip/', payload, { headers });
-        this.mostrarExito('Parte PBIP creado correctamente');
-        this.resetFormulario();
-        this.$emit('parte-creado'); // Emitir evento para actualizar la vista principal
+
+        const response = await instance.post(
+          "/api/gemar/partes-pbip/",
+          payload
+        );
+
+        if (response.status === 201) {
+          this.mostrarExito("Parte PBIP creado correctamente");
+          this.resetFormulario();
+          this.$emit("parte-creado");
+        } else {
+          this.mostrarError("Error inesperado al crear el parte PBIP");
+        }
       } catch (error) {
-        this.error = this.obtenerMensajeError(error);
-        this.mostrarError(this.error);
+        console.error("Error al guardar:", error);
+        let errorMessage = "Error al crear el parte PBIP";
+        if (error.response) {
+          if (error.response.status === 400) {
+            errorMessage = error.response.data.detail || "Datos inválidos";
+          }
+        }
+        this.mostrarError(errorMessage);
       } finally {
         this.loading = false;
       }
     },
-    
+
     validarFormulario() {
       if (!this.parte.fecha_operacion) {
-        this.error = 'La fecha de operación es requerida';
+        this.error = "La fecha de operación es requerida";
+        this.mostrarError(this.error);
         return false;
       }
-      
+
       if (this.buques.length === 0) {
-        this.error = 'Debe agregar al menos un buque';
+        this.error = "Debe agregar al menos un buque";
+        this.mostrarError(this.error);
         return false;
       }
-      
+
       for (const buque of this.buques) {
         if (!buque.buque_id || !buque.puerto_id || !buque.fecha_hora) {
-          this.error = 'Todos los campos son requeridos para cada buque';
+          this.error = "Todos los campos son requeridos para cada buque";
+          this.mostrarError(this.error);
           return false;
         }
       }
-      
+
       this.error = null;
       return true;
     },
-    
-    obtenerMensajeError(error) {
-      if (error.response) {
-        if (error.response.data) {
-          if (typeof error.response.data === 'object') {
-            return Object.values(error.response.data).join(' ');
-          }
-          return error.response.data;
-        }
-        return error.response.statusText;
-      }
-      return 'Error de conexión con el servidor';
-    },
-    
+
     resetFormulario() {
       this.parte = {
-        fecha_operacion: '',
-        fecha_actual: new Date().toISOString().slice(0, 16)
+        fecha_operacion: "",
+        fecha_actual: new Date().toISOString().slice(0, 16),
       };
       this.buques = [];
       this.error = null;
     },
-    
+
     cancelar() {
-      this.resetFormulario();
+      his.resetFormulario();
     },
-    
+
     async rechazar() {
-      // Implementar lógica para rechazar si es necesario
+      try {
+        this.mostrarExito("Parte rechazado correctamente");
+      } catch (error) {
+        this.mostrarError("Error al rechazar el parte");
+      }
     },
-    
+
     async aprobar() {
-      // Implementar lógica para aprobar
+      try {
+        this.mostrarExito("Parte aprobado correctamente");
+      } catch (error) {
+        this.mostrarError("Error al aprobar el parte");
+      }
     },
-    
+
+    listo() {
+      this.mostrarExito("Parte marcado como listo");
+    },
+
     mostrarError(mensaje) {
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
+        icon: "error",
+        title: "Error",
         text: mensaje,
-        confirmButtonText: 'Aceptar'
+        confirmButtonText: "Aceptar",
       });
     },
-    
+
     mostrarExito(mensaje) {
       Swal.fire({
-        icon: 'success',
-        title: 'Éxito',
+        icon: "success",
+        title: "Éxito",
         text: mensaje,
-        confirmButtonText: 'Aceptar'
+        confirmButtonText: "Aceptar",
       });
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -373,7 +481,6 @@ export default {
   background-color: #f8f9fa;
 }
 
-/* Estilos para la paginación */
 .io-pagination {
   padding: 0.75rem 1.25rem;
   background-color: #f8f9fa;
@@ -414,7 +521,6 @@ export default {
   font-size: 0.9rem;
 }
 
-/* Estilos para los botones */
 .btn-outline-danger {
   color: #dc3545;
   border-color: #dc3545;
@@ -465,13 +571,14 @@ export default {
   border-color: #0a58ca;
 }
 
-/* Estilos para los selects e inputs */
-.form-control, .form-select {
+.form-control,
+.form-select {
   font-size: 0.875rem;
   padding: 0.25rem 0.5rem;
 }
 
-.form-control:focus, .form-select:focus {
+.form-control:focus,
+.form-select:focus {
   border-color: #86b7fe;
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }

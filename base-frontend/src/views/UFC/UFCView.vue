@@ -1,8 +1,10 @@
 <template>
+
   <NavbarComponent />
   <div style="margin-left: 16em; width: 80%">
     <RegistrosPartesUFC />
   </div>
+
 </template>
 
 <script>

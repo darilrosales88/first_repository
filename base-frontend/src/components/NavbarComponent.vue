@@ -180,9 +180,8 @@ export default {
           submenu: [
             { title: "Registro de Informes", route: "/ufc" },
             { title: "Informe Operativo", route: "/InfoOperativo" },
-            { title: "CCD Producto", route: "" },
-            { title: "GEMAR", route: "/GemarView", icon: "clipboard-data" },
-            
+            { title: "CCD Producto", route: "/ccdxproducto" },
+            { title: "GEMAR", route: "/GEMAR" },
           ],
         },
         {

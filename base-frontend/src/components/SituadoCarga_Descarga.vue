@@ -8,10 +8,7 @@
       </div>
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <router-link
-            v-if="hasGroup('AdminUFC') && this.habilitado"
-            to="/AdicionarSituados"
-          >
+          <router-link v-if="hasGroup('AdminUFC') && this.habilitado" to="/AdicionarSituados" >
             <button class="btn btn-sm btn-primary">
               <i class="bi bi-plus-circle me-1"></i>Agregar nuevo registro
               situado
@@ -24,11 +21,9 @@
                 class="form-control"
                 placeholder="Buscar en registros"
                 v-model="searchQuery"
-                @input="handleSearchInput"
-              />
+                @input="handleSearchInput"/>
               <span
-                class="position-absolute top-50 start-0 translate-middle-y ps-2"
-              >
+                class="position-absolute top-50 start-0 translate-middle-y ps-2">
                 <i class="bi bi-search"></i>
               </span>
             </div>
@@ -72,11 +67,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr
-                v-for="(item, index) in registroSituado"
-                :key="item.id"
-                class="align-middle"
-              >
+              <tr v-for="(item, index) in registroSituado" :key="item.id" class="align-middle">
                 <th scope="row">{{ index + 1 }}</th>
                 <td>{{ item.tipo_origen_name }}</td>
                 <td>{{ item.origen }}</td>
@@ -85,16 +76,15 @@
                   <span
                     :class="`ps-status ps-status-${getStatusClass(
                       item.estado
-                    )}`"
-                  >
+                    )}`">
                     {{ item.estado }}
                   </span>
                 </td>
                 <td>{{ item.operacion }}</td>
                 <td class="ps-td">
-                  <span v-if="item.producto">
-                    {{ item.producto_detalle.producto_name
-                    }}<!-- Aqui hay que actualizar tambien esto mismo en los demas estados @BZ-theFanG #-#-->
+                  <span
+                    v-if="item.productos_info && item.productos_info.length > 0">
+                    {{ getNombresProductos(item.productos_info) }}
                   </span>
                   <span v-else>-</span>
                 </td>
@@ -113,26 +103,21 @@
                     <button
                       @click="viewDetails(item)"
                       class="btn btn-sm btn-outline-info me-2"
-                      title="Ver detalles"
-                    >
+                      title="Ver detalles">
                       <i class="bi bi-eye-fill"></i>
                     </button>
 
-                    <button
-                      v-if="this.habilitado"
+                    <button v-if="this.habilitado"
                       @click="editRegistroSituado(item)"
                       class="btn btn-sm btn-outline-warning me-2"
-                      title="Editar"
-                    >
+                      title="Editar">
                       <i class="bi bi-pencil-square"></i>
                     </button>
 
-                    <button
-                      v-if="this.habilitado"
+                    <button v-if="this.habilitado"
                       @click="confirmDelete(item.id)"
                       class="btn btn-sm btn-outline-danger"
-                      title="Eliminar"
-                    >
+                      title="Eliminar">
                       <i class="bi bi-trash"></i>
                     </button>
                   </div>
@@ -244,10 +229,7 @@
                       <span class="ps-detail-label">Estado:</span>
                       <span class="ps-detail-value">
                         <span
-                          :class="`ps-status ps-status-${getStatusClass(
-                            currentRecord.estado
-                          )}`"
-                        >
+                          :class="`ps-status ps-status-${getStatusClass(currentRecord.estado)}`">
                           {{ currentRecord.estado || "N/A" }}
                         </span>
                       </span>
@@ -437,7 +419,7 @@ export default {
       }
     },
 
-    /*async getVagonesCargadosDescargados() {
+  /*async getVagonesCargadosDescargados() {
       this.loading = true;
       try {
         const response = await axios.get("/ufc/situados-hoy/", {
@@ -483,8 +465,8 @@ export default {
               informe: this.informeID ? this.informeID : infoID.data.id,
             },
           });
-
-          if (this.informeID) {
+          
+          if(this.informeID){
             this.habilitado = false;
           }
           this.registroSituado = response.data.results;
@@ -1062,6 +1044,7 @@ export default {
   color: #06d6a0;
   border: 1px solid rgba(6, 214, 160, 0.2);
 }
+
 
 .ps-status-danger {
   background: rgba(247, 37, 133, 0.1);

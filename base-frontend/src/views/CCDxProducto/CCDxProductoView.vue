@@ -178,7 +178,8 @@ export default {
         if (response.data.existe) {
           this.informeCCDxProductoId = response.data.id;
 
-          this.deleteInforme(response.data.id)
+          //this.deleteInforme(response.data.id)//Aqui mandas a borrar el id del informe
+          //Esto aqui deberia ser que si existe el informe se desactiva el boton 
         } else {
           this.informeCCDxProductoId = null;
           this.isExistingRecord = false;
@@ -210,7 +211,7 @@ export default {
         this.showErrorToast("Error al crear el informe");
       }
     },
-
+    //y esto que cosa es tato 
     async deleteInforme(id) {
       try {
         await axios.delete(`/ufc/ccd-informe/${id}/`);

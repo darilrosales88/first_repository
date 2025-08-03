@@ -972,6 +972,9 @@ class ufc_informe_ccd(models.Model):
     fecha_actual = models.DateTimeField(
         auto_now=True, verbose_name="Fecha actual", unique=True
     )
+    fecha_creacion = models.DateField(
+        auto_now=True, verbose_name="Fecha actual", editable=False
+    )
     estado_parte = models.CharField(default="creado",max_length=14, choices=ESTADOS_PARTE, verbose_name="Estado del parte")
     comentarios= models.TextField(
         null=True,
@@ -998,6 +1001,13 @@ class ufc_informe_ccd(models.Model):
             ("puede_aprobar_informe", "Puede aprobar informes CCD"),
             ("puede_cambiar_a_listo", "Puede cambiar el estado del informe CCD a listo"),
         ]
+        constraints=[models.UniqueConstraint(
+            fields = [
+                "creado_por",
+                "fecha_creacion",
+            ],
+            name="unique_ccd_creado_por__fecha_creacion",
+        )]
     def save(self, *args, **kwargs):
         # Asignar entidad del creador si no está establecida
         if not self.entidad and self.creado_por:

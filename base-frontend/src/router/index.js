@@ -806,7 +806,7 @@ const routes = [
   {
     path: "/gemar_listado_partes",
     name: "ListaPartesGemar",
-    component: () => import("../views/GEMAR/ListaPartesGemar.vue"),
+    component: () => import("../components/GEMAR/ListaPartesGemar.vue"),
     meta: {
       requireLogin: true,
     },

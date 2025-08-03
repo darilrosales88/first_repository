@@ -248,12 +248,12 @@ export default {
     },
     getEstadoBadgeClass(estado) {
       const classes = {
-        'Creado': 'bg-secondary bg-opacity-10 text-secondary',
-        'Aprobado': 'bg-success bg-opacity-10 text-success',
-        'Rechazado': 'bg-danger bg-opacity-10 text-danger',
-        'Listo': 'bg-info bg-opacity-10 text-info',
+        'Creado': 'io-status-warning',
+        'Aprobado': 'io-status-success',
+        'Rechazado': 'io-status-danger',
+        'Listo': 'io-status-info',
       };
-      return classes[estado] || 'bg-light text-dark';
+      return classes[estado] || 'io-status-default';
     },
     formatDateTime(dateTime) {
       if (!dateTime) return 'N/A';
@@ -290,141 +290,171 @@ export default {
 };
 </script>
 
+<!-- En la sección de estilos de RegistrosPartesCombinados.vue -->
 <style scoped>
-/* Estilos mejorados para los botones de acción */
-.action-buttons {
-  display: flex;
-  gap: 15px;
-  margin: 30px auto;
-  justify-content: center;
-  padding: 20px 0;
-  width: 100%;
+/* Variables de color (copiadas de RegistrosPartesUFC.vue) */
+:root {
+  --io-primary: #4361ee;
+  --io-primary-hover: #3a56d4;
+  --io-secondary: #3f37c9;
+  --io-accent: #4895ef;
+  --io-danger: #f72585;
+  --io-success: #4cc9f0;
+  --io-warning: #f8961e;
+  --io-info: #4895ef;
+  --io-light: #f8f9fa;
+  --io-dark: #212529;
+  --io-gray: #6c757d;
+  --io-light-gray: #e9ecef;
+  --io-border-radius: 12px;
+  --io-box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  --io-transition: all 0.3s ease;
 }
 
-.action-btn {
-  padding: 12px 25px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 120px;
+/* Tabla - Estilos adaptados de RegistrosPartesUFC */
+.io-table-container {
+  overflow-x: auto;
+  padding: 0.5rem;
 }
 
-.approve {
-  background-color: #28a745;
-  color: white;
-}
-
-.approve:hover {
-  background-color: #218838;
-}
-
-.reject {
-  background-color: #dc3545;
-  color: white;
-}
-
-.reject:hover {
-  background-color: #c82333;
-}
-
-.ready {
-  background-color: #17a2b8;
-  color: white;
-}
-
-.ready:hover {
-  background-color: #138496;
-}
-
-.action-btn i {
-  margin-right: 8px;
-  font-size: 18px;
-}
-
-/* Estilos generales del navbar */
-nav ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 15px;
-  background-color: #f8f9fa;
-  padding: 10px;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-nav ul li {
-  display: inline;
-}
-
-a {
-  text-decoration: none;
-  color: #333;
-  cursor: pointer;
-  padding: 10px 20px;
-  border-radius: 5px;
-  transition: all 0.3s ease;
-  font-weight: 500;
-  display: inline-block;
-}
-
-nav a:hover {
-  background-color: #e9ecef;
-  color: #000;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-nav a.active {
-  background-color: #007bff;
-  color: #fff;
-  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
-  transform: translateY(-2px);
-}
-
-nav a:active {
-  transform: translateY(0);
-}
-
-nav ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 10px;
-}
-
-nav ul li {
-  display: inline;
-}
-
-a {
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-}
-
-/* Estilos para la tabla */
 .table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 0.875rem;
 }
 
-.table th {
+.table thead th {
+  background-color: #f9fafb;
+  border-bottom: 2px solid var(--io-light-gray);
+  color: var(--io-dark);
   font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.5px;
+  padding: 1rem 1.2rem;
+  text-align: left;
+  position: sticky;
+  top: 0;
 }
 
+.table tbody tr {
+  transition: var(--io-transition);
+}
+
+.table tbody tr:hover {
+  background-color: rgba(67, 97, 238, 0.03);
+}
+
+.table tbody td {
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--io-light-gray);
+  color: var(--io-dark);
+}
+
+/* Badges de estado */
 .badge {
-  padding: 0.35em 0.65em;
-  font-size: 0.75em;
-  font-weight: 600;
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Clases para los estados (adaptadas de RegistrosPartesUFC) */
+.io-status-success {
+  background: rgba(76, 201, 240, 0.1);
+  color: #06d6a0;
+  border: 1px solid rgba(6, 214, 160, 0.2);
+}
+
+.io-status-warning {
+  background: rgba(248, 150, 30, 0.1);
+  color: #f8961e;
+  border: 1px solid rgba(248, 150, 30, 0.2);
+}
+
+.io-status-danger {
+  background: rgba(247, 37, 133, 0.1);
+  color: #f72585;
+  border: 1px solid rgba(247, 37, 133, 0.2);
+}
+
+.io-status-info {
+  background: rgba(72, 149, 239, 0.1);
+  color: #4895ef;
+  border: 1px solid rgba(72, 149, 239, 0.2);
+}
+
+.io-status-default {
+  background: rgba(108, 117, 125, 0.1);
+  color: var(--io-gray);
+  border: 1px solid rgba(108, 117, 125, 0.2);
+}
+
+/* Botones de acción */
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 0.2rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.btn i {
+  font-size: 1rem;
+}
+
+/* Paginación */
+.io-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding: 0 0.5rem;
+}
+
+.page-link {
+  border-radius: var(--io-border-radius) !important;
+  margin: 0 2px;
+  transition: var(--io-transition);
+}
+
+.page-link:hover {
+  background-color: var(--io-light-gray);
+}
+
+/* Estado de carga */
+.io-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  color: var(--io-gray);
+  padding: 2rem;
+}
+
+.io-empty-state i {
+  font-size: 2.5rem;
+  color: var(--io-accent);
+}
+
+.io-empty-state h3 {
+  color: var(--io-dark);
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.io-empty-state p {
+  margin: 0;
+  max-width: 400px;
 }
 </style>

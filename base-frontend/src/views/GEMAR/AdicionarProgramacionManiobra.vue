@@ -451,7 +451,12 @@ export default {
 
         // Si el formato ETA es "AM/PM", no enviar hora
         if (this.formData.formato_eta === '2') {
-          datosEnvio.hora_eta_am_pm = null;
+          datosEnvio.hora_eta = null;
+        }
+
+        // Si el formato ETS es "AM/PM", no enviar hora
+        if (this.formData.formato_ets === '2') {
+          datosEnvio.hora_ets = null;
         }
 
         // Si el formato ETS es "SIN DETERMINAR", no enviar fecha y hora

@@ -14,48 +14,41 @@
         <div class="card-body p-3">
           <form @submit.prevent="guardarCarga">
             <div class="row">
-              <!-- Primera fila -->
+              <!-- Campo: Parte PBIP -->
               <div class="col-md-6">
-                <!-- Campo: Parte PBIP -->
                 <div class="mb-3">
-                  <label
-                    for="parte"
-                    class="form-label small fw-semibold text-secondary"
-                    >Parte PBIP*</label
-                  >
+                  <label for="parte" class="form-label small fw-semibold text-secondary">Parte PBIP*</label>
                   <select
                     class="form-select form-select-sm border-secondary"
                     style="padding: 8px 12px"
                     v-model="carga.parte_id"
                     required
-                    oninvalid="this.setCustomValidity('Por favor, seleccione un parte PBIP')"
+                    @change="cargarDatosParte"
+                    oninvalid="this.setCustomValidity('Por favor, seleccione un Parte PBIP')"
                     oninput="this.setCustomValidity('')"
                   >
-                    <option value="" disabled>Seleccione un parte PBIP</option>
+                    <option value="" disabled>Seleccione un Parte PBIP</option>
                     <option
-                      v-for="parte in partes"
+                      v-for="parte in partesPBIP"
                       :key="parte.id"
                       :value="parte.id"
                     >
-                      {{ parte.id }} - {{ parte.buque.nombre_embarcacion }} - {{ parte.puerto.nombre_puerto }}
+                      PBIP - {{ parte.buque?.nombre || 'Sin buque' }} - {{ parte.puerto?.nombre || 'Sin puerto' }} - Nivel {{ parte.nivel }}
                     </option>
                   </select>
                 </div>
               </div>
 
+              <!-- Campo: Puerto -->
               <div class="col-md-6">
-                <!-- Campo: Puerto -->
                 <div class="mb-3">
-                  <label
-                    for="puerto"
-                    class="form-label small fw-semibold text-secondary"
-                    >Puerto*</label
-                  >
+                  <label for="puerto" class="form-label small fw-semibold text-secondary">Puerto*</label>
                   <select
                     class="form-select form-select-sm border-secondary"
                     style="padding: 8px 12px"
                     v-model="carga.puerto_id"
                     required
+                    @change="carga.terminal_id = ''"
                     oninvalid="this.setCustomValidity('Por favor, seleccione un puerto')"
                     oninput="this.setCustomValidity('')"
                   >
@@ -71,15 +64,38 @@
                 </div>
               </div>
 
-              <!-- Segunda fila -->
+              <!-- Campo: Terminal -->
               <div class="col-md-6">
-                <!-- Campo: Producto -->
                 <div class="mb-3">
-                  <label
-                    for="producto"
-                    class="form-label small fw-semibold text-secondary"
-                    >Producto*</label
+                  <label for="terminal" class="form-label small fw-semibold text-secondary">Terminal*</label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="carga.terminal_id"
+                    required
+                    :disabled="!carga.puerto_id"
+                    oninvalid="this.setCustomValidity('Por favor, seleccione una terminal')"
+                    oninput="this.setCustomValidity('')"
                   >
+                    <option value="" disabled>Seleccione una terminal</option>
+                    <option
+                      v-for="terminal in terminalesFiltradas"
+                      :key="terminal.id"
+                      :value="terminal.id"
+                    >
+                      {{ terminal.nombre_terminal }} ({{ terminal.puerto_name }})
+                    </option>
+                  </select>
+                  <small v-if="carga.puerto_id && terminalesFiltradas.length === 0" class="text-danger">
+                    No hay terminales disponibles para este puerto
+                  </small>
+                </div>
+              </div>
+
+              <!-- Campo: Producto -->
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="producto" class="form-label small fw-semibold text-secondary">Producto*</label>
                   <select
                     class="form-select form-select-sm border-secondary"
                     style="padding: 8px 12px"
@@ -100,14 +116,10 @@
                 </div>
               </div>
 
+              <!-- Campo: Manifiesto -->
               <div class="col-md-6">
-                <!-- Campo: Manifiesto -->
                 <div class="mb-3">
-                  <label
-                    for="manifiesto"
-                    class="form-label small fw-semibold text-secondary"
-                    >Manifiesto*</label
-                  >
+                  <label for="manifiesto" class="form-label small fw-semibold text-secondary">Manifiesto*</label>
                   <input
                     type="text"
                     class="form-control form-control-sm border-secondary"
@@ -122,15 +134,10 @@
                 </div>
               </div>
 
-              <!-- Tercera fila -->
+              <!-- Campo: Organismo -->
               <div class="col-md-6">
-                <!-- Campo: Organismo -->
                 <div class="mb-3">
-                  <label
-                    for="organismo"
-                    class="form-label small fw-semibold text-secondary"
-                    >Organismo*</label
-                  >
+                  <label for="organismo" class="form-label small fw-semibold text-secondary">Organismo*</label>
                   <select
                     class="form-select form-select-sm border-secondary"
                     style="padding: 8px 12px"
@@ -151,43 +158,10 @@
                 </div>
               </div>
 
-              <div class="col-md-6">
-                <!-- Campo: Terminal -->
-                <div class="mb-3">
-                  <label
-                    for="terminal"
-                    class="form-label small fw-semibold text-secondary"
-                    >Terminal*</label
-                  >
-                  <select
-                    class="form-select form-select-sm border-secondary"
-                    style="padding: 8px 12px"
-                    v-model="carga.terminal_id"
-                    required
-                    oninvalid="this.setCustomValidity('Por favor, seleccione una terminal')"
-                    oninput="this.setCustomValidity('')"
-                  >
-                    <option value="" disabled>Seleccione una terminal</option>
-                    <option
-                      v-for="terminal in terminalesFiltradas"
-                      :key="terminal.id"
-                      :value="terminal.id"
-                    >
-                      {{ terminal.id }}-{{ terminal.nombre_terminal }}
-                    </option>
-                  </select>
-                </div>
-              </div>
-
-              <!-- Cuarta fila -->
+              <!-- Campos numéricos -->
               <div class="col-md-4">
-                <!-- Campo: Toneladas Ayer -->
                 <div class="mb-3">
-                  <label
-                    for="toneladas_ayer"
-                    class="form-label small fw-semibold text-secondary"
-                    >Toneladas Ayer*</label
-                  >
+                  <label for="toneladas_ayer" class="form-label small fw-semibold text-secondary">Toneladas Ayer*</label>
                   <input
                     type="number"
                     class="form-control form-control-sm border-secondary"
@@ -205,13 +179,8 @@
               </div>
 
               <div class="col-md-4">
-                <!-- Campo: Toneladas Hoy -->
                 <div class="mb-3">
-                  <label
-                    for="toneladas_hoy"
-                    class="form-label small fw-semibold text-secondary"
-                    >Toneladas Hoy*</label
-                  >
+                  <label for="toneladas_hoy" class="form-label small fw-semibold text-secondary">Toneladas Hoy*</label>
                   <input
                     type="number"
                     class="form-control form-control-sm border-secondary"
@@ -229,13 +198,8 @@
               </div>
 
               <div class="col-md-4">
-                <!-- Campo: Días en Almacén -->
                 <div class="mb-3">
-                  <label
-                    for="dias_almacen"
-                    class="form-label small fw-semibold text-secondary"
-                    >Días en Almacén*</label
-                  >
+                  <label for="dias_almacen" class="form-label small fw-semibold text-secondary">Días en Almacén*</label>
                   <input
                     type="number"
                     class="form-control form-control-sm border-secondary"
@@ -251,37 +215,10 @@
                 </div>
               </div>
 
-              <!-- Quinta fila -->
+              <!-- Campos de plan y real -->
               <div class="col-md-4">
-                <!-- Campo: Operación -->
                 <div class="mb-3">
-                  <label
-                    for="operacion"
-                    class="form-label small fw-semibold text-secondary"
-                    >Operación*</label
-                  >
-                  <select
-                    class="form-select form-select-sm border-secondary"
-                    style="padding: 8px 12px"
-                    v-model="carga.operacion"
-                    required
-                    oninvalid="this.setCustomValidity('Por favor, seleccione una operación')"
-                    oninput="this.setCustomValidity('')"
-                  >
-                    <option value="carga">Carga</option>
-                    <option value="descarga">Descarga</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="col-md-4">
-                <!-- Campo: Plan -->
-                <div class="mb-3">
-                  <label
-                    for="plan"
-                    class="form-label small fw-semibold text-secondary"
-                    >Plan*</label
-                  >
+                  <label for="plan" class="form-label small fw-semibold text-secondary">Plan*</label>
                   <input
                     type="number"
                     class="form-control form-control-sm border-secondary"
@@ -299,13 +236,8 @@
               </div>
 
               <div class="col-md-4">
-                <!-- Campo: Real -->
                 <div class="mb-3">
-                  <label
-                    for="real"
-                    class="form-label small fw-semibold text-secondary"
-                    >Real*</label
-                  >
+                  <label for="real" class="form-label small fw-semibold text-secondary">Real*</label>
                   <input
                     type="number"
                     class="form-control form-control-sm border-secondary"
@@ -319,6 +251,40 @@
                     oninvalid="this.setCustomValidity('Por favor, ingrese el real')"
                     oninput="this.setCustomValidity('')"
                   />
+                </div>
+              </div>
+
+              <!-- Campo: Estado -->
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="estado" class="form-label small fw-semibold text-secondary">Estado*</label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="carga.estado"
+                    required
+                    oninvalid="this.setCustomValidity('Por favor, seleccione un estado')"
+                    oninput="this.setCustomValidity('')"
+                  >
+                    <option value="CREADO">Creado</option>
+                    <option value="APROBADO">Aprobado</option>
+                    <option value="CANCELADO">Cancelado</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Campo: Observaciones -->
+              <div class="col-md-12">
+                <div class="mb-3">
+                  <label for="observaciones" class="form-label small fw-semibold text-secondary">Observaciones</label>
+                  <textarea
+                    class="form-control form-control-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="carga.observaciones"
+                    id="observaciones"
+                    name="observaciones"
+                    rows="2"
+                  ></textarea>
                 </div>
               </div>
             </div>
@@ -354,7 +320,7 @@ export default {
   data() {
     return {
       carga: {
-        parte_id: '',
+        parte_id: null,
         puerto_id: '',
         terminal_id: '',
         producto_id: '',
@@ -363,11 +329,13 @@ export default {
         toneladas_hoy: 0,
         organismo_id: '',
         dias_almacen: 0,
-        operacion: 'carga',
         plan: 0,
-        real: 0
+        real: 0,
+        estado: 'CREADO',
+        observaciones: '',
+        aprobado_por: null
       },
-      partes: [],
+      partesPBIP: [],
       puertos: [],
       terminales: [],
       productos: [],
@@ -378,7 +346,10 @@ export default {
   computed: {
     terminalesFiltradas() {
       if (!this.carga.puerto_id) return [];
-      return this.terminales.filter(t => t.puerto.id == this.carga.puerto_id);
+      return this.terminales.filter(t => {
+        const puertoId = t.puerto?.id || t.puerto_id;
+        return puertoId == this.carga.puerto_id;
+      });
     }
   },
   async created() {
@@ -399,24 +370,112 @@ export default {
           'Authorization': `Token ${token}`,
           'Content-Type': 'application/json'
         };
-        
-        const [partesRes, puertosRes, terminalesRes, productosRes, organismosRes] = await Promise.all([
-          axios.get('/api/gemar/partes-pbip/', { headers }),
+
+        // Cargar todos los datos necesarios
+        const [puertosRes, productosRes, organismosRes, terminalesRes, partesRes] = await Promise.all([
           axios.get('/api/puertos/', { headers }),
-          axios.get('/api/terminales/', { headers }),
           axios.get('/api/productos/', { headers }),
-          axios.get('/api/osde/', { headers })
+          axios.get('/api/osde/', { headers }),
+          axios.get('/api/terminales/', { 
+            headers,
+            params: { 
+              limit: 1000,
+              expand: 'puerto'
+            }
+          }),
+          axios.get('/api/gemar/partes-pbip/', { 
+            headers,
+            params: { 
+              estado: 'CREADO', 
+              limit: 1000,
+              expand: 'buque,puerto'
+            }
+          })
         ]);
-        
-        this.partes = partesRes.data.results || [];
-        this.puertos = puertosRes.data.results || [];
-        this.terminales = terminalesRes.data.results || [];
-        this.productos = productosRes.data.results || [];
-        this.organismos = organismosRes.data.results || [];
-        
+
+        // Procesar puertos
+        this.puertos = (puertosRes.data.results || puertosRes.data || []).map(p => ({
+          id: p.id,
+          nombre_puerto: p.nombre_puerto || p.nombre || 'Sin nombre'
+        }));
+
+        // Procesar productos
+        this.productos = (productosRes.data.results || productosRes.data || []).map(p => ({
+          id: p.id,
+          nombre_producto: p.nombre_producto || p.nombre || 'Sin nombre'
+        }));
+
+        // Procesar organismos
+        this.organismos = (organismosRes.data.results || organismosRes.data || []).map(o => ({
+          id: o.id,
+          nombre: o.nombre || o.nombre_organismo || 'Sin nombre'
+        }));
+
+        // Procesar terminales
+        this.terminales = (terminalesRes.data.results || terminalesRes.data || []).map(t => {
+          const puerto = t.puerto || {};
+          return {
+            id: t.id,
+            nombre_terminal: t.nombre_terminal || t.nombre || 'Sin nombre',
+            puerto: {
+              id: puerto.id || t.puerto_id,
+              nombre: puerto.nombre_puerto || puerto.nombre || 'Sin nombre'
+            },
+            puerto_id: puerto.id || t.puerto_id,
+            puerto_name: puerto.nombre_puerto || puerto.nombre || 'Sin puerto'
+          };
+        });
+
+        // Procesar partes PBIP
+        this.partesPBIP = (partesRes.data.results || partesRes.data || []).map(p => {
+          const buque = p.buque || {};
+          const puerto = p.puerto || {};
+          return {
+            id: p.id,
+            buque: {
+              id: buque.id || p.buque_id,
+              nombre: buque.nombre_embarcacion || buque.nombre || 'Sin nombre'
+            },
+            puerto: {
+              id: puerto.id || p.puerto_id,
+              nombre: puerto.nombre_puerto || puerto.nombre || 'Sin nombre'
+            },
+            nivel: p.nivel,
+            estado: p.estado
+          };
+        });
+
       } catch (error) {
         console.error('Error al cargar datos:', error);
-        this.mostrarError('Error al cargar datos iniciales');
+        this.mostrarError('Error al cargar datos iniciales: ' + (error.response?.data?.detail || error.message));
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    async cargarDatosParte() {
+      if (!this.carga.parte_id) return;
+      
+      try {
+        this.loading = true;
+        const token = localStorage.getItem('token');
+        const headers = { 
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        };
+
+        const response = await axios.get(`/api/gemar/partes-pbip/${this.carga.parte_id}/`, { 
+          headers,
+          params: { expand: 'puerto' }
+        });
+        const parte = response.data;
+        
+        // Actualizar solo el estado del parte
+        this.carga.estado = 'CREADO';
+
+      } catch (error) {
+        console.error('Error al cargar datos del parte:', error);
+        this.mostrarError('Error al cargar datos del parte PBIP seleccionado');
       } finally {
         this.loading = false;
       }
@@ -426,25 +485,46 @@ export default {
       try {
         this.loading = true;
         const token = localStorage.getItem('token');
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
         const headers = { 
           'Authorization': `Token ${token}`,
           'Content-Type': 'application/json'
         };
         
+        // Validar campos requeridos
+        const requiredFields = [
+          'parte_id', 'puerto_id', 'terminal_id', 'producto_id', 
+          'manifiesto', 'organismo_id', 'toneladas_ayer', 
+          'toneladas_hoy', 'dias_almacen', 'plan', 'real', 'estado'
+        ];
+        
+        const missingFields = requiredFields.filter(field => !this.carga[field]);
+        if (missingFields.length > 0) {
+          throw new Error(`Los siguientes campos son requeridos: ${missingFields.join(', ')}`);
+        }
+
+        // Construir payload con los nombres que espera el backend
         const payload = {
           parte: this.carga.parte_id,
           puerto: this.carga.puerto_id,
           terminal: this.carga.terminal_id,
           producto: this.carga.producto_id,
           manifiesto: this.carga.manifiesto,
-          toneladas_ayer: this.carga.toneladas_ayer,
-          toneladas_hoy: this.carga.toneladas_hoy,
+          toneladas_ayer: parseFloat(this.carga.toneladas_ayer),
+          toneladas_hoy: parseFloat(this.carga.toneladas_hoy),
           organismo: this.carga.organismo_id,
-          dias_almacen: this.carga.dias_almacen,
-          operacion: this.carga.operacion,
-          plan: this.carga.plan,
-          real: this.carga.real
+          dias_almacen: parseInt(this.carga.dias_almacen),
+          plan: parseFloat(this.carga.plan),
+          real: parseFloat(this.carga.real),
+          estado: this.carga.estado,
+          observaciones: this.carga.observaciones,
+          creado_por: userData.id
         };
+
+        // Si está aprobado, agregar quien aprueba
+        if (this.carga.estado === 'APROBADO') {
+          payload.aprobado_por = userData.id;
+        }
 
         const response = await axios.post('/api/gemar/cargas-viejas/', payload, { headers });
         
@@ -454,19 +534,40 @@ export default {
         }
       } catch (error) {
         console.error('Error al guardar:', error);
-        let errorMessage = 'Error al guardar la carga';
+        let errorDetails = '';
+        
         if (error.response?.data) {
-          errorMessage = Object.values(error.response.data).join(', ');
+          if (typeof error.response.data === 'object') {
+            errorDetails = Object.entries(error.response.data)
+              .map(([field, errors]) => {
+                const errorList = Array.isArray(errors) ? errors.join(', ') : errors;
+                return `<strong>${field}:</strong> ${errorList}`;
+              })
+              .join('<br>');
+          } else {
+            errorDetails = error.response.data;
+          }
         }
-        this.mostrarError(errorMessage);
+        
+        const errorMessage = `
+          <div>
+            <p>Error al guardar la carga:</p>
+            <div class="text-start">${errorDetails || error.message}</div>
+          </div>
+        `;
+        
+        Swal.fire({
+          title: 'Error',
+          html: errorMessage,
+          icon: 'error',
+          confirmButtonText: 'Entendido'
+        });
       } finally {
         this.loading = false;
       }
     },
     
     confirmCancel() {
-      event.preventDefault();
-      event.stopPropagation();
       Swal.fire({
         title: "¿Volver a la página principal?",
         text: "Los datos no guardados se perderán",

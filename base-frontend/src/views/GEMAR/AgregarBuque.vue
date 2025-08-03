@@ -17,38 +17,41 @@
             <div class="col-md-6">
               <!-- Campo: Nombre del Buque -->
               <div class="mb-3">
-                <label
-                  for="nombre"
-                  class="form-label small fw-semibold text-secondary"
-                  >Nombre del Buque*</label
-                >
-                <input
-                  type="text"
-                  class="form-control form-control-sm border-secondary"
+                <label for="buque_id" class="form-label small fw-semibold text-secondary"
+                  >Buque*</label>
+                <select
+                  class="form-select form-select-sm border-secondary"
                   style="padding: 8px 12px"
-                  v-model="nuevoBuque.nombre"
-                  id="nombre"
-                  name="nombre"
+                  v-model="nuevoBuque.buque_id"
+                  id="buque_id"
+                  name="buque_id"
                   required
-                  oninvalid="this.setCustomValidity('Por favor, ingrese el nombre del buque')"
-                  oninput="this.setCustomValidity('')"
-                />
+                  @change="console.log('Buque seleccionado:', nuevoBuque.buque_id)"
+                >
+                  <option value="" disabled>Seleccione un buque</option>
+                  <option
+                    v-for="buque in listaBuques"
+                    :key="buque.id"
+                    :value="buque.id"
+                  >
+                    {{ buque.nombre_embarcacion || buque.nombre }}
+                  </option>
+                </select>
               </div>
 
               <!-- Campo: Puerto de Arribo -->
               <div class="mb-3">
                 <label
-                  for="puerto"
+                  for="puerto_id"
                   class="form-label small fw-semibold text-secondary"
-                  >Puerto de Arribo*</label
-                >
+                  >Puerto de Arribo*</label>
                 <select
                   class="form-select form-select-sm border-secondary"
                   style="padding: 8px 12px"
                   v-model="nuevoBuque.puerto_id"
+                  id="puerto_id"
+                  name="puerto_id"
                   required
-                  oninvalid="this.setCustomValidity('Por favor, seleccione un puerto')"
-                  oninput="this.setCustomValidity('')"
                 >
                   <option value="" disabled>Seleccione un puerto</option>
                   <option
@@ -56,7 +59,7 @@
                     :key="puerto.id"
                     :value="puerto.id"
                   >
-                    {{ puerto.id }}-{{ puerto.nombre }}
+                    {{ puerto.nombre_puerto || puerto.nombre }}
                   </option>
                 </select>
               </div>
@@ -69,8 +72,7 @@
                 <label
                   for="fecha_hora"
                   class="form-label small fw-semibold text-secondary"
-                  >Fecha y Hora*</label
-                >
+                  >Fecha y Hora*</label>
                 <input
                   type="datetime-local"
                   class="form-control form-control-sm border-secondary"
@@ -79,8 +81,6 @@
                   id="fecha_hora"
                   name="fecha_hora"
                   required
-                  oninvalid="this.setCustomValidity('Por favor, seleccione fecha y hora')"
-                  oninput="this.setCustomValidity('')"
                 />
               </div>
 
@@ -89,15 +89,14 @@
                 <label
                   for="nivel"
                   class="form-label small fw-semibold text-secondary"
-                  >Nivel*</label
-                >
+                  >Nivel*</label>
                 <select
                   class="form-select form-select-sm border-secondary"
                   style="padding: 8px 12px"
                   v-model="nuevoBuque.nivel"
+                  id="nivel"
+                  name="nivel"
                   required
-                  oninvalid="this.setCustomValidity('Por favor, seleccione un nivel')"
-                  oninput="this.setCustomValidity('')"
                 >
                   <option value="" disabled>Seleccione un nivel</option>
                   <option value="1">1 - Nivel Básico</option>
@@ -128,48 +127,147 @@
 <script>
 import NavbarComponent from "@/components/NavbarComponent.vue";
 import Swal from "sweetalert2";
+import axios from "axios";
 
 export default {
   name: 'AgregarBuque',
   components: {
     NavbarComponent
   },
-  props: {
-    listaPuertos: {
-      type: Array,
-      default: () => []
-    }
-  },
   data() {
     return {
       nuevoBuque: {
-        nombre: '',
+        buque_id: null,
         puerto_id: null,
         fecha_hora: new Date().toISOString().slice(0, 16),
-        nivel: 1
-      }
+        nivel: '1'
+      },
+      listaBuques: [],
+      listaPuertos: [],
+      loading: false
     }
   },
+  async created() {
+    await this.cargarBuques();
+    await this.cargarPuertos();
+  },
   methods: {
-    guardarBuque() {
+    async cargarBuques() {
+      try {
+        this.loading = true;
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+          this.mostrarError('No se encontró el token de autenticación');
+          return;
+        }
+        
+        const headers = { 
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        };
+
+        const response = await axios.get('/api/embarcaciones/', { 
+          headers,
+          params: { limit: 1000 }
+        });
+
+        this.listaBuques = response.data.results || response.data || [];
+        
+        this.listaBuques = this.listaBuques.map(buque => ({
+          id: buque.id,
+          nombre: buque.nombre_embarcacion || buque.nombre || 'Buque sin nombre'
+        }));
+
+      } catch (error) {
+        console.error('Error al cargar buques:', error);
+        this.mostrarError('Error al cargar la lista de buques: ' + (error.response?.data?.detail || error.message));
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    async cargarPuertos() {
+      try {
+        this.loading = true;
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+          this.mostrarError('No se encontró el token de autenticación');
+          return;
+        }
+        
+        const headers = { 
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        };
+
+        const response = await axios.get('/api/puertos/', { 
+          headers,
+          params: { limit: 1000 }
+        });
+
+        this.listaPuertos = response.data.results || response.data || [];
+        
+        this.listaPuertos = this.listaPuertos.map(puerto => ({
+          id: puerto.id,
+          nombre: puerto.nombre_puerto || puerto.nombre || 'Puerto sin nombre'
+        }));
+
+      } catch (error) {
+        console.error('Error al cargar puertos:', error);
+        this.mostrarError('Error al cargar la lista de puertos: ' + (error.response?.data?.detail || error.message));
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    async guardarBuque() {
       // Validar datos
-      if (!this.nuevoBuque.nombre || !this.nuevoBuque.puerto_id || !this.nuevoBuque.fecha_hora) {
+      if (!this.nuevoBuque.buque_id || !this.nuevoBuque.puerto_id || !this.nuevoBuque.fecha_hora) {
         this.mostrarError('Todos los campos marcados con * son obligatorios');
         return;
       }
       
-      // Emitir el evento con el nuevo buque
-      this.$emit('buque-agregado', {
-        ...this.nuevoBuque,
-        // Generar un ID temporal (será reemplazado por el ID real del backend)
-        id: Date.now()
-      });
-      
-      // Mostrar mensaje de éxito
-      this.mostrarExito('Buque agregado correctamente');
-      
-      // Cerrar el formulario
-      this.$router.go(-1);
+      try {
+        const token = localStorage.getItem('token');
+        const headers = {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        };
+
+        // Crear payload con la estructura exacta que espera el backend
+        const payload = {
+          buque_id: this.nuevoBuque.buque_id,
+          puerto_id: this.nuevoBuque.puerto_id,
+          fecha_operacion: new Date().toISOString().split('T')[0], // Fecha actual
+          fecha_hora: this.nuevoBuque.fecha_hora,
+          nivel: parseInt(this.nuevoBuque.nivel)
+        };
+
+        console.log("Enviando payload:", payload);
+
+        const response = await axios.post('/api/gemar/partes-pbip/', payload, { headers });
+        
+        this.mostrarExito('Buque agregado correctamente al parte PBIP');
+        this.$router.push({ name: 'PartesPBIP' });
+      } catch (error) {
+        console.error('Error completo:', error);
+        console.error('Respuesta del error:', error.response?.data);
+        
+        let errorMessage = 'Error al guardar el buque';
+        if (error.response?.data) {
+          // Mostrar todos los errores del backend
+          errorMessage += ':\n';
+          for (const [key, value] of Object.entries(error.response.data)) {
+            errorMessage += `${key}: ${Array.isArray(value) ? value.join(', ') : value}\n`;
+          }
+        } else {
+          errorMessage += ': ' + error.message;
+        }
+        
+        this.mostrarError(errorMessage);
+      }
     },
     
     cancelar() {

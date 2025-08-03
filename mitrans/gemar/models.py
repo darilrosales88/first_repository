@@ -49,6 +49,7 @@ class PartePBIP(models.Model):
         if self.fecha_operacion > timezone.now().date():
             raise ValidationError(_('La fecha de operación no puede ser futura.'))
 
+# gemar/models.py (actualización de CargaVieja)
 class CargaVieja(models.Model):
     parte = models.ForeignKey(PartePBIP, on_delete=models.CASCADE, related_name='cargas_viejas')
     puerto = models.ForeignKey(nom_puerto, on_delete=models.PROTECT, verbose_name=_('Puerto'))

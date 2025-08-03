@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
-
+from rest_framework.pagination import PageNumberPagination
 from gemar.models import PartePBIP, CargaVieja, ExistenciaMercancia
 from gemar.serializers import (
     PartePBIPSerializer, CargaViejaSerializer, ExistenciaMercanciaSerializer
@@ -15,21 +15,30 @@ from gemar.serializers import (
 from Administracion.permissions import IsGEMARUser, IsUFCUser, IsAdminUser
 
 class PartePBIPViewSet(viewsets.ModelViewSet):
-    queryset = PartePBIP.objects.all()
+    queryset = PartePBIP.objects.all().order_by('-fecha_creacion')
     serializer_class = PartePBIPSerializer
     permission_classes = [IsAuthenticated, IsAdminUser | IsGEMARUser]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['buque', 'puerto', 'nivel', 'fecha_operacion', 'estado']
-    search_fields = ['buque__nombre', 'puerto__nombre']
+    search_fields = ['buque__nombre_embarcacion', 'puerto__nombre_puerto']
     ordering_fields = ['fecha_operacion', 'fecha_creacion']
-    ordering = ['-fecha_operacion']
+    ordering = ['-fecha_creacion']
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
-        # Filtro adicional si es necesario
-        return super().get_queryset()
+        queryset = super().get_queryset()
+        # Filtro por fecha si se proporciona
+        fecha = self.request.query_params.get('fecha')
+        if fecha:
+            queryset = queryset.filter(fecha_operacion=fecha)
+        return queryset
 
-    def perform_create(self, serializer):
-        serializer.save(creado_por=self.request.user)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(creado_por=request.user)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsGEMARUser | IsAdminUser])
     def aprobar(self, request, pk=None):
@@ -53,11 +62,6 @@ class PartePBIPViewSet(viewsets.ModelViewSet):
         parte.save()
         return Response({'status': 'Parte PBIP cancelado'}, status=status.HTTP_200_OK)
 
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            self.permission_classes = [IsAuthenticated, IsAdminUser]
-        return super().get_permissions()
-
 class CargaViejaViewSet(viewsets.ModelViewSet):
     queryset = CargaVieja.objects.all()
     serializer_class = CargaViejaSerializer
@@ -74,6 +78,16 @@ class CargaViejaViewSet(viewsets.ModelViewSet):
         if parte_id:
             queryset = queryset.filter(parte_id=parte_id)
         return queryset
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer):
+        serializer.save(creado_por=self.request.user)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsGEMARUser | IsAdminUser])
     def aprobar(self, request, pk=None):
@@ -92,7 +106,7 @@ class CargaViejaViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            self.permission_classes = [IsAuthenticated, IsAdminUser]
+            self.permission_classes = [IsAuthenticated, IsAdminUser | IsGEMARUser]
         return super().get_permissions()
 
 class ExistenciaMercanciaViewSet(viewsets.ModelViewSet):

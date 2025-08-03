@@ -70,16 +70,18 @@
                   <th scope="col">Puerto de Arribo</th>
                   <th scope="col">Fecha y Hora</th>
                   <th scope="col">Nivel</th>
+                  <th scope="col">Estado</th>
                   <th scope="col">Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(item, index) in buques" :key="index">
+                <tr v-for="(item, index) in buques" :key="item.id">
                   <td>{{ index + 1 }}</td>
                   <td>{{ getNombreBuque(item.buque_id) }}</td>
                   <td>{{ getNombrePuerto(item.puerto_id) }}</td>
                   <td>{{ formatDateTime(item.fecha_hora) }}</td>
                   <td>Nivel {{ item.nivel }}</td>
+                  <td>{{ item.estado }}</td>
                   <td>
                     <div class="d-flex gap-1">
                       <button
@@ -95,12 +97,6 @@
                         <i class="bi bi-trash"></i> Eliminar
                       </button>
                     </div>
-                    <button
-                      @click="removeBuque(index)"
-                      class="btn btn-sm btn-outline-danger"
-                    >
-                      <i class="bi bi-trash"></i> Eliminar
-                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -160,7 +156,6 @@
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
-import EditarPartePBIP from "./EditarPartePBIP.vue";
 import NavbarComponent from "@/components/NavbarComponent.vue";
 
 export default {
@@ -179,10 +174,6 @@ export default {
       listaPuertos: [],
       loading: false,
       error: null,
-      debugInfo: {
-        buquesResponse: null,
-        puertosResponse: null,
-      },
     };
   },
   computed: {
@@ -201,12 +192,9 @@ export default {
   },
   async created() {
     await this.cargarDatosIniciales();
-    console.log("Datos cargados:", {
-      buques: this.listaBuques,
-      puertos: this.listaPuertos,
-      debugInfo: this.debugInfo,
-    });
+    await this.cargarPartesPBIP(); // Nueva función para cargar los partes existentes
   },
+
   methods: {
     editarPartePBIP(buque) {
       this.$router.push({
@@ -220,70 +208,74 @@ export default {
       });
     },
 
-    async cargarDatosIniciales() {
+    async cargarPartesPBIP() {
       try {
         this.loading = true;
+        const token = localStorage.getItem('token');
+        const headers = {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        };
 
-        const instance = axios.create({
-          baseURL: "http://127.0.0.1:8000",
-          withCredentials: true,
-        });
-
-        const [buquesRes, puertosRes] = await Promise.all([
-          instance.get("/api/embarcaciones/"),
-          instance.get("/api/puertos/"),
-        ]);
-
-        this.debugInfo.buquesResponse = buquesRes.data;
-        this.debugInfo.puertosResponse = puertosRes.data;
-
-        this.listaBuques = buquesRes.data.results || [];
-        this.listaPuertos = puertosRes.data.results || [];
-
-        this.listaBuques = this.listaBuques.map((b) => ({
-          id: b.id,
-          nombre: b.nombre || b.nombre_buque || "",
-        }));
-
-        this.listaPuertos = this.listaPuertos.map((p) => ({
-          id: p.id,
-          nombre: p.nombre || p.nombre_puerto || "",
-        }));
-      } catch (error) {
-        console.error("Error al cargar datos:", error);
-        let errorMessage = "Error al cargar datos iniciales";
-        if (error.response) {
-          console.error("Detalles del error:", error.response.data);
-          if (error.response.data?.detail) {
-            errorMessage = error.response.data.detail;
-          }
+        const response = await axios.get('/api/gemar/partes-pbip/', { headers });
+        
+        // Asegurarnos de que tenemos un array de resultados
+        const resultados = response.data.results || response.data;
+        
+        if (Array.isArray(resultados)) {
+          this.buques = resultados.map(parte => ({
+            id: parte.id,  // Agregar el ID del parte
+            buque_id: parte.buque.id,
+            puerto_id: parte.puerto.id,
+            fecha_hora: parte.fecha_hora,
+            nivel: parte.nivel,
+            estado: parte.estado
+          }));
+        } else {
+          this.buques = [];
         }
-        this.mostrarError(errorMessage);
+      } catch (error) {
+        console.error("Error al cargar partes PBIP:", error);
+        this.mostrarError("Error al cargar los partes PBIP existentes");
       } finally {
         this.loading = false;
       }
     },
-    //cancelar() {
-    // Opcional: preguntar confirmación antes de limpiar
-    //f (this.cargas.some(c => c.puerto_id || c.producto_id || c.organismo_id)) {
-    //Swal.fire({
-    //title: '¿Cancelar cambios?',
-    //text: "Los datos no guardados se perderán",
-    //icon: 'warning',
-    //showCancelButton: true,
-    //confirmButtonColor: '#3085d6',
-    //cancelButtonColor: '#d33',
-    //confirmButtonText: 'Sí, cancelar',
-    //cancelButtonText: 'No, continuar editando'
-    //}).then((result) => {
-    //if (result.isConfirmed) {
-    //this.resetForm();
-    // }
-    // });
-    // } else {
-    // this.resetForm();
-    //}
-    //},
+
+    async cargarDatosIniciales() {
+      try {
+        this.loading = true;
+        const token = localStorage.getItem('token');
+        const headers = {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        };
+
+        const [buquesRes, puertosRes] = await Promise.all([
+          axios.get("/api/embarcaciones/", { headers }),
+          axios.get("/api/puertos/", { headers }),
+        ]);
+
+        this.listaBuques = buquesRes.data.results || buquesRes.data || [];
+        this.listaPuertos = puertosRes.data.results || puertosRes.data || [];
+
+        this.listaBuques = this.listaBuques.map((b) => ({
+          id: b.id,
+          nombre: b.nombre_embarcacion || b.nombre || "",
+        }));
+
+        this.listaPuertos = this.listaPuertos.map((p) => ({
+          id: p.id,
+          nombre: p.nombre_puerto || p.nombre || "",
+        }));
+      } catch (error) {
+        console.error("Error al cargar datos:", error);
+        this.mostrarError("Error al cargar datos iniciales");
+      } finally {
+        this.loading = false;
+      }
+    },
+    
     addBuque() {
       this.$router.push({
         name: "AgregarBuque",
@@ -322,33 +314,45 @@ export default {
 
       try {
         this.loading = true;
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+          this.mostrarError('No se encontró el token de autenticación');
+          return;
+        }
 
-        const instance = axios.create({
-          baseURL: "http://127.0.0.1:8000",
-          withCredentials: true,
-        });
-
-        const payload = {
-          fecha_operacion: this.parte.fecha_operacion,
-          buques: this.buques.map((b) => ({
-            buque_id: b.buque_id,
-            puerto_id: b.puerto_id,
-            fecha_hora: b.fecha_hora,
-            nivel: b.nivel,
-          })),
+        const headers = {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
         };
 
-        const response = await instance.post(
-          "/api/gemar/partes-pbip/",
-          payload
-        );
+        // Crear un parte por cada buque
+        const promises = this.buques.map(async (buque) => {
+          const payload = {
+            fecha_operacion: this.parte.fecha_operacion,
+            buque: buque.buque_id,
+            puerto: buque.puerto_id,
+            fecha_hora: buque.fecha_hora,
+            nivel: buque.nivel,
+            creado_por: this.$store.state.user.id // O obtener el ID del usuario de donde corresponda
+          };
 
-        if (response.status === 201) {
-          this.mostrarExito("Parte PBIP creado correctamente");
+          const response = await axios.post(
+            '/api/gemar/partes-pbip/',
+            payload,
+            { headers }
+          );
+          return response.data;
+        });
+
+        const resultados = await Promise.all(promises);
+        
+        if (resultados.length > 0) {
+          this.mostrarExito("Parte(s) PBIP creado(s) correctamente");
           this.resetFormulario();
           this.$emit("parte-creado");
         } else {
-          this.mostrarError("Error inesperado al crear el parte PBIP");
+          this.mostrarError("No se crearon partes PBIP");
         }
       } catch (error) {
         console.error("Error al guardar:", error);
@@ -356,6 +360,16 @@ export default {
         if (error.response) {
           if (error.response.status === 400) {
             errorMessage = error.response.data.detail || "Datos inválidos";
+            // Mostrar errores de validación específicos si existen
+            if (error.response.data) {
+              for (const key in error.response.data) {
+                if (Array.isArray(error.response.data[key])) {
+                  errorMessage += `\n${key}: ${error.response.data[key].join(', ')}`;
+                }
+              }
+            }
+          } else if (error.response.status === 401) {
+            errorMessage = "No autorizado - por favor inicie sesión nuevamente";
           }
         }
         this.mostrarError(errorMessage);
@@ -365,21 +379,43 @@ export default {
     },
 
     validarFormulario() {
+      // Validar fecha de operación
       if (!this.parte.fecha_operacion) {
         this.error = "La fecha de operación es requerida";
         this.mostrarError(this.error);
         return false;
       }
 
+      // Validar que la fecha no sea futura
+      const fechaOperacion = new Date(this.parte.fecha_operacion);
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      
+      if (fechaOperacion > hoy) {
+        this.error = "La fecha de operación no puede ser futura";
+        this.mostrarError(this.error);
+        return false;
+      }
+
+      // Validar buques
       if (this.buques.length === 0) {
         this.error = "Debe agregar al menos un buque";
         this.mostrarError(this.error);
         return false;
       }
 
+      // Validar cada buque
       for (const buque of this.buques) {
         if (!buque.buque_id || !buque.puerto_id || !buque.fecha_hora) {
           this.error = "Todos los campos son requeridos para cada buque";
+          this.mostrarError(this.error);
+          return false;
+        }
+
+        // Validar que la fecha y hora no sea futura
+        const fechaHoraBuque = new Date(buque.fecha_hora);
+        if (fechaHoraBuque > new Date()) {
+          this.error = "La fecha y hora del buque no puede ser futura";
           this.mostrarError(this.error);
           return false;
         }

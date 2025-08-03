@@ -13,29 +13,35 @@ from nomencladores.models import nom_producto as Producto  # For producto_id
 from nomencladores.models import nom_osde_oace_organismo as Organismo  # For organismo_id
 from nomencladores.models import nom_tipo_embalaje as TipoEmbalaje  # For tipo_embalaje_id
 from nomencladores.models import nom_unidad_medida as UnidadMedida
+from nomencladores.models import nom_puerto
+from nomencladores.models import nom_terminal
+from nomencladores.models import nom_producto
+from nomencladores.models import nom_osde_oace_organismo
 from Administracion.serializers import UserPermissionSerializer as CustomUserSerializer
 
 class PartePBIPSerializer(serializers.ModelSerializer):
     buque = nom_embarcacion_serializer(read_only=True)
     buque_id = serializers.PrimaryKeyRelatedField(
-        queryset=Buque.objects.filter(tipo_embarcacion__iexact='buque'),
+        queryset=Buque.objects.all(),  # O Buque.objects.filter(tipo_embarcacion='buque') si aplica
         write_only=True,
         source='buque'
     )
     puerto = nom_puerto_serializer(read_only=True)
     puerto_id = serializers.PrimaryKeyRelatedField(
-        queryset=Puerto.objects.filter(),
+        queryset=nom_puerto.objects.all(),
         write_only=True,
         source='puerto'
     )
     creado_por = CustomUserSerializer(read_only=True)
-    nivel_display = serializers.CharField(source='get_nivel_display', read_only=True)
-    estado_display = serializers.CharField(source='get_estado_display', read_only=True)
 
     class Meta:
         model = PartePBIP
         fields = '__all__'
-        read_only_fields = ('fecha_creacion', 'creado_por')
+        read_only_fields = ('fecha_creacion', 'creado_por', 'aprobado_por')
+
+    def create(self, validated_data):
+        validated_data['creado_por'] = self.context['request'].user
+        return super().create(validated_data)
 
     def validate(self, data):
         # Validar combinación única de buque, puerto y nivel
@@ -50,35 +56,49 @@ class PartePBIPSerializer(serializers.ModelSerializer):
             )
         return data
 
+# gemar/serializers.py (actualización de CargaViejaSerializer)
 class CargaViejaSerializer(serializers.ModelSerializer):
+    parte = serializers.PrimaryKeyRelatedField(queryset=PartePBIP.objects.all())
     puerto = nom_puerto_serializer(read_only=True)
     puerto_id = serializers.PrimaryKeyRelatedField(
-        queryset=Puerto.objects.filter(),
+        queryset=Puerto.objects.all(),
         write_only=True,
-        source='puerto'
+        source='puerto',
+        required=True
     )
     terminal = nom_terminal_serializer(read_only=True)
     terminal_id = serializers.PrimaryKeyRelatedField(
-        queryset=Terminal.objects.filter(),
+        queryset=Terminal.objects.all(),
         write_only=True,
-        source='terminal'
+        source='terminal',
+        required=True
     )
     producto = nom_producto_serializer(read_only=True)
-    puerto_id = serializers.PrimaryKeyRelatedField(
-    queryset=Puerto.objects.all(),  
-    write_only=True,
-    source='puerto'
-)
+    producto_id = serializers.PrimaryKeyRelatedField(
+        queryset=Producto.objects.all(),
+        write_only=True,
+        source='producto',
+        required=True
+    )
     organismo = nom_osde_oace_organismo_serializer(read_only=True)
     organismo_id = serializers.PrimaryKeyRelatedField(
-        queryset=Organismo.objects.filter(),
+        queryset=Organismo.objects.all(),
         write_only=True,
-        source='organismo'
+        source='organismo',
+        required=True
     )
 
     class Meta:
         model = CargaVieja
         fields = '__all__'
+        extra_kwargs = {
+            'manifiesto': {'required': True},
+            'toneladas_ayer': {'required': True},
+            'toneladas_hoy': {'required': True},
+            'dias_almacen': {'required': True},
+            'plan': {'required': True},
+            'real': {'required': True}
+        }
 
     def validate(self, data):
         parte = data.get('parte')

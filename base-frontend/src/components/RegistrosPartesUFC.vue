@@ -403,6 +403,7 @@ export default {
           },
         });
         this.informes = response.data.results;
+        console.log(this.informes)
         this.totalItems = response.data.count;
       } catch (error) {
         console.error("Error al obtener los informes:", error);

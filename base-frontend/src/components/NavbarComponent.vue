@@ -21,7 +21,7 @@
           @click="insertRouteMain(item.title)"
         >
           <a
-            class="nav-link px-2 py-2 d-flex align-items-center"
+            class="nav-link px-3 py-3 d-flex align-items-center"
             role="button"
             @click="toggleDropdown(index)"
             :aria-expanded="isOpen(index)"
@@ -326,7 +326,7 @@ export default {
 
 /* Contenedor de burbujas (fijo al final) */
 .bubbles-container {
-  height: 240px;
+  height: 150px;
   width: 240px;
   position: relative;
   flex-shrink: 0;

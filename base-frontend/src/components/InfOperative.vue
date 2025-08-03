@@ -284,6 +284,8 @@ export default {
           aprobado_por: this.formData.aprobado_por,
         };
 
+        console.log(dataToSend);
+
         const response = await axios.post(
           "/ufc/informe-operativo/",
           dataToSend
@@ -307,7 +309,8 @@ export default {
         this.isLoading = false;
       }
     },
-        showSuccessToast(message) {
+
+    showSuccessToast(message) {
       const Toast = Swal.mixin({
         toast: true,
         position: "top-end",

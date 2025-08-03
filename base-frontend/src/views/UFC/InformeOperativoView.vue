@@ -429,10 +429,9 @@ export default {
         return false;
       }
     },
+    
     handleRecordStatusChange(payload) {
       this.isExistingRecord = payload.isExisting;
-      // Opcional: Mostrar feedback
-      console.log("Estado actualizado:", payload);
     },
     
     showErrorToast(message) {

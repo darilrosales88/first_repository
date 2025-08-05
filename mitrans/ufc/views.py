@@ -610,7 +610,11 @@ class registro_vagones_cargados_view_set(viewsets.ModelViewSet):
 class en_trenes_view_set(viewsets.ModelViewSet):
     queryset = en_trenes.objects.all().order_by('-id')
     serializer_class = en_trenes_serializer
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
     filter_class = en_trenes_filter
     permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     ordering_fields = ['id'] 
@@ -883,7 +887,12 @@ class PendienteArrastreViewset(viewsets.ModelViewSet):
     queryset = arrastres.objects.all()
     serializer_class = PendienteArrastreSerializer
     permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
+    filter_backends = [filters.SearchFilter,DjangoFilterBackend, # Para filtros exactos
+                       filters.OrderingFilter]  # Para ordenamiento
+    filterset_fields = ['tipo_equipo__id', 'producto__producto__codigo_producto','producto__tipo_embalaje__id','producto__unidad_medida__simbolo']
+    search_fields = ['producto__producto__nombre_producto','cantidad','=unidad_medida__unidad_medida', 'origen','tipo_origen']
     filter_class = PendienteArrastreFilter
+
     
     def get_queryset(self):
         queryset = super().get_queryset()

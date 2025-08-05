@@ -30,5 +30,20 @@ filterset_fields = ['tipo_equipo__id', 'producto__producto__codigo_producto','pr
     search_fields = ['producto__producto__nombre_producto','cantidad','=unidad_medida__unidad_medida', 'origen','tipo_origen']
 
 ```
-- Los filtros se llaman con el query de ejemplo `ufc/arrastres/?tipo_equipo__id={id del equipo}`
+- Los filtros se llaman con el query de ejemplo `ufc/arrastres/?informe={id_informe}&tipo_equipo__id={id del equipo}`
 - Los search se llaman con `ufc/arrastres/?search={Un string a buscar de los campos anteriores}`
+- El query `informe` busca por el id del informe operativo
+**Hay que darse cuenta que si no se llama al query con el param del informe_id saldran todos los registros dentro de BD**
+ESTO ES MUY IMPORTANTE
+
+- Esta es la misma estructura para Pendientes, SITUADOS, PorSituar debido a que son los mismos atributos
+
+### Cargados/DESCARGADOS
+
+- Los parametros query son los siguientes
+```python
+filterset_fields = ['tipo_equipo_ferroviario__id', 'producto__producto__codigo_producto','producto__tipo_embalaje__id','producto__unidad_medida__simbolo']
+    search_fields = ['producto__producto__nombre_producto','cantidad','=unidad_medida__unidad_medida', 'origen','tipo_origen']
+
+```
+**OJO cambia el tipo_equipo a tipo_equipo_ferroviario**

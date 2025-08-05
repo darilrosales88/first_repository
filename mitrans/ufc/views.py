@@ -389,6 +389,11 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
 class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
     queryset = vagon_cargado_descargado.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = vagon_cargado_descargado_serializer
+    filter_backends = [filters.SearchFilter,DjangoFilterBackend, # Para filtros exactos
+                       filters.OrderingFilter]  # Para ordenamiento
+    filterset_fields = ['tipo_equipo_ferroviario__id', 'producto__producto__codigo_producto','producto__tipo_embalaje__id','producto__unidad_medida__simbolo']
+    search_fields = ['producto__producto__nombre_producto','cantidad','=unidad_medida__unidad_medida', 'origen','tipo_origen']
+
     filter_class = vagon_cargado_descargado_filter
     permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     def get_queryset(self):
@@ -756,7 +761,11 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
 class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
     queryset = por_situar.objects.all().order_by("-id")
     serializer_class = PorSituarCargaDescargaSerializer
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [filters.SearchFilter,DjangoFilterBackend, # Para filtros exactos
+                       filters.OrderingFilter]  # Para ordenamiento
+    filterset_fields = ['tipo_equipo__id', 'producto__producto__codigo_producto','producto__tipo_embalaje__id','producto__unidad_medida__simbolo']
+    search_fields = ['producto__producto__nombre_producto','cantidad','=unidad_medida__unidad_medida', 'origen','tipo_origen']
+
     permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -824,7 +833,11 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
 class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
     queryset = Situado_Carga_Descarga.objects.all().order_by("-id")
     serializer_class = SituadoCargaDescargaSerializers
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [filters.SearchFilter,DjangoFilterBackend, # Para filtros exactos
+                       filters.OrderingFilter]  # Para ordenamiento
+    filterset_fields = ['tipo_equipo__id', 'producto__producto__codigo_producto','producto__tipo_embalaje__id','producto__unidad_medida__simbolo']
+    search_fields = ['producto__producto__nombre_producto','cantidad','=unidad_medida__unidad_medida', 'origen','tipo_origen']
+
     permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     
     def get_queryset(self):

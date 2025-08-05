@@ -48,11 +48,14 @@ class UserPermissionSerializer(serializers.ModelSerializer):
 
     cargo_name = serializers.ReadOnlyField(source = 'cargo.nombre_cargo')
     entidad_name = serializers.ReadOnlyField(source = 'entidad.nombre')
+    provincia = serializers.ReadOnlyField(source = 'entidad.provincia.id')
+    provincia_name = serializers.ReadOnlyField(source = 'entidad.provincia.nombre_provincia')
     role_name = serializers.ReadOnlyField(source='get_role_display')
 
     class Meta:
         model = CustomUser        
-        fields = ['id', 'username', 'email', 'first_name', 'last_name','role','role_name', 'entidad','cargo','cargo_name','entidad_name', 'password', 'groups', 'user_permissions']
+        #fields = ['id', 'username', 'email', 'first_name', 'last_name','role','role_name', 'entidad','cargo','cargo_name','entidad_name', 'password', 'groups', 'user_permissions']
+        fields = "__all__"
         extra_kwargs = {'password': {'write_only': True, 'required': False}}
     
 

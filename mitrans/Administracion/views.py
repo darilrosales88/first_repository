@@ -102,6 +102,7 @@ def get_user_permissions_and_groups(request, user_id):
         # Datos básicos del usuario
         first_name = user.first_name
         last_name = user.last_name
+        username = user.username
         entidad = {
             'id': user.entidad.id,
             'nombre': user.entidad.nombre,
@@ -110,6 +111,7 @@ def get_user_permissions_and_groups(request, user_id):
             'id': user.cargo.id,
             'nombre_cargo': user.cargo.nombre_cargo,
         }
+        
 
         # Obtener todos los grupos del usuario
         groups = user.groups.all().order_by("-id")
@@ -134,6 +136,7 @@ def get_user_permissions_and_groups(request, user_id):
         return Response({
             'first_name': first_name,
             'last_name': last_name,
+            'username': username,
             'entidad': entidad,
             'cargo': cargo,
             'groups': grupos_formateados,

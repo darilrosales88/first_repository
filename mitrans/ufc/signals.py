@@ -162,8 +162,6 @@ def actualizar_rotacion(sender, instance:rotacion_vagones, **kwargs):
     
 
     # Filtrar solo los vagones cargados/descargados para este tipo de equipo
-
-
 def actualizar_datos_rotacion(rotacion, tipo_equipo,informe):
 
     # Filtrar los vagones cargados/descargados para este tipo de equipo
@@ -172,10 +170,7 @@ def actualizar_datos_rotacion(rotacion, tipo_equipo,informe):
         tipo_equipo_ferroviario=tipo_equipo, operacion="carga", fecha__date=hoy,informe_operativo=informe
     )
     total_plan_carga = (
-        registros.aggregate(Sum("plan_diario_carga_descarga"))[
-            "plan_diario_carga_descarga__sum"
-        ]
-        or 0
+        registros.aggregate(Sum("plan_diario_carga_descarga"))["plan_diario_carga_descarga__sum"] or 0
     )
     total_real_carga = (
         registros.aggregate(Sum("real_carga_descarga"))["real_carga_descarga__sum"] or 0
@@ -234,7 +229,7 @@ def calcular_informe_operativo_diario(sender, instance, created, **kwargs):
 
             # 3. Sumatoria de real_carga_descarga (solo del día actual)
             real_total = (
-                vagon_cargado_descargado.objects.filter(fecha__date=hoy).aggregate(
+                vagon_cargado_descargado.objects.filter(fecha__date=hoy,operacion='carga').aggregate(
                     total=Sum("real_carga_descarga")
                 )["total"]
                 or 0
@@ -305,128 +300,140 @@ def recalcular_informe_operativo_al_eliminar(sender, instance, **kwargs):
 def actualizar_campos_automaticos_vagones_productos(sender, instance, **kwargs):
     """Actualiza los campos automáticos en vagones_productos cuando hay cambios
     en los modelos relacionados vagon_cargado_descargado, Situado_Carga_Descarga"""
-
+    
     # Obtener la fecha actual
     hoy = timezone.now().date()
-
+    
     # Verificar si es el primer día del mes
     es_primer_dia_mes = hoy.day == 1
-
+    
     # Obtener el año actual
     año_actual = hoy.year
-
+    
+    # Obtener el informe operativo asociado (si existe)
+    informe_operativo = getattr(instance, 'informe_operativo', None)
+    
+    if not informe_operativo:
+        return
+    
     # Verificar si hay otros informes operativos en el año actual
     informes_año_actual = ufc_informe_operativo.objects.filter(
         fecha_operacion__year=año_actual
-    ).exclude(fecha_operacion__date=hoy)
-
+    ).exclude(id=informe_operativo.id)
+    
     es_unico_informe_año = not informes_año_actual.exists()
-
+    
     with transaction.atomic():
-        # Obtener todos los objetos vagones_productos que necesitan actualización
-        objetos_actualizar = vagones_productos.objects.all()
-
+        # Obtener todos los objetos vagones_productos relacionados con este informe
+        objetos_actualizar = vagones_productos.objects.filter(
+            informe_operativo=informe_operativo
+        )
+        
         for vagon_producto in objetos_actualizar:
-            # Actualizar campos básicos
+            # Calcular valores agregados filtrados por el informe operativo
             plan_dia = (
-                vagon_cargado_descargado.objects.filter(operacion="carga").aggregate(
+                vagon_cargado_descargado.objects.filter(
+                    operacion="carga",
+                    informe_operativo=informe_operativo
+                ).aggregate(
                     total=Sum("plan_diario_carga_descarga")
-                )["total"]
-                or 0
+                )["total"] or 0
             )
-
+            
             vagones_cargados = (
-                vagon_cargado_descargado.objects.filter(operacion="carga",).aggregate(
+                vagon_cargado_descargado.objects.filter(
+                    operacion="carga",
+                    informe_operativo=informe_operativo
+                ).aggregate(
                     total=Sum("real_carga_descarga")
-                )["total"]
-                or 0
+                )["total"] or 0
             )
-
+            
             vagones_situados = (
-                Situado_Carga_Descarga.objects.filter(operacion="carga",).aggregate(
+                Situado_Carga_Descarga.objects.filter(
+                    operacion="carga",
+                    informe_operativo=informe_operativo
+                ).aggregate(
                     total=Sum("situados")
-                )["total"]
-                or 0
+                )["total"] or 0
             )
-
+            
             plan_aseguramiento = (
-                vagon_cargado_descargado.objects.filter(operacion="carga",).aggregate(
+                vagon_cargado_descargado.objects.filter(
+                    operacion="carga",
+                    informe_operativo=informe_operativo
+                ).aggregate(
                     total=Sum("real_carga_descarga")
-                )["total"]
-                or 0
+                )["total"] or 0
             )
-
-            # Lógica para campos acumulados según los casos especificados
+            
+            # Manejar los diferentes casos según las condiciones
             if es_unico_informe_año and es_primer_dia_mes:
-                # Caso 3: Único informe en el año y es primer día del mes
+                # Caso 1: Único informe en el año y es primer día del mes
                 vagon_producto.plan_acumulado_dia_anterior = 0
                 vagon_producto.real_acumulado_dia_anterior = 0
-                vagon_producto.plan_acumulado_actual = (
-                    vagon_producto.plan_acumulado_dia_anterior + plan_dia
-                )
-                vagon_producto.real_acumulado_actual = (
-                    vagon_producto.real_acumulado_dia_anterior + vagones_cargados
-                )
-                vagon_producto.plan_acumulado_anual = (
-                    vagon_producto.plan_acumulado_anual + plan_dia
-                )
-                vagon_producto.real_acumulado_anual = (
-                    vagon_producto.real_acumulado_anual + vagones_cargados
-                )
-
+                
+                # plan_anual es editable en este caso (se mantiene el valor que tenga)
+                
             elif es_unico_informe_año and not es_primer_dia_mes:
-                # Caso 4: Único informe en el año pero no es primer día del mes
-                vagon_producto.plan_acumulado_actual = (
-                    vagon_producto.plan_acumulado_dia_anterior + plan_dia
-                )
-                vagon_producto.real_acumulado_actual = (
-                    vagon_producto.real_acumulado_dia_anterior + vagones_cargados
-                )
-                vagon_producto.plan_acumulado_anual = (
-                    vagon_producto.plan_acumulado_anual + plan_dia
-                )
-                vagon_producto.real_acumulado_anual = (
-                    vagon_producto.real_acumulado_anual + vagones_cargados
-                )
-
+                # Caso 2: Único informe en el año pero no es primer día del mes
+                # plan_anual, plan_acumulado_dia_anterior y real_acumulado_dia_anterior
+                # son editables en este caso (se mantienen los valores que tengan)
+                pass
+                
             elif not es_unico_informe_año and es_primer_dia_mes:
-                # Caso 5: No es único informe en el año pero es primer día del mes
+                # Caso 3: No es único informe en el año pero es primer día del mes
                 vagon_producto.plan_acumulado_dia_anterior = 0
                 vagon_producto.real_acumulado_dia_anterior = 0
-                vagon_producto.plan_acumulado_actual = (
-                    vagon_producto.plan_acumulado_dia_anterior + plan_dia
-                )
-                vagon_producto.real_acumulado_actual = (
-                    vagon_producto.real_acumulado_dia_anterior + vagones_cargados
-                )
-                vagon_producto.plan_acumulado_anual = (
-                    vagon_producto.plan_acumulado_anual + plan_dia
-                )
-                vagon_producto.real_acumulado_anual = (
-                    vagon_producto.real_acumulado_anual + vagones_cargados
-                )
-
+                
+                # Obtener plan_anual del informe del día anterior
+                informe_anterior = informes_año_actual.filter(
+                    fecha_operacion__lt=informe_operativo.fecha_operacion
+                ).order_by('-fecha_operacion').first()
+                
+                if informe_anterior:
+                    vagon_producto_anterior = vagones_productos.objects.filter(
+                        informe_operativo=informe_anterior
+                    ).first()
+                    if vagon_producto_anterior:
+                        vagon_producto.plan_anual = vagon_producto_anterior.plan_anual
+                
             else:
-                # Caso 6: No es único informe en el año ni es primer día del mes
-                vagon_producto.plan_acumulado_actual = (
-                    vagon_producto.plan_acumulado_dia_anterior + plan_dia
-                )
-                vagon_producto.real_acumulado_actual = (
-                    vagon_producto.real_acumulado_dia_anterior + vagones_cargados
-                )
-                vagon_producto.plan_acumulado_anual = (
-                    vagon_producto.plan_acumulado_anual + plan_dia
-                )
-                vagon_producto.real_acumulado_anual = (
-                    vagon_producto.real_acumulado_anual + vagones_cargados
-                )
-
+                # Caso 4: No es único informe en el año ni es primer día del mes
+                # Obtener valores del informe del día anterior
+                informe_anterior = informes_año_actual.filter(
+                    fecha_operacion__lt=informe_operativo.fecha_operacion
+                ).order_by('-fecha_operacion').first()
+                
+                if informe_anterior:
+                    vagon_producto_anterior = vagones_productos.objects.filter(
+                        informe_operativo=informe_anterior
+                    ).first()
+                    if vagon_producto_anterior:
+                        vagon_producto.plan_anual = vagon_producto_anterior.plan_anual
+                        vagon_producto.plan_acumulado_dia_anterior = vagon_producto_anterior.plan_acumulado_actual
+                        vagon_producto.real_acumulado_dia_anterior = vagon_producto_anterior.real_acumulado_actual
+            
+            # Actualizar campos acumulados (común a todos los casos)
+            vagon_producto.plan_acumulado_actual = (
+                vagon_producto.plan_acumulado_dia_anterior + plan_dia
+            )
+            vagon_producto.real_acumulado_actual = (
+                vagon_producto.real_acumulado_dia_anterior + vagones_cargados
+            )
+            vagon_producto.plan_acumulado_anual = (
+                vagon_producto.plan_acumulado_anual + plan_dia
+            )
+            vagon_producto.real_acumulado_anual = (
+                vagon_producto.real_acumulado_anual + vagones_cargados
+            )
+            
             # Actualizar campos básicos
             vagon_producto.plan_dia = plan_dia
             vagon_producto.vagones_situados = vagones_situados
             vagon_producto.vagones_cargados = vagones_cargados
             vagon_producto.plan_aseguramiento_proximos_dias = plan_aseguramiento
-
+            
             # Validar campos obligatorios
             campos_obligatorios = [
                 "plan_mensual",
@@ -438,18 +445,18 @@ def actualizar_campos_automaticos_vagones_productos(sender, instance, **kwargs):
                 "plan_acumulado_anual",
                 "real_acumulado_anual",
             ]
-
+            
             campos_vacios = [
                 campo
                 for campo in campos_obligatorios
                 if getattr(vagon_producto, campo) is None
             ]
-
+            
             if campos_vacios:
                 print(
                     f"Advertencia: Los siguientes campos están vacíos en el registro {vagon_producto.id}: {', '.join(campos_vacios)}"
                 )
-
+            
             # Guardar todos los cambios
             vagon_producto.save()
 

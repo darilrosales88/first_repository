@@ -669,7 +669,7 @@ const routes = [
   },
   
   {
-    path: "/EditarCarga",
+    path: "/EditarCarga/:id",
     name: "EditarCarga",
     component: () => import("../views/GEMAR/EditarCargaVieja.vue"),
     meta: {
@@ -693,7 +693,7 @@ const routes = [
     },
   },
   {
-    path: "/EditarExistenciaMercancia",
+    path: "/EditarExistenciaMercancia/:id",
     name: "EditarExistenciaMercancia",
     component: () => import("../views/GEMAR/EditarExistenciaMercancia.vue"),
     meta: {
@@ -717,7 +717,7 @@ const routes = [
     },
   },
   {
-    path: "/EditarPartePBIP",
+    path: "/EditarPartePBIP/:id",
     name: "EditarPartePBIP",
     component: () => import("../views/GEMAR/EditarPartePBIP.vue"),
     meta: {

@@ -31,14 +31,23 @@ class PartePBIPViewSet(viewsets.ModelViewSet):
         fecha = self.request.query_params.get('fecha')
         if fecha:
             queryset = queryset.filter(fecha_operacion=fecha)
+            
+        # Filtro por estado si se proporciona
+        estado = self.request.query_params.get('estado')
+        if estado:
+            queryset = queryset.filter(estado=estado)
+            
         return queryset
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(creado_por=request.user)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    def perform_create(self, serializer):
+        serializer.save(creado_por=self.request.user)
+
+    def perform_update(self, serializer):
+        # Solo permitir actualización si el estado es CREADO
+        instance = self.get_object()
+        if instance.estado != 'CREADO':
+            raise ValidationError("Solo se pueden editar partes en estado CREADO")
+        serializer.save()
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsGEMARUser | IsAdminUser])
     def aprobar(self, request, pk=None):
@@ -122,6 +131,12 @@ class ExistenciaMercanciaViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(creado_por=self.request.user)
 
+    def perform_update(self, serializer):
+        # No permitir cambiar la fecha de operación
+        if 'fecha_operacion' in serializer.validated_data:
+            del serializer.validated_data['fecha_operacion']
+        serializer.save()
+
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsGEMARUser | IsAdminUser])
     def aprobar(self, request, pk=None):
         existencia = self.get_object()
@@ -139,7 +154,7 @@ class ExistenciaMercanciaViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            self.permission_classes = [IsAuthenticated, IsAdminUser]
+            self.permission_classes = [IsAuthenticated, IsAdminUser | IsGEMARUser]
         return super().get_permissions()
 
 

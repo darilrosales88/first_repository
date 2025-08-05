@@ -1,95 +1,203 @@
 <template>
   <div>
     <div class="ufc-header">
-      <h6>Editar Mercancia</h6>
+      <h6>Editar Existencia de Mercancía</h6>
     </div>
     <Navbar-Component />
     <div class="container py-3" style="margin-left: 20em; width: 70%">
       <div class="card border">
         <div class="card-header bg-light border-bottom">
           <h5 class="mb-0 text-dark fw-semibold">
-            <i class="bi bi-box-seam me-2"></i> Editar Mercancia
+            <i class="bi bi-box-seam me-2"></i> Editar Existencia de Mercancía
           </h5>
         </div>
         <div class="card-body p-3">
           <form @submit.prevent="guardarCambios">
             <div class="row">
+              <!-- Columna Izquierda -->
               <div class="col-md-6">
+                <!-- Campo: Terminal -->
                 <div class="mb-3">
-                  <label class="form-label small fw-semibold text-secondary">Terminal</label>
-                  <select 
-                    v-model="terminal.terminal_id" 
+                  <label for="terminal" class="form-label small fw-semibold text-secondary">
+                    Terminal*
+                  </label>
+                  <select
                     class="form-select form-select-sm border-secondary"
                     style="padding: 8px 12px"
-                    disabled
+                    v-model="existencia.terminal_id"
+                    required
+                    :disabled="loading"
                   >
-                    <option value="">Seleccione...</option>
-                    <option 
-                      v-for="term in listaTerminales" 
-                      :value="term.id"
-                      :key="term.id"
+                    <option value="" disabled>Seleccione una terminal</option>
+                    <option
+                      v-for="terminal in terminales"
+                      :key="terminal.id"
+                      :value="terminal.id"
                     >
-                      {{ term.nombre }}
+                      {{ terminal.nombre_terminal }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Campo: Tipo -->
+                <div class="mb-3">
+                  <label for="tipo" class="form-label small fw-semibold text-secondary">
+                    Tipo*
+                  </label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="existencia.tipo"
+                    required
+                    :disabled="loading"
+                  >
+                    <option value="" disabled>Seleccione un tipo</option>
+                    <option value="1">Importación</option>
+                    <option value="2">Exportación</option>
+                  </select>
+                </div>
+
+                <!-- Campo: Tipo de Producto -->
+                <div class="mb-3">
+                  <label for="tipo_producto" class="form-label small fw-semibold text-secondary">
+                    Tipo de Producto*
+                  </label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="existencia.tipo_producto"
+                    required
+                    @change="actualizarCamposPorTipo"
+                    :disabled="loading"
+                  >
+                    <option value="" disabled>Seleccione un tipo</option>
+                    <option value="1">Producto</option>
+                    <option value="2">Contenedor</option>
+                  </select>
+                </div>
+
+                <!-- Campo: Producto -->
+                <div class="mb-3">
+                  <label for="producto" class="form-label small fw-semibold text-secondary">
+                    Producto*
+                  </label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="existencia.producto_id"
+                    required
+                    :disabled="loading"
+                  >
+                    <option value="" disabled>Seleccione un producto</option>
+                    <option
+                      v-for="producto in productos"
+                      :key="producto.id"
+                      :value="producto.id"
+                    >
+                      {{ producto.nombre_producto }}
                     </option>
                   </select>
                 </div>
               </div>
-            </div>
 
-            <div class="row">
+              <!-- Columna Derecha -->
               <div class="col-md-6">
-                <div class="mb-3">
-                  <label class="form-label small fw-semibold text-secondary">Capacidad Importación</label>
-                  <input 
-                    type="number" 
-                    v-model.number="terminal.capacidad_importacion" 
-                    class="form-control form-control-sm border-secondary"
+                <!-- Campo: Tipo de Embalaje (condicional) -->
+                <div class="mb-3" v-if="existencia.tipo_producto == 1">
+                  <label for="tipo_embalaje" class="form-label small fw-semibold text-secondary">
+                    Tipo de Embalaje
+                  </label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
                     style="padding: 8px 12px"
-                    step="0.01"
-                    min="0"
+                    v-model="existencia.tipo_embalaje_id"
+                    :disabled="loading"
                   >
+                    <option value="" disabled>Seleccione un tipo de embalaje</option>
+                    <option
+                      v-for="embalaje in tiposEmbalaje"
+                      :key="embalaje.id"
+                      :value="embalaje.id"
+                    >
+                      {{ embalaje.nombre_tipo_embalaje }}
+                    </option>
+                  </select>
                 </div>
-              </div>
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label class="form-label small fw-semibold text-secondary">Capacidad Exportación</label>
-                  <input 
-                    type="number" 
-                    v-model.number="terminal.capacidad_exportacion" 
-                    class="form-control form-control-sm border-secondary"
-                    style="padding: 8px 12px"
-                    step="0.01"
-                    min="0"
-                  >
-                </div>
-              </div>
-            </div>
 
-            <div class="row">
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label class="form-label small fw-semibold text-secondary">Existencia Importación</label>
-                  <input 
-                    type="number" 
-                    v-model.number="terminal.existencia_importacion" 
-                    class="form-control form-control-sm border-secondary"
+                <!-- Campo: Estado del Contenedor (condicional) -->
+                <div class="mb-3" v-if="existencia.tipo_producto == 2">
+                  <label for="estado" class="form-label small fw-semibold text-secondary">
+                    Estado del Contenedor*
+                  </label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
                     style="padding: 8px 12px"
-                    step="0.01"
-                    min="0"
+                    v-model="existencia.estado"
+                    required
+                    :disabled="loading"
                   >
+                    <option value="" disabled>Seleccione un estado</option>
+                    <option value="1">Vacío</option>
+                    <option value="2">Lleno</option>
+                  </select>
                 </div>
-              </div>
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label class="form-label small fw-semibold text-secondary">Existencia Exportación</label>
-                  <input 
-                    type="number" 
-                    v-model.number="terminal.existencia_exportacion" 
-                    class="form-control form-control-sm border-secondary"
+
+                <!-- Campo: Contenido (condicional) -->
+                <div class="mb-3" v-if="existencia.tipo_producto == 2 && existencia.estado == 2">
+                  <label for="contiene" class="form-label small fw-semibold text-secondary">
+                    Contenido*
+                  </label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
                     style="padding: 8px 12px"
+                    v-model="existencia.contiene"
+                    required
+                    :disabled="loading"
+                  >
+                    <option value="" disabled>Seleccione contenido</option>
+                    <option value="1">Alimentos</option>
+                    <option value="2">Productos varios</option>
+                  </select>
+                </div>
+
+                <!-- Campo: Unidad de Medida -->
+                <div class="mb-3">
+                  <label for="unidad_medida" class="form-label small fw-semibold text-secondary">
+                    Unidad de Medida*
+                  </label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="existencia.unidad_medida_id"
+                    required
+                    :disabled="loading"
+                  >
+                    <option value="" disabled>Seleccione una unidad</option>
+                    <option
+                      v-for="unidad in unidadesMedida"
+                      :key="unidad.id"
+                      :value="unidad.id"
+                    >
+                      {{ unidad.unidad_medida }} ({{ unidad.simbolo }})
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Campo: Existencia -->
+                <div class="mb-3">
+                  <label for="existencia" class="form-label small fw-semibold text-secondary">
+                    Existencia*
+                  </label>
+                  <input
+                    type="number"
                     step="0.01"
                     min="0"
-                  >
+                    class="form-control form-control-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="existencia.existencia"
+                    required
+                    :disabled="loading"
+                  />
                 </div>
               </div>
             </div>
@@ -97,10 +205,10 @@
             <!-- Botones de acción -->
             <div class="modal-footer">
               <div class="d-flex justify-content-between align-items-center mb-4">
-                <button type="button" class="ufc-button secondary" @click="confirmCancel">
+                <button type="button" class="ufc-button secondary" @click="confirmCancel" :disabled="loading">
                   <i class="bi bi-x-circle me-1"></i>Cancelar
                 </button>
-                <button type="submit" class="ufc-button primary">
+                <button type="submit" class="ufc-button primary" :disabled="loading">
                   <i class="bi bi-check-circle me-1"></i>Guardar Cambios
                 </button>
               </div>
@@ -116,103 +224,183 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 import NavbarComponent from "@/components/NavbarComponent.vue";
+
 export default {
-  name: 'EditarTerminalExistencia',
+  name: 'EditarExistenciaMercancia',
   components: {
     NavbarComponent
   },
   data() {
     return {
-      terminal: {
-        terminal_id: null,
-        capacidad_importacion: 0,
-        capacidad_exportacion: 0,
-        existencia_importacion: 0,
-        existencia_exportacion: 0
+      existencia: {
+        terminal_id: '',
+        tipo: '',
+        tipo_producto: '',
+        producto_id: '',
+        tipo_embalaje_id: null,
+        unidad_medida_id: '',
+        estado: null,
+        contiene: null,
+        existencia: 0
       },
-      listaTerminales: [],
+      terminales: [],
+      productos: [],
+      tiposEmbalaje: [],
+      unidadesMedida: [],
       loading: false
     }
   },
   async created() {
     await this.cargarDatosIniciales();
-    await this.cargarTerminal();
+    await this.cargarExistencia();
   },
   methods: {
     async cargarDatosIniciales() {
       try {
         this.loading = true;
         const token = localStorage.getItem('token');
-        const headers = { 
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json'
-        };
         
-        const response = await axios.get('/api/terminales/', { headers });
-        this.listaTerminales = response.data.results || [];
+        // Cargar terminales
+        const terminalesResponse = await axios.get('/api/terminales/', {
+          headers: { 'Authorization': `Token ${token}` }
+        });
+        this.terminales = terminalesResponse.data.results || [];
+        
+        // Cargar productos
+        const productosResponse = await axios.get('/api/productos/', {
+          headers: { 'Authorization': `Token ${token}` }
+        });
+        this.productos = productosResponse.data.results || [];
+        
+        // Cargar tipos de embalaje
+        const embalajesResponse = await axios.get('/api/embalajes/', {
+          headers: { 'Authorization': `Token ${token}` }
+        });
+        this.tiposEmbalaje = embalajesResponse.data.results || [];
+        
+        // Cargar unidades de medida
+        const unidadesResponse = await axios.get('/api/unidades_medida/', {
+          headers: { 'Authorization': `Token ${token}` }
+        });
+        this.unidadesMedida = unidadesResponse.data.results || [];
         
       } catch (error) {
-        console.error('Error al cargar terminales:', error);
-        this.mostrarError('Error al cargar la lista de terminales');
+        console.error('Error al cargar datos iniciales:', error);
+        this.mostrarError('Error al cargar los datos iniciales');
       } finally {
         this.loading = false;
       }
     },
     
-    async cargarTerminal() {
+    async cargarExistencia() {
       try {
-        const terminalId = this.$route.params.id;
-        if (!terminalId) {
-          this.mostrarError('ID de terminal no especificado');
+        this.loading = true;
+        const existenciaId = this.$route.params.id;
+        if (!existenciaId) {
+          this.mostrarError('ID de existencia no especificado');
           return;
         }
         
         const token = localStorage.getItem('token');
-        const headers = { 
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json'
-        };
-        
-        const response = await axios.get(`/api/gemar/existencias-mercancia/${terminalId}/`, { headers });
+        const response = await axios.get(`/api/gemar/existencias-mercancia/${existenciaId}/`, {
+          headers: { 'Authorization': `Token ${token}` }
+        });
         
         if (response.data) {
-          this.terminal = {
-            terminal_id: response.data.terminal?.id || terminalId,
-            capacidad_importacion: response.data.capacidad_importacion || 0,
-            capacidad_exportacion: response.data.capacidad_exportacion || 0,
-            existencia_importacion: response.data.existencia_importacion || 0,
-            existencia_exportacion: response.data.existencia_exportacion || 0
+          this.existencia = {
+            fecha_operacion: response.data.fecha_operacion,  // Añadimos esta línea
+            terminal_id: response.data.terminal?.id || '',
+            tipo: response.data.tipo.toString(),
+            tipo_producto: response.data.tipo_producto.toString(),
+            producto_id: response.data.producto?.id || '',
+            tipo_embalaje_id: response.data.tipo_embalaje?.id || null,
+            unidad_medida_id: response.data.unidad_medida?.id || '',
+            estado: response.data.estado ? response.data.estado.toString() : null,
+            contiene: response.data.contiene ? response.data.contiene.toString() : null,
+            existencia: response.data.existencia || 0
           };
         }
       } catch (error) {
-        console.error('Error al cargar la terminal:', error);
-        this.mostrarError('Error al cargar los datos de la terminal');
+        console.error('Error al cargar la existencia:', error);
+        this.mostrarError('Error al cargar los datos de la existencia');
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    actualizarCamposPorTipo() {
+      if (this.existencia.tipo_producto == 1) { // Producto
+        this.existencia.estado = null;
+        this.existencia.contiene = null;
+      } else { // Contenedor
+        this.existencia.tipo_embalaje_id = null;
       }
     },
     
     async guardarCambios() {
       try {
+        this.loading = true;
         const token = localStorage.getItem('token');
-        const headers = { 
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json'
+        const existenciaId = this.$route.params.id;
+        
+        // Validación básica
+        if (!this.existencia.terminal_id || !this.existencia.tipo || 
+            !this.existencia.tipo_producto || !this.existencia.producto_id || 
+            !this.existencia.unidad_medida_id || this.existencia.existencia < 0) {
+          this.mostrarError('Los campos marcados con * son obligatorios y la existencia no puede ser negativa');
+          return;
+        }
+        
+        // Validaciones específicas para contenedores
+        if (this.existencia.tipo_producto == 2) {
+          if (!this.existencia.estado) {
+            this.mostrarError('Para contenedores debe especificar el estado');
+            return;
+          }
+          if (this.existencia.estado == 2 && !this.existencia.contiene) {
+            this.mostrarError('Para contenedores llenos debe especificar qué contienen');
+            return;
+          }
+        }
+        
+        // Preparar los datos para enviar
+        const datosParaEnviar = {
+          fecha_operacion: this.existencia.fecha_operacion,  // Añadimos este campo
+          terminal_id: this.existencia.terminal_id,
+          tipo: parseInt(this.existencia.tipo),
+          tipo_producto: parseInt(this.existencia.tipo_producto),
+          producto_id: this.existencia.producto_id,
+          tipo_embalaje_id: this.existencia.tipo_embalaje_id,
+          unidad_medida_id: this.existencia.unidad_medida_id,
+          estado: this.existencia.estado ? parseInt(this.existencia.estado) : null,
+          contiene: this.existencia.contiene ? parseInt(this.existencia.contiene) : null,
+          existencia: parseFloat(this.existencia.existencia)
         };
         
-        const payload = {
-          terminal_id: this.terminal.terminal_id,
-          capacidad_importacion: this.terminal.capacidad_importacion,
-          capacidad_exportacion: this.terminal.capacidad_exportacion,
-          existencia_importacion: this.terminal.existencia_importacion,
-          existencia_exportacion: this.terminal.existencia_exportacion
-        };
+        const response = await axios.put(
+          `/api/gemar/existencias-mercancia/${existenciaId}/`, 
+          datosParaEnviar, 
+          {
+            headers: {
+              'Authorization': `Token ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
         
-        await axios.put(`/api/gemar/existencias-mercancia/${this.$route.params.id}/`, payload, { headers });
-        
-        this.mostrarExito('Cambios guardados correctamente');
-        this.$router.go(-1);
+        if (response.status === 200) {
+          this.mostrarExito('Existencia de mercancía actualizada correctamente');
+          this.$router.push({ name: 'ExistenciasMercancia' });
+        }
       } catch (error) {
         console.error('Error al guardar cambios:', error);
-        this.mostrarError('Error al guardar los cambios');
+        let errorMessage = 'Error al actualizar la existencia de mercancía';
+        if (error.response?.data) {
+          errorMessage = Object.values(error.response.data).join(', ');
+        }
+        this.mostrarError(errorMessage);
+      } finally {
+        this.loading = false;
       }
     },
     

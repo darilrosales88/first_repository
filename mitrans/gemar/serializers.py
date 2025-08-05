@@ -18,11 +18,12 @@ from nomencladores.models import nom_terminal
 from nomencladores.models import nom_producto
 from nomencladores.models import nom_osde_oace_organismo
 from Administracion.serializers import UserPermissionSerializer as CustomUserSerializer
+from django.utils import timezone
 
 class PartePBIPSerializer(serializers.ModelSerializer):
     buque = nom_embarcacion_serializer(read_only=True)
     buque_id = serializers.PrimaryKeyRelatedField(
-        queryset=Buque.objects.all(),  # O Buque.objects.filter(tipo_embarcacion='buque') si aplica
+        queryset=Buque.objects.all(),
         write_only=True,
         source='buque'
     )
@@ -33,27 +34,44 @@ class PartePBIPSerializer(serializers.ModelSerializer):
         source='puerto'
     )
     creado_por = CustomUserSerializer(read_only=True)
+    aprobado_por = CustomUserSerializer(read_only=True)
 
     class Meta:
         model = PartePBIP
         fields = '__all__'
-        read_only_fields = ('fecha_creacion', 'creado_por', 'aprobado_por')
+        read_only_fields = ('fecha_creacion', 'creado_por', 'aprobado_por', 'estado')
 
     def create(self, validated_data):
         validated_data['creado_por'] = self.context['request'].user
         return super().create(validated_data)
 
+    def update(self, instance, validated_data):
+        # Solo permitir actualización si el estado es CREADO
+        if instance.estado != 'CREADO':
+            raise serializers.ValidationError(
+                "Solo se pueden editar partes en estado CREADO"
+            )
+        return super().update(instance, validated_data)
+
     def validate(self, data):
         # Validar combinación única de buque, puerto y nivel
         if PartePBIP.objects.filter(
-            buque=data.get('buque'),
-            puerto=data.get('puerto'),
-            nivel=data.get('nivel'),
-            fecha_operacion=data.get('fecha_operacion')
+            buque=data.get('buque', self.instance.buque if self.instance else None),
+            puerto=data.get('puerto', self.instance.puerto if self.instance else None),
+            nivel=data.get('nivel', self.instance.nivel if self.instance else None),
+            fecha_operacion=data.get('fecha_operacion', self.instance.fecha_operacion if self.instance else None)
         ).exclude(pk=self.instance.pk if self.instance else None).exists():
             raise serializers.ValidationError(
                 "La combinación de Buque, Puerto y Nivel para esta fecha ya existe."
             )
+        
+        # Validar que la fecha de operación no sea futura
+        fecha_operacion = data.get('fecha_operacion', self.instance.fecha_operacion if self.instance else None)
+        if fecha_operacion and fecha_operacion > timezone.now().date():
+            raise serializers.ValidationError(
+                "La fecha de operación no puede ser futura."
+            )
+            
         return data
 
 # gemar/serializers.py (actualización de CargaViejaSerializer)
@@ -168,12 +186,18 @@ class ExistenciaMercanciaSerializer(serializers.ModelSerializer):
         read_only_fields = ('fecha_creacion', 'creado_por')
 
     def validate(self, data):
-        fecha_operacion = data.get('fecha_operacion')
-        terminal = data.get('terminal')
-        tipo = data.get('tipo')
-        producto = data.get('producto')
-        tipo_embalaje = data.get('tipo_embalaje')
-        unidad_medida = data.get('unidad_medida')
+        # Solo validar fecha_operacion si es una creación
+        if self.instance is None and 'fecha_operacion' not in data:
+            raise serializers.ValidationError(
+                "La fecha de operación es requerida para crear un nuevo registro."
+            )
+            
+        fecha_operacion = data.get('fecha_operacion', getattr(self.instance, 'fecha_operacion', None))
+        terminal = data.get('terminal', getattr(self.instance, 'terminal', None))
+        tipo = data.get('tipo', getattr(self.instance, 'tipo', None))
+        producto = data.get('producto', getattr(self.instance, 'producto', None))
+        tipo_embalaje = data.get('tipo_embalaje', getattr(self.instance, 'tipo_embalaje', None))
+        unidad_medida = data.get('unidad_medida', getattr(self.instance, 'unidad_medida', None))
 
         if ExistenciaMercancia.objects.filter(
             fecha_operacion=fecha_operacion,
@@ -188,9 +212,9 @@ class ExistenciaMercanciaSerializer(serializers.ModelSerializer):
             )
         
         # Validaciones específicas para contenedores
-        tipo_producto = data.get('tipo_producto')
-        estado = data.get('estado')
-        contiene = data.get('contiene')
+        tipo_producto = data.get('tipo_producto', getattr(self.instance, 'tipo_producto', None))
+        estado = data.get('estado', getattr(self.instance, 'estado', None))
+        contiene = data.get('contiene', getattr(self.instance, 'contiene', None))
         
         if tipo_producto == 2:  # Contenedor
             if not estado:

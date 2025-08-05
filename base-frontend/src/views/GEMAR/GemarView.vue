@@ -240,10 +240,8 @@ export default {
         this.loading = true;
         const today = new Date().toISOString().split('T')[0];
         
-        // Elimina las líneas del token y headers
         const resumenRes = await axios.get(`/api/gemar/resumen-diario/?fecha=${today}`);
         
-        // Resto del código permanece igual...
         this.partes = [
           ...resumenRes.data.partes_pbip.map(p => ({ ...p, tipo: 'PBIP' })),
           ...resumenRes.data.cargas_viejas.map(c => ({ ...c, tipo: 'Carga Vieja' })),
@@ -312,8 +310,8 @@ export default {
           (parte.buque?.nombre && parte.buque.nombre.toLowerCase().includes(query)) ||
           (parte.puerto?.nombre && parte.puerto.nombre.toLowerCase().includes(query)) ||
           (parte.producto?.nombre && parte.producto.nombre.toLowerCase().includes(query)) ||
-          (parte.estado && parte.estado.toLowerCase().includes(query)) ||
-          (parte.estado_registro && parte.estado_registro.toLowerCase().includes(query))
+          (parte.estado && typeof parte.estado === 'string' && parte.estado.toLowerCase().includes(query)) ||
+          (parte.estado_registro && typeof parte.estado_registro === 'string' && parte.estado_registro.toLowerCase().includes(query))
         );
       });
       this.currentPage = 1;
@@ -354,8 +352,6 @@ export default {
         this.mostrarError("No se pudieron cargar los detalles del parte");
       }
     },
-    
-    
     
     async deleteParte() {
       if (!this.parteToDelete) return;
@@ -427,8 +423,6 @@ export default {
       });
     },
     
-   
-    
     confirmDelete(parte) {
       this.parteToDelete = parte;
       this.showDeleteModal = true;
@@ -438,7 +432,6 @@ export default {
       this.showDeleteModal = false;
       this.parteToDelete = null;
     },
-    
     
     tienePermiso(accion) {
       // Implementa lógica de permisos según tu sistema
@@ -451,7 +444,10 @@ export default {
     
     getStatusClass(status) {
       if (!status) return 'default';
-      const statusLower = status.toLowerCase();
+      
+      // Asegurarnos de que status sea una cadena
+      const statusStr = typeof status === 'string' ? status : String(status);
+      const statusLower = statusStr.toLowerCase();
 
       if (statusLower.includes('aprobado')) return 'success';
       if (statusLower.includes('pendiente') || statusLower.includes('creado'))

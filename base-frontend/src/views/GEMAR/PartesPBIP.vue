@@ -26,7 +26,7 @@
                 <div class="col-sm-8">
                   <input
                     type="date"
-                    v-model="parte.fecha_operacion"
+                    v-model="fechaOperacion"
                     class="form-control form-control-sm"
                     required
                   />
@@ -40,7 +40,7 @@
                 <div class="col-sm-8">
                   <input
                     type="datetime-local"
-                    v-model="parte.fecha_actual"
+                    v-model="fechaActual"
                     class="form-control form-control-sm"
                     readonly
                   />
@@ -75,10 +75,10 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(item, index) in buques" :key="item.id">
+                <tr v-for="(item, index) in partesPBIP" :key="item.id">
                   <td>{{ index + 1 }}</td>
-                  <td>{{ getNombreBuque(item.buque_id) }}</td>
-                  <td>{{ getNombrePuerto(item.puerto_id) }}</td>
+                  <td>{{ item.buque.nombre_embarcacion || item.buque.nombre }}</td>
+                  <td>{{ item.puerto.nombre_puerto || item.puerto.nombre }}</td>
                   <td>{{ formatDateTime(item.fecha_hora) }}</td>
                   <td>Nivel {{ item.nivel }}</td>
                   <td>{{ item.estado }}</td>
@@ -87,12 +87,14 @@
                       <button
                         @click="editarPartePBIP(item)"
                         class="btn btn-sm btn-outline-primary"
+                        :disabled="item.estado !== 'CREADO'"
                       >
                         <i class="bi bi-pencil"></i> Editar
                       </button>
                       <button
-                        @click="removeBuque(index)"
+                        @click="eliminarPartePBIP(item.id)"
                         class="btn btn-sm btn-outline-danger"
+                        :disabled="item.estado !== 'CREADO'"
                       >
                         <i class="bi bi-trash"></i> Eliminar
                       </button>
@@ -108,7 +110,7 @@
             class="io-pagination d-flex justify-content-between align-items-center mt-3"
           >
             <div class="text-muted small">
-              Mostrando 1-15 de {{ buques.length }} registros
+              Mostrando {{ partesPBIP.length }} registros
             </div>
             <nav aria-label="Page navigation">
               <ul class="pagination pagination-sm mb-0">
@@ -165,46 +167,25 @@ export default {
   },
   data() {
     return {
-      parte: {
-        fecha_operacion: "",
-        fecha_actual: new Date().toISOString().slice(0, 16),
-      },
-      buques: [],
+      fechaOperacion: "",
+      fechaActual: new Date().toISOString().slice(0, 16),
+      partesPBIP: [],
       listaBuques: [],
       listaPuertos: [],
       loading: false,
       error: null,
     };
   },
-  computed: {
-    getNombreBuque() {
-      return (buqueId) => {
-        const buque = this.listaBuques.find((b) => b.id === buqueId);
-        return buque ? buque.nombre : "Buque no encontrado";
-      };
-    },
-    getNombrePuerto() {
-      return (puertoId) => {
-        const puerto = this.listaPuertos.find((p) => p.id === puertoId);
-        return puerto ? puerto.nombre : "Puerto no encontrado";
-      };
-    },
-  },
   async created() {
     await this.cargarDatosIniciales();
-    await this.cargarPartesPBIP(); // Nueva función para cargar los partes existentes
+    await this.cargarPartesPBIP();
   },
 
   methods: {
-    editarPartePBIP(buque) {
+    editarPartePBIP(parte) {
       this.$router.push({
         name: "EditarPartePBIP",
-        params: {
-          id: buque.buque_id,
-          buqueData: JSON.stringify(buque),
-          listaBuques: JSON.stringify(this.listaBuques),
-          listaPuertos: JSON.stringify(this.listaPuertos),
-        },
+        params: { id: parte.id }
       });
     },
 
@@ -220,23 +201,44 @@ export default {
         const response = await axios.get('/api/gemar/partes-pbip/', { headers });
         
         // Asegurarnos de que tenemos un array de resultados
-        const resultados = response.data.results || response.data;
+        this.partesPBIP = response.data.results || response.data || [];
         
-        if (Array.isArray(resultados)) {
-          this.buques = resultados.map(parte => ({
-            id: parte.id,  // Agregar el ID del parte
-            buque_id: parte.buque.id,
-            puerto_id: parte.puerto.id,
-            fecha_hora: parte.fecha_hora,
-            nivel: parte.nivel,
-            estado: parte.estado
-          }));
-        } else {
-          this.buques = [];
-        }
       } catch (error) {
         console.error("Error al cargar partes PBIP:", error);
         this.mostrarError("Error al cargar los partes PBIP existentes");
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async eliminarPartePBIP(id) {
+      try {
+        const confirmacion = await Swal.fire({
+          title: '¿Estás seguro?',
+          text: "Esta acción no se puede deshacer",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: 'Sí, eliminar',
+          cancelButtonText: 'Cancelar'
+        });
+
+        if (confirmacion.isConfirmed) {
+          this.loading = true;
+          const token = localStorage.getItem('token');
+          const headers = {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json'
+          };
+
+          await axios.delete(`/api/gemar/partes-pbip/${id}/`, { headers });
+          this.mostrarExito("Parte eliminado correctamente");
+          await this.cargarPartesPBIP(); // Recargar la lista
+        }
+      } catch (error) {
+        console.error("Error al eliminar parte PBIP:", error);
+        this.mostrarError("Error al eliminar el parte PBIP");
       } finally {
         this.loading = false;
       }
@@ -258,16 +260,6 @@ export default {
 
         this.listaBuques = buquesRes.data.results || buquesRes.data || [];
         this.listaPuertos = puertosRes.data.results || puertosRes.data || [];
-
-        this.listaBuques = this.listaBuques.map((b) => ({
-          id: b.id,
-          nombre: b.nombre_embarcacion || b.nombre || "",
-        }));
-
-        this.listaPuertos = this.listaPuertos.map((p) => ({
-          id: p.id,
-          nombre: p.nombre_puerto || p.nombre || "",
-        }));
       } catch (error) {
         console.error("Error al cargar datos:", error);
         this.mostrarError("Error al cargar datos iniciales");
@@ -279,27 +271,7 @@ export default {
     addBuque() {
       this.$router.push({
         name: "AgregarBuque",
-        params: {
-          listaPuertos: this.listaPuertos,
-        },
       });
-    },
-
-    handleBuqueAgregado(nuevoBuque) {
-      this.buques.push({
-        buque_id: nuevoBuque.id,
-        puerto_id: nuevoBuque.puerto_id,
-        fecha_hora: nuevoBuque.fecha_hora,
-        nivel: nuevoBuque.nivel,
-      });
-    },
-
-    removeBuque(index) {
-      if (this.buques.length > 1) {
-        this.buques.splice(index, 1);
-      } else {
-        this.mostrarError("Debe haber al menos un buque");
-      }
     },
 
     formatDateTime(dateTime) {
@@ -326,41 +298,28 @@ export default {
           'Content-Type': 'application/json'
         };
 
-        // Crear un parte por cada buque
-        const promises = this.buques.map(async (buque) => {
-          const payload = {
-            fecha_operacion: this.parte.fecha_operacion,
-            buque: buque.buque_id,
-            puerto: buque.puerto_id,
-            fecha_hora: buque.fecha_hora,
-            nivel: buque.nivel,
-            creado_por: this.$store.state.user.id // O obtener el ID del usuario de donde corresponda
-          };
+        const payload = {
+          fecha_operacion: this.fechaOperacion,
+          buque_id: this.buqueSeleccionado,
+          puerto_id: this.puertoSeleccionado,
+          fecha_hora: this.fechaHoraBuque,
+          nivel: this.nivelSeleccionado
+        };
 
-          const response = await axios.post(
-            '/api/gemar/partes-pbip/',
-            payload,
-            { headers }
-          );
-          return response.data;
-        });
-
-        const resultados = await Promise.all(promises);
+        const response = await axios.post(
+          '/api/gemar/partes-pbip/',
+          payload,
+          { headers }
+        );
         
-        if (resultados.length > 0) {
-          this.mostrarExito("Parte(s) PBIP creado(s) correctamente");
-          this.resetFormulario();
-          this.$emit("parte-creado");
-        } else {
-          this.mostrarError("No se crearon partes PBIP");
-        }
+        this.mostrarExito("Parte PBIP creado correctamente");
+        await this.cargarPartesPBIP(); // Recargar la lista
       } catch (error) {
         console.error("Error al guardar:", error);
         let errorMessage = "Error al crear el parte PBIP";
         if (error.response) {
           if (error.response.status === 400) {
             errorMessage = error.response.data.detail || "Datos inválidos";
-            // Mostrar errores de validación específicos si existen
             if (error.response.data) {
               for (const key in error.response.data) {
                 if (Array.isArray(error.response.data[key])) {
@@ -379,15 +338,13 @@ export default {
     },
 
     validarFormulario() {
-      // Validar fecha de operación
-      if (!this.parte.fecha_operacion) {
+      if (!this.fechaOperacion) {
         this.error = "La fecha de operación es requerida";
         this.mostrarError(this.error);
         return false;
       }
 
-      // Validar que la fecha no sea futura
-      const fechaOperacion = new Date(this.parte.fecha_operacion);
+      const fechaOperacion = new Date(this.fechaOperacion);
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
       
@@ -397,45 +354,12 @@ export default {
         return false;
       }
 
-      // Validar buques
-      if (this.buques.length === 0) {
-        this.error = "Debe agregar al menos un buque";
-        this.mostrarError(this.error);
-        return false;
-      }
-
-      // Validar cada buque
-      for (const buque of this.buques) {
-        if (!buque.buque_id || !buque.puerto_id || !buque.fecha_hora) {
-          this.error = "Todos los campos son requeridos para cada buque";
-          this.mostrarError(this.error);
-          return false;
-        }
-
-        // Validar que la fecha y hora no sea futura
-        const fechaHoraBuque = new Date(buque.fecha_hora);
-        if (fechaHoraBuque > new Date()) {
-          this.error = "La fecha y hora del buque no puede ser futura";
-          this.mostrarError(this.error);
-          return false;
-        }
-      }
-
       this.error = null;
       return true;
     },
 
-    resetFormulario() {
-      this.parte = {
-        fecha_operacion: "",
-        fecha_actual: new Date().toISOString().slice(0, 16),
-      };
-      this.buques = [];
-      this.error = null;
-    },
-
     cancelar() {
-      his.resetFormulario();
+      this.fechaOperacion = "";
     },
 
     async rechazar() {

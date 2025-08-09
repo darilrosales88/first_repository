@@ -456,8 +456,8 @@ class vagones_productos(models.Model):
     )
 
     # ManyToManyField, es posible que un vagon tenga mas de un producto
-    producto = models.ManyToManyField(
-        producto_UFC, blank=True, related_name="vagones_productos"
+    producto = models.ForeignKey(
+        producto_UFC, blank=True, related_name="vagones_productos", on_delete=models.SET_NULL,null=True
     )
     plan_anual = models.IntegerField(default=0)
     plan_acumulado_dia_anterior = models.IntegerField()
@@ -476,20 +476,8 @@ class vagones_productos(models.Model):
         verbose_name = "Vagón y producto"
 
     def __str__(self):
-        # Obtener todos los productos relacionados
-        productos = self.producto.all()
-
-        # Crear una lista con los nombres de los productos,el primer producto es el objeto local,
-        # el segundo es el nombre del atrib en el modelo al que se llama de tipo nom_producto
-        nombres_productos = [
-            str(producto.producto.nombre_producto) for producto in productos
-        ]
-
-        # Unir los nombres con comas si hay más de uno
-        productos_str = (
-            ", ".join(nombres_productos) if nombres_productos else "Sin productos"
-        )
-        return f"Vagones y productos: {productos_str}"
+        
+        return f"Vagones y productos: {self.producto}"
 
 
 

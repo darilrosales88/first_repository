@@ -72,3 +72,6 @@ __pycache__
 base-frontend/dist/
 base-frontend/.env
 copias_no_subir
+
+## Archivos extras
+*.sql

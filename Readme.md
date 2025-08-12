@@ -3,6 +3,7 @@
 ## Documentacion Automatica al backend
 - Tenemos 2 endpoints principales `/api/doc` para la documentacion de los endpoints y los tipos de datos que recibe, con la estructura del crud
 - `/api/redoc` para las rutas de los endpoints
+- Para poder abrir el proyecto tienen que hacer `pip install -r requirements.txt`
 
 ## Se va a empezar a usar el la BD PostgresSQL
 Por favor leer el [README.md](doc/CambioPOSTGRES.md) que es donde se hacen especificos los pasos para poder cambiar a postgres

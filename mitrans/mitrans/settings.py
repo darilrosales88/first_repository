@@ -43,6 +43,7 @@ THIRD_APPS = [
     'djoser',
     'corsheaders',
     'django_filters',
+    'drf_spectacular',
 ]
 OWN_APPS = [    
     'nomencladores.apps.NomencladoresConfig',
@@ -99,6 +100,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    
+    #Necesario para annadir la documentacion
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 
     #para la paginacion global en los componentes
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
@@ -106,6 +110,13 @@ REST_FRAMEWORK = {
 
 }
 
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'MITRANS API',
+    'DESCRIPTION': 'Proyecto para la gestion del Transporte y Cargas',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    # OTHER SETTINGS
+}
 
 ROOT_URLCONF = 'mitrans.urls'
 

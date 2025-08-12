@@ -224,7 +224,7 @@ class nom_puerto_serializer(serializers.ModelSerializer):
     class Meta:
         model = nom_puerto       
         fields = ('id','nombre_puerto','pais','nombre_pais', 'provincia','nombre_provincia', 'servicio_portuario','servicio_portuario_name','latitud','longitud')
-        filterset_class: nom_puerto_filter
+        filterset_class = nom_puerto_filter
 #****************-------------------------********************--------------------***************-----------------********************************
 class nom_terminal_filter(filters.FilterSet):
     puerto_nombre_terminal = filters.CharFilter(method='filtrado_por_nombre_terminal_puerto',lookup_expr = 'icontains')
@@ -312,7 +312,7 @@ class nom_osde_oace_organismo_serializer(serializers.ModelSerializer):
     class Meta:
         model = nom_osde_oace_organismo       
         fields = ('id','nombre','abreviatura','codigo_reeup')
-        filterset_class: nom_osde_oace_organismo_filter
+        filterset_class = nom_osde_oace_organismo_filter
 #****************-------------------------********************--------------------***************-----------------********************************
 class nom_entidades_filter(filters.FilterSet):    
     nombre_abrev_osde = filters.CharFilter(method='filtrado_por_nombre_abrev_org',lookup_expr = 'icontains') 
@@ -500,7 +500,7 @@ class nom_producto_serializer(serializers.ModelSerializer):
     class Meta:
         model = nom_producto       
         fields = ('id', 'codigo_producto','nombre_producto','tipo_producto','tipo_producto_name','descripcion')
-        filterset_class: nom_producto_filter
+        filterset_class = nom_producto_filter
 #****************-------------------------********************--------------------***************-----------------********************************
 class nom_tipo_embalaje_filter(filters.FilterSet):    
     nombre_tipo_embalaje = filters.CharFilter(method='filtrado_por_nombre_tipo_embalaje',lookup_expr = 'icontains')
@@ -522,7 +522,7 @@ class nom_tipo_embalaje_serializer(serializers.ModelSerializer):
     class Meta:
         model = nom_tipo_embalaje       
         fields = ('id', 'nombre_tipo_embalaje')
-        filterset_class: nom_tipo_embalaje_filter
+        filterset_class = nom_tipo_embalaje_filter
 #****************-------------------------********************--------------------***************-----------------********************************
 class nom_incidencia_filter(filters.FilterSet):
     nombre_codigo = filters.CharFilter(method='filtrado_por_nombre_codigo',lookup_expr = 'icontains')  

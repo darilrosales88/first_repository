@@ -1,67 +1,133 @@
 <template>
   <div>
-    <div style=" background-color: #002A68; color: white; text-align: right;">
+    <div style="background-color: #002A68; color: white; text-align: right">
       <h6>Bienvenido:</h6>
-    </div>  
+    </div>
     <br />
     <Navbar-Component />
     
-    <div class="form-container">
-      <h3 style="color: #002A68;">Editar Entidad</h3>
+    <div class="form-container" style="margin-left: 18em; width: 75%">
+      <h3 style="color: #002A68">Editar Entidad</h3>
       <form @submit.prevent="updateItem" class="form-grid">
         <!-- Campo Nombre -->
         <div class="mb-3">
-          <label for="nombre" class="form-label">Nombre:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="nombre" v-model="nombre" required />
+          <label for="nombre" class="form-label">Nombre:<span style="color: red">*</span></label>
+          <input
+            type="text"
+            class="form-control"
+            id="nombre"
+            v-model="nombre"
+            required
+          />
         </div>
 
         <!-- Campo Abreviatura -->
         <div class="mb-3">
-          <label for="abreviatura" class="form-label">Abreviatura:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="abreviatura" v-model="abreviatura" required />
+          <label for="abreviatura" class="form-label">Abreviatura:<span style="color: red">*</span></label>
+          <input
+            type="text"
+            class="form-control"
+            id="abreviatura"
+            v-model="abreviatura"
+            required
+          />
         </div>
 
         <!-- Campo Código REEUP -->
         <div class="mb-3">
           <label for="codigo_reeup" class="form-label">Código REEUP:</label>
-          <input type="text" class="form-control" id="codigo_reeup" v-model="codigo_reeup" />
+          <input
+            type="text"
+            class="form-control"
+            id="codigo_reeup"
+            v-model="codigo_reeup"
+          />
         </div>
 
         <!-- Campo OSDE/OACE u organismo -->
         <div class="mb-3">
-          <label for="osde_oace_organismo" class="form-label">OSDE/OACE u organismo:<span style="color: red;">*</span></label>
-          <select class="form-control" id="osde_oace_organismo" v-model="osde_oace_organismo" required>
-            <option v-for="item in osdeOaceOrganismoOptions" :key="item.id" :value="item.id">{{ item.nombre }}</option>
+          <label for="osde_oace_organismo" class="form-label">OSDE/OACE u organismo:<span style="color: red">*</span></label>
+          <select
+            class="form-control"
+            id="osde_oace_organismo"
+            v-model="osde_oace_organismo"
+            required
+          >
+            <option
+              v-for="item in osdeOaceOrganismoOptions"
+              :key="item.id"
+              :value="item.id"
+            >
+              {{ item.nombre }}
+            </option>
           </select>
         </div>
 
         <!-- Campo Provincia -->
         <div class="mb-3">
-          <label for="provincia" class="form-label">Provincia:<span style="color: red;">*</span></label>
-          <select class="form-control" id="provincia" v-model="provincia" required>
-            <option v-for="item in provinciaOptions" :key="item.id" :value="item.id">{{ item.nombre_provincia }}</option>
+          <label for="provincia" class="form-label">Provincia:<span style="color: red">*</span></label>
+          <select
+            class="form-control"
+            id="provincia"
+            v-model="provincia"
+            required
+          >
+            <option
+              v-for="item in provinciaOptions"
+              :key="item.id"
+              :value="item.id"
+            >
+              {{ item.nombre_provincia }}
+            </option>
           </select>
         </div>
 
         <!-- Campo Tipo de entidad -->
         <div class="mb-3">
-          <label for="tipo_entidad" class="form-label">Tipo de entidad:<span style="color: red;">*</span></label>
-          <select class="form-control" id="tipo_entidad" v-model="tipo_entidad" required>
-            <option v-for="option in tipoEntidadOptions" :key="option.value" :value="option.value">{{ option.text }}</option>
+          <label for="tipo_entidad" class="form-label">Tipo de entidad:<span style="color: red">*</span></label>
+          <select
+            class="form-control"
+            id="tipo_entidad"
+            v-model="tipo_entidad"
+            required
+          >
+            <option
+              v-for="option in tipoEntidadOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.text }}
+            </option>
           </select>
         </div>
 
         <!-- Campo Territorio -->
         <div class="mb-3">
           <label for="territorio" class="form-label">Territorio:</label>
-          <select class="form-control" id="territorio" v-model="territorio">
-            <option v-for="item in territoriosOptions" :key="item.id" :value="item.id">{{ item.nombre_territorio }}</option>
+          <select
+            class="form-control"
+            id="territorio"
+            v-model="territorio"
+          >
+            <option
+              v-for="item in territoriosOptions"
+              :key="item.id"
+              :value="item.id"
+            >
+              {{ item.nombre_territorio }}
+            </option>
           </select>
         </div>
 
         <!-- Botones -->
         <div class="form-buttons">
-          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button
+            type="button"
+            @click="confirmCancel"
+            style="color: white; text-decoration: none"
+          >
+            Cancelar
+          </button>
           <button type="submit">Actualizar</button>
         </div>
       </form>
@@ -75,12 +141,13 @@ body {
 }
 
 .form-container {
-  max-width: 680px; /* Ancho reducido */
+  max-width: 600px; /* Ancho reducido */
   margin: 20px; /* Centra el formulario */
   padding: 20px;
   margin-left: 220px;
-  background-color: rgb(245, 245, 245);
+  background-color: white;
   border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 h3 {
@@ -102,12 +169,11 @@ form {
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 columnas de igual tamaño */
+  grid-template-columns: repeat(3, 1fr); /* 2 columnas de igual tamaño */
   gap: 15px; /* Espacio entre los elementos */
 }
 
 .mb-3 {
-  width: 200px;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -129,7 +195,7 @@ select option {
 }
 
 .form-buttons {
-  grid-column: span 3; /* Los botones ocupan las 2 columnas */
+  grid-column: span 3; /* Los botones ocupan las 3 columnas */
   display: flex;
   justify-content: flex-end;
   font-size: 14px;

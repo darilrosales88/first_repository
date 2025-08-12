@@ -1,4 +1,17 @@
-#5. creacion de las URL
+# gemar/urls.py
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from gemar import views
+
+router = DefaultRouter()
+router.register(r'partes-pbip', views.PartePBIPViewSet, basename='partepbip')
+router.register(r'cargas-viejas', views.CargaViejaViewSet, basename='cargavieja')
+router.register(r'existencias-mercancia', views.ExistenciaMercanciaViewSet, basename='existenciamercancia')
+
+urlpatterns = [
+    path('', include(router.urls)),
+    path('resumen-diario/', views.ResumenDiarioView.as_view(), name='resumen-diario'),
+]#5. creacion de las URL
 #la forma de tratar las vistas que estan empleando la prop viewsets de rest_framework es la siguiente
 #de rest_framework importamos routers, que se va a encargar de redireccionar
 from rest_framework import routers
@@ -11,7 +24,7 @@ from .views import (gemar_parte_hecho_extraordinario_view_set,
 
 from django.urls import path
 
-urlpatterns = [
+urlpatterns += [
     path('gemar-partes-combinados/', listar_partes_combinados, name='listar-partes-combinados'),
     path('gemar-verificar-informe-existente/', verificar_informe_he_existente, name='verificar-informe'),
     path('gemar-verificar-informe-programacion-maniobra-existente/', verificar_parte_programacion_maniobra_existente, name='verificar-informe-programacion-maniobra'),

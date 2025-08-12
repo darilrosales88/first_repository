@@ -1,23 +1,39 @@
 <template>
   <div>
-    <div style=" background-color: #002A68; color: white; text-align: right;">
+    <div style="background-color: #002a68; color: white; text-align: right">
       <h6>Bienvenido:</h6>
-    </div>  
+    </div>
     <br />
     <Navbar-Component />
-    
-    <div class="form-container">
-      <h3 style="color: #002A68;">Editar Tipo de Estructura de Ubicación</h3>
-      <form @submit.prevent="updateTipoEstructuraUbicacion" class="form-grid">
-        <!-- Campo Nombre -->
-        <div class="mb-3">
-          <label for="nombre" class="form-label">Nombre:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="nombre" v-model="nombre_tipo_estructura_ubicacion" required />
+
+    <div class="form-container" style="margin-left: 18em; width: 75%">
+      <h3 style="color: #002a68">Editar Tipo de Estructura de Ubicación</h3>
+      <form @submit.prevent="updateTipoEstructuraUbicacion">
+        <div class="form-row">
+          <!-- Campo Nombre -->
+          <div class="mb-3">
+            <label for="nombre" class="form-label"
+              >Nombre:<span style="color: red">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="nombre"
+              v-model="nombre_tipo_estructura_ubicacion"
+              required
+            />
+          </div>
         </div>
 
         <!-- Botones -->
         <div class="form-buttons">
-          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button
+            type="button"
+            @click="confirmCancel"
+            style="color: white; text-decoration: none"
+          >
+            Cancelar
+          </button>
           <button type="submit">Aceptar</button>
         </div>
       </form>
@@ -27,7 +43,7 @@
 
 <style scoped>
 body {
-  background-color: #F2F2F2;
+  background-color: #f2f2f2;
 }
 
 .form-container {
@@ -56,17 +72,16 @@ form {
   gap: 15px;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 2 columnas de igual tamaño */
-  gap: 15px; /* Espacio entre los elementos */
+.form-row {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
 }
 
 .mb-3 {
   width: 200px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
 }
 
 .form-control {
@@ -85,7 +100,6 @@ select option {
 }
 
 .form-buttons {
-  grid-column: span 3; /* Los botones ocupan las 2 columnas */
   display: flex;
   justify-content: flex-end;
   font-size: 14px;

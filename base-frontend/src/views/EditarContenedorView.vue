@@ -5,7 +5,7 @@
     </div>  
     <br />
     <Navbar-Component />
-    <div class="form-container">
+    <div class="form-container" style="margin-left: 18em; width: 75%">
       <h3 style="color: #002A68;">Editar contenedor <strong>{{ contenedor.id_contenedor }}</strong></h3>
       <form @submit.prevent="submitForm" class="form-grid">
         <!-- Campo ID (solo lectura) -->
@@ -56,12 +56,13 @@ body {
 }
 
 .form-container {
-  max-width: 680px; /* Ancho reducido */
+  max-width: 600px; /* Ancho reducido */
   margin: 20px; /* Centra el formulario */
   padding: 20px;
   margin-left: 220px;
-  background-color: rgb(245, 245, 245);
+  background-color: white;
   border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 h3 {
@@ -75,6 +76,12 @@ h3 {
   text-align: left;
 }
 
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr); /* 2 columnas de igual tamaño */
@@ -82,7 +89,6 @@ h3 {
 }
 
 .mb-3 {
-  width: 200px;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -104,10 +110,11 @@ select option {
 }
 
 .form-buttons {
-  grid-column: span 3; /* Los botones ocupan las 2 columnas */
+  grid-column: span 3; /* Los botones ocupan las 3 columnas */
   display: flex;
   justify-content: flex-end;
   font-size: 14px;
+  margin-top: 20px;
 }
 
 button {

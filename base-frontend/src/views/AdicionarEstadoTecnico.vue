@@ -1,29 +1,61 @@
 <template>
   <div>
-    <div style=" background-color: #002A68; color: white; text-align: right;">
+    <div style="background-color: #002a68; color: white; text-align: right">
       <h6>Bienvenido:</h6>
-    </div>  
+    </div>
     <br />
     <Navbar-Component />
-    
-    <div class="form-container">
-      <h3>Adicionar estado técnico</h3>
+    <div class="form-container" style="margin-left: 18em; width: 75%">
+      <h3 style="color: #002a68">Adicionar estado técnico</h3>
       <form @submit.prevent="saveItem">
         <div class="form-row">
-        <div class="mb-3">
-          <label for="codigo_estado_tecnico" class="form-label">Código:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="codigo_estado_tecnico" v-model="codigo_estado_tecnico" required />
-          <p v-if="codigo_estado_tecnico_error" class="help is-danger">{{ codigo_estado_tecnico_error }}</p>
+          <div class="mb-3">
+            <label for="codigo_estado_tecnico" class="form-label"
+              >Código:<span style="color: red">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="codigo_estado_tecnico"
+              v-model="codigo_estado_tecnico"
+              required
+            />
+            <p 
+              v-if="codigo_estado_tecnico_error" 
+              class="help is-danger"
+            >
+              {{ codigo_estado_tecnico_error }}
+            </p>
+          </div>
+
+          <div class="mb-3">
+            <label for="nombre_estado_tecnico" class="form-label"
+              >Nombre:<span style="color: red">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="nombre_estado_tecnico"
+              v-model="nombre_estado_tecnico"
+              required
+            />
+            <p 
+              v-if="nombre_estado_tecnico_error" 
+              class="help is-danger"
+            >
+              {{ nombre_estado_tecnico_error }}
+            </p>
+          </div>
         </div>
 
-        <div class="mb-3">
-          <label for="nombre_estado_tecnico" class="form-label">Nombre:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="nombre_estado_tecnico" v-model="nombre_estado_tecnico" required />
-          <p v-if="nombre_estado_tecnico_error" class="help is-danger">{{ nombre_estado_tecnico_error }}</p>
-        </div>
-      </div>
         <div class="form-buttons">
-          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button
+            type="button"
+            @click="confirmCancel"
+            style="color: white; text-decoration: none"
+          >
+            Cancelar
+          </button>
           <button type="submit">Aceptar</button>
         </div>
       </form>
@@ -33,17 +65,16 @@
 
 <style scoped>
 body {
-  background-color: #F2F2F2;
+  background-color: #f2f2f2;
 }
 
 .form-container {
-  max-width: 600px; /* Ancho reducido */
-  margin: 20px ; /* Centra el formulario */
+  max-width: 600px;
+  margin: 20px;
   padding: 20px;
   margin-left: 220px;
   background-color: rgb(245, 245, 245);
   border-radius: 8px;
-  
 }
 
 h3 {
@@ -51,10 +82,12 @@ h3 {
   margin-bottom: 20px;
   font-size: 18px;
 }
-.form-label{
+
+.form-label {
   font-size: 14px;
   text-align: left;
 }
+
 form {
   display: flex;
   flex-direction: column;
@@ -74,11 +107,17 @@ form {
 }
 
 .form-control {
-  padding: 1px 0px; /* Padding reducido */
-  height: 25px; /* Altura reducida */
-  font-size: 14px; /* Tamaño de fuente reducido */
+  padding: 1px 0px;
+  height: 25px;
+  font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 2px;
+}
+
+.help.is-danger {
+  color: #ff3860;
+  font-size: 12px;
+  margin-top: 4px;
 }
 
 .form-buttons {
@@ -89,12 +128,12 @@ form {
 
 button {
   margin-left: 10px;
-  padding: 6px 15px; /* Padding reducido */
+  padding: 6px 15px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
-  font-size: 14px; /* Tamaño de fuente reducido */
+  font-size: 14px;
 }
 
 button[type="button"] {

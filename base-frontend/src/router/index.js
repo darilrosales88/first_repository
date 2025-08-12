@@ -643,6 +643,87 @@ const routes = [
       requireLogin: true,
     },
   },
+{
+    path: "/GEMAR",
+    name: "GEMAR",
+    component: () => import("../views/GEMAR/GemarView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/CargasViejas",
+    name: "CargasViejas",
+    component: () => import("../views/GEMAR/CargasViejas.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/AgregarCarga",
+    name: "AgregarCarga",
+    component: () => import("../views/GEMAR/AgregarCarga.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  
+  {
+    path: "/EditarCarga/:id",
+    name: "EditarCarga",
+    component: () => import("../views/GEMAR/EditarCargaVieja.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/ExistenciasMercancia",
+    name: "ExistenciasMercancia",
+    component: () => import("../views/GEMAR/ExistenciasMercancia.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/AgregarExistenciaMercancia",
+    name: "AgregarExistenciaMercancia",
+    component: () => import("../views/GEMAR/AgregarExistenciaMercancia.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/EditarExistenciaMercancia/:id",
+    name: "EditarExistenciaMercancia",
+    component: () => import("../views/GEMAR/EditarExistenciaMercancia.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/PartesPBIP",
+    name: "PartesPBIP",
+    component: () => import("../views/GEMAR/PartesPBIP.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/AgregarBuque",
+    name: "AgregarBuque",
+    component: () => import("../views/GEMAR/AgregarBuque.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/EditarPartePBIP/:id",
+    name: "EditarPartePBIP",
+    component: () => import("../views/GEMAR/EditarPartePBIP.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
 
   {
     path: "/ufc",

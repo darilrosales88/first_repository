@@ -246,8 +246,9 @@ export default {
         const userId = localStorage.getItem("userid");
         if (userId) {
           const response = await axios.get(`/apiAdmin/users/${userId}/`);
+          
+          console.log("El dato del usuario es ", response.data);
           this.formData.creado_por = response.data.id;
-          this.formData.provincia = response.data.provincia.id;
         }
       } catch (error) {
         console.error("Error al obtener Nombre de Usuario:", error);

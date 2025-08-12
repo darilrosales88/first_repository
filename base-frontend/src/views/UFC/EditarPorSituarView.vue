@@ -421,7 +421,7 @@ export default {
         };
         
         this.buscarEquipos();
-        this.getProductoXEquipo();
+
       } catch (error) {
         // ... manejo de errores ...
       } finally {

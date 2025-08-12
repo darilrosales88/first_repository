@@ -51,7 +51,7 @@
                   <td>{{ getTipoProductoText(item.tipo_producto) }}</td>
                   <td>{{ item.descripcion }}</td>
                   <td >
-                    <div class="d-flex" style="margin-left: 20%;">
+                    <div class="d-flex" style="margin-left: 30%;">
                       <button 
                         @click="openProductoDetailsModal(item)"
                         class="btn btn-sm btn-outline-info me-2"

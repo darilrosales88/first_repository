@@ -140,7 +140,7 @@ class vagones_productos_filter(filters.FilterSet):
     def filtrado_por_origen_tipo_prod_tef(self, queryset, name, value):        
         return queryset.filter(
             Q(tipo_equipo_ferroviario_name__icontains=value) | 
-            Q(productos_list__icontains=value) | 
+            Q(producto=value) | 
             Q(tipo_origen_name__icontains=value)
         )
     
@@ -160,23 +160,12 @@ class vagones_productos_serializer(serializers.ModelSerializer):
     tipo_origen_name = serializers.ReadOnlyField(source='get_tipo_origen_display')    
     tipo_equipo_ferroviario_name = serializers.ReadOnlyField(source='tipo_equipo_ferroviario.get_tipo_equipo_display')
     tipo_combustible_name = serializers.ReadOnlyField(source='get_tipo_combustible_display')    
-    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
-    productos_list = serializers.SerializerMethodField()  # Campo custom para nombres
-
-    producto_ids = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=producto_UFC.objects.all(),
-        source='producto',  # Esto mapea al campo ManyToManyField
-        write_only=True,
-        required=False
-    )   
-    
+    producto_name = serializers.ReadOnlyField(source='producto.producto.nombre_producto')   
 
     class Meta:
         model = vagones_productos
-        fields = '__all__'  # O lista explícita incluyendo 'productos_list'
+        fields = '__all__'
         extra_kwargs = {
-            'producto': {'read_only': True},
             'registros_vagones': {'read_only': True}
         }
 
@@ -202,13 +191,6 @@ class vagones_productos_serializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 f"Error al crear el registro: {str(e)}"
             )    
-
-    def get_productos_list(self, obj):
-        return ", ".join([
-            p.producto.nombre_producto 
-            for p in obj.producto.all() 
-            if hasattr(p, 'producto')
-        ])
     
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -340,8 +322,8 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
     def create(self, validated_data):
         try:
             with transaction.atomic():
-                # Extraer datos para relaciones
-        
+
+                # Extraer datos para relaciones        
                 registros_data = validated_data.pop('registros_vagones_data', [])
 
                 # Asegurar que real_carga_descarga no sea sobrescrito
@@ -351,10 +333,7 @@ class vagon_cargado_descargado_serializer(serializers.ModelSerializer):
                 
                 # Crear instancia principal
                 instance = super().create(validated_data)
-                
-                # Asignar productos
-                
-                
+               
                 # Crear y asociar registros de vagones
                 for registro_data in registros_data:
                     registro = registro_vagones_cargados.objects.create(**registro_data)

@@ -74,7 +74,7 @@
                 <td>{{ vagon.tipo_combustible_name || "-" }}</td>
                 <td>{{ vagon.vagones_situados }}</td>
                 <td>{{ vagon.vagones_cargados }}</td>
-                <td>{{ vagon.productos_list }}</td>
+                <td>{{ vagon.producto_name }}</td>
                 <td v-if="hasGroup('AdminUFC')">
                   <div class="d-flex">
                     <button
@@ -433,7 +433,7 @@ export default {
             params: {
               page: this.currentPage,
               page_size: this.itemsPerPage,
-              informe: this.informeID ? this.informeID : infoID.data.id,
+              informe: this.informeID ? this.informeID : infoID.data.id,              
             },
           });
           if(this.informeID){
@@ -443,7 +443,8 @@ export default {
           this.vagones_productos = response.data.results;
           this.allRecords = [...response.data.results]; // Guardar copia completa para filtrado
           this.totalItems = response.data.count;
-          this.busqueda_existente = true;
+          this.busqueda_existente = true;   
+          console.log("Asere no se ",this.vagones_productos);       
         } else {
           this.showErrorToast("No hay ID para cargar");
         }

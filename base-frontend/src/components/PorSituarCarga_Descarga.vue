@@ -9,7 +9,7 @@
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <router-link v-if="hasGroup(['AdminUFC', 'OperadorUFC']) && this.habilitado" to="/AdicionarPorSituar">
-            <button class="btn btn-primary">
+            <button class="btn btn-sm btn-primary">
               <i class="bi bi-plus-circle me-1"></i>Añadir
             </button>
           </router-link>

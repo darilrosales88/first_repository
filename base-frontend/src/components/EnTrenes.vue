@@ -8,9 +8,10 @@
       </div>
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <router-link v-if="hasGroup(['AdminUFC', 'OperadorUFC']) && this.habilitado" to="/AdicionarVagon">
-            <button class="btn btn-primary">
-              <i class="bi bi-plus-circle me-1"></i>Añadir
+          
+          <router-link v-if="hasGroup('AdminUFC') && this.habilitado" to="/AdicionarVagon">
+            <button class="btn btn-sm btn-primary">
+              <i class="bi bi-plus-circle me-1"></i>Agregar nuevo vagón en tren
             </button>
           </router-link>
           <form @submit.prevent="search_producto" class="search-container">

@@ -178,9 +178,13 @@ export default {
           title: "Partes",
           icon: "file-earmark-text",
           submenu: [
-            { title: "Registro de Informes", route: "/ufc", icon: "table" },
-            { title: "Informe Operativo", route: "/InfoOperativo", icon: "file-earmark-text" },
-            { title: "CCD Producto", route: "/ccdxproducto", icon: "file-earmark-spreadsheet" },
+            { title: "Registro de Informes", route: "/ufc" },
+            { title: "Informe Operativo", route: "/InfoOperativo" },
+            { title: "CCD Producto", route: "/ccdxproducto" },
+            { title: "Gemar-HE", route: "/gemar_hecho_extraordinario" },
+            { title: "Informes HE", route: "/gemar_listado_partes" },
+            { title: "Gemar-ProgramacionManiobras", route: "/gemar_parte_programacion_maniobras" },
+            { title: "Listado de Partes - Gemar", route: "/listar_partes_combinados" },
           ],
         },
         {
@@ -218,7 +222,6 @@ export default {
       }
     },
     insertRoute(route) {
-      console.log(route);
       this.$router.push(route);
     },
     hasPermission(permission) {

@@ -17,6 +17,7 @@ Including another URLconf
 from django.conf import settings
 from django.contrib import admin
 from django.urls import path,include
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 
 urlpatterns = [
@@ -29,7 +30,12 @@ urlpatterns = [
     #clase include de django.urls y despues se genera el path
     path('api/', include('nomencladores.urls')),
     path('apiAdmin/', include('Administracion.urls')),    
-    path('ufc/', include('ufc.urls')),   
+    path('ufc/', include('ufc.urls')),  
+    path('gemar/', include('gemar.urls')), 
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    # Optional UI:
+    path('api/doc/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
 
 if settings.DEBUG:

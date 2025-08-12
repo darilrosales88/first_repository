@@ -950,7 +950,7 @@ export default {
         if (this.vagonesAgregados.length != this.formData.cantidad_vagones) {
           Swal.fire({
             title: "Advertencia",
-            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de vagones (${this.formData.cantidad_vagones}).`,
+            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de "Situados" (${this.formData.situados}). ¿Desea actualizar el campo "Situados" para que coincida?`,
             icon: "warning",
             showCancelButton: false,
             confirmButtonText: "Aceptar",

@@ -27,6 +27,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 #para usar el or
 from django.db.models import Q,Prefetch
 
+from django.db.models import Sum
+from django.db import transaction
 
 from django.utils import timezone
 #para usar el or
@@ -381,7 +383,141 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
         # Registrar la acción en el modelo de Auditoria
         registrar_auditoria(request, "Visualizar lista de vagones y productos")
 
-        return super().list(request, *args, **kwargs) 
+        return super().list(request, *args, **kwargs)   
+
+    @action(detail=False, methods=['get'], url_path='calcular-campos-automaticos')
+    def calcular_campos_automaticos(self, request):
+        """
+        Calcula los campos automáticos del modelo vagones y productos.
+        """
+        informe_id = request.query_params.get('informe_id')
+        if not informe_id:
+            return Response({'error': 'Se requiere el parámetro informe_id'}, status=400)
+        
+        try:            
+            hoy = timezone.now().date()
+            año_actual = hoy.year
+
+            # Verificar si es el primer día del mes
+            es_primer_dia_mes = hoy.day == 1            
+
+            # Obtener el informe operativo asociado
+            informe_operativo = ufc_informe_operativo.objects.filter(id=informe_id).first()
+            
+            if not informe_operativo:
+                return Response({'error': 'Informe operativo no encontrado'}, status=404)
+
+            # Verificar si hay otros informes operativos en el año actual
+            informes_año_actual = ufc_informe_operativo.objects.filter(
+                fecha_operacion__year=año_actual
+            ).exclude(id=informe_operativo.id)  
+                    
+            es_unico_informe_año = not informes_año_actual.exists()
+            
+            # Calcular plan_dia basado en vagones cargados
+            plan_dia = (
+                vagon_cargado_descargado.objects.filter(
+                    operacion="carga",
+                    informe_operativo=informe_operativo
+                ).aggregate(
+                    total=Sum("plan_diario_carga_descarga")
+                )["total"] or 0
+            )
+
+            vagones_cargados = (
+                vagon_cargado_descargado.objects.filter(
+                    operacion="carga",
+                    informe_operativo=informe_operativo
+                ).aggregate(
+                    total=Sum("real_carga_descarga")
+                )["total"] or 0
+            )
+            
+            vagones_situados = (
+                Situado_Carga_Descarga.objects.filter(
+                    operacion="carga",
+                    informe_operativo=informe_operativo
+                ).aggregate(
+                    total=Sum("situados")
+                )["total"] or 0
+            )
+            
+            plan_aseguramiento = (
+                vagon_cargado_descargado.objects.filter(
+                    operacion="carga",
+                    informe_operativo=informe_operativo
+                ).aggregate(
+                    total=Sum("real_carga_descarga")
+                )["total"] or 0
+            )
+
+            # Preparar datos de respuesta
+            response_data = {
+                'plan_dia': plan_dia,
+                'es_primer_dia_mes': es_primer_dia_mes,
+                'es_unico_informe_año': es_unico_informe_año,
+                'plan_acumulado_dia_anterior': 0,
+                'real_acumulado_dia_anterior': 0,
+                'vagones_situados':vagones_situados,
+                'vagones_cargados':vagones_cargados,
+                'plan_aseguramiento':plan_aseguramiento
+            }
+            print("Mijitoooooooooo ", response_data)
+
+            # Manejar los diferentes casos según las condiciones
+            if es_unico_informe_año and es_primer_dia_mes:
+                # Caso 1: Único informe en el año y es primer día del mes
+                response_data.update({
+                    'plan_acumulado_dia_anterior': 0,
+                    'real_acumulado_dia_anterior': 0
+                })
+                
+            elif not es_unico_informe_año and es_primer_dia_mes:
+                # Caso 3: No es único informe en el año pero es primer día del mes
+                response_data.update({
+                    'plan_acumulado_dia_anterior': 0,
+                    'real_acumulado_dia_anterior': 0
+                })
+                
+                # Obtener datos del informe anterior si existe
+                informe_anterior = informes_año_actual.filter(
+                    fecha_operacion__lt=informe_operativo.fecha_operacion
+                ).order_by('-fecha_operacion').first()
+                
+                if informe_anterior:
+                    vagon_producto_anterior = vagones_productos.objects.filter(
+                        informe_operativo=informe_anterior
+                    ).first()
+                    if vagon_producto_anterior:
+                        response_data['plan_anual'] = vagon_producto_anterior.plan_anual
+                        
+            elif not es_unico_informe_año and not es_primer_dia_mes:
+                # Caso 4: No es único informe en el año ni es primer día del mes
+                informe_anterior = informes_año_actual.filter(
+                    fecha_operacion__lt=informe_operativo.fecha_operacion
+                ).order_by('-fecha_operacion').first()                
+                
+                if informe_anterior:
+                    vagon_producto_anterior = vagones_productos.objects.filter(
+                        informe_operativo=informe_anterior
+                    ).first()
+                    print("no jodaas mas ",vagon_producto_anterior.plan_anual)
+                    if vagon_producto_anterior:
+                        response_data.update({
+                            'plan_anual': vagon_producto_anterior.plan_anual,
+                            'plan_acumulado_dia_anterior': vagon_producto_anterior.plan_acumulado_actual,
+                            'real_acumulado_dia_anterior': vagon_producto_anterior.real_acumulado_actual,
+                            'plan_aseguramiento_proximos_dias': vagon_producto_anterior.plan_aseguramiento_proximos_dias
+                        })
+
+            return Response(response_data)
+            
+        except Exception as e:
+            return Response(
+                {"error": f"Error al calcular los campos automáticos: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            ) 
+
 
 #/*********************************************************************************************************************************************
 #para el estado de vagones cargados/descargados

@@ -620,7 +620,6 @@ export default {
         this.loading = false;
       }
     },
-
     async getPuertos() {
       try {
         let allPuertos = [];

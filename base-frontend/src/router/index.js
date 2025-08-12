@@ -801,8 +801,74 @@ const routes = [
   name: 'VisualizarInfoOperative', // Este nombre debe coincidir con el usado en el router-link
   component: () => import('@/views/UFC/VisualizarInfoOperativo.vue'),
   props: true
-}
-  
+  },
+  /*A partir de aqui es GEMAR */
+  {
+    path: "/gemar_listado_partes",
+    name: "ListaPartesGemar",
+    component: () => import("../components/GEMAR/ListaPartesGemar.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/gemar_hecho_extraordinario",
+    name: "gemar_hecho_extraordinario",
+    component: () => import("../views/GEMAR/HechoExtraordinarioView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/gemar_hecho_extraordinario/add",
+    name: "add_gemar_hecho_extraordinario",
+    component: () => import("../views/GEMAR/AdicionarHE.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+
+  {
+    path: "/gemar_hecho_extraordinario/edit/:id",
+    name: "editar_gemar_hecho_extraordinario",
+    component: () => import("../views/GEMAR/EditarHE.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  //Programacion de maniobras - GEMAR 
+  {
+    path: "/gemar_parte_programacion_maniobras",
+    name: "gemar_parte_programacion_maniobras",
+    component: () => import("../views/GEMAR/ProgramacionManiobraView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/gemar_programacion_maniobras/add",
+    name: "add_gemar_programacion_maniobras",
+    component: () => import("../views/GEMAR/AdicionarProgramacionManiobra.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/gemar_programacion_maniobra/edit/:id",
+    name: "editar_gemar_programacion_maniobra",
+    component: () => import("../views/GEMAR/EditarProgramacionManiobra.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/listar_partes_combinados",
+    name: "listar_partes_combinados",
+    component: () => import("../components/GEMAR/RegistrosPartesCombinados.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
 ];
 
 const router = createRouter({

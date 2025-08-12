@@ -129,6 +129,76 @@
                 </select>
               </div>
 
+              <!-- Campo: producto -->
+              <div class="mb-3" v-if="mostrarCampoProducto">
+                <label
+                  for="producto"
+                  class="form-label small fw-semibold text-secondary"
+                >
+                  Productos
+                  <button
+                    class="create-button ms-2"
+                    @click="abrirModalAgregarProducto"
+                  >
+                    <i class="bi bi-plus-circle large-icon"></i>
+                  </button>
+                </label>
+                <select
+                  class="form-select"
+                  v-model="formData.producto"
+                  id="producto"
+                  name="producto"
+                  multiple
+                  size="4"
+                >
+                  <option
+                    v-for="producto in productos"
+                    :key="producto.id"
+                    :value="producto.id"
+                  >
+                    {{ producto.id }}-{{ producto.producto_name }} -
+                    {{ producto.producto_codigo }}-{{
+                      producto.tipo_embalaje_name
+                    }}
+                  </option>
+                </select>                
+              </div>
+
+              <!-- Campo: producto -->
+              <div class="mb-3" v-if="mostrarCampoProducto">
+                <label
+                  for="producto"
+                  class="form-label small fw-semibold text-secondary"
+                >
+                  Productos
+                  <button
+                    class="create-button ms-2"
+                    @click="abrirModalAgregarProducto"
+                  >
+                    <i class="bi bi-plus-circle large-icon"></i>
+                  </button>
+                </label>
+                <select
+                  class="form-select"
+                  v-model="formData.producto"
+                  id="producto"
+                  name="producto"
+                  multiple
+                  size="4"
+                >
+                  <option
+                    v-for="producto in productos"
+                    :key="producto.id"
+                    :value="producto.id"
+                  >
+                    {{ producto.id }}-{{ producto.producto_name }} -
+                    {{ producto.producto_codigo }}-{{
+                      producto.tipo_embalaje_name
+                    }}
+                  </option>
+                </select>                
+              </div>
+
               <!-- Campo: tipo_combustible -->
               <div class="mb-3" v-if="mostrarCampoCombustible">
                 <label
@@ -217,6 +287,23 @@
                 />
               </div>
 
+              <!-- Campo: plan_dia -->
+              <div class="mb-3">
+                <label
+                  for="plan_dia"
+                  class="form-label small fw-semibold text-secondary"
+                  >Plan del día</label
+                >
+                <input
+                  type="number"
+                  class="form-control form-control-sm border-secondary"
+                  v-model="formData.plan_dia"
+                  id="plan_dia"
+                  name="plan_dia"
+                  readonly
+                />
+              </div>
+
               <!-- Campo: plan_acumulado_dia_anterior -->
               <div class="mb-3" v-if="mostrarCamposAcumulados">
                 <label
@@ -255,44 +342,57 @@
                 />
               </div>
 
-              <!-- Campo: producto -->
-              <div class="mb-3" v-if="mostrarCampoProducto">
+              <!-- Campo: vagones_situados -->
+              <div class="mb-3">
                 <label
-                  for="producto"
+                  for="plan_dia"
                   class="form-label small fw-semibold text-secondary"
+                  >Vagones situados</label
                 >
-                  Productos
-                  <button
-                    class="create-button ms-2"
-                    @click="abrirModalAgregarProducto"
-                  >
-                    <i class="bi bi-plus-circle large-icon"></i>
-                  </button>
-                </label>
-                <select
-                  class="form-select"
-                  v-model="formData.lista_productos"
-                  id="producto"
-                  name="producto"
-                  multiple
-                  size="4"
-                >
-                  <option
-                    v-for="producto in productos"
-                    :key="producto.id"
-                    :value="producto.id"
-                  >
-                    {{ producto.id }}-{{ producto.producto_name }} -
-                    {{ producto.producto_codigo }}-{{
-                      producto.tipo_embalaje_name
-                    }}
-                  </option>
-                </select>
-                <small class="text-muted"
-                  >Mantén presionado Ctrl o Shift para seleccionar
-                  múltiplesproductos</small
-                >
+                <input
+                  type="number"
+                  class="form-control form-control-sm border-secondary"
+                  v-model="formData.vagones_situados"
+                  id="vagones_situados"
+                  name="vagones_situados"
+                  readonly
+                />
               </div>
+
+              <!-- Campo: vagones_cargados -->
+              <div class="mb-3">
+                <label
+                  for="plan_dia"
+                  class="form-label small fw-semibold text-secondary"
+                  >Vagones cargados</label
+                >
+                <input
+                  type="number"
+                  class="form-control form-control-sm border-secondary"
+                  v-model="formData.vagones_cargados"
+                  id="vagones_cargados"
+                  name="vagones_cargados"
+                  readonly
+                />
+              </div>
+              <!-- Campo: plan_aseguramiento_proximos_dias -->
+              <div class="mb-3">
+                <label
+                  for="plan_dia"
+                  class="form-label small fw-semibold text-secondary"
+                  >Plan de aseguramiento de los próximos días</label
+                >
+                <input
+                  type="number"
+                  class="form-control form-control-sm border-secondary"
+                  v-model="formData.plan_aseguramiento_proximos_dias"
+                  id="plan_aseguramiento_proximos_dias"
+                  name="plan_aseguramiento_proximos_dias"
+                  readonly
+                />
+              </div>
+
+              
             </div>
             <!-- Campo: observaciones -->
             <div class="mb-3">
@@ -356,9 +456,13 @@ export default {
         tipo_producto: "",
         plan_mensual: "",
         plan_anual: 0,
+        plan_dia:0,
+        vagones_situados:0,
+        vagones_cargados:0,
+        plan_aseguramiento_proximos_dias:0,
         plan_acumulado_dia_anterior: 0,
         real_acumulado_dia_anterior: 0,
-        lista_productos: [],
+        producto: [],
         observaciones: "",
       },
       // Nuevas propiedades de estado
@@ -370,7 +474,6 @@ export default {
       entidades: [],
       esPrimerDiaMes: false,
       esUnicoInformeAnual: false,
-      informeOperativoActual: null,
       informeOperativoAnterior: null,
     };
   },
@@ -406,7 +509,7 @@ export default {
     this.getNoLocomotoras();
     this.getEntidades();
     this.getPuertos();
-    await this.verificarFechaEInformes();
+    this.verificarInformeOperativo();
   },
   async created() {
     await this.fetchUserPermissionsAndGroups();
@@ -456,18 +559,7 @@ export default {
     // Envío del formulario
     async submitForm() {
       try {
-        // 1. Verifificar que el informe operativo existe ya para la fecha creada
-        const existeInforme = await this.verificarInformeOperativo();
-        if (!existeInforme) {
-          Swal.fire(
-            "Error",
-            "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
-            "error"
-          );
-          this.$router.push({ name: "InfoOperativo" });
-          return;
-        }
-
+        // Verificar informe operativo
         const today = new Date();
         const fechaFormateada = `${today.getFullYear()}-${String(
           today.getMonth() + 1
@@ -480,6 +572,16 @@ export default {
           }
         );
 
+        if (!informeResponse.data.existe) {
+          Swal.fire(
+            "Error",
+            "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+            "error"
+          );
+          this.$router.push({ name: "InfoOperativo" });
+          return;
+        }
+
         if (informeResponse.data.estado_parte === "Aprobado") {
           Swal.fire(
             "Error",
@@ -488,101 +590,50 @@ export default {
           );
           return;
         }
-        // Convertir plan_anual a número entero
-        this.formData.plan_anual = parseInt(this.formData.plan_anual) || 0;
 
-        // 1. Preparar los IDs de productos
-        const productosParaEnviar = this.prepararProductosParaEnvio();
-
-        // Convertir los IDs a números enteros
-        this.formData.lista_productos = this.formData.lista_productos.map(
-          (id) => parseInt(id)
-        );
-
-        if (
-          productosParaEnviar.length === 0 &&
-          this.formData.lista_productos.length > 0
-        ) {
-          Swal.fire(
-            "Error",
-            "Los productos seleccionados no son válidos",
-            "error"
-          );
-          return;
-        }
-
-        // Validar que los productos seleccionados existan
-        const productosValidos = await this.validarProductos(
-          this.formData.lista_productos
-        );
-        if (!productosValidos) {
-          Swal.fire(
-            "Error",
-            "Uno o más productos seleccionados no existen",
-            "error"
-          );
-          return;
-        }
-        this.formData.informe_operativo = informeResponse.data.id;
-
+        // Preparar datos para enviar
         const datosEnvio = {
           ...this.formData,
-          producto_ids: productosParaEnviar,
           informe_operativo: informeResponse.data.id,
+          // Si necesitas enviar solo un producto, toma el primero
+          producto: this.formData.producto.length > 0 ? this.formData.producto[0] : null,
+          // Convertir valores a números
+          plan_mensual: parseInt(this.formData.plan_mensual) || 0,
+          plan_anual: parseInt(this.formData.plan_anual) || 0,
+          plan_dia: this.formData.plan_dia,
+          vagones_situados: this.formData.vagones_situados,
+          vagones_cargados: this.formData.vagones_cargados,
+          plan_aseguramiento_proximos_dias: this.formData.plan_aseguramiento_proximos_dias,
+
         };
 
         const response = await axios.post(
           "/ufc/vagones-productos/",
           datosEnvio
         );
+        
         Swal.fire("Éxito", "Registro agregado correctamente", "success");
         this.$router.push({ name: "InfoOperativo" });
       } catch (error) {
-        console.error("Error al guardar:", error.response);
+        console.error("Error al guardar:", error);
         let errorMsg = "No se pudo guardar el registro";
-
+        
         if (error.response?.data) {
-          errorMsg += `: ${JSON.stringify(error.response.data)}`;
+          // Mejorar el manejo de errores del backend
+          if (typeof error.response.data === 'object') {
+            errorMsg += `: ${JSON.stringify(error.response.data)}`;
+          } else {
+            errorMsg += `: ${error.response.data}`;
+          }
+        } else if (error.message) {
+          errorMsg += `: ${error.message}`;
         }
-
+        
         Swal.fire("Error", errorMsg, "error");
       }
-    },
-    prepararProductosParaEnvio() {
-      return this.formData.lista_productos
-        .map((id) => {
-          const idNum = parseInt(id);
-          return isNaN(idNum) ? null : idNum;
-        })
-        .filter((id) => id !== null);
-    },
+    },    
 
-    manejarErrorEnvio(error) {
-      let errorMsg = "No se pudo guardar el registro";
-
-      if (error.response?.data) {
-        if (error.response.data.producto_ids) {
-          errorMsg = "Uno o más productos seleccionados no existen";
-        } else {
-          errorMsg += `: ${JSON.stringify(error.response.data)}`;
-        }
-      }
-
-      Swal.fire("Error", errorMsg, "error");
-      console.error("Error detallado:", error.response || error);
-    },
-
-    async validarProductos(idsProductos) {
-      try {
-        const response = await axios.post("/ufc/producto-vagon/verificar/", {
-          producto_ids: idsProductos.map((id) => parseInt(id)),
-        });
-        return response.data.todos_existen;
-      } catch (error) {
-        console.error("Error al validar productos:", error);
-        return false;
-      }
-    },
+    
     async verificarInformeOperativo() {
       try {
         this.formData.fecha = new Date().toISOString();
@@ -597,12 +648,30 @@ export default {
 
         if (response.data.existe) {
           this.informeOperativoId = response.data.id;
+          await this.DameCamposAutomaticos(response.data.id);
           return true;
         }
         return false;
       } catch (error) {
         console.error("Error al verificar informe:", error);
         return false;
+      }
+    },
+    async DameCamposAutomaticos(informeId) {
+      try {
+        const response = await axios.get("/ufc/vagones-productos/calcular-campos-automaticos/", {
+          params: { informe_id: informeId }
+        });
+        this.formData.plan_dia = response.data.plan_dia || 0;
+        this.formData.plan_anual = response.data.plan_anual || 0;
+        this.formData.vagones_situados = response.data.vagones_situados || 0;
+        this.formData.vagones_cargados = response.data.vagones_cargados || 0;
+        this.formData.plan_aseguramiento_proximos_dias = response.data.plan_aseguramiento_proximos_dias || 0;    
+        this.formData.plan_acumulado_dia_anterior = response.data.plan_acumulado_dia_anterior || 0; 
+        this.formData.real_acumulado_dia_anterior = response.data.real_acumulado_dia_anterior || 0;     
+      } catch (error) {
+        console.error("Error al obtener el plan del día:", error);
+        this.formData.plan_dia = 0;
       }
     },
 
@@ -618,7 +687,11 @@ export default {
         plan_anual: "",
         plan_acumulado_dia_anterior: 0,
         real_acumulado_dia_anterior: 0,
-        lista_productos: [],
+        producto: [],
+        plan_dia:0,
+        vagones_situados:0,
+        vagones_cargados:0,
+        plan_aseguramiento_proximos_dias:0,
         observaciones: "",
       };
     },
@@ -642,66 +715,6 @@ export default {
           this.$router.push({ name: "InfoOperativo" });
         }
       });
-    },
-
-    // Método para verificar fecha y estado de informes
-    async verificarFechaEInformes() {
-      try {
-        const hoy = new Date();
-        this.esPrimerDiaMes = hoy.getDate() === 1;
-
-        // Obtener año actual
-        const añoActual = hoy.getFullYear();
-
-        // Verificar si hay informes operativos en el año actual
-        const response = await axios.get(
-          `/ufc/informe-operativo/?fecha_operacion__year=${añoActual}`
-        );
-        const informesAnuales = response.data.results || [];
-
-        // Verificar si es el único informe del año
-        this.esUnicoInformeAnual = informesAnuales.length === 1;
-
-        if (!this.esUnicoInformeAnual) {
-          // Obtener el informe del día anterior
-          const ayer = new Date(hoy);
-          ayer.setDate(ayer.getDate() - 1);
-          const fechaAyer = ayer.toISOString().split("T")[0];
-
-          const responseAnterior = await axios.get(
-            `/ufc/informe-operativo/?fecha_operacion=${fechaAyer}`
-          );
-          if (
-            responseAnterior.data.results &&
-            responseAnterior.data.results.length > 0
-          ) {
-            this.informeOperativoAnterior = responseAnterior.data.results[0];
-
-            // Obtener historial del informe anterior
-            const responseHistorial = await axios.get(
-              `/ufc/historial-vagones-productos/?informe_id=${this.informeOperativoAnterior.id}`
-            );
-            if (
-              responseHistorial.data.results &&
-              responseHistorial.data.results.length > 0
-            ) {
-              const historialAnterior = responseHistorial.data.results[0];
-
-              // Asignar valores del día anterior
-              this.formData.plan_anual =
-                historialAnterior.datos_vagon_producto.plan_anual || 0;
-              this.formData.plan_acumulado_dia_anterior =
-                historialAnterior.datos_vagon_producto
-                  .plan_acumulado_dia_anterior || 0;
-              this.formData.real_acumulado_dia_anterior =
-                historialAnterior.datos_vagon_producto
-                  .real_acumulado_dia_anterior || 0;
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error al verificar fecha e informes:", error);
-      }
     },
 
     // Métodos para obtener datos

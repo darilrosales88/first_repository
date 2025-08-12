@@ -37,7 +37,7 @@
                       oninput="this.setCustomValidity('')">
                       <option value="" disabled>Seleccione un destino</option>
                       <option v-for="entidad in entidades" :key="entidad.id" :value="entidad.nombre">
-                        {{ entidad.id }}-{{ entidad.nombre }}
+                        {{ entidad.nombre }}
                       </option>
                     </select>
 
@@ -46,7 +46,7 @@
                       oninput="this.setCustomValidity('')">
                       <option value="" disabled>Seleccione un puerto</option>
                       <option v-for="puerto in puertos" :key="puerto.id" :value="puerto.nombre_puerto">
-                        {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                        {{ puerto.nombre_puerto }}
                       </option>
                     </select>
                     <select
@@ -81,7 +81,7 @@
                       oninput="this.setCustomValidity('')">
                       <option value="" disabled>Seleccione un destino</option>
                       <option v-for="entidad in entidades" :key="entidad.id":value="entidad.nombre">
-                        {{ entidad.id }}-{{ entidad.nombre }}
+                        {{ entidad.nombre }}
                       </option>
                     </select>
 
@@ -90,7 +90,7 @@
                       oninput="this.setCustomValidity('')">
                       <option value="" disabled>Seleccione un puerto</option>
                       <option v-for="puerto in puertos" :key="puerto.id" :value="puerto.nombre_puerto">
-                        {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                        {{ puerto.nombre_puerto }}
                       </option>
                     </select>
                     <select
@@ -109,7 +109,7 @@
                   oninvalid="this.setCustomValidity('Por favor, seleccione un tipo de equipo ferroviario')"
                   oninput="this.setCustomValidity('')">
                   <option v-for="tipo_equipo_ferroviario in tipos_equipos_ferroviarios" :key="tipo_equipo_ferroviario.id" :value="tipo_equipo_ferroviario.id">
-                    {{ tipo_equipo_ferroviario.id }}-{{tipo_equipo_ferroviario.tipo_equipo_name}}-{{ tipo_equipo_ferroviario.descripcion }}
+                    {{tipo_equipo_ferroviario.tipo_equipo_name}}
                   </option>
                 </select>
               </div>
@@ -140,6 +140,40 @@
 
               <!-- Campo: producto -->
               <div class="mb-3">
+                <div class="mb-3">
+                  
+                  <label
+                    for="productos"
+                    class="form-label small fw-semibold text-secondary"
+                    >Productos</label
+                  >
+                  <div class="ufc-input-with-action">
+                    <select
+                      class="form-select form-select-sm border-secondary"
+                      style="padding: 8px 12px"
+                      v-model="formData.producto"
+                      @change="buscarTipoEquipo"
+                      required
+                      oninvalid="this.setCustomValidity('Por favor, seleccione un Producto')"
+                      oninput="this.setCustomValidity('')"
+                    >
+                      <option value="" disabled>Seleccione un Producto</option>
+
+                      <option
+                        v-for="producto in productos"
+                        :key="producto.id"
+                        :value="producto.id"
+                      >
+                        <!-- Esto tambien hay que modificarlo en los demas y quitar las funciones basuras ademas de agregar esto mismo en los editar de cada uno @BZ-theFanG #-# -->
+                        {{ producto.producto_name }}-{{
+                          producto.producto_codigo
+                        }}-{{ producto.tipo_embalaje_name }}
+                      </option>
+                    </select>
+                    <button class="create-button ms-2" @click.stop.prevent="abrirModalAgregarProducto">
+                      <i class="bi bi-plus-circle large-icon"></i>
+                    </button>
+                  </div>
                 <div class="mb-3">
                   
                   <label
@@ -211,13 +245,13 @@
     <div class="card border">
       <div class="card-header bg-light border-bottom">
         <h5 class="mb-0 text-dark fw-semibold">
-          *Debe existir al menos un vagón
+          Vagones
         </h5>
       </div>
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <button class="btn btn-primary" @click="abrirModalAgregarVagon">
-            <i class="bi bi-plus-circle me-1"></i>Agregar vagón
+            <i class="bi bi-plus-circle me-1"></i>Añadir
           </button>
         </div>
         <!-- Tabla responsive con mejoras -->
@@ -261,7 +295,7 @@
                 <td>{{ item.fecha_despacho }}</td>
                 <td>{{ item.origen }}</td> 
                 <td>{{ item.fecha_llegada }}</td>
-                <td>{{ item.observaciones }}</td>
+                <td>{{ item.observaciones || "-" }}</td>
                 <!-- <td v-if="hasGroup('AdminUFC')">
                   <div class="d-flex">
                     <button @click.prevent="confirmDeleteVagonAsignado(item)" class="btn btn-sm btn-outline-danger" title="Eliminar">
@@ -540,12 +574,7 @@ export default {
       
         );
 
-        await Swal.fire({
-          title: "Éxito",
-          text: "Vagón actualizado correctamente",
-          icon: "success",
-        });
-
+        this.showSuccessToast("Registro Actualizado");
         this.$router.push({ name: "InfoOperativo" });
       } catch (error) {
         console.error("Error al actualizar:", error);
@@ -670,6 +699,49 @@ export default {
           "error"
         );
       }
+    },
+        showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#4BB543",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
+      });
+    },
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
+      });
     },
 
     // Métodos para obtener datos

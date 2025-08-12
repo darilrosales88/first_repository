@@ -55,8 +55,7 @@
                     :key="locomotora.id"
                     :value="locomotora.id"
                   >
-                    {{ locomotora.id }}-{{ locomotora.numero_identificacion }} -
-                    {{ locomotora.tipo_equipo_name }}
+                    {{ locomotora.numero_identificacion }}
                   </option>
                 </select>
               </div>
@@ -84,9 +83,7 @@
                     :key="equipo.id"
                     :value="equipo.id"
                   >
-                    {{ equipo.id }}-{{ equipo.tipo_equipo_name }}-{{
-                      equipo.tipo_carga_name
-                    }}
+                    {{ equipo.tipo_equipo_name }}
                   </option>
                 </select>
               </div>
@@ -142,11 +139,7 @@
                   style="padding: 8px 12px"
                   :disabled="isDisable"
                   v-model="formData.equipo_vagon"
-                  required
-                  @click="onVagonChange"
-                  oninvalid="this.setCustomValidity('Por favor, seleccione un ID de vagón')"
-                  oninput="this.setCustomValidity('')"
-                >
+                  @click="onVagonChange">
                   <option value="" disabled>Seleccione un vagón</option>
                   <option v-for="item in equipos_vagones" :value="item.id">
                     {{ item.id }}-{{ item.numero_identificacion }}
@@ -214,7 +207,7 @@
                         :key="entidad.id"
                         :value="entidad.nombre"
                       >
-                        {{ entidad.id }}-{{ entidad.nombre }}
+                        {{ entidad.nombre }}
                       </option>
                     </select>
 
@@ -240,7 +233,7 @@
                         :key="puerto.id"
                         :value="puerto.nombre_puerto"
                       >
-                        {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                        {{ puerto.nombre_puerto }}
                       </option>
                     </select>
                     <select
@@ -316,7 +309,7 @@
                         :key="entidad.id"
                         :value="entidad.nombre"
                       >
-                        {{ entidad.id }}-{{ entidad.nombre }}
+                        {{ entidad.nombre }}
                       </option>
                     </select>
 
@@ -342,7 +335,7 @@
                         :key="puerto.id"
                         :value="puerto.nombre_puerto"
                       >
-                        {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                        {{ puerto.nombre_puerto }}
                       </option>
                     </select>
 
@@ -388,29 +381,32 @@
                   <label
                     for="productos"
                     class="form-label small fw-semibold text-secondary"
-                    >Productos</label
-                  >
+                    >Productos</label>
                   <div class="ufc-input-with-action">
-                    <select
+                    <select v-if="formData.tipo_equipo"
                       class="form-select form-select-sm border-secondary"
                       style="padding: 8px 12px"
                       v-model="formData.producto"
                       @change="buscarTipoEquipo"
                       required
                       oninvalid="this.setCustomValidity('Por favor, seleccione un Producto')"
-                      oninput="this.setCustomValidity('')"
-                    >
+                      oninput="this.setCustomValidity('')">
                       <option value="" disabled>Seleccione un Producto</option>
                       <option
                         v-for="producto in productos"
                         :key="producto.id"
-                        :value="producto.id"
-                      >
-                        <!-- Esto tambien hay que modificarlo en los demas y quitar las funciones basuras ademas de agregar esto mismo en los editar de cada uno @BZ-theFanG #-# -->
+                        :value="producto.id">
                         {{ producto.producto_name }}-{{
                           producto.producto_codigo
                         }}-{{ producto.tipo_embalaje_name }}
                       </option>
+                    </select>
+                    <select
+                      v-else
+                      class="form-select form-select-sm border-secondary"
+                      style="padding: 8px 12px"
+                      disabled>
+                      <option value="">Seleccione primero el tipo de equipo</option>
                     </select>
                     <button class="create-button ms-2" @click.stop.prevent="abrirModalAgregarProducto">
                       <i class="bi bi-plus-circle large-icon"></i>
@@ -448,7 +444,7 @@
                 <i class="bi bi-x-circle" me-1></i>Cancelar
               </button>
               <button type="submit" class="ufc-button primary">
-                <i class="bi bi-check-circle" me-1></i>Agregar
+                <i class="bi bi-check-circle" me-1></i>Añadir
               </button>
             </div>
           </div>
@@ -460,13 +456,13 @@
     <div class="card border">
       <div class="card-header bg-light border-bottom">
         <h5 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-train-freight-front"></i> Vagones agregados
+          <i class="bi bi-train-freight-front"></i> Vagones añadidos
         </h5>
       </div>
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <button class="btn btn-primary" @click="agregarVagon">
-            <i class="bi bi-plus-circle"></i> Agregar Vagon
+            <i class="bi bi-plus-circle"></i> Añadir
           </button>
         </div>
         <!-- Tabla responsive con mejoras -->
@@ -509,7 +505,12 @@
           <p v-if="vagonesAgregados.length < formData.cantidad_vagones">
             Faltan
             {{ formData.cantidad_vagones - vagonesAgregados.length }}
-            vagones por agregar.
+            vagones por añadir.
+          </p>
+          <p v-if="vagonesAgregados.length > formData.cantidad_vagones">
+            Existen
+            {{ vagonesAgregados.length  - formData.cantidad_vagones}}
+            vagones sobrantes.
           </p>
           <p v-else-if="vagonesAgregados.length === formData.cantidad_vagones">
             Todos los vagones han sido agregados.
@@ -572,13 +573,10 @@ export default {
     },
   },
   mounted() {
-    this.getProductos();
     this.getLocomotoras();
     this.getEntidades();
     this.getPuertos();
     this.getEquipos();
-    this.filteredProductos = this.productos;
-    this.closeDropdownsOnClickOutside();
   },
   methods: {
     confirmCancel() {
@@ -644,7 +642,7 @@ export default {
         if (!existeInforme) {
           Swal.fire(
             "Error",
-            "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+            "No existe un informe operativo creado para la fecha actual. Cree uno primero.",
             "error"
           );
           this.$router.push({ name: "InfoOperativo" });
@@ -665,13 +663,13 @@ export default {
         if (this.vagonesAgregados.length==0) {
           Swal.fire({ 
             title: "Error",
-            text: "Debe añadir al menos un vagón",
+            text: "Añada al menos un vagón",
             icon: "error",});
           return;
         }
 
         if (this.formData.estado === "cargado" && this.formData.producto.length === 0) {
-          this.showErrorToast("Debe seleccionar al menos un producto cuando el estado es Cargado");
+          this.showErrorToast("Seleccione al menos un producto cuando el estado es Cargado");
           return;
         }
 
@@ -683,7 +681,7 @@ export default {
         if (!informeResponse.data.existe) {
           Swal.fire(
             "Error",
-            "No existe un informe operativo creado para la fecha actual. Debe crear uno primero.",
+            "No existe un informe operativo creado para la fecha actual. Cree uno primero.",
             "error"
           );
           this.$router.push({ name: "InfoOperativo" });
@@ -694,7 +692,7 @@ export default {
         if (informeDetalleResponse.data.estado_parte === "Aprobado") {
           Swal.fire(
             "Error",
-            "No se puede agregar registros a un informe operativo que ya ha sido aprobado.",
+            "No se puede añadir registros a un informe operativo que ya ha sido aprobado.",
             "error"
           );
           return;
@@ -712,31 +710,27 @@ export default {
         if (this.vagonesAgregados.length !== this.formData.cantidad_vagones) {
           Swal.fire({
             title: "Advertencia",
-            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de "Por Situar" (${this.formData.cantidad_vagones}). ¿Desea actualizar el campo "Situados" para que coincida?`,
+            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de vagones (${this.formData.cantidad_vagones}).`,
             icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Sí, actualizar",
-            cancelButtonText: "No, corregir manualmente",
-          }).then((result) => {
-            if (result.isConfirmed) {
-              this.formData.cantidad_vagones = this.vagonesAgregados.length;
-            }
+            showCancelButton: false,
+            confirmButtonText: "Aceptar",
+            confirmButtonColor: "#007bff"
           });
           return;
         }
 
         const vagones = JSON.parse(vagonesJson);
         this.formData.equipo_vagon = vagones.map((vagon) => vagon.vagon_id);
-        this.formData.informe_operativo = informeResponse.data.id; // Añadir el ID del informe operativo
+        this.formData.informe_operativo = informeResponse.data.id; 
 
         console.log("Datos del formulario:", this.formData);
 
         await axios.post("/ufc/en-trenes/", this.formData);
 
-        this.showSuccessToast("El registro ha sido creado correctamente");
-        this.resetForm();
         this.$router.push({ name: "InfoOperativo" });
-
+        this.showSuccessToast("El registro ha sido creado.");
+        this.resetForm();
+        
       } catch (error) {
         this.showErrorToast(error.message);
         let errorMessage = "Hubo un error al enviar el formulario";
@@ -816,6 +810,34 @@ export default {
         );
       }
     },
+
+    async getProductoXEquipo() {
+      this.loading = true;
+      
+      try {
+        const response = await axios.get(`/ufc/producto-vagon/?tipo_equipo=${this.formData.tipo_equipo}`);
+
+        this.productos = response.data.results.map((p) => {
+          // Asegurar que tipo_embalaje esté definido
+          const tipoEmbalaje = p.tipo_embalaje || {};
+          return {
+            ...p,
+            tipo_embalaje: {
+              nombre:
+                tipoEmbalaje.nombre ||
+                tipoEmbalaje.nombre_embalaje ||
+                "Sin embalaje",
+            },
+          };
+        });
+      } catch (error) {
+        console.error("Error al obtener productos:", error);
+        Swal.fire("Error", "No se pudieron cargar los productos", "error");
+      } finally {
+        this.loading = false;
+      }
+    }, 
+
     async buscarEquipos() {
       try {
         let url = "/api/e-f-no-locomotora/";
@@ -840,6 +862,7 @@ export default {
           return;
         }
         this.isDisable = false;
+        this.getProductoXEquipo();
         this.equipos_vagones = response.data;
       } catch (error) {
         console.error("Error al obtener los equipos ferroviarios:", error);
@@ -853,6 +876,7 @@ export default {
         });
       }
     },
+
     async getEntidades() {
       try {
         let allEntidades = [];
@@ -868,9 +892,11 @@ export default {
         Swal.fire("Error", "Hubo un error al obtener las entidades.", "error");
       }
     },
+
     volverEnTren() {
       this.$router.push({ name: "InfoOperativo" });
     },
+
     async getPuertos() {
       try {
         let allPuertos = [];
@@ -895,41 +921,13 @@ export default {
         Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
       }
     },
-    async getProductos() {
-      try {
-        let allProductos = [];
-        let nextPage = "/ufc/producto-vagon/";
-        while (nextPage) {
-          const response = await axios.get(nextPage);
-          allProductos = [...allProductos, ...response.data.results];
-          nextPage = response.data.next;
-        }
 
-        this.productos = allProductos.map((p) => {
-          // Asegurar que tipo_embalaje esté definido
-          const tipoEmbalaje = p.tipo_embalaje || {};
-          return {
-            ...p,
-            tipo_embalaje: {
-              nombre:
-                tipoEmbalaje.nombre ||
-                tipoEmbalaje.nombre_embalaje ||
-                "Sin embalaje",
-            },
-          };
-        });
-        console.log(this.productos);
-      } catch (error) {
-        console.error("Error al obtener los productos:", error);
-        Swal.fire("Error", "Hubo un error al obtener los productos.", "error");
-      }
-    },
     abrirModalAgregarProducto() {
       this.mostrarModal = true;
     },
     cerrarModal() {
       this.mostrarModal = false;
-      this.getProductos();
+      this.getProductoXEquipo();
     },
 
     agregarVagon() {
@@ -937,24 +935,37 @@ export default {
       if (this.equipos_vagones.length == 0) {
         Swal.fire({
           title: "Error",
-          text: "Debe seleccionar el Tipo de Equipo Ferroviario",
+          text: "Seleccione el tipo de equipo ferroviario",
           icon: "error",
+          showCancelButton: false,
+          confirmButtonText: "Aceptar",
+          confirmButtonColor: "#ff4444"
         });
         return;
       }
 
+      if (this.vagonesAgregados.length == this.formData.cantidad_vagones) {
+        Swal.fire({
+          title: "Error",
+          text: "Ya añadió todos los vagones según la cantidad de vagones definida",
+          icon: "error",
+          showCancelButton: false,
+          confirmButtonText: "Aceptar",
+          confirmButtonColor: "#ff4444"
+        });
+        return;
+      }
       console.log(this.formData.equipo_vagon);
       if (this.formData.equipo_vagon.length == 0) {
         Swal.fire({
           title: "Error",
-          text: "Debe seleccionar al menos un identificador (ID) de un vagón",
+          text: "Seleccione un identificador (ID) de un vagón",
           icon: "error",
         });
         return;
       }
 
       const equipoSeleccionado = this.equipos_vagones.find((e) => e.id === this.formData.equipo_vagon);
-      console.log(equipoSeleccionado );
       const datosVagon = JSON.parse(JSON.stringify(this.formData));
       
       const nuevoVagon = {
@@ -966,21 +977,12 @@ export default {
       const yaExistente = this.vagonesAgregados.some((vagon) => vagon.vagon_id === datosVagon.equipo_vagon); 
 
       if (yaExistente) {
-        Swal.fire({
-          title: "Error",
-          text: "Este vagón ya ha sido agregado a la lista",
-          icon: "error",
-        });
+        this.showErrorToast("Este vagón ya existe");
         return;
       }
 
       this.vagonesAgregados.push(nuevoVagon);
-      Swal.fire({
-        title: "Éxito",
-        text: "Vagón agregado correctamente.",
-        icon: "success",
-        confirmButtonText: "Aceptar",
-      });
+      this.showSuccessToast("Vagón añadido");
       localStorage.setItem(
         "vagonesAgregados",
         JSON.stringify(this.vagonesAgregados)
@@ -993,67 +995,9 @@ export default {
         "vagonesAgregados",
         JSON.stringify(this.vagonesAgregados)
       );
-      Swal.fire({
-        title: "Éxito",
-        text: "Vagón eliminado correctamente.",
-        icon: "success",
-        confirmButtonText: "Aceptar",
-      });
+      this.showSuccessToast("Vagón eliminado");
     },
 
-    /* Acciones del producto */
-    toggleProductosDropdown() {
-      this.showProductosDropdown = !this.showProductosDropdown;
-      if (this.showProductosDropdown) {
-        this.productoSearch = "";
-        this.filterProductos();
-      }
-    },
-
-    filterProductos() {
-      if (!this.productoSearch) {
-        this.filteredProductos = this.productos;
-        return;
-      }
-      const searchTerm = this.productoSearch.toLowerCase();
-      this.filteredProductos = this.productos.filter(
-        (producto) =>
-          producto.producto_name.toLowerCase().includes(searchTerm) ||
-          producto.producto_codigo.toLowerCase().includes(searchTerm) ||
-          producto.id.toString().includes(searchTerm)
-      );
-    },
-
-    toggleProductoSelection(productoId) {
-      const index = this.formData.producto.indexOf(productoId);
-      if (index === -1) {
-        this.formData.producto.push(productoId);
-      } else {
-        this.formData.producto.splice(index, 1);
-      }
-    },
-
-    getSelectedProductosText() {
-      if (this.formData.producto.length === 0) return "";
-      if (this.formData.producto.length === 1) {
-        const producto = this.productos.find(
-          (p) => p.id === this.formData.producto
-        );
-        return producto
-          ? `${producto.id}-${producto.producto_name}`
-          : "1 producto seleccionado";
-      }
-      return `${this.formData.producto.length} productos seleccionados`;
-    },
-
-
-    closeDropdownsOnClickOutside() {
-      document.addEventListener("click", (e) => {
-        if (!e.target.closest(".ufc-custom-select")) {
-          this.showProductosDropdown = false;
-        }
-      });
-    },
     showSuccessToast(message) {
       const Toast = Swal.mixin({
         toast: true,

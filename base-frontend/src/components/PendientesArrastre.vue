@@ -558,7 +558,7 @@ export default {
         this.arrastresPendientes = this.arrastresPendientes.filter(
           (objeto) => objeto.id !== id
         );
-        this.showErrorToast("El registro ha sido eliminado exitosamente.");
+        this.showSuccessToast("Registro elimiando");
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
         this.showErrorToast("Hubo un error al eliminar el registro.");

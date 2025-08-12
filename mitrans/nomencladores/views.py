@@ -76,7 +76,7 @@ def get_permissions(self):
 class nom_pais_view_set(viewsets.ModelViewSet):
     queryset = nom_pais.objects.all().order_by('-id')
     serializer_class = nom_pais_serializer
-
+    
     
 
     def get_queryset(self):

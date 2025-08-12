@@ -3,7 +3,7 @@
     <div class="card border">
       <div class="card-header bg-light border-bottom">
         <h6 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-check2-square me-2"></i>Registros Situados
+          <i class="bi bi-check2-square me-2"></i>Vagones Situados
         </h6>
       </div>
       <div class="card-body p-3">
@@ -555,7 +555,7 @@ export default {
         this.registroSituado = this.registroSituado.filter(
           (objeto) => objeto.id !== id
         );
-        this.showSuccessToast("El registro ha sido elimiando correctamente");
+        this.showSuccessToast("Registro elimiando");
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
         Swal.fire("Error", "Hubo un error al eliminar el producto.", "error");

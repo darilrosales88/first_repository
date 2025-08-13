@@ -281,7 +281,7 @@ export default {
           'Content-Type': 'application/json'
         };
 
-        const response = await axios.get(`/api/gemar/partes-pbip/${parteId}/`, { headers });
+        const response = await axios.get(`/gemar/partes-pbip/${parteId}/`, { headers });
         
         // Formatear la fecha_hora para el input datetime-local
         let fechaHora = response.data.fecha_hora;
@@ -340,13 +340,13 @@ export default {
 
         // Usamos PATCH para actualización parcial según convenciones REST
         const response = await axios.patch(
-          `/api/gemar/partes-pbip/${this.parte.id}/`,
+          `/gemar/partes-pbip/${this.parte.id}/`,
           payload,
           { headers }
         );
 
         this.mostrarExito('Cambios guardados correctamente');
-        this.$router.push({ name: 'PartesPBIP' });
+        this.$router.push({ name: 'Gemar-Partes-PBIP' });
         
       } catch (error) {
         console.error('Error al guardar cambios:', error);
@@ -393,7 +393,7 @@ export default {
         };
 
         const response = await axios.post(
-          `/api/gemar/partes-pbip/${this.parte.id}/aprobar/`,
+          `/gemar/partes-pbip/${this.parte.id}/aprobar/`,
           {},
           { headers }
         );
@@ -422,7 +422,7 @@ export default {
     },
     
     cancelar() {
-      this.$router.push({ name: 'PartesPBIP' });
+      this.$router.push({ name: 'Gemar-Partes-PBIP' });
     },
     
     formatearFecha(fecha) {

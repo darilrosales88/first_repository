@@ -333,7 +333,7 @@ export default {
         };
         
         const response = await axios.post(
-          '/api/gemar/existencias-mercancia/', 
+          '/gemar/existencias-mercancia/', 
           datosParaEnviar, 
           {
             headers: {
@@ -345,7 +345,7 @@ export default {
         
         if (response.status === 201) {
           this.mostrarExito('Existencia de mercancía creada correctamente');
-          this.$router.push({ name: 'ExistenciasMercancia' });
+          this.$router.push({ name: 'Gemar-Existencias-Mercancia' });
         }
       } catch (error) {
         console.error('Error al guardar existencia:', error);

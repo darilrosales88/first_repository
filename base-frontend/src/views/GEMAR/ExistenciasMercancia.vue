@@ -201,7 +201,7 @@ export default {
           return;
         }
         
-        const response = await axios.get('/api/gemar/existencias-mercancia/', {
+        const response = await axios.get('/gemar/existencias-mercancia/', {
           params: {
             fecha_operacion: this.fechaOperacion
           },
@@ -225,12 +225,12 @@ export default {
     },
     
     navigateToAddMercancia() {
-      this.$router.push({ name: 'AgregarExistenciaMercancia' });
+      this.$router.push({ name: 'Agregar-Existencias-Mercancia' });
     },
     
     editarMercancia(id) {
       this.$router.push({ 
-        name: 'EditarExistenciaMercancia', 
+        name: 'Editar-Existencias-Mercancia', 
         params: { id: id } 
       });
     },
@@ -250,7 +250,7 @@ export default {
         
         if (result.isConfirmed) {
           const token = localStorage.getItem('token');
-          await axios.delete(`/api/gemar/existencias-mercancia/${id}/`, {
+          await axios.delete(`/gemar/existencias-mercancia/${id}/`, {
             headers: { 'Authorization': `Token ${token}` }
           });
           

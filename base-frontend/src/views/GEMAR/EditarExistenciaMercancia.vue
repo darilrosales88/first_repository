@@ -302,7 +302,7 @@ export default {
         }
         
         const token = localStorage.getItem('token');
-        const response = await axios.get(`/api/gemar/existencias-mercancia/${existenciaId}/`, {
+        const response = await axios.get(`/gemar/existencias-mercancia/${existenciaId}/`, {
           headers: { 'Authorization': `Token ${token}` }
         });
         
@@ -378,7 +378,7 @@ export default {
         };
         
         const response = await axios.put(
-          `/api/gemar/existencias-mercancia/${existenciaId}/`, 
+          `/gemar/existencias-mercancia/${existenciaId}/`, 
           datosParaEnviar, 
           {
             headers: {
@@ -390,7 +390,7 @@ export default {
         
         if (response.status === 200) {
           this.mostrarExito('Existencia de mercancía actualizada correctamente');
-          this.$router.push({ name: 'ExistenciasMercancia' });
+          this.$router.push({ name: 'Gemar-Existencias-Mercancia' });
         }
       } catch (error) {
         console.error('Error al guardar cambios:', error);

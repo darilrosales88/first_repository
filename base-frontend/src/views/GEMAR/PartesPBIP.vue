@@ -77,7 +77,9 @@
               <tbody>
                 <tr v-for="(item, index) in partesPBIP" :key="item.id">
                   <td>{{ index + 1 }}</td>
-                  <td>{{ item.buque.nombre_embarcacion || item.buque.nombre }}</td>
+                  <td>
+                    {{ item.buque.nombre_embarcacion || item.buque.nombre }}
+                  </td>
                   <td>{{ item.puerto.nombre_puerto || item.puerto.nombre }}</td>
                   <td>{{ formatDateTime(item.fecha_hora) }}</td>
                   <td>Nivel {{ item.nivel }}</td>
@@ -89,14 +91,14 @@
                         class="btn btn-sm btn-outline-primary"
                         :disabled="item.estado !== 'CREADO'"
                       >
-                        <i class="bi bi-pencil"></i> Editar
+                        <i class="bi bi-pencil"></i>
                       </button>
                       <button
                         @click="eliminarPartePBIP(item.id)"
                         class="btn btn-sm btn-outline-danger"
                         :disabled="item.estado !== 'CREADO'"
                       >
-                        <i class="bi bi-trash"></i> Eliminar
+                        <i class="bi bi-trash"></i>
                       </button>
                     </div>
                   </td>
@@ -156,122 +158,397 @@
 </template>
 
 <script>
-import axios from "axios";
 import Swal from "sweetalert2";
+import axios from "axios";
 import NavbarComponent from "@/components/NavbarComponent.vue";
 
 export default {
-  name: "PartesPBIP",
+  name: "PartesPBIPView",
   components: {
     NavbarComponent,
   },
   data() {
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000;
+    const localISOTime = new Date(now - offset).toISOString().split("T")[0];
+    
     return {
-      fechaOperacion: "",
-      fechaActual: new Date().toISOString().slice(0, 16),
+      componentKey: 0, // Para forzar recarga de componentes
+      userPermissions: [],
+      userGroups: [],
+      loadingPermissions: false,
+      
+      // Datos para gestión de partes
+      informeParteId: null,
+      isExistingRecord: false,
+      existingRecordData: null,
+      checkingExisting: true,
+      
+      // Datos del formulario
+      formData: {
+        fecha_actual: localISOTime,
+        fecha_operacion: localISOTime,
+      },
+      
+      // Listas y datos
       partesPBIP: [],
       listaBuques: [],
       listaPuertos: [],
+      
+      // Estados
       loading: false,
       error: null,
+      success: false,
     };
   },
+
   async created() {
+    await this.fetchUserPermissionsAndGroups();
+    await this.verificarPartesExistentes();
     await this.cargarDatosIniciales();
-    await this.cargarPartesPBIP();
   },
 
   methods: {
-    editarPartePBIP(parte) {
-      this.$router.push({
-        name: "EditarPartePBIP",
-        params: { id: parte.id }
-      });
-    },
-
-    async cargarPartesPBIP() {
+    // Métodos de verificación y carga inicial
+    async verificarPartesExistentes() {
+      this.checkingExisting = true;
       try {
-        this.loading = true;
-        const token = localStorage.getItem('token');
-        const headers = {
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json'
-        };
+        const today = new Date();
+        const fechaFormateada = `${today.getFullYear()}-${String(
+          today.getMonth() + 1
+        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-        const response = await axios.get('/api/gemar/partes-pbip/', { headers });
-        
-        // Asegurarnos de que tenemos un array de resultados
-        this.partesPBIP = response.data.results || response.data || [];
-        
-      } catch (error) {
-        console.error("Error al cargar partes PBIP:", error);
-        this.mostrarError("Error al cargar los partes PBIP existentes");
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    async eliminarPartePBIP(id) {
-      try {
-        const confirmacion = await Swal.fire({
-          title: '¿Estás seguro?',
-          text: "Esta acción no se puede deshacer",
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#d33',
-          cancelButtonColor: '#3085d6',
-          confirmButtonText: 'Sí, eliminar',
-          cancelButtonText: 'Cancelar'
+        const response = await axios.get("/gemar/partes-pbip/", {
+          params: { fecha_actual: fechaFormateada },
         });
 
-        if (confirmacion.isConfirmed) {
-          this.loading = true;
-          const token = localStorage.getItem('token');
-          const headers = {
-            'Authorization': `Token ${token}`,
-            'Content-Type': 'application/json'
-          };
-
-          await axios.delete(`/api/gemar/partes-pbip/${id}/`, { headers });
-          this.mostrarExito("Parte eliminado correctamente");
-          await this.cargarPartesPBIP(); // Recargar la lista
+        if (response.data.existe) {
+          this.informeParteId = response.data.id;
+          this.isExistingRecord = true;
+          this.existingRecordData = response.data;
+          return true;
+        } else {
+          this.informeParteId = null;
+          this.isExistingRecord = false;
+          this.existingRecordData = null;
         }
+        return false;
       } catch (error) {
-        console.error("Error al eliminar parte PBIP:", error);
-        this.mostrarError("Error al eliminar el parte PBIP");
+        console.error("Error al verificar partes:", error);
+        this.showErrorToast("Error al verificar partes existentes");
+        return false;
       } finally {
-        this.loading = false;
+        this.checkingExisting = false;
       }
     },
 
     async cargarDatosIniciales() {
       try {
         this.loading = true;
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         const headers = {
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
         };
 
-        const [buquesRes, puertosRes] = await Promise.all([
+        const [buquesRes, puertosRes, partesRes] = await Promise.all([
           axios.get("/api/embarcaciones/", { headers }),
           axios.get("/api/puertos/", { headers }),
+          axios.get("/gemar/partes-pbip/", { headers })
         ]);
 
         this.listaBuques = buquesRes.data.results || buquesRes.data || [];
         this.listaPuertos = puertosRes.data.results || puertosRes.data || [];
+        this.partesPBIP = partesRes.data.results || partesRes.data || [];
       } catch (error) {
         console.error("Error al cargar datos:", error);
-        this.mostrarError("Error al cargar datos iniciales");
+        this.showErrorToast("Error al cargar datos iniciales");
       } finally {
         this.loading = false;
       }
     },
-    
-    addBuque() {
+
+    // Métodos de gestión de partes
+    async crearPartePBIP() {
+      this.loading = true;
+      this.error = null;
+      this.success = false;
+
+      try {
+        // Verificar si ya existe un parte
+        const verificacion = await axios.get(
+          "/gemar/verificar-partes-pbip-existente/",
+          {
+            params: {
+              fecha_actual: this.formData.fecha_actual
+            }
+          }
+        );
+
+        if (verificacion.data.existe) {
+          this.isExistingRecord = true;
+          await Swal.fire({
+            icon: "info",
+            title: "Parte existente",
+            text: `Ya existe un parte para la fecha ${this.formData.fecha_actual}`,
+            confirmButtonColor: "#002a68",
+          });
+          return;
+        }
+
+        // Crear el nuevo parte
+        const response = await axios.post(
+          "/gemar/partes-pbip/",
+          {
+            fecha_operacion: this.formData.fecha_operacion,
+            buque_id: this.formData.buqueSeleccionado,
+            puerto_id: this.formData.puertoSeleccionado,
+            fecha_hora: this.formData.fechaHoraBuque,
+            nivel: this.formData.nivelSeleccionado,
+          }
+        );
+
+        // Manejar respuesta exitosa
+        this.success = true;
+        this.isExistingRecord = true;
+        this.informeParteId = response.data.id;
+        this.existingRecordData = response.data;
+
+        await Swal.fire({
+          icon: "success",
+          title: "Éxito",
+          text: "Parte PBIP creado correctamente",
+          confirmButtonColor: "#002a68",
+        });
+
+        this.$forceUpdate();
+        await this.cargarDatosIniciales();
+
+      } catch (error) {
+        console.error("Error al crear parte:", error);
+        this.error = error.response?.data || "Error al crear el parte";
+        
+        await Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: JSON.stringify(this.error),
+          confirmButtonColor: "#002a68",
+        });
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async editarPartePBIP(parte) {
       this.$router.push({
-        name: "AgregarBuque",
+        name: "Editar-Partes-PBIP",
+        params: { id: parte.id },
       });
+    },
+
+    async eliminarPartePBIP(id) {
+      try {
+        const confirmacion = await Swal.fire({
+          title: "¿Estás seguro?",
+          text: "Esta acción no se puede deshacer",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#d33",
+          cancelButtonColor: "#3085d6",
+          confirmButtonText: "Sí, eliminar",
+          cancelButtonText: "Cancelar",
+        });
+
+        if (confirmacion.isConfirmed) {
+          this.loading = true;
+          const token = localStorage.getItem("token");
+          const headers = {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          };
+
+          await axios.delete(`/gemar/partes-pbip/${id}/`, { headers });
+          this.showSuccessToast("Parte eliminado correctamente");
+          await this.cargarDatosIniciales();
+        }
+      } catch (error) {
+        console.error("Error al eliminar parte PBIP:", error);
+        this.showErrorToast("Error al eliminar el parte PBIP");
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    // Métodos de estado
+    async CambiarEstado(NuevoEstado) {
+      try {
+        if (!this.informeParteId) {
+          await Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "No se ha encontrado un parte para modificar.",
+            confirmButtonColor: "#002a68",
+          });
+          return;
+        }
+
+        const response = await axios.patch(
+          `/gemar/partes-pbip/${this.informeParteId}/`,
+          { estado_parte: NuevoEstado },
+          { headers: { "Content-Type": "application/json" } }
+        );
+
+        if (response.status === 200) {
+          await Swal.fire({
+            icon: "success",
+            title: "Éxito",
+            text: `Estado actualizado a "${NuevoEstado}" correctamente.`,
+            confirmButtonColor: "#002a68",
+          });
+
+          // Actualizar el estado y forzar recarga del componente
+          this.existingRecordData.estado = NuevoEstado;
+          this.componentKey += 1;
+          await this.cargarDatosIniciales();
+        }
+      } catch (error) {
+        console.error("Error al cambiar estado:", {
+          url: error.config?.url,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+        await Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: error.response?.data?.detail || "Error al actualizar el estado.",
+          confirmButtonColor: "#002a68",
+        });
+      }
+    },
+
+    async rechazar() {
+      if (!this.hasGroup("RevisorGEMAR")) {
+        await Swal.fire({
+          icon: "error",
+          title: "Acceso denegado",
+          text: "No tienes permiso para rechazar el parte PBIP.",
+          confirmButtonColor: "#002a68",
+        });
+        return;
+      }
+      const result = await Swal.fire({
+        title: "¿Estás seguro?",
+        text: "¿Está seguro que desea rechazar este parte PBIP?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#002a68",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Sí, rechazar",
+        cancelButtonText: "Cancelar",
+      });
+
+      if (result.isConfirmed) {
+        await this.CambiarEstado("Rechazado");
+      }
+    },
+
+    async aprobar() {
+      if (!this.hasGroup("RevisorGEMAR")) {
+        await Swal.fire({
+          icon: "error",
+          title: "Acceso denegado",
+          text: "No tienes permiso para aprobar el parte PBIP.",
+          confirmButtonColor: "#002a68",
+        });
+        return;
+      }
+
+      const result = await Swal.fire({
+        title: "¿Estás seguro?",
+        text: "¿Está seguro que desea aprobar este parte PBIP?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#002a68",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Sí, aprobar",
+        cancelButtonText: "Cancelar",
+      });
+
+      if (result.isConfirmed) {
+        await this.CambiarEstado("Aprobado");
+      }
+    },
+
+    async listo() {
+      if (!this.hasGroup("AdminGEMAR")) {
+        await Swal.fire({
+          icon: "error",
+          title: "Acceso denegado",
+          text: "No tienes permiso para cambiar el estado del parte PBIP a 'Listo'.",
+          confirmButtonColor: "#002a68",
+        });
+        return;
+      }
+      const result = await Swal.fire({
+        title: "¿Estás seguro?",
+        text: "¿Está seguro que desea poner a 'Listo' este parte PBIP?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#002a68",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Sí, poner a listo",
+        cancelButtonText: "Cancelar",
+      });
+
+      if (result.isConfirmed) {
+        await this.CambiarEstado("Listo");
+      }
+    },
+
+    // Métodos de utilidad
+    hasPermission(permission) {
+      if (!this.userPermissions || !Array.isArray(this.userPermissions)) {
+        console.warn("userPermissions no está disponible o no es un array");
+        return false;
+      }
+      return this.userPermissions.some((p) => p.codename === permission);
+    },
+
+    hasGroup(group) {
+      if (!this.userGroups || !Array.isArray(this.userGroups)) {
+        return false;
+      }
+      return this.userGroups.some((g) => g.name === group);
+    },
+
+    async fetchUserPermissionsAndGroups() {
+      this.loadingPermissions = true;
+      try {
+        const userId = localStorage.getItem("userid");
+        if (userId) {
+          const response = await axios.get(
+            `/apiAdmin/user/${userId}/permissions-and-groups/`
+          );
+          
+          this.userPermissions = response.data?.permissions || [];
+          this.userGroups = response.data?.groups || [];
+          
+          // Verificar si el usuario tiene permisos para GEMAR
+          const hasGemarAccess = this.userGroups.some(g => 
+            ['AdminGEMAR', 'VisualizadorGEMAR', 'AdminGemar', 'VisualizadorGemar'].includes(g.name)
+          );
+          
+          if (!hasGemarAccess) {
+            this.$router.push('/unauthorized');
+          }
+        }
+      } catch (error) {
+        console.error("Error al obtener permisos:", error);
+        this.userPermissions = [];
+        this.userGroups = [];
+      } finally {
+        this.loadingPermissions = false;
+      }
     },
 
     formatDateTime(dateTime) {
@@ -281,122 +558,47 @@ export default {
       return `${date} ${h}:${m}`;
     },
 
-    async aceptar() {
-      if (!this.validarFormulario()) return;
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
 
-      try {
-        this.loading = true;
-        const token = localStorage.getItem('token');
-        
-        if (!token) {
-          this.mostrarError('No se encontró el token de autenticación');
-          return;
-        }
-
-        const headers = {
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json'
-        };
-
-        const payload = {
-          fecha_operacion: this.fechaOperacion,
-          buque_id: this.buqueSeleccionado,
-          puerto_id: this.puertoSeleccionado,
-          fecha_hora: this.fechaHoraBuque,
-          nivel: this.nivelSeleccionado
-        };
-
-        const response = await axios.post(
-          '/api/gemar/partes-pbip/',
-          payload,
-          { headers }
-        );
-        
-        this.mostrarExito("Parte PBIP creado correctamente");
-        await this.cargarPartesPBIP(); // Recargar la lista
-      } catch (error) {
-        console.error("Error al guardar:", error);
-        let errorMessage = "Error al crear el parte PBIP";
-        if (error.response) {
-          if (error.response.status === 400) {
-            errorMessage = error.response.data.detail || "Datos inválidos";
-            if (error.response.data) {
-              for (const key in error.response.data) {
-                if (Array.isArray(error.response.data[key])) {
-                  errorMessage += `\n${key}: ${error.response.data[key].join(', ')}`;
-                }
-              }
-            }
-          } else if (error.response.status === 401) {
-            errorMessage = "No autorizado - por favor inicie sesión nuevamente";
-          }
-        }
-        this.mostrarError(errorMessage);
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    validarFormulario() {
-      if (!this.fechaOperacion) {
-        this.error = "La fecha de operación es requerida";
-        this.mostrarError(this.error);
-        return false;
-      }
-
-      const fechaOperacion = new Date(this.fechaOperacion);
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
-      
-      if (fechaOperacion > hoy) {
-        this.error = "La fecha de operación no puede ser futura";
-        this.mostrarError(this.error);
-        return false;
-      }
-
-      this.error = null;
-      return true;
-    },
-
-    cancelar() {
-      this.fechaOperacion = "";
-    },
-
-    async rechazar() {
-      try {
-        this.mostrarExito("Parte rechazado correctamente");
-      } catch (error) {
-        this.mostrarError("Error al rechazar el parte");
-      }
-    },
-
-    async aprobar() {
-      try {
-        this.mostrarExito("Parte aprobado correctamente");
-      } catch (error) {
-        this.mostrarError("Error al aprobar el parte");
-      }
-    },
-
-    listo() {
-      this.mostrarExito("Parte marcado como listo");
-    },
-
-    mostrarError(mensaje) {
-      Swal.fire({
+      Toast.fire({
         icon: "error",
-        title: "Error",
-        text: mensaje,
-        confirmButtonText: "Aceptar",
+        title: message,
       });
     },
 
-    mostrarExito(mensaje) {
-      Swal.fire({
+    showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#00C851",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
         icon: "success",
-        title: "Éxito",
-        text: mensaje,
-        confirmButtonText: "Aceptar",
+        title: message,
       });
     },
   },

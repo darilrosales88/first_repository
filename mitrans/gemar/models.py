@@ -229,14 +229,14 @@ class gemar_parte_programacion_maniobras(models.Model):
 class gemar_programacion_maniobras(models.Model):
     # Opciones para campos de selección
     FORMATO_HORA_CHOICES = [
-        (1, '24 horas'),
-        (2, 'AM/PM'),
-        (3, 'SIN DETERMINAR'),
+        ("1", '24 horas'),
+        ("2", 'AM/PM'),
+        ("3", 'SIN DETERMINAR'),
     ]
     
     AM_PM_CHOICES = [
-        (1, 'AM'),
-        (2, 'PM'),
+        ("1", 'AM'),
+        ("2", 'PM'),
     ]
     
     # Campos principales

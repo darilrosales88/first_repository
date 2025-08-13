@@ -2,7 +2,7 @@ from django.db import models
 from Administracion.models import CustomUser
 from nomencladores.models import( nom_producto,nom_tipo_embalaje,nom_unidad_medida,
                                  nom_entidades,nom_incidencia,nom_provincia,nom_terminal,nom_atraque,
-                                 nom_tipo_maniobra_portuaria,nom_puerto,nom_osde_oace_organismo,nom_embarcacion as Buque
+                                 nom_tipo_maniobra_portuaria,nom_puerto,nom_osde_oace_organismo
                                  )
 
 from django.dispatch import receiver
@@ -11,7 +11,17 @@ from django.db.models.signals import pre_save, post_save, post_delete,pre_delete
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from django.db import models
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
+from nomencladores.models import (
+    nom_embarcacion as Buque, nom_puerto, nom_terminal, nom_producto, 
+    nom_osde_oace_organismo, nom_tipo_embalaje, nom_unidad_medida
+)
 from Administracion.models import CustomUser
+from django.utils import timezone
+from django.db import models
+from Administracion.models import CustomUser
+from nomencladores.models import nom_producto, nom_tipo_embalaje, nom_unidad_medida, nom_entidades, nom_incidencia, nom_provincia
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 class gemar_parte_hecho_extraordinario(models.Model):
@@ -356,44 +366,114 @@ class gemar_programacion_maniobras(models.Model):
         return f"Buque {self.buque} - puerto {self.puerto} ({self.fecha_eta})"
     
 class PartePBIP(models.Model):
+    
+    # Opciones para campos de selección
     NIVEL_CHOICES = [
         (1, 'Nivel 1'),
         (2, 'Nivel 2'),
         (3, 'Nivel 3'),
     ]
-
-    fecha_operacion = models.DateField(_('Fecha de operación'))
-    fecha_creacion = models.DateTimeField(_('Fecha de creación'), auto_now_add=True)
-    buque = models.ForeignKey(Buque, on_delete=models.PROTECT, verbose_name=_('Buque'))
-    puerto = models.ForeignKey(nom_puerto, on_delete=models.PROTECT, verbose_name=_('Puerto'))
-    fecha_hora = models.DateTimeField(_('Fecha y hora'))
-    nivel = models.IntegerField(_('Nivel'), choices=NIVEL_CHOICES)
-    creado_por = models.ForeignKey(CustomUser, on_delete=models.PROTECT, verbose_name=_('Creado por'))
-    estado = models.CharField(_('Estado'), max_length=20, default='CREADO', choices=[
+    
+    ESTADO_CHOICES = [
         ('CREADO', 'Creado'),
         ('APROBADO', 'Aprobado'),
         ('CANCELADO', 'Cancelado'),
-    ])
+    ]
+
+    # Campos de fecha y hora
+    fecha_operacion = models.DateField(
+        verbose_name=_('Fecha de operación'),
+        help_text=_('Fecha en que se realiza la operación portuaria')
+    )
+    
+    fecha_creacion = models.DateTimeField(
+        verbose_name=_('Fecha de creación'),
+        auto_now_add=True,
+        help_text=_('Fecha y hora en que se creó el registro')
+    )
+    
+    fecha_hora = models.DateTimeField(
+        verbose_name=_('Fecha y hora'),
+        help_text=_('Fecha y hora específica del evento')
+    )
+
+    # Relaciones con otros modelos
+    buque = models.ForeignKey(
+        Buque,
+        on_delete=models.PROTECT,
+        verbose_name=_('Buque'),
+        related_name='partes_pbip_buque'
+    )
+    
+    puerto = models.ForeignKey(
+        nom_puerto,
+        on_delete=models.PROTECT,
+        verbose_name=_('Puerto'),
+        related_name='partes_pbip_puerto'
+    )
+    
+    creado_por = models.ForeignKey(
+        CustomUser,
+        on_delete=models.PROTECT,
+        verbose_name=_('Creado por'),
+        related_name='partes_pbip_creados'
+    )
+    
     aprobado_por = models.ForeignKey(
-        CustomUser, 
-        on_delete=models.PROTECT, 
+        CustomUser,
+        on_delete=models.PROTECT,
         verbose_name=_('Aprobado por'),
         null=True,
         blank=True,
         related_name='partes_pbip_aprobados'
     )
 
+    # Campos de estado y nivel
+    nivel = models.IntegerField(
+        verbose_name=_('Nivel de seguridad'),
+        choices=NIVEL_CHOICES,
+        help_text=_('Nivel de protección establecido para la operación')
+    )
+    
+    estado = models.CharField(
+        verbose_name=_('Estado del parte'),
+        max_length=20,
+        choices=ESTADO_CHOICES,
+        default='CREADO',
+        help_text=_('Estado actual del parte PBIP')
+    )
+
+    # Metadata
     class Meta:
         verbose_name = _('Parte PBIP')
         verbose_name_plural = _('Partes PBIP')
         unique_together = ('buque', 'puerto', 'nivel', 'fecha_operacion')
+        ordering = ['-fecha_creacion']
+        indexes = [
+            models.Index(fields=['fecha_operacion']),
+            models.Index(fields=['estado']),
+            models.Index(fields=['nivel']),
+        ]
 
+    # Métodos
     def __str__(self):
-        return f"PBIP - {self.buque.nombre} - {self.puerto.nombre} - {self.get_nivel_display()}"
+        return f"PBIP - {self.buque.nombre} - {self.puerto.nombre} - Nivel {self.get_nivel_display()}"
 
     def clean(self):
-        if self.fecha_operacion > timezone.now().date():
-            raise ValidationError(_('La fecha de operación no puede ser futura.'))
+        """
+        Validación para asegurar que la fecha de operación no sea futura
+        """
+        if self.fecha_operacion and self.fecha_operacion > timezone.now().date():
+            raise ValidationError({
+                'fecha_operacion': _('La fecha de operación no puede ser futura.')
+            })
+            
+    def save(self, *args, **kwargs):
+        """
+        Sobreescritura del método save para incluir validaciones adicionales
+        """
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 # gemar/models.py (actualización de CargaVieja)
 class CargaVieja(models.Model):
@@ -503,3 +583,4 @@ class ExistenciaMercancia(models.Model):
             self.contiene = None
             
         if self.existencia < 0:
+            raise ValidationError(_('La existencia no puede ser negativa.'))

@@ -594,6 +594,9 @@ export default {
       } catch (error) {
         console.error("Error al obtener los equipos:", error);
         Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
+      }finally {
+        this.formData.producto = [];
+        this.vagonesAgregados=[];
       }
     },
 

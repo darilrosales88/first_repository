@@ -487,7 +487,8 @@ export default {
         if (!this.formData.tipo_equipo) {
           return;
         }
-
+        this.formData.producto = [];
+        this.vagonesAgregados=[];
         url += `?tipo_equipo=${this.formData.tipo_equipo}`;
         const response = await axios.get(url);
 

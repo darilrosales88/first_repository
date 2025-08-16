@@ -481,7 +481,7 @@ export default {
         tipo_equipo: "",
         estado: "cargado",
         operacion: "",
-        productos: "",
+        producto: "",
         situados: 1,
         pendiente_proximo_dia: 0,
         observaciones: "",
@@ -690,7 +690,8 @@ export default {
         if (!this.formData.tipo_equipo) {
           return;
         }
-
+        this.formData.producto = [];
+        this.vagonesAgregados=[];
         // al tipo de equipo específico lo añadimos como parámetro
         url += `?tipo_equipo=${this.formData.tipo_equipo}`;
         const response = await axios.get(url);

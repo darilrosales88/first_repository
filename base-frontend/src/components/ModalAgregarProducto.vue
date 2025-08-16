@@ -136,6 +136,27 @@
                     <option value="prod_varios">Productos varios</option>
                   </select>
                 </div>
+
+                  <!-- Campo: Tipo Equipo -->
+                <div class="ufc-input-group">
+                  <label for="contiene" class="form-label small fw-semibold text-secondary">
+                    Tipo Equipo <span class="required-asterisk">*</span>
+                  </label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="formData.tipo_equipo"
+                    id="tipo_equipo"
+                    name="tipo_equipo"
+                    required>
+                    <option
+                      v-for="tipo_equipo in tipo_equipos"
+                      :key="tipo_equipo.id"
+                      :value="tipo_equipo.id">
+                      {{ tipo_equipo.tipo_equipo_name }}
+                    </option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -181,16 +202,19 @@ export default {
         cantidad: 0,
         estado: "vacio",
         contiene: "",
+        tipo_equipo:""
       },
       productos: [],
       embalajes: [],
       unidades: [],
+      tipo_equipos: [],
     };
   },
   mounted() {
     this.getProductos();
     this.getEmbalaje();
     this.getUnidades();
+    this.getTipoEquipo();
   },
   methods: {
     async submitForm() {
@@ -221,6 +245,15 @@ export default {
       } catch (error) {
         console.error("Error al obtener los productos:", error);
         Swal.fire("Error", "Hubo un error al obtener los productos.", "error");
+      }
+    },
+    async getTipoEquipo() {
+      try {
+        const response = await axios.get("/api/tipo-e-f-no-locomotora/");
+        this.tipo_equipos = response.data;
+      } catch (error) {
+        console.error("Error al obtener los tipos de equipo:", error);
+        Swal.fire("Error", "Hubo un error al obtener los tipos de equipo.", "error");
       }
     },
     async getEmbalaje() {

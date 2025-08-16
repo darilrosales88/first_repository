@@ -75,3 +75,4 @@ copias_no_subir
 
 ## Archivos extras
 *.sql
+.sqlquery

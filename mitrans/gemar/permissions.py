@@ -23,7 +23,3 @@ class IsVisualizadorGemarPermission(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return False
-
-class ReadOnly(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and request.method in permissions.SAFE_METHODS

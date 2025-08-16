@@ -1,4 +1,15 @@
 #4. Creacion de las vistas
+from rest_framework import viewsets, status, filters
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.views import APIView
+from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
+from django.db.models import Q
+from rest_framework.pagination import PageNumberPagination
+from gemar.models import PartePBIP, CargaVieja, ExistenciaMercancia
+from gemar.Administracion.permissions import IsGEMARUser, IsAdminUser
 
 #4.1 una variante para trabajar con los serializadores  es la propiedad viewsets
 # de rest_framework, facilita el CRUD
@@ -11,7 +22,8 @@ from .models import (gemar_hecho_extraordinario,gemar_parte_hecho_extraordinario
 #importacion de serializadores asociados a los modelos
 from .serializers import (gemar_hecho_extraordinario_serializer,gemar_parte_hecho_extraordinario_serializer,
                           gemar_programacion_maniobras,gemar_programacion_maniobras_serializer,
-                          gemar_parte_programacion_maniobras_serializer)
+                          gemar_parte_programacion_maniobras_serializer, PartePBIPSerializer, CargaViejaSerializer, 
+                          ExistenciaMercanciaSerializer)
 
 
 from Administracion.models import Auditoria
@@ -716,12 +728,291 @@ def verificar_parte_programacion_maniobra_existente(request):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 #**********************************************************************************************************************
-#LISTA DE TODOS LOS PARTES (HE Y PROGRAMACION DE MANIOBRAS)
+
+
+#Lo que hizo Raider
+class PartePBIPViewSet(viewsets.ModelViewSet):
+    queryset = PartePBIP.objects.all().order_by('-fecha_creacion')
+    serializer_class = PartePBIPSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser | IsGEMARUser]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['buque', 'puerto', 'nivel', 'fecha_operacion', 'estado']
+    search_fields = ['buque__nombre_embarcacion', 'puerto__nombre_puerto']
+    ordering_fields = ['fecha_operacion', 'fecha_creacion']
+    ordering = ['-fecha_creacion']
+    pagination_class = PageNumberPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Filtrado por fecha si se proporciona
+        fecha = self.request.query_params.get('fecha')
+        
+        if fecha:
+            queryset = queryset.filter(fecha_operacion=fecha)
+            
+        return queryset
+    
+    def create(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminGEMAR').exists():            
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Llama al método create del padre (que a su vez llama a perform_create)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(creado_por=request.user)
+        headers = self.get_success_headers(serializer.data)
+        
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion=f"Insertar parte PBIP: {serializer.data['id']}",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
+    def perform_create(self, serializer):
+        user = self.request.user
+        print(f"[VIEW] Usuario autenticado: {user.username}")
+        
+        # Asignar valores al serializer
+        instance = serializer.save(
+            creado_por=user,
+            estado='CREADO'
+        )
+
+    #Funcion para la actualizacion del estado del parte de PBIP
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        
+        # Solo permitir actualizar el estado
+        if 'estado' not in request.data:
+            return Response(
+                {"detail": "Se requiere el campo 'estado'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Preparar datos para la actualización
+        update_data = {'estado': request.data['estado']}
+        
+        # Si el nuevo estado es "APROBADO", asignar el usuario actual a aprobado_por
+        if request.data['estado'] == 'APROBADO':
+            update_data['aprobado_por'] = request.user.id
+        
+        serializer = self.get_serializer(
+            instance, 
+            data=update_data, 
+            partial=True
+        )
+        
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        # Auditoría centralizada
+        registrar_auditoria(request, f"Actualizar estado del parte PBIP {serializer.data['estado']}")
+
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminGEMAR').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        parte_pbip = serializer.save()
+
+        # Registrar auditoría
+        registrar_auditoria(request, f"Modificar parte PBIP: {parte_pbip.id}")
+
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminGEMAR').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        instance = self.get_object()
+        id_parte = instance.id
+
+        # Registrar auditoría antes de eliminar
+        registrar_auditoria(request, f"Eliminar parte PBIP: {id_parte}")
+        
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorGEMAR').exists() and not request.user.groups.filter(name='AdminGEMAR').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        # Registrar la acción en el modelo de Auditoria
+        registrar_auditoria(request, "Visualizar lista de partes PBIP.")
+
+        return super().list(request, *args, **kwargs)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsGEMARUser | IsAdminUser])
+    def aprobar(self, request, pk=None):
+        parte = self.get_object()
+        parte.estado = 'APROBADO'
+        parte.aprobado_por = request.user
+        parte.save()
+        
+        # Registrar auditoría
+        registrar_auditoria(request, f"Aprobar parte PBIP: {parte.id}")
+        
+        return Response({'status': 'Parte PBIP aprobado'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsGEMARUser | IsAdminUser])
+    def rechazar(self, request, pk=None):
+        parte = self.get_object()
+        parte.estado = 'RECHAZADO'
+        parte.save()
+        
+        # Registrar auditoría
+        registrar_auditoria(request, f"Rechazar parte PBIP: {parte.id}")
+        
+        return Response({'status': 'Parte PBIP rechazado'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsGEMARUser | IsAdminUser])
+    def cancelar(self, request, pk=None):
+        parte = self.get_object()
+        parte.estado = 'CANCELADO'
+        parte.save()
+        
+        # Registrar auditoría
+        registrar_auditoria(request, f"Cancelar parte PBIP: {parte.id}")
+        
+        return Response({'status': 'Parte PBIP cancelado'}, status=status.HTTP_200_OK)
+
+class CargaViejaViewSet(viewsets.ModelViewSet):
+    queryset = CargaVieja.objects.all()
+    serializer_class = CargaViejaSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser | IsGEMARUser]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['parte', 'puerto', 'terminal', 'producto', 'organismo']
+    search_fields = ['producto__nombre', 'manifiesto', 'organismo__nombre', 'puerto__nombre', 'terminal__nombre']
+    ordering_fields = ['parte__fecha_operacion']
+    ordering = ['-parte__fecha_operacion']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        parte_id = self.request.query_params.get('parte_id')
+        if parte_id:
+            queryset = queryset.filter(parte_id=parte_id)
+        return queryset
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer):
+        serializer.save(creado_por=self.request.user)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsGEMARUser | IsAdminUser])
+    def aprobar(self, request, pk=None):
+        carga = self.get_object()
+        carga.estado = 'APROBADO'
+        carga.aprobado_por = request.user
+        carga.save()
+        return Response({'status': 'Carga aprobada'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsGEMARUser | IsAdminUser])
+    def rechazar(self, request, pk=None):
+        carga = self.get_object()
+        carga.estado = 'RECHAZADO'
+        carga.save()
+        return Response({'status': 'Carga rechazada'}, status=status.HTTP_200_OK)
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            self.permission_classes = [IsAuthenticated, IsAdminUser | IsGEMARUser]
+        return super().get_permissions()
+
+class ExistenciaMercanciaViewSet(viewsets.ModelViewSet):
+    queryset = ExistenciaMercancia.objects.all()
+    serializer_class = ExistenciaMercanciaSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser | IsGEMARUser]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['terminal', 'tipo', 'tipo_producto', 'producto', 'estado_registro']
+    search_fields = ['producto__nombre', 'terminal__nombre']
+    ordering_fields = ['fecha_operacion', 'fecha_creacion']
+    ordering = ['-fecha_operacion']
+
+    def perform_create(self, serializer):
+        serializer.save(creado_por=self.request.user)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsGEMARUser | IsAdminUser])
+    def aprobar(self, request, pk=None):
+        existencia = self.get_object()
+        existencia.estado_registro = 'APROBADO'
+        existencia.aprobado_por = request.user
+        existencia.save()
+        return Response({'status': 'Existencia aprobada'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsGEMARUser | IsAdminUser])
+    def rechazar(self, request, pk=None):
+        existencia = self.get_object()
+        existencia.estado_registro = 'RECHAZADO'
+        existencia.save()
+        return Response({'status': 'Existencia rechazada'}, status=status.HTTP_200_OK)
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            self.permission_classes = [IsAuthenticated, IsAdminUser]
+        return super().get_permissions()
+
+
+class ResumenDiarioView(APIView):
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        fecha = request.query_params.get('fecha')
+        if not fecha:
+            return Response(
+                {'error': 'El parámetro fecha es requerido.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Obtener todos los partes del día
+        partes_pbip = PartePBIP.objects.filter(fecha_operacion=fecha)
+        cargas_viejas = CargaVieja.objects.filter(parte__fecha_operacion=fecha)
+        existencias = ExistenciaMercancia.objects.filter(fecha_operacion=fecha)
+        
+        resumen = {
+            'total_partes_pbip': partes_pbip.count(),
+            'total_cargas_viejas': cargas_viejas.count(),
+            'total_existencias': existencias.count(),
+            'partes_pbip': PartePBIPSerializer(partes_pbip, many=True).data,
+            'cargas_viejas': CargaViejaSerializer(cargas_viejas, many=True).data,
+            'existencias': ExistenciaMercanciaSerializer(existencias, many=True).data
+        }
+        
+        return Response(resumen)
+#LISTA DE TODOS LOS PARTES (HE, PROGRAMACION DE MANIOBRAS Y PBIP)
 @api_view(['GET'])
 def listar_partes_combinados(request):
     """
-    Endpoint para listar todos los partes (hechos extraordinarios y programación de maniobras)
-    ordenados por fecha_actual descendente (incluyendo hora).
+    Endpoint para listar todos los partes (hechos extraordinarios, programación de maniobras y PBIP)
+    ordenados por fecha_actual/fecha_operacion descendente (incluyendo hora).
     """
     try:
         # Obtener parámetros opcionales de filtrado
@@ -740,6 +1031,8 @@ def listar_partes_combinados(request):
         hechos_extraordinarios = gemar_parte_hecho_extraordinario.objects.all()
         # Obtener partes de programación de maniobras
         programacion_maniobras = gemar_parte_programacion_maniobras.objects.all()
+        # Obtener partes PBIP
+        partes_pbip = PartePBIP.objects.all()
         
         # Aplicar filtros si existen
         if fecha_inicio:
@@ -747,6 +1040,7 @@ def listar_partes_combinados(request):
                 fecha_inicio_obj = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
                 hechos_extraordinarios = hechos_extraordinarios.filter(fecha_actual__date__gte=fecha_inicio_obj)
                 programacion_maniobras = programacion_maniobras.filter(fecha_actual__date__gte=fecha_inicio_obj)
+                partes_pbip = partes_pbip.filter(fecha_operacion__gte=fecha_inicio_obj)
             except ValueError:
                 return Response({"error": "Formato de fecha_inicio inválido. Use YYYY-MM-DD"}, status=400)
         
@@ -755,19 +1049,42 @@ def listar_partes_combinados(request):
                 fecha_fin_obj = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
                 hechos_extraordinarios = hechos_extraordinarios.filter(fecha_actual__date__lte=fecha_fin_obj)
                 programacion_maniobras = programacion_maniobras.filter(fecha_actual__date__lte=fecha_fin_obj)
+                partes_pbip = partes_pbip.filter(fecha_operacion__lte=fecha_fin_obj)
             except ValueError:
                 return Response({"error": "Formato de fecha_fin inválido. Use YYYY-MM-DD"}, status=400)
         
         if estado:
             hechos_extraordinarios = hechos_extraordinarios.filter(estado_parte=estado)
             programacion_maniobras = programacion_maniobras.filter(estado_parte=estado)
+            partes_pbip = partes_pbip.filter(estado=estado)
         
         # Serializar los datos
         hechos_serializer = gemar_parte_hecho_extraordinario_serializer(hechos_extraordinarios, many=True)
         programacion_serializer = gemar_parte_programacion_maniobras_serializer(programacion_maniobras, many=True)
+        pbip_serializer = PartePBIPSerializer(partes_pbip, many=True)
         
         # Combinar los resultados
         combined_data = hechos_serializer.data + programacion_serializer.data
+        
+        # Transformar datos PBIP para mantener consistencia con los otros partes
+        pbip_data = []
+        for parte in pbip_serializer.data:
+            pbip_data.append({
+                'id': parte['id'],
+                'tipo_parte': 'PBIP',
+                'fecha_actual': parte['fecha_operacion'],  # Usamos fecha_operacion como fecha_actual
+                'estado_parte': parte['estado'],
+                'creado_por': parte['creado_por'],
+                'aprobado_por': parte['aprobado_por'],
+                'buque': parte['buque'],
+                'puerto': parte['puerto'],
+                'detalles': {
+                    'nivel': parte['nivel'],
+                    'descripcion': 'Parte PBIP'  # Campo adicional para consistencia
+                }
+            })
+        
+        combined_data += pbip_data
         
         # Ordenar por fecha_actual descendente (más reciente primero)
         combined_data_sorted = sorted(
@@ -777,7 +1094,7 @@ def listar_partes_combinados(request):
         )
         
         # Registrar auditoría
-        registrar_auditoria(request, "Visualización de lista combinada de partes")
+        registrar_auditoria(request, "Visualización de lista combinada de partes (HE, Maniobras y PBIP)")
         
         return Response({
             "count": len(combined_data_sorted),
@@ -786,4 +1103,3 @@ def listar_partes_combinados(request):
         
     except Exception as e:
         return Response({"error": str(e)}, status=500)
-

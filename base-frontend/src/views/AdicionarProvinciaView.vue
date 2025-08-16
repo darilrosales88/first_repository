@@ -1,39 +1,70 @@
 <template>
   <div>
-    <div style=" background-color: #002A68; color: white; text-align: right;">
+    <div style="background-color: #002a68; color: white; text-align: right">
       <h6>Bienvenido:</h6>
-    </div>  
+    </div>
     <br />
     <Navbar-Component />
-    
-    <div class="form-container">
-      <h3>Crear Provincia:</h3>
+    <div class="form-container" style="margin-left: 18em; width: 75%">
+      <h3 style="color: #002a68">Adicionar Provincia:</h3>
       <form @submit.prevent="createProvincia">
-        <!-- Campo Código -->
         <div class="form-row">
-        <div class="mb-3">
-          <label for="codigo" class="form-label">Código:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="codigo" v-model="codigo" required />
+          <div class="mb-3">
+            <label for="codigo" class="form-label"
+              >Código:<span style="color: red">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="codigo"
+              v-model="codigo"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="nombre_provincia" class="form-label"
+              >Nombre de la Provincia:<span style="color: red">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="nombre_provincia"
+              v-model="nombre_provincia"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="pais" class="form-label"
+              >País:<span style="color: red">*</span></label
+            >
+            <select
+              class="form-control"
+              id="pais"
+              v-model="pais"
+              required
+            >
+              <option value="">-Seleccione-</option>
+              <option
+                v-for="item in paisOptions"
+                :key="item.id"
+                :value="item.id"
+              >
+                {{ item.nombre_pais }}
+              </option>
+            </select>
+          </div>
         </div>
 
-        <!-- Campo Nombre de la Provincia -->
-        <div class="mb-3">
-          <label for="nombre_provincia" class="form-label">Nombre de la Provincia:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="nombre_provincia" v-model="nombre_provincia" required />
-        </div>
-
-        <!-- Campo País -->
-        <div class="mb-3">
-          <label for="pais" class="form-label">País:<span style="color: red;">*</span></label>
-          <select class="form-control" id="pais" v-model="pais" required>
-            <option value="">-Seleccione-</option>
-            <option v-for="item in paisOptions" :key="item.id" :value="item.id">{{ item.nombre_pais }}</option>
-          </select>
-        </div>
-</div>
-        <!-- Botones -->
         <div class="form-buttons">
-          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button
+            type="button"
+            @click="confirmCancel"
+            style="color: white; text-decoration: none"
+          >
+            Cancelar
+          </button>
           <button type="submit">Aceptar</button>
         </div>
       </form>
@@ -43,17 +74,16 @@
 
 <style scoped>
 body {
-  background-color: #F2F2F2;
+  background-color: #f2f2f2;
 }
 
 .form-container {
-  max-width: 600px; /* Ancho reducido */
-  margin: 20px ; /* Centra el formulario */
+  max-width: 600px;
+  margin: 20px;
   padding: 20px;
   margin-left: 220px;
   background-color: rgb(245, 245, 245);
   border-radius: 8px;
- 
 }
 
 h3 {
@@ -61,10 +91,12 @@ h3 {
   margin-bottom: 20px;
   font-size: 18px;
 }
-.form-label{
+
+.form-label {
   font-size: 14px;
   text-align: left;
 }
+
 form {
   display: flex;
   flex-direction: column;
@@ -84,9 +116,9 @@ form {
 }
 
 .form-control {
-  padding: 1px 0px; /* Padding reducido */
-  height: 25px; /* Altura reducida */
-  font-size: 14px; /* Tamaño de fuente reducido */
+  padding: 1px 0px;
+  height: 25px;
+  font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 2px;
 }
@@ -99,12 +131,12 @@ form {
 
 button {
   margin-left: 10px;
-  padding: 6px 15px; /* Padding reducido */
+  padding: 6px 15px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
-  font-size: 14px; /* Tamaño de fuente reducido */
+  font-size: 14px;
 }
 
 button[type="button"] {

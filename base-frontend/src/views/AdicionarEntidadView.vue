@@ -1,52 +1,119 @@
 <template>
   <div>
-    <div style=" background-color: #002A68; color: white; text-align: right;">
+    <div style="background-color: #002a68; color: white; text-align: right">
       <h6>Bienvenido:</h6>
-    </div>  
+    </div>
     <br />
     <Navbar-Component />
-    
-    <div class="form-container">
-      <h3>Crear Entidad</h3>
+    <div class="form-container" style="margin-left: 18em; width: 75%">
+      <h3 style="color: #002a68">Adicionar Entidad</h3>
       <form @submit.prevent="saveItem" class="form-grid">
         <div class="mb-3">
-          <label for="nombre" class="form-label">Nombre:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="nombre" v-model="nombre" required />
+          <label for="nombre" class="form-label"
+            >Nombre:<span style="color: red">*</span></label
+          >
+          <input
+            type="text"
+            class="form-control"
+            id="nombre"
+            v-model="nombre"
+            required
+          />
         </div>
 
         <div class="mb-3">
-          <label for="abreviatura" class="form-label">Abreviatura:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="abreviatura" v-model="abreviatura" required />
+          <label for="abreviatura" class="form-label"
+            >Abreviatura:<span style="color: red">*</span></label
+          >
+          <input
+            type="text"
+            class="form-control"
+            id="abreviatura"
+            v-model="abreviatura"
+            required
+          />
         </div>
 
         <div class="mb-3">
-          <label for="codigo_reeup" class="form-label">Código REEUP:</label>
-          <input type="text" class="form-control" id="codigo_reeup" v-model="codigo_reeup" />
+          <label for="codigo_reeup" class="form-label"
+            >Código REEUP:</label
+          >
+          <input
+            type="text"
+            class="form-control"
+            id="codigo_reeup"
+            v-model="codigo_reeup"
+          />
         </div>
 
         <div class="mb-3">
-          <label for="osde_oace_organismo" class="form-label">OSDE/OACE u organismo:<span style="color: red;">*</span></label>
-          <select class="form-control" id="osde_oace_organismo" v-model="osde_oace_organismo" required>
-            <option v-for="item in osdeOaceOrganismoOptions" :key="item.id" :value="item.id">{{ item.nombre }}</option>
+          <label for="osde_oace_organismo" class="form-label"
+            >OSDE/OACE u organismo:<span style="color: red">*</span></label
+          >
+          <select
+            class="form-control"
+            id="osde_oace_organismo"
+            v-model="osde_oace_organismo"
+            required
+          >
+            <option
+              v-for="item in osdeOaceOrganismoOptions"
+              :key="item.id"
+              :value="item.id"
+            >
+              {{ item.nombre }}
+            </option>
           </select>
         </div>
 
         <div class="mb-3">
-          <label for="provincia" class="form-label">Provincia:<span style="color: red;">*</span></label>
-          <select class="form-control" id="provincia" v-model="provincia" required>
-            <option v-for="item in provinciaOptions" :key="item.id" :value="item.id">{{ item.nombre_provincia }}</option>
+          <label for="provincia" class="form-label"
+            >Provincia:<span style="color: red">*</span></label
+          >
+          <select
+            class="form-control"
+            id="provincia"
+            v-model="provincia"
+            required
+          >
+            <option
+              v-for="item in provinciaOptions"
+              :key="item.id"
+              :value="item.id"
+            >
+              {{ item.nombre_provincia }}
+            </option>
           </select>
         </div>
 
         <div class="mb-3">
-          <label for="tipo_entidad" class="form-label">Tipo de entidad:<span style="color: red;">*</span></label>
-          <select class="form-control" id="tipo_entidad" v-model="tipo_entidad" required>
-            <option v-for="option in tipoEntidadOptions" :key="option.value" :value="option.value">{{ option.text }}</option>
+          <label for="tipo_entidad" class="form-label"
+            >Tipo de entidad:<span style="color: red">*</span></label
+          >
+          <select
+            class="form-control"
+            id="tipo_entidad"
+            v-model="tipo_entidad"
+            required
+          >
+            <option
+              v-for="option in tipoEntidadOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.text }}
+            </option>
           </select>
         </div>
 
         <div class="form-buttons">
-          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button
+            type="button"
+            @click="confirmCancel"
+            style="color: white; text-decoration: none"
+          >
+            Cancelar
+          </button>
           <button type="submit">Aceptar</button>
         </div>
       </form>
@@ -56,12 +123,12 @@
 
 <style scoped>
 body {
-  background-color: #F2F2F2;
+  background-color: #f2f2f2;
 }
 
 .form-container {
-  max-width: 680px; /* Ajusta el ancho máximo del contenedor */
-  margin: 20px; /* Centra el formulario */
+  max-width: 680px;
+  margin: 20px;
   padding: 20px;
   margin-left: 220px;
   border-radius: 8px;
@@ -81,8 +148,8 @@ h3 {
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 2 columnas de igual tamaño */
-  gap: 15px; /* Espacio entre los elementos */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
 }
 
 .mb-3 {
@@ -93,15 +160,15 @@ h3 {
 }
 
 .form-control {
-  padding: 1px 0px; /* Padding reducido */
-  height: 25px; /* Altura reducida */
-  font-size: 14px; /* Tamaño de fuente reducido */
+  padding: 1px 0px;
+  height: 25px;
+  font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 2px;
 }
 
 .form-buttons {
-  grid-column: span 3; /* Los botones ocupan las 2 columnas */
+  grid-column: span 3;
   display: flex;
   justify-content: flex-end;
   font-size: 14px;
@@ -110,12 +177,12 @@ h3 {
 
 button {
   margin-left: 10px;
-  padding: 6px 15px; /* Padding reducido */
+  padding: 6px 15px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
-  font-size: 14px; /* Tamaño de fuente reducido */
+  font-size: 14px;
 }
 
 button[type="button"] {

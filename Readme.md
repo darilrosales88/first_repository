@@ -16,3 +16,6 @@ Por favor leer el [Git Policy](doc/PoliticaGit.md)
 ### Se completo el merge
 - Se completo el merge entre las 4 ramas, hasta ahora pasaron los test, y parece no haber problema, pero hay que hacer una busqueda exhaustiva para poder seguir trabajando con esto.
 - Se esta trabajando ya con la BD Postgres por favor leer documentacion relacionada.
+
+### Correciones en CCDxProducto
+- Se agrego un queryset `informe_ccd__id` para poder desplegar los estados asociados a un informe en especifico asi no muestra todos los estados de todos los informes operativos.

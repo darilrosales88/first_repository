@@ -1262,7 +1262,7 @@ class ccd_arrastres(models.Model):
         related_name="arrastres_ccd",
         null=True, blank=True,
         verbose_name="Acceso o Centro Carga/Descarga",
-        default=7
+        help_text="Seleccione el acceso o centro de carga/descarga asociado al arrastre",
     )
     tipo_equipo= models.ForeignKey(
         nom_tipo_equipo_ferroviario,

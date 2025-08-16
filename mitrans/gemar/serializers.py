@@ -3,7 +3,6 @@
 from rest_framework import serializers
 #para trabajar con el filtrado de los serialziadores debemos hacer la siguiente importacion
 from django_filters import rest_framework as filters
-from rest_framework import serializers
 from gemar.models import PartePBIP, CargaVieja, ExistenciaMercancia
 from nomencladores.serializers import (
     nom_embarcacion_serializer, nom_puerto_serializer, nom_terminal_serializer, 
@@ -22,9 +21,6 @@ from nomencladores.models import nom_osde_oace_organismo as Organismo  # For org
 from nomencladores.models import nom_tipo_embalaje as TipoEmbalaje  # For tipo_embalaje_id
 from nomencladores.models import nom_unidad_medida as UnidadMedida
 from nomencladores.models import nom_puerto
-from nomencladores.models import nom_terminal
-from nomencladores.models import nom_producto
-from nomencladores.models import nom_osde_oace_organismo
 from Administracion.serializers import UserPermissionSerializer as CustomUserSerializer
 from Administracion.models import CustomUser
 

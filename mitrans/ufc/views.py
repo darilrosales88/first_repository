@@ -1,7 +1,6 @@
 #4.1 una variante para trabajar con los serializadores  es la propiedad viewsets
 # de rest_framework, facilita el CRUD
-from rest_framework import viewsets,generics,permissions
-from rest_framework.pagination import PageNumberPagination
+from rest_framework import viewsets
 #importacion de modelos
 from .models import vagon_cargado_descargado,producto_UFC,en_trenes
 from .models import registro_vagones_cargados,vagones_productos
@@ -10,12 +9,9 @@ from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones
 from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descargado_serializer, 
                         producto_vagon_serializer, en_trenes_serializer,PorSituarCargaDescargaSerializer, SituadoCargaDescargaSerializers, 
                         PendienteArrastreSerializer, registro_vagones_cargados_serializer,
-                        registro_vagones_cargados_filter, vagones_productos_filter, producto_vagon_filter,
-                        vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer,PorSituarCargaDescargaFilter,
-                        ufc_informe_operativo_serializer,ufc_informe_operativo_filter,
-                        vagones_dias_serializer, rotacion_filter,PendienteArrastreFilter
+                        vagones_productos_filter, producto_vagon_filter,
+                        vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer,ufc_informe_operativo_serializer,vagones_dias_serializer, rotacion_filter,PendienteArrastreFilter
                         )
-from django.core.cache import cache
 from Administracion.models import Auditoria
 
 from rest_framework.response import Response
@@ -25,21 +21,19 @@ from rest_framework import status,filters
 from django_filters.rest_framework import DjangoFilterBackend
 
 #para usar el or
-from django.db.models import Q,Prefetch
+from django.db.models import Q
 
 from django.db.models import Sum
-from django.db import transaction
 
 from django.utils import timezone
 #para usar el or
 
 #Actualizando el ModelViewSet para usar diferentes permisos según la acción
-from .permissions import IsAdminUFCPermission,IsVisualizadorUFCPermission,IsRevisorUFCPermission,IsUFCPermission,OperadorUFCPermission,RevisorUFCPermission,ReadOnly
+from .permissions import IsAdminUFCPermission,IsVisualizadorUFCPermission,IsUFCPermission,OperadorUFCPermission,RevisorUFCPermission,ReadOnly
 
 from rest_framework.decorators import action,api_view  # Importa el decorador action
 
 #Para las validaciones de las fechas en el informe operativo
-from django.db.models.functions import TruncDate
 from django.db.models import DateField
 from datetime import datetime
 from django.db.models.functions import Cast
@@ -274,11 +268,8 @@ def verificar_informe_existente(request):
     
 #vista para cambiar estado_parte en ufc_informe_operativo
 # En tu archivo views.py de la app ufc
-from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from .models import ufc_informe_operativo
-from django.utils import timezone
-import json
 
 @require_http_methods(["PATCH"])
 def actualizar_estado_parte(request):

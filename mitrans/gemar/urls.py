@@ -2,8 +2,7 @@
 #la forma de tratar las vistas que estan empleando la prop viewsets de rest_framework es la siguiente
 #de rest_framework importamos routers, que se va a encargar de redireccionar
 from rest_framework import routers
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 from gemar import views
 #importamos las vistas
 from .views import (gemar_parte_hecho_extraordinario_view_set, 
@@ -12,7 +11,6 @@ from .views import (gemar_parte_hecho_extraordinario_view_set,
                     gemar_parte_programacion_maniobras_view_set,listar_partes_combinados)
     
 
-from django.urls import path
 
 urlpatterns = [
     path('gemar-partes-combinados/', listar_partes_combinados, name='listar-partes-combinados'),

@@ -18,28 +18,21 @@ from .serializers import nom_atraque_serializer,nom_unidad_medida_serializer,nom
 from .serializers import nom_destino_serializer,nom_tipo_equipo_ferroviario_serializer,nom_embarcacion_serializer
 from .serializers import nom_equipo_ferroviario_serializer,nom_estado_tecnico_serializer,nom_producto_serializer,nom_entidades_filter
 from .serializers import nom_tipo_embalaje_serializer,nom_incidencia_serializer,nom_tipo_estructura_ubicacion_serializer,nom_estructura_ubicacion_serializer
-from Administracion.serializers import UserPermissionSerializer
 
 from Administracion.models import Auditoria
-from Administracion.serializers import AuditoriaSerializer, auditoria_filter
 
 #importacion de verificacion de autenticacion, trabajo con grupos y asignacion de
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from django.contrib.auth.models import Permission
 #para la gestion de usuarios
 from Administracion.models import CustomUser  # Importa tu modelo personalizado
 from django.contrib.auth import get_user_model
 
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
 
-from Administracion.serializers import GroupSerializer
 
 #Para la gestion de los grupos a los que perteneceran los usuarios
-from django.contrib.auth.models import Group
-from rest_framework.permissions import IsAuthenticated  # Importa IsAuthenticated
 
 from ufc.models import registro_vagones_cargados  # Importar el modelo de la app ufc
 
@@ -50,7 +43,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
 
 
-from django.utils import timezone
 
 #para hacer la paginacion
 #Para la paginacion
@@ -527,7 +519,7 @@ class nom_contenedor_view_set(viewsets.ModelViewSet):
                 {"detail": "No tiene permiso para realizar esta acción."},
                 status=status.HTTP_403_FORBIDDEN
             )
-        print('Eliminando contenedor con ID:', kwargs.get('pk'));  # Verifica el ID
+        print('Eliminando contenedor con ID:', kwargs.get('pk'))  # Verifica el ID
 
         # Registrar la acción en el modelo de Auditoria antes de eliminar
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
@@ -538,7 +530,7 @@ class nom_contenedor_view_set(viewsets.ModelViewSet):
             direccion_ip=direccion_ip,
             navegador=navegador,
         )
-        return super().destroy(request, *args, **kwargs);
+        return super().destroy(request, *args, **kwargs)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -2015,8 +2007,8 @@ class nom_estado_tecnico_view_set(viewsets.ModelViewSet):
                 {"detail": "No tiene permiso para realizar esta acción."},
                 status=status.HTTP_403_FORBIDDEN
             )
-        print('Eliminando estado tecnico con ID:', kwargs.get('pk'));  # Verifica el ID
-        return super().destroy(request, *args, **kwargs);
+        print('Eliminando estado tecnico con ID:', kwargs.get('pk'))  # Verifica el ID
+        return super().destroy(request, *args, **kwargs)
 
     def get_queryset(self):
         queryset = super().get_queryset()

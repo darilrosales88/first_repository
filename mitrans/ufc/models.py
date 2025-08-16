@@ -1,6 +1,5 @@
 from django.db import models, transaction
 from django.core.validators import RegexValidator
-from django.core.exceptions import ValidationError
 
 from Administracion.models import CustomUser
 from nomencladores.models import( nom_tipo_equipo_ferroviario,nom_producto,
@@ -8,7 +7,6 @@ from nomencladores.models import( nom_tipo_equipo_ferroviario,nom_producto,
                                  nom_equipo_ferroviario,nom_provincia,
                                  nom_entidades   
                                  )
-import time
 
 
 

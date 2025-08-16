@@ -1,29 +1,18 @@
 from django.db import models
 from Administracion.models import CustomUser
-from nomencladores.models import( nom_producto,nom_tipo_embalaje,nom_unidad_medida,
-                                 nom_entidades,nom_incidencia,nom_provincia,nom_terminal,nom_atraque,
-                                 nom_tipo_maniobra_portuaria,nom_puerto,nom_osde_oace_organismo
+from nomencladores.models import( nom_estado_tecnico, nom_producto,nom_tipo_embalaje,nom_unidad_medida,
+                                 nom_entidades,nom_incidencia,nom_provincia,nom_terminal,nom_puerto,nom_osde_oace_organismo,nom_embarcacion
                                  )
 
-from django.dispatch import receiver
-from django.db.models.signals import pre_save, post_save, post_delete,pre_delete
 
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from nomencladores.models import (
-    nom_embarcacion as Buque, nom_puerto, nom_terminal, nom_producto, 
-    nom_osde_oace_organismo, nom_tipo_embalaje, nom_unidad_medida
+    nom_embarcacion as Buque
 )
-from Administracion.models import CustomUser
 from django.utils import timezone
-from django.db import models
-from Administracion.models import CustomUser
-from nomencladores.models import nom_producto, nom_tipo_embalaje, nom_unidad_medida, nom_entidades, nom_incidencia, nom_provincia
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 class gemar_parte_hecho_extraordinario(models.Model):
     tipo_parte = models.CharField(
         default="Parte de hecho extraordinario", 
@@ -584,3 +573,32 @@ class ExistenciaMercancia(models.Model):
             
         if self.existencia < 0:
             raise ValidationError(_('La existencia no puede ser negativa.'))
+        
+
+class diario_embarcacion(models.Model):
+    fecha_operacion = models.DateField(_('Fecha de operación'))
+    fecha_creacion = models.DateTimeField(_('Fecha de creación'), auto_now_add=True)
+    puerto= models.ForeignKey(nom_puerto, on_delete=models.SET_NULL, verbose_name=_('Puerto'),blank=True,null=True)
+    embarcacion=models.ForeignKey(nom_embarcacion,  on_delete=models.SET_NULL, verbose_name=_('Embarcacion'),blank=True,null=True)
+    fuera_servicio= models.BooleanField(verbose_name="Campo asociado a Fuera de servicio: F/S")
+    estado_tec=models.ForeignKey(nom_estado_tecnico,  on_delete=models.SET_NULL, verbose_name=_('Estado Tecnico'),blank=True,null=True)
+    observaciones_tec=models.CharField(verbose_name="Campo Enriquecido con las observaciones tecnicas")
+    fecha_vencimiento = models.DateField(_('Fecha de Vencimiento'))
+    cert_vencido= models.BooleanField(verbose_name="Certificado Vencido")
+    observaciones_cert_vencido=models.CharField(verbose_name="Campo descriptivo sobre el certificado Vencido")
+    t_estimado_afect= models.TimeField(verbose_name="Tiempo estimado de afectacion")
+    medida_x_afect=models.CharField(verbose_name="Campo descriptivo sobre la medida por la afectacion")
+    
+    class Meta:
+        verbose_name = _('Registro Diario de Embarcacion')
+        verbose_name_plural = _('Registros Diario de Embarcacion')
+        constraints=[models.UniqueConstraint(
+            fields = [
+                "fecha_operacion",
+                "puerto",
+                "embarcacion",
+            ],
+            name="unique_diario_embarcacion",
+        )]
+
+

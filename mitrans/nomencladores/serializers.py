@@ -4,7 +4,6 @@ from rest_framework import serializers
 #para trabajar con el filtrado de los serialziadores debemos hacer la siguiente importacion
 from django_filters import rest_framework as filters
 
-from django.db.models import Q
 
 #2.  importamos nom_pais
 from .models import nom_pais,nom_provincia,nom_municipio,nom_tipo_maniobra_portuaria,nom_contenedor,nom_cargo 

@@ -5,7 +5,6 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
-from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from rest_framework.pagination import PageNumberPagination
 from gemar.models import PartePBIP, CargaVieja, ExistenciaMercancia
@@ -13,7 +12,6 @@ from gemar.Administracion.permissions import IsGEMARUser, IsAdminUser
 
 #4.1 una variante para trabajar con los serializadores  es la propiedad viewsets
 # de rest_framework, facilita el CRUD
-from rest_framework import viewsets
 
 #importacion de modelos
 from .models import (gemar_hecho_extraordinario,gemar_parte_hecho_extraordinario,
@@ -29,27 +27,18 @@ from .serializers import (gemar_hecho_extraordinario_serializer,gemar_parte_hech
 from Administracion.models import Auditoria
 
 #importacion de verificacion de autenticacion, trabajo con grupos y asignacion de
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework.decorators import action
+from rest_framework.decorators import api_view
 #para la gestion de usuarios
-from Administracion.models import CustomUser  # Importa tu modelo personalizado
-from django.contrib.auth import get_user_model
 
-from rest_framework.response import Response
-from rest_framework import status
 
 #para usar el or
-from django.db.models import Q
 
 from django.utils import timezone
 from datetime import datetime
 
 #Para la paginacion
-from rest_framework.pagination import PageNumberPagination
 
 #Para el tratado de los permisos en el backend
-from .permissions import IsAdminGemarPermission,IsVisualizadorGemarPermission
 
 def registrar_auditoria(request, accion):
     """

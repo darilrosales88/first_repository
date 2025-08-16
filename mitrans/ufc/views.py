@@ -1287,7 +1287,7 @@ def verificar_informe_ccd_existente(request):
             ).first()
             return Response({
                 "existe": True,
-                "id": informe.id,
+                "id": informe.pk,
                 "fecha_operacion": informe.fecha_operacion,
                 "estado":informe.estado_parte,
             })
@@ -1306,6 +1306,7 @@ class ccd_arrastresViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter  # Para ordenamiento
         ]
     #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+    search_fields = ['acceso__nombre','operacion','producto__producto__nombre_producto','producto__producto__codigo_producto','tipo_equipo__tipo_equipo']
 
 #### View CCD En Trenes OK
 class ccd_en_trenesViewSet(viewsets.ModelViewSet):
@@ -1318,7 +1319,8 @@ class ccd_en_trenesViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter  # Para ordenamiento
         ]
     #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
-    
+    search_fields = ['acceso__nombre','operacion','producto__producto__nombre_producto','producto__producto__codigo_producto','tipo_equipo__tipo_equipo']
+
 #### View CCD Vagones Carga/Descarga OK
 class ccd_vagones_cdViewSet(viewsets.ModelViewSet):
     serializer_class=ccd_vagones_cdSerializer
@@ -1330,7 +1332,8 @@ class ccd_vagones_cdViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter  # Para ordenamiento
         ]
     #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
-    
+    search_fields = ['acceso__nombre','operacion','producto__producto__nombre_producto','producto__producto__codigo_producto','tipo_equipo__tipo_equipo']
+  
 #### View CCD por Situar OK
 class ccd_por_situarViewSet(viewsets.ModelViewSet):
     serializer_class=ccd_por_situarSerializer
@@ -1341,7 +1344,8 @@ class ccd_por_situarViewSet(viewsets.ModelViewSet):
         filters.SearchFilter,  # Para búsqueda de texto
         filters.OrderingFilter  # Para ordenamiento
         ]
-    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+    search_fields = ['acceso__nombre','operacion','producto__producto__nombre_producto','producto__producto__codigo_producto','tipo_equipo__tipo_equipo']
+
 
 #### View CCD Situados OK
 class ccd_situadosViewSet(viewsets.ModelViewSet):
@@ -1353,7 +1357,7 @@ class ccd_situadosViewSet(viewsets.ModelViewSet):
         filters.SearchFilter,  # Para búsqueda de texto
         filters.OrderingFilter  # Para ordenamiento
         ]
-    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+    search_fields = ['acceso__nombre','operacion','producto__producto__nombre_producto','producto__producto__codigo_producto','tipo_equipo__tipo_equipo']
     
 #### View CCD Casillas Productos
 class ccd_casillas_productosViewSet(viewsets.ModelViewSet):
@@ -1365,7 +1369,7 @@ class ccd_casillas_productosViewSet(viewsets.ModelViewSet):
         filters.SearchFilter,  # Para búsqueda de texto
         filters.OrderingFilter  # Para ordenamiento
         ]
-    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+    search_fields = ['acceso__nombre']
     
 #### View CCD Registro Vagones Carga/Descarga
 class ccd_registro_vagones_cdViewSet(viewsets.ModelViewSet):
@@ -1377,4 +1381,4 @@ class ccd_registro_vagones_cdViewSet(viewsets.ModelViewSet):
         filters.SearchFilter,  # Para búsqueda de texto
         filters.OrderingFilter  # Para ordenamiento
         ]
-    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+    #search_fields = ['origen','tipo_origen','no_id','equipo_ferroviario__numero_identificacion']

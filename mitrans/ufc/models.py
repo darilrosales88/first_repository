@@ -1405,8 +1405,8 @@ class ccd_en_trenes(models.Model):
 class ccd_registro_vagones_cd(models.Model):
     # Opciones para el campo tipo_origen
     TIPO_ORIGEN_CHOICES = [
-        ("municipio", "Municipio"),
-        ("provincia", "Provincia"),
+        ("ac_cd", "Acceso Comercial"),
+        ("puerto", "Puerto"),
     ]
 
     equipo_ferroviario=models.ForeignKey(nom_equipo_ferroviario, on_delete=models.CASCADE,null=False,blank=False,verbose_name="Campo de equipo Ferroviario", related_name="registro_equipo_ccd")

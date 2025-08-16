@@ -8,7 +8,7 @@
 
 ## 1. **Instala el driver de PostgreSQL para Python**
    ```bash
-   pip install psycopg-binary
+   pip install psycopg[binary]
    ```
 
 ## 2. **Hacer una copia de seguridad de la BD SQLITE**
@@ -64,7 +64,7 @@ Comenta esas lineas y agrega estas:
 ### Si has seguido todos los pasos hasta aqui deberias ya tener bien conectada tu BD Postgres con Django
 ---
 
-## 6. Migrar Tablas para tu BD en Postgres.
+## 6V1. Migrar Tablas para tu BD en Postgres.
 
 En la Raiz del proyecto poner en la consola
 
@@ -74,7 +74,7 @@ python manage.py migrate --run-syncdb
 
 Con esto ya se crean las tablas de los models en la BD postgres
 
-## 7. Cargar los datos de los nomencladores
+## 7V1. Cargar los datos de los nomencladores
 
 - Asegurarse que se tiene en la raiz del proyecto el archivo `nomencladores.json` que guarda los datos de los nomencladores antiguos que teniamos en la BD SQLITE
 
@@ -93,7 +93,8 @@ python manage.py loaddata nomencladores.json
 
 ### **Con estos pasos ya deberias tener los registros de los nomencladores cargados en tu BD postgres, de todas maneras usar el Pgadmin para comprobar que esten, ya falta poco para poder tener el proyecto funcional**
 
-## 8. Creacion de los Grupos en el admin de DJANGO
+
+## 8V1. Creacion de los Grupos en el admin de DJANGO
 
 - Crear nuevo SuperUsuario para el backend de Django `python manage.py createsuperuser`
 
@@ -114,5 +115,12 @@ python manage.py loaddata nomencladores.json
     * OperadorUFC -> Los permisos para el CRUD de todos los registros de UFC excepto los 2 que se llaman `puede_aprobar_parte`,`puede_rechazar_parte`. Agregarle ademas, todos los visualizar de los nomencladores. ya que les hace falta para poder conformar los registros de informes de UFC.
     * RevisorUFC -> Solamente se le agregaran los visualizar de UFC y `puede_aprobar_parte`,`puede_rechazar_parte`.
     * VisualizardorUFC -> Solo se le agregaran los permisos de los visualizar de UFC
+
+## 6V2 Para hacer las migraciones hay otra manera mas simple
+- Abrir PgAdmin
+- Cargar los datos de mitrans_dbUTF.sql en el PgAdmin con la herramienta de importar.
+- **Asegurarse que la BD este con un encoding UTF-8**
+
+
 
 ## 9. Comprobar que todo este OK, a Revisar la APP y poblarla con registros UFC

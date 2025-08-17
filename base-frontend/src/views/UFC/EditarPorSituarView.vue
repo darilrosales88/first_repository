@@ -368,7 +368,6 @@ export default {
   },
   created() {
     this.registroId = this.$route.params.id;
-    console.log("Hola",this.registroId)
     if (this.registroId) {
       this.cargarRegistro();
     }
@@ -423,10 +422,8 @@ export default {
         this.buscarEquipos();
 
       } catch (error) {
-        // ... manejo de errores ...
-      } finally {
-        this.loading = false;
-      }
+        this.showErrorToast("Error al cargar el registro");
+      } 
     },
 
     async getEntidades() {
@@ -528,7 +525,6 @@ export default {
       const vagonAgregado = {
         equipo_ferroviario: equipoSeleccionado,
         cant_dias: this.nuevoVagon.cant_dias,
-        // Agrega otros datos necesarios para mantener consistencia
         datos: {
           equipo_vagon: equipoSeleccionado.numero_identificacion,
         },
@@ -635,11 +631,9 @@ export default {
           observaciones: this.formData.observaciones,
           informe_operativo: this.informeOperativoId,
 
-          // Datos de los vagones (estructura corregida)
           equipo_vagon: this.vagonesAgregados.map((vagon) => ({
             equipo_ferroviario: vagon.equipo_ferroviario.id, // ID del equipo
             cant_dias: vagon.cant_dias,
-            // Otros campos necesarios para el vagon
           })),
         };
         console.log("Esto fue lo que se envio", payload);

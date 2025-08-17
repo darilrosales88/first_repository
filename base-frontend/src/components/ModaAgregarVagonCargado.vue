@@ -138,8 +138,6 @@
                     rows="3"                  
                   ></textarea>
                 </div>
-                
-                <!-- Aquí puedes agregar más campos para la columna 2 si es necesario -->
               </div>
 			      </div>
 
@@ -185,10 +183,10 @@
       return {
         formData: {
           no_id: "",
-          fecha_despacho: new Date().toISOString().split('T')[0], // Formato YYYY-MM-DD
+          fecha_despacho: new Date().toISOString().split('T')[0],
+          fecha_llegada: new Date().toISOString().split('T')[0],
           tipo_origen: "ac_ccd",
           origen: "",
-          fecha_llegada: new Date().toISOString().split('T')[0], // Formato YYYY-MM-DD
           observaciones:""
         },
         equipos_ferroviarios: [],
@@ -213,7 +211,7 @@
         this.$emit("cerrar-modal");
       },
       
-      async submitForm() {
+  async submitForm() {
   // Validación de campos
   if (!this.formData.no_id || !this.formData.fecha_despacho || !this.formData.origen) {
     Swal.fire("Error", "Por favor complete todos los campos obligatorios", "error");

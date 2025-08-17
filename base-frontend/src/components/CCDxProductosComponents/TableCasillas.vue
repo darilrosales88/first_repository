@@ -3,12 +3,12 @@
         <div class="card border">
             <div class="card-header bg-light border-bottom">
                 <h6 class="mb-0 text-dark fw-semibold">
-                    <i class="bi bi-train-front-fill me-2"></i>Vagones situados
+                    <i class="bi bi-train-front-fill me-2"></i>Casillas por centro de carga y descarga
                 </h6>
             </div>
             <div class="card-body p-3">
                 <div class="d-flex justify-content-between align-items-center">
-                    <router-link v-if="hasGroup(['AdminUFC', 'OperadorUFC'])" to="/AnnadirSituadoCCD">
+                    <router-link  v-if="hasGroup(['AdminUFC', 'OperadorUFC']) && this.habilitado" to="/AnnadirCasillaCCD">
                         <button class="btn btn-primary">
                         <i class="bi bi-plus-circle me-1"></i>Añadir
                         </button>
@@ -38,7 +38,7 @@
                                 <th v-for="(item, index) in headers" :key="index" scope="col">{{item}}</th>
                             </tr>
                             <tr v-if="search && elementList.length == 0">
-                                <td colspan="8" class="text-center text-muted py-4">
+                                <td colspan="21" class="text-center text-muted py-4">
                                 <i class="bi bi-exclamation-circle fs-4"></i>
                                 <p class="mt-2">
                                     No se encontraron resultados para "{{ searchQuery }}"
@@ -46,7 +46,7 @@
                                 </td>
                             </tr>
                             <tr v-else-if="elementList.length == 0">
-                                <td colspan="8" class="text-center text-muted py-4">
+                                <td colspan="21" class="text-center text-muted py-4">
                                     <div class="ps-loading" v-if="loading">
                                         <div class="ps-spinner"></div>
                                         <span>Cargando registros...</span>
@@ -62,22 +62,27 @@
                             <tr v-for="(item, index) in elementList" :key="index" class="align-middle">
                                 <th>{{ index + 1 }}</th>
                                 <td>{{ item.acceso.nombre }}</td>
-                                <td>{{ item.tipo_equipo.tipo_equipo_name }}</td>
-                                <td><span :class="`ps-status ps-status-${getStatusClass(item.estado)}`">{{ item.estado }}</span></td>
-                                <td>{{ item.operacion}}</td>
-                                <td>{{ item.producto.producto.nombre_producto }}</td>
-                                <td>{{ item.equipo_vagon_detalle.length}}</td>
+                                <td>{{ item.total_ayer }}</td>
+                                <td>{{ item.entro_hoy }}</td>
+                                <td>{{ item.plan_carga}}</td>
+                                <td>{{ item.real_carga }}</td>
+                                <td>{{ item.diferencia_carga}}</td>
+                                <td>{{ item.plan_descarga}}</td>
+                                <td>{{ item.real_descarga}}</td>
+                                <td>{{ item.diferencia_descarga }}</td>
+                                <td>{{ item.recepcion}}</td>
+                                <td>{{ item.reexpedciones}}</td>
+                                <td>{{ item.situados}}</td>
+                                <td>{{ item.situados_mas_2dias}}</td>
+                                <td>{{ item.por_situar}}</td>
+                                <td>{{ item.por_situar_mas_2dias}}</td>
+                                <td>{{ item.en_trenes}}</td>
+                                <td>{{ item.pendientes}}</td>
+                                <td>{{ item.total}}</td>
+                                <td>{{ item.total_general}}</td>
                                 <td>
                                     <div class="d-flex">
-                                        <button 
-                                            @click="viewDetails(item)"
-                                            class="btn btn-sm btn-outline-info me-2"
-                                            title="Ver detalles">
-                                            <i class="bi bi-eye-fill"></i>
-                                        </button>
-
                                         <button
-                                            @click="edit_element(item)"
                                             class="btn btn-sm btn-outline-warning me-2"
                                             title="Editar">
                                             <i class="bi bi-pencil-square"></i>
@@ -115,164 +120,6 @@
                         </ul>
                     </nav>
                 </div>
-                <div v-if="showDetailsModal" class="ps-modal-overlay" @click.self="closeModal">
-                  
-                  <!-- Contenedor principal del modal -->
-                  <div class="ps-modal">
-                    <!-- Encabezado del modal -->
-                    <div class="ps-modal-header">
-                      <div class="ps-modal-header-content">
-                        <div class="ps-modal-icon-container">
-                          <i class="bi bi-info-circle-fill ps-modal-icon"></i>
-                        </div>
-                        <div>
-                          <h2>Detalles del Registro</h2>
-                          <p class="ps-modal-subtitle">
-                            Información completa del registro seleccionado
-                          </p>
-                        </div>
-                      </div>
-                      <button class="ps-modal-close" @click="closeModal">
-                        <i class="bi bi-x-lg"></i>
-                      </button>
-                    </div>
-
-                    <!-- Cuerpo del modal -->
-                    <div class="ps-modal-body">
-                      <!-- Grid de tarjetas de detalles -->
-                      <div class="ps-detail-grid">
-
-                        <!-- Tarjeta 1: Información Básica -->
-
-                        <div class="ps-detail-card">
-                          <div class="ps-detail-card-header">
-                            <i class="bi bi-tag-fill"></i>
-                            <h4>Producto</h4>
-                          </div>
-
-                          <div class="ps-detail-card-body">
-                            <div class="ps-detail-item">
-                              <span class="ps-detail-label">Nombre:</span>
-                              <span class="ps-detail-value">
-                                {{
-                                  itemVisualizar.producto.producto.nombre_producto ||"N/A"
-                                }}
-                              </span>
-                            </div>
-
-                            <div class="ps-detail-item">
-                              <span class="ps-detail-label">Tipo:</span>
-                              <span class="ps-detail-value">
-                                {{ itemVisualizar.producto.producto.tipo_producto_name || "N/A" }}
-                              </span>
-                            </div>
-
-                            <div class="ps-detail-item">
-                              <span class="ps-detail-label">Embalaje:</span>
-                              <span class="ps-detail-value">
-                                {{ itemVisualizar.producto.tipo_embalaje.nombre_tipo_embalaje || "N/A" }}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div class="ps-detail-card">
-                          <div class="ps-detail-card-header">
-                            <i class="bi bi-clipboard2-data-fill"></i>
-                            <h4>Acceso Comercial</h4>
-                          </div>
-                          <div class="ps-detail-card-body">
-
-                            <div class="ps-detail-item">
-                              <span class="ps-detail-label">Nombre:</span>
-                              <span class="ps-detail-value">
-                                {{ itemVisualizar.acceso.nombre || "N/A" }}
-                              </span>
-                            </div>
-
-                            <div class="ps-detail-item">
-                              <span class="ps-detail-label">Ministerio:</span>
-                              <span class="ps-detail-value">
-                                {{ itemVisualizar.acceso.o_o_o_name || "N/A" }}
-                              </span>
-                            </div>
-
-                            <div class="ps-detail-item">
-                              <span class="ps-detail-label">Tipo de entidad:</span>
-                              <span class="ps-detail-value">
-                                {{ itemVisualizar.acceso.tipo_entidad_name|| "N/A" }}
-                              </span>
-                            </div>
-
-                            <div class="ps-detail-item">
-                              <span class="ps-detail-label">Provincia:</span>
-                              <span class="ps-detail-value">
-                                {{ itemVisualizar.acceso.provincia_name || "N/A" }}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div class="ps-detail-card">
-                          <div class="ps-detail-card-header">
-                            <i class="bi bi-exclamation-square-fill"></i>
-                            <h4>Equipo</h4>
-                          </div>
-                          <div class="ps-detail-card-body">
-                            <div class="ps-detail-item">
-                              <span class="ps-detail-label">Nombre:</span>
-                              <span class="ps-detail-value">
-                                {{ itemVisualizar.tipo_equipo.tipo_equipo_name || "N/A" }}
-                              </span>
-                            </div>
-
-                            <div class="ps-detail-item">
-                              <span class="ps-detail-label">Tipo de Carga:</span>
-                              <span class="ps-detail-value">
-                                {{ itemVisualizar.tipo_equipo.tipo_carga_name || "N/A" }}
-                              </span>
-                            </div>
-
-                            <div class="ps-detail-item">
-                              <span class="ps-detail-label">Tipo de Combustible:</span>
-                              <span class="ps-detail-value">
-                                {{ itemVisualizar.tipo_equipo.tipo_combustible_name || "N/A" }}
-                              </span>
-                            </div>
-
-                            <div class="ps-detail-item">
-                              <span class="ps-detail-label">Descripción:</span>
-                              <span class="ps-detail-value">
-                                {{itemVisualizar.tipo_equipo.descripcion || "N/A" }}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div class="ps-detail-card ps-detail-card-full">
-                          <div class="ps-detail-card-header">
-                            <i class="bi bi-chat-square-text-fill"></i>
-                            <h4>Causas del Incumplimiento</h4>
-                          </div>
-                          <div class="ps-detail-card-body">
-                            <div class="ps-detail-item">
-                              <span class="ps-detail-value">
-                                {{itemVisualizar.causas_incumplimiento ||"Ninguna observación registrada"}}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Pie del modal -->
-                    <div class="ps-modal-footer">
-                      <button class="ps-modal-btn ps-modal-btn-secondary" @click="closeModal">
-                        <i class="bi bi-x-circle"></i> Cerrar
-                      </button>
-                    </div>
-                  </div>
-                </div>  
             </div>
         </div>
     </div>
@@ -283,32 +130,39 @@ import Swal from "sweetalert2";
 import axios from "axios";
 
 export default {
-  name: "TableSituado",
+  name: "TableCasillas",
   props: {
-    informeID: {
-      type: Number,
-      required: false,
-    },
+
   },
   data() {
     return {
         headers: [
         'Acceso Comercial',
-        'Tipo de Equipo',
-        'Estado',
-        'Operación',
-        'Producto',
-        'Situados',
-        'Acciones'],
+        'Total Ayer',
+        'Entro Hoy',
+        'Plan Acumulado Carga',
+        'Real Acumulado Carga',
+        'Diferencia de Carga',
+        'Plan Acumulado Descarga',
+        'Real Acumulado Descarga',
+        'Diferencia de Descarga',
+        'Recepcion',
+        'Reexpediciones',
+        'Situados Carga/Descarga',
+        'Situados +48hrs', 
+        'Por situar',
+        'Por situar +48hrs',
+        'En trenes',
+        'Pend de Arrastre',
+        'Total',
+        'Total General',
+        'Acciones',],
 
         search: false,
         searchQuery: '',
 
         elementList: [],
         allElements: [],
-
-        itemVisualizar: null,
-        showDetailsModal: false,
 
         loading: false,
 
@@ -319,7 +173,6 @@ export default {
 
         userPermissions: [],
         userGroups: [],
-        
     };
   },
 
@@ -332,21 +185,11 @@ export default {
         return "info";
     },
 
-    closeModal() {
-      this.showDetailsModal = false;
-      this.itemVisualizar = null;
-    },
-
-    viewDetails(item) { 
-      console.log(item);
-      this.itemVisualizar = item;
-      this.showDetailsModal = true;
-    },
-
     handleSearchInput() {
         const query = this.searchQuery.toLowerCase().trim();
         
         if (query === '') {
+            // Si la búsqueda está vacía, mostrar todos los elementos
             this.elementList = [...this.allElements];
             this.search = false;
             return;
@@ -354,11 +197,7 @@ export default {
 
         this.elementList = this.allElements.filter(item => {
             return (
-                (item.acceso.nombre?.toLowerCase().includes(query))||
-                (item.tipo_equipo.tipo_equipo_name?.toLowerCase().includes(query))||
-                (item.estado?.toLowerCase().includes(query))||
-                (item.operacion?.toLowerCase().includes(query))||
-                (item.producto.producto.nombre_producto?.toLowerCase().includes(query))
+                (item.acceso.nombre?.toLowerCase().includes(query))
             );
         });
 
@@ -366,26 +205,26 @@ export default {
     },
 
     async getElements() {
-        try {
+      try {
           const today = new Date();
           const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-          const infoID = await axios.get("/ufc/verificar-informe-ccd-existente/", {params: { fecha_operacion: fechaFormateada },});
-          this.estado_parte = infoID.data.estado;
+          const infoID = await axios.get(`/ufc/verificar-informe-ccd-existente/?fecha_operacion=${fechaFormateada}`);
+          this.estado_parte = infoID.data.estado; 
           if (this.informeID || infoID.data.id) {
               this.loading = true;
-              const response = await axios.get("/ufc/ccd-situados/", {
+              const response = await axios.get("/ufc/ccd-casillas/", {
                   params: {
                       page: this.currentPage,
                       page_size: this.itemsPerPage,
-                      informe: this.informeID ? this.informeID : infoID.data.id,
+                      informe: this.informeID,
                   }
               });
               
               if (this.informeID) {
                   this.habilitado = false;
               }
-              this.allElements = response.data.results; 
-              this.elementList = [...this.allElements]; 
+              this.allElements = response.data.results; // Guardar todos los elementos
+              this.elementList = [...this.allElements]; // Copia para mostrar
               this.totalItems = response.data.count;
               this.loading = false;
           } else {
@@ -396,17 +235,9 @@ export default {
       } 
     },
 
-    edit_element(item) {
-      this.$router.push({
-        name: "EditarSituadoCCD",
-        params: { id: item.id },
-      });
-    },
-
     async delete_element(id) {
-      console.log("hola")
       try {
-        await axios.delete(`/ufc/ccd-situados/${id}/`);
+        await axios.delete(`/ufc/ccd-casillas/${id}/`);
         this.showSuccessToast("registro eliminado");
         this.getElements();
       } catch (error) {
@@ -422,6 +253,7 @@ export default {
           const response = await axios.get(`/apiAdmin/user/${userId}/permissions-and-groups/`);
           this.userPermissions = response.data.permissions;
           this.userGroups = response.data.groups;
+          console.log(this.userGroups);
         }
       } catch (error) {
         console.error("Error al obtener permisos y grupos:", error);
@@ -495,9 +327,8 @@ export default {
   },
 
   async created() {
-    this.getElements();
+    this.getElements()
     this.fetchUserPermissionsAndGroups();
-
   },
 };
 </script>

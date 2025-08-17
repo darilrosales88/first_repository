@@ -1,4 +1,7 @@
 <template>
+    <div style="background-color: #002a68; color: white; text-align: right; padding: 10px;">
+      <h6>CCDxProducto</h6>
+    </div>
     <NavbarComponent />
     <div style="margin-left: 25em; width: 60%">
       <div class="container py-3">
@@ -64,17 +67,33 @@
       </div>
     </div>
     <div style="margin-left: 16em; width: 80%">
+      <TableCasillas/> 
+    </div>
+    <div style="margin-left: 16em; width: 80%">
         <nav>
             <ul>
                 <li><a href="#" @click.prevent="currentComponent = 'TablePorSituar'" :class="{ active: currentComponent === 'TablePorSituar' }">Por Situar Carga/Descarga</a></li>
                 <li><a href="#" @click.prevent="currentComponent = 'TableSituados'" :class="{ active: currentComponent === 'TableSituados' }">Situado Carga/Descarga</a></li>
-                <li><a href="#" @click.prevent="currentComponent = 'TableCargaDescarga'" :class="{ active: currentComponent === 'TableCargaDescarga' }">Cargados</a></li>
+                <li><a href="#" @click.prevent="currentComponent = 'TableCargaDescarga'" :class="{ active: currentComponent === 'TableCargaDescarga' }">Cargados/Descargados</a></li>
                 <li><a href="#" @click.prevent="currentComponent = 'TablePendienteArrastre'" :class="{ active: currentComponent === 'TablePendienteArrastre' }">Pendientes</a></li>
                 <li><a href="#" @click.prevent="currentComponent = 'TableEnTren'":class="{ active: currentComponent === 'TableEnTren' }">En Trenes</a></li>
             </ul>
         </nav>
 
-        <div><component :is="currentComponent" /></div> 
+        <div><component :is="currentComponent"/></div> 
+    </div>
+    <div style="margin-left: 16em; width: 80%">
+      <div class="action-buttons">
+        <button class="action-btn reject" @click="rechazar">
+          <i class="bi bi-x-circle"></i> Rechazar
+        </button>
+        <button class="action-btn ready" @click="listo">
+          <i class="bi bi-check-circle"></i> Listo
+        </button>
+        <button class="action-btn approve" @click="aprobar">
+          <i class="bi bi-check2-circle"></i> Aprobar
+        </button>
+      </div>
     </div>
 </template>
 
@@ -82,6 +101,7 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 import NavbarComponent from "@/components/NavbarComponent.vue";
+import TableCasillas from "@/components/CCDxProductosComponents/TableCasillas.vue";
 import TablePorSituar from "@/components/CCDxProductosComponents/TablePorSituar.vue";
 import TableSituados from "@/components/CCDxProductosComponents/TableSituados.vue";
 import TableCargaDescarga from "@/components/CCDxProductosComponents/TableCargaDescarga.vue";
@@ -94,6 +114,7 @@ export default {
 
   components: {
     NavbarComponent,
+    TableCasillas,
     TablePorSituar,
     TableSituados,
     TableCargaDescarga,
@@ -160,7 +181,6 @@ export default {
         const userId = localStorage.getItem("userid");
         if (userId) {
           const response = await axios.get(`/apiAdmin/users/${userId}/`);
-          console.log(response.data)
           this.formData.creado_por = response.data.id;
           this.formData.provincia = response.data.provincia.id;
         }
@@ -174,12 +194,13 @@ export default {
         const today = new Date();
         const fechaFormateada = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
         const response = await axios.get("/ufc/verificar-informe-ccd-existente/", {params: { fecha_operacion: fechaFormateada },});
-        console.log(fechaFormateada)
         if (response.data.existe) {
           this.informeCCDxProductoId = response.data.id;
           this.isExistingRecord = true;
-          //this.deleteInforme(response.data.id)//Aqui mandas a borrar el id del informe
-          //Esto aqui deberia ser que si existe el informe se desactiva el boton 
+          console.log(response);
+          return true;
+          
+          //this.deleteInforme(response.data.id)
         } else {
           this.informeCCDxProductoId = null;
           this.isExistingRecord = false;
@@ -198,13 +219,10 @@ export default {
           creado_por: this.formData.creado_por,
         };
 
-        console.log(dataToSend);
-
         const response = await axios.post("/ufc/ccd-informe/",dataToSend);
-        console.log(response)
         this.informeOperativoId = response.data.id;
-        
-        this.showSuccessToast("Informe creado correctamente");
+        this.isExistingRecord = true;
+        this.showSuccessToast("Informe creado");
       } catch (error) {
         console.error("Error al guardar operación:", error);
         this.showErrorToast("Error al crear el informe");
@@ -214,10 +232,92 @@ export default {
     async deleteInforme(id) {
       try {
         await axios.delete(`/ufc/ccd-informe/${id}/`);
-        this.showSuccessToast("Informe eliminado correctamente");
+        this.showSuccessToast("Informe eliminado");
       } catch (error) {
         console.error("Error al eliminar el informe:", error);
         this.showErrorToast("Error al eliminar el informe");
+      }
+    },
+
+    async rechazar() {
+      if (!this.hasGroup("RevisorUFC")) {
+        this.showErrorToast("No tienes permiso para rechazar informes operativos");
+        return;
+      }
+      const result = await Swal.fire({
+        title: "¿Estás seguro?",
+        text: "Está seguro que desea rechazar este informe operativo?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#002a68",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Continuar",
+        cancelButtonText: "Cancelar",
+      });
+
+      if (result.isConfirmed) {
+        await this.CambiarEstado("rechazado");
+      }
+    },
+
+    async aprobar() {
+      if (!this.hasGroup("RevisorUFC")) {
+        this.showErrorToast("No tienes permiso para aprobar informes operativos");
+        return;
+      }
+
+      const result = await Swal.fire({
+        title: "¿Estás seguro?",
+        text: "Está seguro que desea aprobar este informe operativo?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#002a68",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Continuar",
+        cancelButtonText: "Cancelar",
+      });
+      
+      if (result.isConfirmed) {
+        await this.CambiarEstado("aprobado");
+      }
+    },
+
+    async listo() {
+      if (!this.hasGroup("AdminUFC")) {
+        this.showErrorToast("No tienes permiso para cambiar a 'Listo' operativos");
+        return;
+      }
+      const result = await Swal.fire({
+        title: "¿Estás seguro?",
+        text: "Está seguro que desea poner a 'Listo' este informe operativo?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#002a68",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Continuar",
+        cancelButtonText: "Cancelar",
+      });
+
+      if (result.isConfirmed) {
+        await this.CambiarEstado("listo");
+      }
+    },
+
+    async CambiarEstado(NuevoEstado) {
+      try {
+        const existeInforme = await this.verificarInformeCCDxProducto;
+        if (!existeInforme || !this.informeCCDxProductoId) {
+          this.showErrorToast("No existe un informe operativo para la fecha actual");
+          return;
+        }
+        const response = await axios.patch(`/ufc/ccd-informe/${this.informeCCDxProductoId}/`,
+          { estado_parte: NuevoEstado },
+          { headers: { "Content-Type": "application/json" } }
+        );
+        this.showSuccessToast(`Informe "${NuevoEstado}"`);
+      } catch (error) {
+        this.showErrorToast("Error al cambiar el estado");
+        console.error(error);
       }
     },
 
@@ -266,9 +366,9 @@ export default {
     },
   },
   async created() {
-    this.obtenerUsername();
-    this.fetchUserPermissionsAndGroups();
-    this.verificarInformeCCDxProducto();
+    await this.obtenerUsername();
+    await this.fetchUserPermissionsAndGroups();
+    await this.verificarInformeCCDxProducto();
     
   },
 };

@@ -23,7 +23,6 @@ export default {
     };
   },
   created() {
-    // Obtener el nombre del usuario desde localStorage al cargar el componente
     this.username = localStorage.getItem("username") || "Invitado";
   },
 };

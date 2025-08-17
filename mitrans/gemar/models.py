@@ -1,6 +1,6 @@
 from django.db import models
 from Administracion.models import CustomUser
-from nomencladores.models import( nom_estado_tecnico, nom_producto,nom_tipo_embalaje,nom_unidad_medida,
+from nomencladores.models import( nom_atraque, nom_estado_tecnico, nom_pais, nom_producto,nom_tipo_embalaje,nom_unidad_medida,
                                  nom_entidades,nom_incidencia,nom_provincia,nom_terminal,nom_puerto,nom_osde_oace_organismo,nom_embarcacion
                                  )
 
@@ -574,7 +574,7 @@ class ExistenciaMercancia(models.Model):
         if self.existencia < 0:
             raise ValidationError(_('La existencia no puede ser negativa.'))
         
-
+####Partes Carlos  de Gemar  ####
 class diario_embarcacion(models.Model):
     fecha_operacion = models.DateField(_('Fecha de operación'))
     fecha_creacion = models.DateTimeField(_('Fecha de creación'), auto_now_add=True)
@@ -600,5 +600,76 @@ class diario_embarcacion(models.Model):
             ],
             name="unique_diario_embarcacion",
         )]
+
+
+class diario_practico(models.Model):
+    fecha_operacion = models.DateField(_('Fecha de operación'))
+    fecha_creacion = models.DateTimeField(_('Fecha de creación'), auto_now_add=True)
+    puerto= models.ForeignKey(nom_puerto, on_delete=models.SET_NULL, verbose_name=_('Puerto'),blank=True,null=True)
+    embarcacion=models.ForeignKey(nom_embarcacion,  on_delete=models.SET_NULL, verbose_name=_('Embarcacion'),blank=True,null=True)
+    fuera_servicio= models.BooleanField(verbose_name="Campo asociado a Fuera de servicio: F/S")
+    estado_tec=models.ForeignKey(nom_estado_tecnico,  on_delete=models.SET_NULL, verbose_name=_('Estado Tecnico'),blank=True,null=True)
+    observaciones_tec=models.CharField(verbose_name="Campo Enriquecido con las observaciones tecnicas")
+    fecha_vencimiento = models.DateField(_('Fecha de Vencimiento'))
+    cert_vencido= models.BooleanField(verbose_name="Certificado Vencido")
+    observaciones_cert_vencido=models.CharField(verbose_name="Campo descriptivo sobre el certificado Vencido")
+    t_estimado_afect= models.TimeField(verbose_name="Tiempo estimado de afectacion")
+    medida_x_afect=models.CharField(verbose_name="Campo descriptivo sobre la medida por la afectacion")
+    
+    class Meta:
+        verbose_name = _('Registro Diario de Practico')
+        verbose_name_plural = _('Registros Diario de Practico')
+        constraints=[models.UniqueConstraint(
+            fields = [
+                "fecha_operacion",
+                "puerto",
+                "embarcacion",
+            ],
+            name="unique_diario_embarcacion",
+        )]
+
+
+class buques_puerto(models.Model):
+    TIPO_BUQUES=[
+        ("buque_carga","Buque de Carga"),
+        ("buque_tanque","Buque Tanque"),
+        ("buque_reparando","Buque Reparando"),
+    
+    ]
+    UBICACIONES=[
+        ("navegando","Navegando"),
+        ("ubicado","Con Ubicacion"),
+    ]
+    OPERACIONES=[
+        ("I","IMPORTACION"),
+        ("E","EXPORTACION"),
+        ("CR","CABOTAJE RECIBIDO"),
+        ("CE","CABOTAJE EXPEDIDO"),
+        ("T","TRASBORDO"),
+        ("A","ALIJO"),
+    ]
+    
+    fecha_operacion = models.DateField(_('Fecha de operación'))
+    fecha_creacion = models.DateTimeField(_('Fecha de creación'), auto_now_add=True)
+    puerto= models.ForeignKey(nom_puerto, on_delete=models.SET_NULL, verbose_name=_('Puerto'),blank=True,null=True)
+    tipo_buque= models.CharField( default="N/A",verbose_name="Tipo de Buques",choices=TIPO_BUQUES,blank=True,null=True)
+    registro=models.IntegerField(verbose_name="Campo Enriquecido con el registro de la embarcacion")
+    buque=models.ForeignKey(nom_embarcacion,  on_delete=models.SET_NULL, verbose_name=_('Buque'),blank=True,null=True)
+    puerto_procedencia= models.ForeignKey(nom_puerto, on_delete=models.SET_NULL, verbose_name=_('Puerto Procedencia'),blank=True,null=True)
+    atraque=models.ForeignKey(nom_atraque, on_delete=models.SET_NULL, verbose_name=_('Atraque'),blank=True,null=True)
+    nor=models.DateTimeField(verbose_name="Fecha y hora de entrada al atraque",blank=True,null=True)
+    fecha_arribo = models.DateField(_('Fecha de arribo'))
+    fecha_entrada = models.DateField(_('Fecha de entrafa'))
+    operacion=models.CharField(verbose_name="Campo Enriquecido con las Operaciones",choices=OPERACIONES,blank=True,null=True)
+    ets=models.DateTimeField(verbose_name="Fecha y hora ETS",blank=True,null=True)
+    eta=models.DateTimeField(verbose_name="Fecha y hora ETA",blank=True,null=True)
+    puerto_destino= models.ForeignKey(nom_puerto, on_delete=models.SET_NULL, verbose_name=_('Puerto Destino'),blank=True,null=True)
+    nacionalidad=models.ForeignKey(nom_pais, on_delete=models.SET_NULL, verbose_name=_('Nacionalidad'),blank=True,null=True)
+    observaciones=models.CharField(verbose_name="Campo Enriquecido con las observaciones",null=True,blank=True)
+    
+    class Meta:
+        verbose_name = _('Registro Buque de Puerto')
+        verbose_name_plural = _('Registros Buques de Puerto')
+        
 
 

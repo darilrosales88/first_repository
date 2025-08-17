@@ -2,7 +2,9 @@
 
 ## Parte Diario de Embarcaciones
 
+##  1. Diario de Embarcaciones
 ### Validaciones
+
 1. Si la fecha de vencimiento es mayor o igual que la fecha actual, el campo Certificado vencido muestra el valor “1-Sí”.
 
 2. Si la fecha de vencimiento es menor que la fecha actual, el campo  Certificado vencido muestra el valor “2-No”.
@@ -34,3 +36,52 @@ CDT general = En servicio / Parque de embarcaciones * 100
 
 12.	La combinación de los campos Fecha de operación, Puerto, Embarcación, son únicos.
 
+## 2. Diario de Buques
+
+1.	El campo Fecha de operación permite seleccionar la fecha de la operación realizada.
+2.	El campo Fecha actual muestra la fecha actual del sistema. Esta es la fecha de creación del tipo de parte.
+3.	El campo Tipo muestra los valores definidos:
+
+    1-Buques de carga
+    
+    2-Buques tanque
+    
+    3-Buques reparando
+
+4.	El campo Registro admite números.
+5.	El campo Buque muestra el listado de embarcaciones de tipo buques registrados en el nomenclador de embarcaciones de tipo “Buque”.
+6.	El campo Puerto procedencia muestra el listado de puertos registrados en el nomenclador de puertos.
+7.	El campo Puerto destino muestra el listado de puertos registrados en el nomenclador de puertos.
+8.	El campo Ubicación muestra los valores definidos:
+1-Navegando
+2-Con ubicación
+9.	Si el campo Ubicación es “1-Navegando”, el campo Puerto ubicado no se habilita.
+10.	Si el campo Ubicación es “2-Con ubicación”, el campo Puerto muestra el listado de puertos registrados en el nomenclador de puertos.
+11.	El campo Atraque muestra el listado de atraques asociados al puerto seleccionado en el campo Puerto.
+12.	Los campos Puerto y Puerto procedencia no debe ser iguales.
+13.	Los campos Puerto y Puerto destino no debe ser iguales.
+14.	El campo Operación muestra los valores definidos:
+    1-I- IMPORTACION
+
+    2-E- EXPORTACION
+    
+    3-CR- CABOTAJE RECIBIDO
+    
+    4-CE- CABOTAJE EXPEDIDO
+    
+    5-T- TRASBORDO
+    
+    6-A- ALIJO 
+15.	Los campos Fecha entrada, Fecha arribo, ETA, ETS, NOR, son campos de selección de fecha y hora, con el formato (dd/mm/aaaa HH:mm).
+16.	El campo Nacionalidad muestra los valores definidos:
+
+    1-A
+    
+    2-C
+    
+    3-T
+17.	El campo Observaciones admite letras, números y caracteres especiales.
+18.	La combinación de los campos Buque, Puerto procedencia, Puerto, Atraque, Operación, Destino, son únicos.
+19.	Validar los campos obligatorios y notificar al usuario mediante un mensaje de información cuando deje alguno vacío.
+20.	Validar los campos únicos y notificar al usuario mediante un mensaje de información cuando deje alguno vacío.
+21.	Los campos editables no deben comenzar con el carácter espacio.

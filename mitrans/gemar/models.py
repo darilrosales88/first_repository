@@ -671,5 +671,21 @@ class buques_puerto(models.Model):
         verbose_name = _('Registro Buque de Puerto')
         verbose_name_plural = _('Registros Buques de Puerto')
         
-
+class producto_buque(models.Model):
+    TIPO_PRODUCTO=[
+        ("producto","Producto"),
+        ("contenedor","Contenedor"),
+    ]
+    ESTADOS_CONTENEDOR=[
+        ("vacio","Vacio"),
+        ("lleno","Lleno"),
+    ]
+    producto=models.ForeignKey(nom_producto, on_delete=models.SET_NULL, verbose_name=_('Producto'),blank=True,null=True)
+    tipo_producto=models.CharField(verbose_name="Tipo de Producto",choices=TIPO_PRODUCTO,blank=True,null=True,max_length=20)
+    tipo_embalaje = models.ForeignKey(nom_tipo_embalaje, on_delete=models.CASCADE)
+    unidad_medida = models.ForeignKey(nom_unidad_medida, on_delete=models.CASCADE)  
+    estado=models.CharField(choices=ESTADOS_CONTENEDOR,verbose_name="Estado del Producto",max_length=20,blank=True,null=True)  
+    class Meta:
+        verbose_name = _('Producto de Buque')
+        verbose_name_plural = _('Productos de Buque')
 

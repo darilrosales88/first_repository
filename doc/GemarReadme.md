@@ -85,3 +85,29 @@ CDT general = En servicio / Parque de embarcaciones * 100
 19.	Validar los campos obligatorios y notificar al usuario mediante un mensaje de información cuando deje alguno vacío.
 20.	Validar los campos únicos y notificar al usuario mediante un mensaje de información cuando deje alguno vacío.
 21.	Los campos editables no deben comenzar con el carácter espacio.
+
+## 3. Productos Buque
+1.	El campo Tipo producto muestra los valores definidos:
+   
+    1-Producto
+
+    2-Contenedor
+
+2.	Si el campo Tipo producto es “1-Producto”, el campo Producto muestra el listado de productos registrados en el nomenclador de producto.
+3.	Si el campo Tipo producto es “1-Producto”, el campo Tipo de embalaje muestra el listado de Tipo de embalajes registradas en el nomenclador de Tipo de embalaje.
+4.	El campo Unidad de medida muestra el listado de unidades de medida registradas en el nomenclador de unidad de medida.
+5.	Si el campo Tipo producto es “1-Contenedor”, el campo Estado debe mostrar los valores definidos:
+   
+    1-Vacío
+    
+    2-Lleno
+
+6.	Si el campo Estado es “2-Lleno”, el campo Contiene debe mostrar los valores definidos:
+    
+    1-Alimentos
+    
+    2-Productos varios
+7.	La combinación de los campos Producto, Estado, Contiene son únicos.
+8.	Validar los campos obligatorios y notificar al usuario mediante un mensaje de información cuando deje alguno vacío.
+9.	Validar los campos únicos y notificar al usuario mediante un mensaje de información cuando deje alguno vacío.
+10.	Los campos editables no deben comenzar con el carácter espacio.

@@ -355,7 +355,7 @@ export default {
   data() {
     return {
       registroSituado: [],
-      allRecords: [], // Copia completa de todos los registros para filtrado local
+      allRecords: [],
       habilitado: true,
       currentPage: 1,
       itemsPerPage: 10,
@@ -373,7 +373,6 @@ export default {
 
   async mounted() {
     await this.getSituado();
-    console.log("Hola", this.registroSituado);
     await this.fetchUserPermissionsAndGroups();
   },
 
@@ -417,11 +416,11 @@ export default {
     },
 
     hasGroup(groups) {
-  if (!Array.isArray(groups)) {
-    groups = [groups];
-  }
-  return this.userGroups.some((g) => groups.includes(g.name));
-},
+      if (!Array.isArray(groups)) {
+        groups = [groups];
+      }
+      return this.userGroups.some((g) => groups.includes(g.name));
+    },
 
     async fetchUserPermissionsAndGroups() {
       try {
@@ -491,7 +490,7 @@ export default {
           this.registroSituado = response.data.results;
           this.totalItems = response.data.count;
         } else {
-          // this.showErrorToast("No hay ID para cargar");
+          this.showErrorToast("No hay ID para cargar");
         }
       } catch (error) {
         console.error("Error al obtener los Situados:", error);
@@ -603,6 +602,7 @@ export default {
       console.error(errorMsg, error);
       Swal.fire("Error", errorMsg, "error");
     },
+    
     showSuccessToast(message) {
       const Toast = Swal.mixin({
         toast: true,

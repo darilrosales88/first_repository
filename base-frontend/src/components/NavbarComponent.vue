@@ -218,7 +218,6 @@ export default {
       }
     },
     insertRoute(route) {
-      console.log(route);
       this.$router.push(route);
     },
     hasPermission(permission) {

@@ -739,19 +739,11 @@ export default {
 
       this.vagonesAgregados.push(nuevoVagon);
       this.showSuccessToast("Vagón añadido");
-      localStorage.setItem(
-        "vagonesAgregados",
-        JSON.stringify(this.vagonesAgregados)
-      );
     },
 
     eliminarVagon(index) {
       this.vagonesAgregados.splice(index, 1);
-      localStorage.setItem(
-        "vagonesAgregados",
-        JSON.stringify(this.vagonesAgregados)
-      );
-    this.showSuccessToast("Vagón añadido");
+      this.showSuccessToast("Vagón añadido");
       
     },
 
@@ -770,13 +762,13 @@ export default {
           title: "Error de validación",
           text: errorMessage,
         });
-        return false; // Detener el envío del formulario
+        return false; 
       }
 
-      return true; // El formulario es válido
+      return true; 
     },
 
-        showSuccessToast(message) {
+    showSuccessToast(message) {
       const Toast = Swal.mixin({
         toast: true,
         position: "top-end",

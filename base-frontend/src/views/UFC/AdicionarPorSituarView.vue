@@ -132,7 +132,6 @@
                     }}
                   </option>
                 </select>
-
               </div>
 
               <!-- Campo: por_situar -->
@@ -525,7 +524,7 @@ export default {
       }
     },
 
-    async abrirModalVagon() {
+    abrirModalVagon() {
       if (this.equipos_vagones.length == 0) {
         Swal.fire({
           title: "Error",
@@ -574,19 +573,13 @@ export default {
         this.showErrorToast("Complete todos los campos");
         return;
       }
-      const equipoSeleccionado = this.equipos_vagones.find(
-        (e) => e.id === this.nuevoVagon.equipo_ferroviario
-      );
-      const yaExistente = this.vagonesAgregados.some(
-        (vagon) =>
-          vagon.equipo_ferroviario.id === this.nuevoVagon.equipo_ferroviario
-      );
 
+      const equipoSeleccionado = this.equipos_vagones.find((e) => e.id === this.nuevoVagon.equipo_ferroviario);
+      const yaExistente = this.vagonesAgregados.some((vagon) => vagon.equipo_ferroviario.id === this.nuevoVagon.equipo_ferroviario);
       if (yaExistente) {
         this.showErrorToast("Este vagón ya existe");
         return;
       }
-
       const vagonAgregado = {
         equipo_ferroviario: equipoSeleccionado,
         cant_dias: this.nuevoVagon.cant_dias,
@@ -736,6 +729,7 @@ export default {
           this.$router.push({ name: "InfoOperativo" });
           return;
         }
+        
         const informeNoAprobado = await this.verificarEstadoInforme();
         if (!informeNoAprobado) {
           Swal.fire(
@@ -823,10 +817,6 @@ export default {
 
     eliminarVagon(index) {
       this.vagonesAgregados.splice(index, 1);
-      localStorage.setItem(
-        "vagonesAgregados",
-        JSON.stringify(this.vagonesAgregados)
-      );
       this.showSuccessToast("Vagón eliminado");
     },
 

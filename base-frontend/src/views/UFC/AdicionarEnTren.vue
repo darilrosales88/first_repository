@@ -925,6 +925,7 @@ export default {
     abrirModalAgregarProducto() {
       this.mostrarModal = true;
     },
+    
     cerrarModal() {
       this.mostrarModal = false;
       this.getProductoXEquipo();

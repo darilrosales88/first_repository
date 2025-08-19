@@ -532,7 +532,7 @@ export default {
 
   mounted() {
     this.verificarInformeOperativo();
-    this.getProductos();
+    this.getProductoXEquipo();
     this.getEntidades();
     this.getPuertos();
     this.getEquipos();

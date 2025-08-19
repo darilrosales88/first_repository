@@ -164,41 +164,6 @@
                 </select>                
               </div>
 
-              <!-- Campo: producto -->
-              <div class="mb-3" v-if="mostrarCampoProducto">
-                <label
-                  for="producto"
-                  class="form-label small fw-semibold text-secondary"
-                >
-                  Productos
-                  <button
-                    class="create-button ms-2"
-                    @click="abrirModalAgregarProducto"
-                  >
-                    <i class="bi bi-plus-circle large-icon"></i>
-                  </button>
-                </label>
-                <select
-                  class="form-select"
-                  v-model="formData.producto"
-                  id="producto"
-                  name="producto"
-                  multiple
-                  size="4"
-                >
-                  <option
-                    v-for="producto in productos"
-                    :key="producto.id"
-                    :value="producto.id"
-                  >
-                    {{ producto.id }}-{{ producto.producto_name }} -
-                    {{ producto.producto_codigo }}-{{
-                      producto.tipo_embalaje_name
-                    }}
-                  </option>
-                </select>                
-              </div>
-
               <!-- Campo: tipo_combustible -->
               <div class="mb-3" v-if="mostrarCampoCombustible">
                 <label

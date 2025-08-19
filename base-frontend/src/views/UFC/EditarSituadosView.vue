@@ -487,8 +487,7 @@ export default {
         if (!this.formData.tipo_equipo) {
           return;
         }
-        this.formData.producto = [];
-        this.vagonesAgregados=[];
+
         url += `?tipo_equipo=${this.formData.tipo_equipo}`;
         const response = await axios.get(url);
 
@@ -571,7 +570,6 @@ export default {
 
     eliminarVagon(vagon, index) {
       this.vagonesAgregados.splice(index, 1);
-      this.equipos_vagones.push(vagon.equipo_ferroviario); 
       this.showSuccessToast("Vagón eliminado");
     },
     
@@ -664,7 +662,7 @@ export default {
           return;
         }
 
-        if (this.vagonesAgregados.length != this.formData.por_situar) {
+        if (this.vagonesAgregados.length != this.formData.situados) {
           Swal.fire({
             title: "Advertencia",
             text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de "Situados" (${this.formData.situados}). ¿Desea actualizar el campo "Situados" para que coincida?`,

@@ -1874,7 +1874,8 @@ class equipo_ferroviario_no_locomotora(APIView):
         ).values('no_id')
         
         equipos_no_locomotoras = nom_equipo_ferroviario.objects.filter(
-            tipo_equipo__in=tipos_no_locomotoras
+            tipo_equipo__in=tipos_no_locomotoras,
+            estado_actual='Disponible'
         ).exclude(   numero_identificacion__in=vagones_registrados) #Esto lo tuve que comentar para poder hacer que me salieran los equipos *******
         
         serializer = nom_equipo_ferroviario_serializer(equipos_no_locomotoras, many=True)

@@ -70,7 +70,7 @@
                 class="btn btn-primary"
                 @click="crearInforme"
                 :disabled="isExistingRecord">
-                <i class="bi bi-save me-2"></i>Crear informe operativo
+                <i class="bi bi-save me-2"></i>Crear 
               </button>
             </div>
           </form>
@@ -107,7 +107,7 @@
             @click.prevent="currentComponent = 'Cargados_Descargados'"
             :class="{ active: currentComponent === 'Cargados_Descargados' }"
           >
-            Cargados
+            Carga/Descarga
           </a>
         </li>
         <li>
@@ -429,10 +429,9 @@ export default {
         return false;
       }
     },
+    
     handleRecordStatusChange(payload) {
       this.isExistingRecord = payload.isExisting;
-      // Opcional: Mostrar feedback
-      console.log("Estado actualizado:", payload);
     },
     
     showErrorToast(message) {

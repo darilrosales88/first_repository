@@ -3,7 +3,7 @@
     <div class="card border">
       <div class="card-header bg-light border-bottom">
         <h6 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-inboxes-fill me-2"></i>Registros Por Situar
+          <i class="bi bi-inboxes-fill me-2"></i>Vagones Por Situar
         </h6>
       </div>
       <div class="card-body p-3">
@@ -145,176 +145,175 @@
               </li>
             </ul>
           </nav>
+        </div>
+        <!-- Modal Overlay - Fondo oscuro que se muestra cuando el modal está activo -->
+        <div
+          v-if="showDetailsModal"
+          class="ps-modal-overlay"
+          @click.self="closeModal">
 
-          <!-- Modal Overlay - Fondo oscuro que se muestra cuando el modal está activo -->
-          <div
-            v-if="showDetailsModal"
-            class="ps-modal-overlay"
-            @click.self="closeModal"
-          >
-            <!-- Contenedor principal del modal -->
-            <div class="ps-modal">
-              <!-- Encabezado del modal -->
-              <div class="ps-modal-header">
-                <div class="ps-modal-header-content">
-                  <div class="ps-modal-icon-container">
-                    <i class="bi bi-info-circle-fill ps-modal-icon"></i>
-                  </div>
-                  <div>
-                    <h2>Detalles del Registro</h2>
-                    <p class="ps-modal-subtitle">
-                      Información completa del registro seleccionado
-                    </p>
-                  </div>
+          <!-- Contenedor principal del modal -->
+          <div class="ps-modal">
+            <!-- Encabezado del modal -->
+            <div class="ps-modal-header">
+              <div class="ps-modal-header-content">
+                <div class="ps-modal-icon-container">
+                  <i class="bi bi-info-circle-fill ps-modal-icon"></i>
                 </div>
-                <button class="ps-modal-close" @click="closeModal">
-                  <i class="bi bi-x-lg"></i>
-                </button>
+                <div>
+                  <h2>Detalles del Registro</h2>
+                  <p class="ps-modal-subtitle">
+                    Información completa del registro seleccionado
+                  </p>
+                </div>
               </div>
+              <button class="ps-modal-close" @click="closeModal">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
 
-              <!-- Cuerpo del modal -->
-              <div class="ps-modal-body">
-                <!-- Grid de tarjetas de detalles -->
-                <div class="ps-detail-grid">
-                  <!-- Tarjeta 1: Información Básica -->
-                  <div class="ps-detail-card">
-                    <div class="ps-detail-card-header">
-                      <i class="bi bi-tag-fill"></i>
-                      <h4>Información Básica</h4>
-                    </div>
-                    <div class="ps-detail-card-body">
-                      <!-- Item 1.1: Tipo Origen -->
-                      <div class="ps-detail-item">
-                        <span class="ps-detail-label">Tipo Origen:</span>
-                        <span class="ps-detail-value">
-                          {{
-                            currentRecord.tipo_origen_name ||
-                            currentRecord.tipo_origen ||
-                            "N/A"
-                          }}
-                        </span>
-                      </div>
-
-                      <!-- Item 1.2: Origen -->
-                      <div class="ps-detail-item">
-                        <span class="ps-detail-label">Origen:</span>
-                        <span class="ps-detail-value">
-                          {{ currentRecord.origen || "N/A" }}
-                        </span>
-                      </div>
-
-                      <!-- Item 1.3: Tipo de Equipo -->
-                      <div class="ps-detail-item">
-                        <span class="ps-detail-label">Tipo de Equipo:</span>
-                        <span class="ps-detail-value">
-                          {{ currentRecord.tipo_equipo_name || "N/A" }}
-                        </span>
-                      </div>
-                    </div>
+            <!-- Cuerpo del modal -->
+            <div class="ps-modal-body">
+              <!-- Grid de tarjetas de detalles -->
+              <div class="ps-detail-grid">
+                <!-- Tarjeta 1: Información Básica -->
+                <div class="ps-detail-card">
+                  <div class="ps-detail-card-header">
+                    <i class="bi bi-tag-fill"></i>
+                    <h4>Información Básica</h4>
                   </div>
+                  <div class="ps-detail-card-body">
+                    <!-- Item 1.1: Tipo Origen -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-label">Tipo Origen:</span>
+                      <span class="ps-detail-value">
+                        {{
+                          currentRecord.tipo_origen_name ||
+                          currentRecord.tipo_origen ||
+                          "N/A"
+                        }}
+                      </span>
+                    </div>
 
-                  <!-- Tarjeta 2: Estado,Operación y Producto -->
-                  <div class="ps-detail-card">
-                    <div class="ps-detail-card-header">
-                      <i class="bi bi-clipboard2-data-fill"></i>
-                      <h4>Estado y Operación</h4>
+                    <!-- Item 1.2: Origen -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-label">Origen:</span>
+                      <span class="ps-detail-value">
+                        {{ currentRecord.origen || "N/A" }}
+                      </span>
                     </div>
-                    <div class="ps-detail-card-body">
-                      <!-- Item 2.1: Estado -->
-                      <div class="ps-detail-item">
-                        <span class="ps-detail-label">Estado:</span>
-                        <span class="ps-detail-value">
-                          <span :class="`ps-status ps-status-${getStatusClass(currentRecord.estado)}`">
-                            {{ currentRecord.estado || "N/A" }}
-                          </span>
-                        </span>
-                      </div>
 
-                      <!-- Item 2.2: Operación -->
-                      <div class="ps-detail-item">
-                        <span class="ps-detail-label">Operación:</span>
-                        <span class="ps-detail-value">
-                          {{ currentRecord.operacion || "N/A" }}
-                        </span>
-                      </div>
-
-                      <!-- Item 2.3: Producto -->
-                      <div class="ps-detail-item">
-                        <span class="ps-detail-label">Producto:</span>
-                        <span class="ps-detail-value">
-                          <span v-if="currentRecord.productos_info && currentRecord.productos_info.length > 0">
-                            {{getNombresProductos(currentRecord.productos_info)}}
-                          </span>
-                          <span v-else>N/A</span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Tarjeta 3: Cantidad (Destacada) -->
-                  <div class="ps-detail-card">
-                    <div class="ps-detail-card-header">
-                      <i class="bi bi-exclamation-square-fill"></i>
-                      <h4>Cantidad</h4>
-                    </div>
-                    <div class="ps-detail-card-body">
-                      <!-- Item 3.1: Por Situar -->
-                      <div class="ps-detail-item">
-                        <span class="ps-detail-label">Por Situar:</span>
-                        <span class="ps-detail-value ps-highlight-value">
-                          {{ currentRecord.por_situar || "0" }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Tarjeta 4: Observaciones (Ancho completo) -->
-                  <div class="ps-detail-card ps-detail-card-full">
-                    <div class="ps-detail-card-header">
-                      <i class="bi bi-chat-square-text-fill"></i>
-                      <h4>Observaciones</h4>
-                    </div>
-                    <div class="ps-detail-card-body">
-                      <!-- Item 4.1: Observaciones -->
-                      <div class="ps-detail-item">
-                        <span class="ps-detail-value">
-                          {{
-                            currentRecord.observaciones ||
-                            "Ninguna observación registrada"
-                          }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Tarjeta 5: Meta Información -->
-                  <div class="ps-detail-card">
-                    <div class="ps-detail-card-header">
-                      <i class="bi bi-calendar-event-fill"></i>
-                      <h4>Meta Información</h4>
-                    </div>
-                    <div class="ps-detail-card-body">
-                      <!-- Item 5.1: Fecha Creación -->
-                      <div class="ps-detail-item">
-                        <span class="ps-detail-label">Fecha Creación:</span>
-                        <span class="ps-detail-value">
-                          {{ currentRecord.fecha_registro }}
-                        </span>
-                      </div>
+                    <!-- Item 1.3: Tipo de Equipo -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-label">Tipo de Equipo:</span>
+                      <span class="ps-detail-value">
+                        {{ currentRecord.tipo_equipo_name || "N/A" }}
+                      </span>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Pie del modal -->
-              <div class="ps-modal-footer">
-                <button
-                  class="ps-modal-btn ps-modal-btn-secondary"
-                  @click="closeModal"
-                >
-                  <i class="bi bi-x-circle"></i> Cerrar
-                </button>
+                <!-- Tarjeta 2: Estado,Operación y Producto -->
+                <div class="ps-detail-card">
+                  <div class="ps-detail-card-header">
+                    <i class="bi bi-clipboard2-data-fill"></i>
+                    <h4>Estado y Operación</h4>
+                  </div>
+                  <div class="ps-detail-card-body">
+                    <!-- Item 2.1: Estado -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-label">Estado:</span>
+                      <span class="ps-detail-value">
+                        <span :class="`ps-status ps-status-${getStatusClass(currentRecord.estado)}`">
+                          {{ currentRecord.estado || "N/A" }}
+                        </span>
+                      </span>
+                    </div>
+
+                    <!-- Item 2.2: Operación -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-label">Operación:</span>
+                      <span class="ps-detail-value">
+                        {{ currentRecord.operacion || "N/A" }}
+                      </span>
+                    </div>
+
+                    <!-- Item 2.3: Producto -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-label">Producto:</span>
+                      <span class="ps-detail-value">
+                        <span v-if="currentRecord.productos_info && currentRecord.productos_info.length > 0">
+                          {{getNombresProductos(currentRecord.productos_info)}}
+                        </span>
+                        <span v-else>N/A</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tarjeta 3: Cantidad (Destacada) -->
+                <div class="ps-detail-card">
+                  <div class="ps-detail-card-header">
+                    <i class="bi bi-exclamation-square-fill"></i>
+                    <h4>Cantidad</h4>
+                  </div>
+                  <div class="ps-detail-card-body">
+                    <!-- Item 3.1: Por Situar -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-label">Por Situar:</span>
+                      <span class="ps-detail-value ps-highlight-value">
+                        {{ currentRecord.por_situar || "0" }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tarjeta 4: Observaciones (Ancho completo) -->
+                <div class="ps-detail-card ps-detail-card-full">
+                  <div class="ps-detail-card-header">
+                    <i class="bi bi-chat-square-text-fill"></i>
+                    <h4>Observaciones</h4>
+                  </div>
+                  <div class="ps-detail-card-body">
+                    <!-- Item 4.1: Observaciones -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-value">
+                        {{
+                          currentRecord.observaciones ||
+                          "Ninguna observación registrada"
+                        }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tarjeta 5: Meta Información -->
+                <div class="ps-detail-card">
+                  <div class="ps-detail-card-header">
+                    <i class="bi bi-calendar-event-fill"></i>
+                    <h4>Meta Información</h4>
+                  </div>
+                  <div class="ps-detail-card-body">
+                    <!-- Item 5.1: Fecha Creación -->
+                    <div class="ps-detail-item">
+                      <span class="ps-detail-label">Fecha Creación:</span>
+                      <span class="ps-detail-value">
+                        {{ currentRecord.fecha_registro }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
+            </div>
+
+            <!-- Pie del modal -->
+            <div class="ps-modal-footer">
+              <button
+                class="ps-modal-btn ps-modal-btn-secondary"
+                @click="closeModal"
+              >
+                <i class="bi bi-x-circle"></i> Cerrar
+              </button>
             </div>
           </div>
         </div>
@@ -358,7 +357,6 @@ export default {
 
   async mounted() {
     await this.getPorSituar();
-    console.log("Hola", this.porSituarCarga_Descarga);
     await this.fetchUserPermissionsAndGroups();
   },
 
@@ -381,11 +379,11 @@ export default {
     },
 
     hasGroup(groups) {
-  if (!Array.isArray(groups)) {
-    groups = [groups];
-  }
-  return this.userGroups.some((g) => groups.includes(g.name));
-},
+      if (!Array.isArray(groups)) {
+        groups = [groups];
+      }
+      return this.userGroups.some((g) => groups.includes(g.name));
+    },
 
     closeModal() {
       this.showDetailsModal = false;
@@ -548,7 +546,7 @@ export default {
         this.porSituarCarga_Descarga = this.porSituarCarga_Descarga.filter(
           (objeto) => objeto.id !== id
         );
-        this.showSuccessToast("El registro ha sido eliminado correctamente");
+        this.showSuccessToast("Registro elimiando");
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
         this.showErrorToast("Hubo un error al eliminar el producto.");

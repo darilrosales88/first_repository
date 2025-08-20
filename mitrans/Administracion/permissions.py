@@ -1,0 +1,45 @@
+from rest_framework import permissions
+from rest_framework.permissions import BasePermission
+
+class IsAdmin(permissions.BasePermission):
+    """
+    Permiso personalizado para permitir solo a los usuarios del grupo Admin realizar operaciones de administración.
+    """
+    def has_permission(self, request,view):
+        return request.user.is_authenticated and request.user.groups.filter(name='Admin').exists()
+    
+class ReadOnly(permissions.BasePermission):
+    """
+    Permiso personalizado para permitir solo operaciones de lectura (GET, HEAD, OPTIONS).
+    """
+    def has_permission(self, request, view):
+        # Verifica que el usuario esté autenticado y pertenezca al grupo Visualizador
+        return request.user.is_authenticated and request.user.groups.filter(name='Visualizador').exists()
+
+    def has_object_permission(self, request, view, obj):
+        # Solo permitir operaciones de lectura (GET, HEAD, OPTIONS)
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return False
+
+
+class IsGEMARUser(BasePermission):
+    """
+    Permiso para usuarios con rol GEMAR
+    """
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == 'gemar'
+
+class IsUFCUser(BasePermission):
+    """
+    Permiso para usuarios con rol UFC
+    """
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == 'ufc'
+
+class IsAdminUser(BasePermission):
+    """
+    Permiso para usuarios administradores
+    """
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.is_staff

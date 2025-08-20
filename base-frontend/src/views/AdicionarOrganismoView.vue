@@ -1,36 +1,61 @@
 <template>
   <div>
-    <div style=" background-color: #002A68; color: white; text-align: right;">
+    <div style="background-color: #002a68; color: white; text-align: right">
       <h6>Bienvenido:</h6>
-    </div>  
+    </div>
     <br />
     <Navbar-Component />
-    
-    <div class="form-container">
-      <h3>Adicionar OSDE/OACE u Organismo:</h3>
+    <div class="form-container" style="margin-left: 18em; width: 75%">
+      <h3 style="color: #002a68">Adicionar OSDE/OACE u Organismo:</h3>
       <form @submit.prevent="save_osde_oace_organismo">
-        <!-- Campo Nombre -->
         <div class="form-row">
-        <div class="mb-3">
-          <label for="nombre" class="form-label">Nombre:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="nombre" v-model="nombre" required />
+          <div class="mb-3">
+            <label for="nombre" class="form-label"
+              >Nombre:<span style="color: red">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="nombre"
+              v-model="nombre"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="abreviatura" class="form-label"
+              >Abreviatura:<span style="color: red">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="abreviatura"
+              v-model="abreviatura"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="codigo_reeup" class="form-label"
+              >Código REEUP:</label
+            >
+            <input
+              type="number"
+              class="form-control"
+              id="codigo_reeup"
+              v-model="codigo_reeup"
+            />
+          </div>
         </div>
 
-        <!-- Campo Abreviatura -->
-        <div class="mb-3">
-          <label for="abreviatura" class="form-label">Abreviatura:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="abreviatura" v-model="abreviatura" required />
-        </div>
-
-        <!-- Campo Código REEUP -->
-        <div class="mb-3">
-          <label for="codigo_reeup" class="form-label">Código REEUP:</label>
-          <input type="number" class="form-control" id="codigo_reeup" v-model="codigo_reeup" />
-        </div>
-      </div>
-        <!-- Botones -->
         <div class="form-buttons">
-          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button
+            type="button"
+            @click="confirmCancel"
+            style="color: white; text-decoration: none"
+          >
+            Cancelar
+          </button>
           <button type="submit">Aceptar</button>
         </div>
       </form>
@@ -40,17 +65,16 @@
 
 <style scoped>
 body {
-  background-color: #F2F2F2;
+  background-color: #f2f2f2;
 }
 
 .form-container {
-  max-width: 600px; /* Ancho reducido */
-  margin: 20px ; /* Centra el formulario */
+  max-width: 600px;
+  margin: 20px;
   padding: 20px;
   margin-left: 220px;
   background-color: rgb(245, 245, 245);
   border-radius: 8px;
- 
 }
 
 h3 {
@@ -58,10 +82,12 @@ h3 {
   margin-bottom: 20px;
   font-size: 18px;
 }
-.form-label{
+
+.form-label {
   font-size: 14px;
   text-align: left;
 }
+
 form {
   display: flex;
   flex-direction: column;
@@ -81,9 +107,9 @@ form {
 }
 
 .form-control {
-  padding: 1px 0px; /* Padding reducido */
-  height: 25px; /* Altura reducida */
-  font-size: 14px; /* Tamaño de fuente reducido */
+  padding: 1px 0px;
+  height: 25px;
+  font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 2px;
 }
@@ -96,12 +122,12 @@ form {
 
 button {
   margin-left: 10px;
-  padding: 6px 15px; /* Padding reducido */
+  padding: 6px 15px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
-  font-size: 14px; /* Tamaño de fuente reducido */
+  font-size: 14px;
 }
 
 button[type="button"] {

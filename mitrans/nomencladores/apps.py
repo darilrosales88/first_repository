@@ -6,4 +6,4 @@ class NomencladoresConfig(AppConfig):
     name = 'nomencladores'
 
     def ready(self):
-        import nomencladores.signals  # Importar las señales
+        pass  # Importar las señales

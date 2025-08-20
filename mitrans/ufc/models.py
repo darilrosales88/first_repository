@@ -1,6 +1,5 @@
 from django.db import models, transaction
-from django.core.validators import RegexValidator
-from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator,MinValueValidator, MaxValueValidator
 
 from Administracion.models import CustomUser
 from nomencladores.models import( nom_tipo_equipo_ferroviario,nom_producto,
@@ -8,7 +7,6 @@ from nomencladores.models import( nom_tipo_equipo_ferroviario,nom_producto,
                                  nom_equipo_ferroviario,nom_provincia,
                                  nom_entidades   
                                  )
-import time
 
 
 
@@ -312,32 +310,16 @@ class Situado_Carga_Descarga(models.Model):
     producto = models.ForeignKey(
         producto_UFC, blank=True, related_name="situados", verbose_name="Productos situados a la carga/descarga",on_delete=models.SET_NULL,null=True
     )
-
-    situados = models.CharField(
-        max_length=10,
+    #Estos campos deben ser Integers
+    situados = models.IntegerField(
         verbose_name="Cantidad de situados",
-        default="0",
-        validators=[
-            
-            RegexValidator(
-                regex="^[0-9]+$",
-                message="Solo se permiten números positivos",
-                code="invalid_situados",
-            )
-        ],
+        validators=[MinValueValidator(1), MaxValueValidator(120)],
     )
 
-    pendiente_proximo_dia = models.CharField(
-        max_length=10,
+    pendiente_proximo_dia = models.IntegerField(
         verbose_name="Pendientes para el próximo día",
-        default="0",
-        validators=[
-            RegexValidator(
-                regex="^[0-9]+$",
-                message="Solo se permiten números positivos",
-                code="invalid_pendientes",
-            )
-        ],
+        validators=[MinValueValidator(1), MaxValueValidator(120)],
+
     )
     
     
@@ -960,6 +942,9 @@ class ufc_informe_ccd(models.Model):
     fecha_actual = models.DateTimeField(
         auto_now=True, verbose_name="Fecha actual", unique=True
     )
+    fecha_creacion = models.DateField(
+        auto_now=True, verbose_name="Fecha actual", editable=False
+    )
     estado_parte = models.CharField(default="creado",max_length=14, choices=ESTADOS_PARTE, verbose_name="Estado del parte")
     comentarios= models.TextField(
         null=True,
@@ -986,6 +971,13 @@ class ufc_informe_ccd(models.Model):
             ("puede_aprobar_informe", "Puede aprobar informes CCD"),
             ("puede_cambiar_a_listo", "Puede cambiar el estado del informe CCD a listo"),
         ]
+        constraints=[models.UniqueConstraint(
+            fields = [
+                "creado_por",
+                "fecha_creacion",
+            ],
+            name="unique_ccd_creado_por__fecha_creacion",
+        )]
     def save(self, *args, **kwargs):
         # Asignar entidad del creador si no está establecida
         if not self.entidad and self.creado_por:
@@ -1252,7 +1244,7 @@ class ccd_arrastres(models.Model):
         related_name="arrastres_ccd",
         null=True, blank=True,
         verbose_name="Acceso o Centro Carga/Descarga",
-        default=7
+        help_text="Seleccione el acceso o centro de carga/descarga asociado al arrastre",
     )
     tipo_equipo= models.ForeignKey(
         nom_tipo_equipo_ferroviario,
@@ -1395,8 +1387,8 @@ class ccd_en_trenes(models.Model):
 class ccd_registro_vagones_cd(models.Model):
     # Opciones para el campo tipo_origen
     TIPO_ORIGEN_CHOICES = [
-        ("municipio", "Municipio"),
-        ("provincia", "Provincia"),
+        ("ac_cd", "Acceso Comercial"),
+        ("puerto", "Puerto"),
     ]
 
     equipo_ferroviario=models.ForeignKey(nom_equipo_ferroviario, on_delete=models.CASCADE,null=False,blank=False,verbose_name="Campo de equipo Ferroviario", related_name="registro_equipo_ccd")

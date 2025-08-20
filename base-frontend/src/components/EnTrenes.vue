@@ -8,9 +8,10 @@
       </div>
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <router-link v-if="hasGroup(['AdminUFC', 'OperadorUFC']) && this.habilitado" to="/AdicionarVagon">
+          
+          <router-link v-if="hasGroup('AdminUFC') && this.habilitado" to="/AdicionarVagon">
             <button class="btn btn-sm btn-primary">
-              <i class="bi bi-plus-circle me-1"></i>Añadir
+              <i class="bi bi-plus-circle me-1"></i>Agregar nuevo vagón en tren
             </button>
           </router-link>
           <form @submit.prevent="search_producto" class="search-container">
@@ -569,7 +570,7 @@ export default {
       try {
         await axios.delete(`/ufc/en-trenes/${id}/`);
         this.enTrenes = this.enTrenes.filter((tren) => tren.id !== id);
-        this.showSuccessToast("El registro ha sido eliminado exitosamente.");
+        this.showSuccessToast("Registro elimiando");
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
         this.showErrorToast("Hubo un error al eliminar el registro.");

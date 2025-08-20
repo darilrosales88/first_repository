@@ -1,35 +1,68 @@
 <template>
   <div>
-    <div style=" background-color: #002A68; color: white; text-align: right;">
+    <div style="background-color: #002a68; color: white; text-align: right">
       <h6>Bienvenido:</h6>
-    </div>  
+    </div>
     <br />
     <Navbar-Component />
-    
-    <div class="form-container">
-      <h3 style="color: #002A68;">Editar OSDE/OACE u Organismo</h3>
-      <form @submit.prevent="update_osde_oace_organismo" class="form-grid">
-        <!-- Campo Nombre -->
-        <div class="mb-3">
-          <label for="nombre" class="form-label">Nombre:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="nombre" v-model="nombre" required />
-        </div>
 
-        <!-- Campo Abreviatura -->
-        <div class="mb-3">
-          <label for="abreviatura" class="form-label">Abreviatura:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="abreviatura" v-model="abreviatura" required />
-        </div>
+    <div class="form-container" style="margin-left: 18em; width: 75%">
+      <h3 style="color: #002a68">
+        Editar OSDE/OACE u Organismo <strong>{{ nombre }}</strong>
+      </h3>
+      <form @submit.prevent="update_osde_oace_organismo">
+        <div class="form-row">
+          <!-- Campo Nombre -->
+          <div class="mb-3">
+            <label for="nombre" class="form-label"
+              >Nombre:<span style="color: red">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="nombre"
+              v-model="nombre"
+              required
+            />
+          </div>
 
-        <!-- Campo Código REEUP -->
-        <div class="mb-3">
-          <label for="codigo_reeup" class="form-label">Código REEUP:</label>
-          <input type="number" class="form-control" id="codigo_reeup" v-model="codigo_reeup" />
+          <!-- Campo Abreviatura -->
+          <div class="mb-3">
+            <label for="abreviatura" class="form-label"
+              >Abreviatura:<span style="color: red">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="abreviatura"
+              v-model="abreviatura"
+              required
+            />
+          </div>
+
+          <!-- Campo Código REEUP -->
+          <div class="mb-3">
+            <label for="codigo_reeup" class="form-label"
+              >Código REEUP:</label
+            >
+            <input
+              type="number"
+              class="form-control"
+              id="codigo_reeup"
+              v-model="codigo_reeup"
+            />
+          </div>
         </div>
 
         <!-- Botones -->
         <div class="form-buttons">
-          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button
+            type="button"
+            @click="confirmCancel"
+            style="color: white; text-decoration: none"
+          >
+            Cancelar
+          </button>
           <button type="submit">Aceptar</button>
         </div>
       </form>
@@ -39,17 +72,16 @@
 
 <style scoped>
 body {
-  background-color: #F2F2F2;
+  background-color: #f2f2f2;
 }
 
 .form-container {
-  max-width: 680px; /* Ancho reducido */
+  max-width: 600px; /* Ancho reducido */
   margin: 20px; /* Centra el formulario */
   padding: 20px;
   margin-left: 220px;
   background-color: rgb(245, 245, 245);
   border-radius: 8px;
-  
 }
 
 h3 {
@@ -69,17 +101,16 @@ form {
   gap: 15px;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 2 columnas de igual tamaño */
-  gap: 15px; /* Espacio entre los elementos */
+.form-row {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
 }
 
 .mb-3 {
   width: 200px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
 }
 
 .form-control {
@@ -98,7 +129,6 @@ select option {
 }
 
 .form-buttons {
-  grid-column: span 3; /* Los botones ocupan las 2 columnas */
   display: flex;
   justify-content: flex-end;
   font-size: 14px;

@@ -14,7 +14,6 @@ from rest_framework import status
 #transaction.atomic crea una transacción atómica que asegura que:
 #O todas las operaciones se ejecutan correctamente O ninguna se ejecuta (si ocurre algún error)
 from django.db import transaction 
-import json
 from django.utils import timezone
 from .models import  vagon_cargado_descargado,vagones_dias
 from nomencladores.models import nom_equipo_ferroviario,nom_tipo_equipo_ferroviario
@@ -44,7 +43,6 @@ from nomencladores.models import (
     nom_producto,
     nom_tipo_embalaje,
     nom_unidad_medida,
-    nom_tipo_equipo_ferroviario,
     nom_entidades)
 
 #****************-------------------------********************--------------------***************-----------------********************************

@@ -6,4 +6,4 @@ class UfcConfig(AppConfig):
     name = 'ufc'
 
     def ready(self):
-        import ufc.signals  # Registrar señales, de esta manera las señales se ejecutarán 
+        pass  # Registrar señales, de esta manera las señales se ejecutarán 

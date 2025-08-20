@@ -100,10 +100,6 @@
   </div>
   
 
-  
-
-  
-
   <div style="margin-left: 16em; width: 80%">
     <div class="action-buttons">
       <button class="action-btn reject" @click="rechazar">

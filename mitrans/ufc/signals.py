@@ -1,8 +1,6 @@
 from datetime import date
-from django.db import models 
-from django.db.models.signals import pre_save, post_save, post_delete,pre_delete
-from django.db.models import Sum, Prefetch,Subquery, OuterRef
-from django.db.models.functions import TruncDate
+from django.db.models.signals import post_save, post_delete,pre_delete
+from django.db.models import Sum, Subquery
 from django.db import transaction
 from django.dispatch import receiver
 from django.utils import timezone
@@ -11,16 +9,11 @@ from .models import (
     ufc_informe_operativo,
     vagones_productos,
     Situado_Carga_Descarga,
-    por_situar,
     vagon_cargado_descargado,
     vagones_dias,
     registro_vagones_cargados,
-    en_trenes,
-    arrastres,
     rotacion_vagones,
-    producto_UFC,
 )
-from ufc.serializers import actualizar_estado_equipo_ferroviario
 
 # @receiver(pre_save, sender=ufc_informe_operativo)
 # def resetear_estados(sender, instance, **kwargs):

@@ -1,7 +1,6 @@
 from django.test import TestCase
-from django.contrib.auth import get_user_model
-from ufc.models import ufc_informe_ccd,ccd_registro_vagones_cd
-from nomencladores.models import (nom_provincia, nom_entidades,nom_pais,nom_osde_oace_organismo,nom_territorio,nom_equipo_ferroviario,nom_tipo_equipo_ferroviario)
+from ufc.models import ufc_informe_ccd
+from nomencladores.models import (nom_provincia, nom_entidades,nom_pais,nom_osde_oace_organismo,nom_territorio,nom_tipo_equipo_ferroviario)
 from Administracion.models import CustomUser
 import logging
 

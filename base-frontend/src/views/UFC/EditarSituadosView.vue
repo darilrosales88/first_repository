@@ -391,8 +391,6 @@ export default {
       },
       userGroups: [],
       userPermissions: [],
-      productoSearch: "",
-      showProductosDropdown: false,
       entidades: [],
       puertos: [],
       productos: [],
@@ -422,7 +420,6 @@ export default {
     if (this.registroId) {
       this.cargarRegistro();
     }
-    this.getProductos();
     this.getEntidades();
     this.getPuertos();
     this.getEquipos();
@@ -465,7 +462,7 @@ export default {
           pendiente_proximo_dia: parseInt(registro.pendiente_proximo_dia) || 0,
           observaciones: registro.observaciones || "",
         };
-        console.log("Aqui2",this.formData)
+        this.getProductoXEquipo();
         this.buscarEquipos();
       } catch (error) {
         console.error("Error al cargar el registro:", error);
@@ -573,7 +570,6 @@ export default {
 
     eliminarVagon(vagon, index) {
       this.vagonesAgregados.splice(index, 1);
-      this.equipos_vagones.push(vagon.equipo_ferroviario); 
       this.showSuccessToast("Vagón eliminado");
     },
     
@@ -596,16 +592,15 @@ export default {
         return [];
       }
     },
-    async getProductos() {
+
+    async getProductoXEquipo() {
       this.loading = true;
+      
       try {
-        const response = await axios.get("/ufc/producto-vagon/", {
-          params: {
-            include_details: true, 
-          },
-        });
+        const response = await axios.get(`/ufc/producto-vagon/?tipo_equipo=${this.formData.tipo_equipo}`);
 
         this.productos = response.data.results.map((p) => {
+          // Asegurar que tipo_embalaje esté definido
           const tipoEmbalaje = p.tipo_embalaje || {};
           return {
             ...p,
@@ -646,7 +641,7 @@ export default {
     },
     cerrarModal() {
       this.mostrarModal = false;
-      this.getProductos();
+      this.getProductoXEquipo();
     },
     async submitForm() {
   
@@ -667,7 +662,7 @@ export default {
           return;
         }
 
-        if (this.vagonesAgregados.length != this.formData.por_situar) {
+        if (this.vagonesAgregados.length != this.formData.situados) {
           Swal.fire({
             title: "Advertencia",
             text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de "Situados" (${this.formData.situados}). ¿Desea actualizar el campo "Situados" para que coincida?`,

@@ -1,23 +1,34 @@
 <template>
   <div>
-    <div style=" background-color: #002A68; color: white; text-align: right;">
+    <div style="background-color: #002a68; color: white; text-align: right">
       <h6>Bienvenido:</h6>
-    </div>  
+    </div>
     <br />
     <Navbar-Component />
-    
-    <div class="form-container">
-      <h2>Adicionar tipo de embalaje</h2>
+    <div class="form-container" style="margin-left: 18em; width: 75%">
+      <h3 style="color: #002a68">Adicionar tipo de embalaje</h3>
       <form @submit.prevent="saveItem">
-        <!-- Campo Nombre del Tipo de Embalaje -->
         <div class="mb-3">
-          <label for="nombre_tipo_embalaje" class="form-label">Nombre:<span style="color: red;">*</span></label>
-          <input type="text" class="form-control" id="nombre_tipo_embalaje" v-model="nombre_tipo_embalaje" required />
+          <label for="nombre_tipo_embalaje" class="form-label"
+            >Nombre:<span style="color: red">*</span></label
+          >
+          <input
+            type="text"
+            class="form-control"
+            id="nombre_tipo_embalaje"
+            v-model="nombre_tipo_embalaje"
+            required
+          />
         </div>
 
-        <!-- Botones -->
         <div class="form-buttons">
-          <button type="button" @click="confirmCancel" style="color:white;text-decoration:none">Cancelar</button>
+          <button
+            type="button"
+            @click="confirmCancel"
+            style="color: white; text-decoration: none"
+          >
+            Cancelar
+          </button>
           <button type="submit">Aceptar</button>
         </div>
       </form>
@@ -27,20 +38,19 @@
 
 <style scoped>
 body {
-  background-color: #F2F2F2;
+  background-color: #f2f2f2;
 }
 
 .form-container {
-  max-width: 450px; /* Ajusta el ancho máximo del contenedor */
-  margin: 20px; /* Centra el formulario */
+  max-width: 450px;
+  margin: 20px;
   padding: 20px;
   margin-left: 220px;
-  
   border-radius: 8px;
   background-color: rgb(245, 245, 245);
 }
 
-h2 {
+h3 {
   text-align: left;
   margin-bottom: 20px;
   font-size: 18px;
@@ -65,13 +75,13 @@ form {
 }
 
 .form-control {
-  padding: 1px 0px; /* Padding reducido */
-  height: 25px; /* Altura reducida */
-  font-size: 14px; /* Tamaño de fuente reducido */
+  padding: 1px 0px;
+  height: 25px;
+  font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 2px;
-  color: #000; /* Asegura que el texto sea negro */
-  background-color: #fff; /* Asegura que el fondo sea blanco */
+  color: #000;
+  background-color: #fff;
 }
 
 .form-buttons {
@@ -82,12 +92,12 @@ form {
 
 button {
   margin-left: 10px;
-  padding: 6px 15px; /* Padding reducido */
+  padding: 6px 15px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
-  font-size: 14px; /* Tamaño de fuente reducido */
+  font-size: 14px;
 }
 
 button[type="button"] {

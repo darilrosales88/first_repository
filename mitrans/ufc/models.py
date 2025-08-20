@@ -1,5 +1,5 @@
 from django.db import models, transaction
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator,MinValueValidator, MaxValueValidator
 
 from Administracion.models import CustomUser
 from nomencladores.models import( nom_tipo_equipo_ferroviario,nom_producto,
@@ -310,32 +310,16 @@ class Situado_Carga_Descarga(models.Model):
     producto = models.ForeignKey(
         producto_UFC, blank=True, related_name="situados", verbose_name="Productos situados a la carga/descarga",on_delete=models.SET_NULL,null=True
     )
-
-    situados = models.CharField(
-        max_length=10,
+    #Estos campos deben ser Integers
+    situados = models.IntegerField(
         verbose_name="Cantidad de situados",
-        default="0",
-        validators=[
-            
-            RegexValidator(
-                regex="^[0-9]+$",
-                message="Solo se permiten números positivos",
-                code="invalid_situados",
-            )
-        ],
+        validators=[MinValueValidator(1), MaxValueValidator(120)],
     )
 
-    pendiente_proximo_dia = models.CharField(
-        max_length=10,
+    pendiente_proximo_dia = models.IntegerField(
         verbose_name="Pendientes para el próximo día",
-        default="0",
-        validators=[
-            RegexValidator(
-                regex="^[0-9]+$",
-                message="Solo se permiten números positivos",
-                code="invalid_pendientes",
-            )
-        ],
+        validators=[MinValueValidator(1), MaxValueValidator(120)],
+
     )
     
     

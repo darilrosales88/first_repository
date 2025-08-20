@@ -480,7 +480,7 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
                         informe_operativo=informe_anterior
                     ).first()
                     if vagon_producto_anterior:
-                        response_data['plan_anual'] = vagon_producto_anterior.plan_anual
+                        response_data['plan_anual'] = vagon_producto_anterior.plan_anual##@int-64 Revisar esta linea
                         
             elif not es_unico_informe_año and not es_primer_dia_mes:
                 # Caso 4: No es único informe en el año ni es primer día del mes

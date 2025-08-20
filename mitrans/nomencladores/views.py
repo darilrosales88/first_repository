@@ -1,25 +1,4 @@
-#4. Creacion de las vistas
-
-#4.1 una variante para trabajar con los serializadores  es la propiedad viewsets
-# de rest_framework, facilita el CRUD
-from rest_framework import viewsets
-
-#importacion de modelos
-from .models import nom_pais,nom_provincia,nom_municipio,nom_tipo_maniobra_portuaria,nom_contenedor,nom_cargo
-from .models import nom_territorio,nom_puerto,nom_terminal,nom_atraque,nom_unidad_medida,nom_osde_oace_organismo,nom_entidades
-from .models import nom_destino,nom_tipo_equipo_ferroviario,nom_embarcacion,nom_equipo_ferroviario,nom_estado_tecnico
-from .models import nom_producto,nom_tipo_embalaje,nom_incidencia,nom_tipo_estructura_ubicacion,nom_estructura_ubicacion
-
-#importacion de serializadores asociados a los modelos
-from .serializers import nom_pais_serializer,nom_provincia_serializer,nom_municipio_serializer
-from .serializers import nom_tipo_maniobra_portuaria_serializer,nom_contenedor_serializer,nom_cargo_serializer
-from .serializers import nom_territorio_serializer,nom_puerto_serializer,nom_terminal_serializer
-from .serializers import nom_atraque_serializer,nom_unidad_medida_serializer,nom_osde_oace_organismo_serializer,nom_osde_oace_organismo_filter,nom_entidades_serializer
-from .serializers import nom_destino_serializer,nom_tipo_equipo_ferroviario_serializer,nom_embarcacion_serializer
-from .serializers import nom_equipo_ferroviario_serializer,nom_estado_tecnico_serializer,nom_producto_serializer,nom_entidades_filter
-from .serializers import nom_tipo_embalaje_serializer,nom_incidencia_serializer,nom_tipo_estructura_ubicacion_serializer,nom_estructura_ubicacion_serializer
-
-from Administracion.models import Auditoria
+# -*- coding: utf-8 -*-
 
 #importacion de verificacion de autenticacion, trabajo con grupos y asignacion de
 from rest_framework.decorators import api_view
@@ -54,6 +33,36 @@ from .permissions import IsAdminNomenladoresPermission,IsVisualizadorNomenclador
 
 
 #asignando a permission_classes los permisos asociados
+#4. Creacion de las vistas
+
+#4.1 una variante para trabajar con los serializadores  es la propiedad viewsets
+# de rest_framework, facilita el CRUD
+from rest_framework import viewsets
+
+#importacion de modelos
+from .models import nom_pais,nom_provincia,nom_municipio,nom_tipo_maniobra_portuaria,nom_contenedor,nom_cargo
+from .models import nom_territorio,nom_puerto,nom_terminal,nom_atraque,nom_unidad_medida,nom_osde_oace_organismo,nom_entidades
+from .models import nom_destino,nom_tipo_equipo_ferroviario,nom_embarcacion,nom_equipo_ferroviario,nom_estado_tecnico
+from .models import nom_producto,nom_tipo_embalaje,nom_incidencia,nom_tipo_estructura_ubicacion,nom_estructura_ubicacion
+
+#importacion de serializadores asociados a los modelos
+from .serializers import nom_pais_serializer,nom_provincia_serializer,nom_municipio_serializer
+from .serializers import nom_tipo_maniobra_portuaria_serializer,nom_contenedor_serializer,nom_cargo_serializer
+from .serializers import nom_territorio_serializer,nom_puerto_serializer,nom_terminal_serializer
+from .serializers import nom_atraque_serializer,nom_unidad_medida_serializer,nom_osde_oace_organismo_serializer,nom_osde_oace_organismo_filter,nom_entidades_serializer
+from .serializers import nom_destino_serializer,nom_tipo_equipo_ferroviario_serializer,nom_embarcacion_serializer
+from .serializers import nom_equipo_ferroviario_serializer,nom_estado_tecnico_serializer,nom_producto_serializer,nom_entidades_filter
+from .serializers import nom_tipo_embalaje_serializer,nom_incidencia_serializer,nom_tipo_estructura_ubicacion_serializer,nom_estructura_ubicacion_serializer
+
+from Administracion.models import Auditoria
+from Administracion.decorators import audit_log
+
+#importacion de verificacion de autenticacion, trabajo con grupos y asignacion de
+
+
+
+
+#asignando a permission_classes los permisos asociados
 def get_permissions(self):
     if self.action in ['create', 'update', 'partial_update', 'destroy']:
         permission_classes = [IsAdminNomenladoresPermission]
@@ -68,6 +77,7 @@ def get_permissions(self):
 class nom_pais_view_set(viewsets.ModelViewSet):
     queryset = nom_pais.objects.all().order_by('-id')
     serializer_class = nom_pais_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
     
     
 
@@ -94,103 +104,27 @@ class nom_pais_view_set(viewsets.ModelViewSet):
 
         return queryset
     
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        pais = serializer.save()
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar país: {pais.nombre_pais}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        pais = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar país: {pais.nombre_pais}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        instance = self.get_object()
-        nombre_pais = instance.nombre_pais
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar país: {nombre_pais}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de países",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
 
 #/*********************************************************************************************************************************************
 class nom_provincia_view_set(viewsets.ModelViewSet):
     queryset = nom_provincia.objects.all().order_by('-id')
     serializer_class = nom_provincia_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -204,92 +138,26 @@ class nom_provincia_view_set(viewsets.ModelViewSet):
 
         return queryset
     
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        provincia = serializer.save()
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar provincia: {provincia.nombre_provincia}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        provincia = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar provincia: {provincia.nombre_provincia}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        nombre_provincia = instance.nombre_provincia
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar provincia: {nombre_provincia}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de provincias",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_municipio_view_set(viewsets.ModelViewSet):
     queryset = nom_municipio.objects.all().order_by('-id')
     serializer_class = nom_municipio_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -306,102 +174,28 @@ class nom_municipio_view_set(viewsets.ModelViewSet):
             queryset = queryset.filter(nombre_municipio__icontains=search)
         return queryset
 
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        municipio = serializer.save()
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar país: {municipio.nombre_municipio}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        municipio = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar municipio: {municipio.nombre_municipio}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        nombre_municipio = instance.nombre_municipio
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar municipio: {nombre_municipio}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de municipios",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 
-CustomUser = get_user_model()  # Obtén el modelo de usuario personalizado
 
 class nom_tipo_maniobra_portuaria_view_set(viewsets.ModelViewSet):
     queryset = nom_tipo_maniobra_portuaria.objects.all().order_by('-id')
     serializer_class = nom_tipo_maniobra_portuaria_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -416,120 +210,32 @@ class nom_tipo_maniobra_portuaria_view_set(viewsets.ModelViewSet):
 
         return queryset
 
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        tipo_maniobra = serializer.save()
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar tipo de maniobra portuaria: {tipo_maniobra.nombre_maniobra}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        tipo_maniobra = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar tipo de maniobra portuaria: {tipo_maniobra.nombre_maniobra}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        nombre_maniobra = instance.nombre_maniobra
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar tipo de maniobra portuaria: {nombre_maniobra}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de tipos de maniobras portuarias",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_contenedor_view_set(viewsets.ModelViewSet):
     queryset = nom_contenedor.objects.all().order_by('-id_contenedor')
     serializer_class = nom_contenedor_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
     #El método get_object utiliza el campo lookup_field para obtener la instancia correcta. Por defecto, lookup_field es pk, 
     #pero en 3este caso, la clave primaria es id_contenedor. Por eso en el ModelViewSet este campo debe estar igualado a id_contenedor
     lookup_field = 'id_contenedor'  # Especifica el campo de búsqueda
 
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        print('Eliminando contenedor con ID:', kwargs.get('pk'))  # Verifica el ID
-
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar contenedor con ID {kwargs.get('pk')}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
         return super().destroy(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -544,79 +250,22 @@ class nom_contenedor_view_set(viewsets.ModelViewSet):
 
         return queryset
     
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        contenedor = serializer.save()
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar contenedor con ID {contenedor.id_contenedor}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        contenedor = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar contenedor con ID {contenedor.id_contenedor}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
-    
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de municipios",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_cargo_view_set(viewsets.ModelViewSet):
     queryset = nom_cargo.objects.all().order_by('-id')
     serializer_class = nom_cargo_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -628,99 +277,26 @@ class nom_cargo_view_set(viewsets.ModelViewSet):
             queryset = queryset.filter(nombre_cargo__icontains=search)
         return queryset
     
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        cargo = serializer.save()
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar cargo: {cargo.nombre_cargo}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        cargo = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar cargo: {cargo.nombre_cargo}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        nombre_cargo = instance.nombre_cargo
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar cargo: {nombre_cargo}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista cargos",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_territorio_view_set(viewsets.ModelViewSet):
     queryset = nom_territorio.objects.all().order_by('-id')
     serializer_class = nom_territorio_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -729,99 +305,27 @@ class nom_territorio_view_set(viewsets.ModelViewSet):
             queryset = queryset.filter(nombre_territorio__icontains=search)
         return queryset
 
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        territorio = serializer.save()
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar Territorio: {territorio.nombre_territorio}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        territorio = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar territorio: {territorio.nombre_territorio}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        nombre_territorio= instance.nombre_territorio
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar territorio: {nombre_territorio}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de territorios",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return super().list(request, *args, **kwargs)    
+        return super().list(request, *args, **kwargs)
             
 #/*********************************************************************************************************************************************
 class nom_puerto_view_set(viewsets.ModelViewSet):
     queryset = nom_puerto.objects.all().order_by('id')  # Ordenar por defecto por el campo 'id'
     serializer_class = nom_puerto_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -836,98 +340,26 @@ class nom_puerto_view_set(viewsets.ModelViewSet):
 
         return queryset
 
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        puerto = serializer.save()
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar puerto: {puerto.nombre_puerto}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        puerto = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar puerto: {puerto.nombre_puerto}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        nombre_puerto= instance.nombre_puerto
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar puerto: {nombre_puerto}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de puertos",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return super().list(request, *args, **kwargs) 
+        return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_terminal_view_set(viewsets.ModelViewSet):
     queryset = nom_terminal.objects.all().order_by('id')  # Ordenar por defecto por el campo 'id'
     serializer_class = nom_terminal_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -947,94 +379,21 @@ class nom_terminal_view_set(viewsets.ModelViewSet):
         
         return queryset
 
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        terminal = serializer.save()
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar terminal: {terminal.nombre_terminal}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        terminal = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar terminal: {terminal.nombre_terminal}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        nombre_terminal= instance.nombre_terminal
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar terminal: {nombre_terminal}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de terminales",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return super().list(request, *args, **kwargs) 
+        return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 #funcion declarada en el views.py una sola vez, sera usada en cada view_set
 class StandardResultsSetPagination(PageNumberPagination):
@@ -1046,6 +405,7 @@ class nom_atraque_view_set(viewsets.ModelViewSet):
     queryset = nom_atraque.objects.all().order_by('id')  # Ordenar por defecto por el campo 'id',hay que hacerlo con 
     #todos los view_set que seran paginados
     serializer_class = nom_atraque_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
     #funcion declarada para la paginacion aqui en el views.py
 
     def get_queryset(self):
@@ -1064,98 +424,26 @@ class nom_atraque_view_set(viewsets.ModelViewSet):
         
         return queryset.order_by('id')  # Asegurar que el QuerySet esté ordenado,hacer esto en cada get_queryset
 
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        atraque = serializer.save() 
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar atraque: {atraque.nombre_atraque}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        atraque = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar atraque: {atraque.nombre_atraque}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        nombre_atraque= instance.nombre_atraque
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar atraque: {nombre_atraque}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de atraques",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_unidad_medida_view_set(viewsets.ModelViewSet):
     queryset = nom_unidad_medida.objects.all().order_by('-id')
     serializer_class = nom_unidad_medida_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -1170,98 +458,26 @@ class nom_unidad_medida_view_set(viewsets.ModelViewSet):
 
         return queryset
 
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        unidad_medida = serializer.save() 
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar unidad de medida: {unidad_medida.unidad_medida}",
-            direccion_ip=direccion_ip,
-            navegador=navegador, 
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        unidad_medida = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar unidad de medida: {unidad_medida.unidad_medida}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        unidad_medida= instance.unidad_medida
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar unidad de medida: {unidad_medida}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de unidades de medida",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_osde_oace_organismo_view_set(viewsets.ModelViewSet):
     queryset = nom_osde_oace_organismo.objects.all().order_by('-id')
     serializer_class = nom_osde_oace_organismo_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
     filter_backends = [DjangoFilterBackend]
     filterset_class = nom_osde_oace_organismo_filter
     def get_queryset(self):
@@ -1278,98 +494,26 @@ class nom_osde_oace_organismo_view_set(viewsets.ModelViewSet):
             queryset = queryset.filter(nombre__icontains=search)
         return queryset
     
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        o_o_organismo = serializer.save() 
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar OSDE/OACE u Organismo: {o_o_organismo.nombre}",
-            direccion_ip=direccion_ip,
-            navegador=navegador, 
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        o_o_organismo = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar OSDE/OACE u Organismo: {o_o_organismo.nombre}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        nombre_o_o_o= instance.nombre
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar OSDE/OACE u Organismo: {nombre_o_o_o}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de OSDE/OACE u Organismos",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_entidades_view_set(viewsets.ModelViewSet):
     queryset = nom_entidades.objects.all().order_by('id')  # Ordenar por defecto por el campo 'id' Esto estaba mal implementado estaba buscando en nom_atraques'
     serializer_class = nom_entidades_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
     filter_backends = [DjangoFilterBackend]
     filterset_class = nom_entidades_filter
 
@@ -1385,93 +529,20 @@ class nom_entidades_view_set(viewsets.ModelViewSet):
 
         return queryset
 
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        entidad = serializer.save() 
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar entidad: {entidad.nombre}",
-            direccion_ip=direccion_ip,
-            navegador=navegador, 
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        entidad = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar entidad: {entidad.nombre}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        entidad_nombre= instance.nombre
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar entidad: {entidad_nombre}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de entidades",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
 
 #funcion para verificar si un juego de datos ya existe en la tabla de la BD
@@ -1500,6 +571,7 @@ class entidades_acceso_comercial_ccdView(APIView):
 class nom_destino_view_set(viewsets.ModelViewSet):
     queryset = nom_destino.objects.all().order_by('-id')
     serializer_class = nom_destino_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -1513,94 +585,20 @@ class nom_destino_view_set(viewsets.ModelViewSet):
 
         return queryset
 
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        destino = serializer.save()
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar destino: {destino.destino}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        destino = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar destino: {destino.destino}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        destino = instance.destino
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar destino: {destino}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de destinos",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
 
 #funcion para verificar si un juego de datos ya existe en la tabla de la BD
@@ -1618,6 +616,7 @@ def verificar_destino(request):
 class nom_tipo_equipo_ferroviario_view_set(viewsets.ModelViewSet):
     queryset = nom_tipo_equipo_ferroviario.objects.all().order_by('-id')
     serializer_class = nom_tipo_equipo_ferroviario_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -1633,94 +632,20 @@ class nom_tipo_equipo_ferroviario_view_set(viewsets.ModelViewSet):
 
         return queryset
 
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        tipo_equipo = serializer.save()
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar tipo de equipo ferroviario: {tipo_equipo.tipo_equipo}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        tipo_equipo = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar tipo de equipo ferroviario: {tipo_equipo.tipo_equipo}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        tipo_equipo = instance.tipo_equipo
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar tipo de equipo ferroviario: {tipo_equipo}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de tipos de equipos ferroviarios",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
 
 #retorna los tipos de equipo
@@ -1745,6 +670,7 @@ class tipo_equipo_ferroviario_no_locomotora(APIView):
 class nom_embarcacion_view_set(viewsets.ModelViewSet):
     queryset = nom_embarcacion.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = nom_embarcacion_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
     
     def get_queryset(self):
         queryset = super().get_queryset()        
@@ -1763,95 +689,20 @@ class nom_embarcacion_view_set(viewsets.ModelViewSet):
 
         return queryset
 
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        print(request.data)
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        embarcacion = serializer.save()
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar embarcación: {embarcacion.nombre_embarcacion}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        embarcacion = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar embarcación: {embarcacion.nombre_embarcacion}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        nombre_embarcacion = instance.nombre_embarcacion
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar embarcación: {nombre_embarcacion}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de embarcaciones",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
     
 
@@ -1884,6 +735,7 @@ class equipo_ferroviario_no_locomotora(APIView):
 class nom_equipo_ferroviario_view_set(viewsets.ModelViewSet):
     queryset = nom_equipo_ferroviario.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = nom_equipo_ferroviario_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -1903,93 +755,20 @@ class nom_equipo_ferroviario_view_set(viewsets.ModelViewSet):
         #Fixed bug para buscar locomotoras cuando se usa select_related('campo_asociado_a_ForeignKEY')
         return queryset
     
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        equipo_ferroviario = serializer.save() 
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar equipo ferroviario: {equipo_ferroviario.numero_identificacion}",
-            direccion_ip=direccion_ip,
-            navegador=navegador, 
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        equipo_ferroviario = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar equipo ferroviario: {equipo_ferroviario.numero_identificacion}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        numero_identificacion= instance.numero_identificacion
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar equipo ferroviario: {numero_identificacion}",
-            direccion_ip=direccion_ip,
-            navegador=navegador, 
-        )
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de equipos ferroviarios",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
     
 
@@ -2000,649 +779,202 @@ class nom_equipo_ferroviario_view_set(viewsets.ModelViewSet):
 class nom_estado_tecnico_view_set(viewsets.ModelViewSet):
     queryset = nom_estado_tecnico.objects.all().order_by('-id')
     serializer_class = nom_estado_tecnico_serializer
-    lookup_field = 'codigo_estado_tecnico'  # Especifica el campo a usar como clave primaria
-
-    def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        print('Eliminando estado tecnico con ID:', kwargs.get('pk'))  # Verifica el ID
-        return super().destroy(request, *args, **kwargs)
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        cod_estado = self.request.query_params.get('codigo_estado')
-        if cod_estado:            
-            queryset = queryset.filter(codigo_estado_tecnico=cod_estado) | queryset.filter(nombre_estado_tecnico__icontains=cod_estado)
-        return queryset 
 
+        # Filtrado por estado tecnico
+        search = self.request.query_params.get('estado_tecnico', None)
+
+        if search is not None: #preguntamos si la variable search no está vacía
+            queryset = queryset.filter(estado_tecnico__icontains=search)
+        return queryset
+
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        estado_tecnico = serializer.save()
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar estado técnico: {estado_tecnico.nombre_estado_tecnico}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        estado_tecnico = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar estado técnico: {estado_tecnico.nombre_estado_tecnico}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        nombre_estado_tecnico = instance.nombre_estado_tecnico
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar estado técnico: {nombre_estado_tecnico}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de estados técnicos",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
-
 #/*********************************************************************************************************************************************
 class nom_producto_view_set(viewsets.ModelViewSet):
-    queryset = nom_producto.objects.all().order_by('nombre_producto')  # Orden obligatorio
+    queryset = nom_producto.objects.all().order_by('-id')
     serializer_class = nom_producto_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
 
         # Filtrado por tipo de estructura de ubicacion
-        search = self.request.query_params.get('nombre_tipo_codigo_producto', None)
+        search = self.request.query_params.get('nombre_codigo_producto', None)
 
         if search is not None:
 
-            queryset = queryset.filter( Q(nombre_producto__icontains=search) | Q(tipo_producto__icontains=search) 
-            | Q(codigo_producto__exact=search) )      
+            queryset = queryset.filter( Q(nombre_producto__icontains=search) | Q(codigo_producto__exact=search)
+            )
 
         return queryset
 
-
-        # Filtrado por nombre, descripcion y codigo
-        search = self.request.query_params.get('nombre_descripcion_codigo_producto', None)
-
-        if search is not None:
-
-            queryset = queryset.filter(nombre_producto__icontains=search) | queryset.filter(descripcion__icontains = search) | queryset.filter(codigo_producto__exact = search)
-
-        return queryset
-    
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        producto = serializer.save() 
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar producto: {producto.nombre_producto}",
-            direccion_ip=direccion_ip,
-            navegador=navegador, 
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        producto = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar producto: {producto.nombre_producto}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        nombre_producto= instance.nombre_producto
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar producto: {nombre_producto}",
-            direccion_ip=direccion_ip,
-            navegador=navegador, 
-        )
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de productos",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
-
 class nom_tipo_embalaje_view_set(viewsets.ModelViewSet):
     queryset = nom_tipo_embalaje.objects.all().order_by('-id')
     serializer_class = nom_tipo_embalaje_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
 
         # Filtrado por tipo de embalaje
-        search = self.request.query_params.get('nombre_tipo_embalaje', None)
+        search = self.request.query_params.get('tipo_embalaje', None)
 
-        if search is not None:
-
-            queryset = queryset.filter(nombre_tipo_embalaje__icontains=search)
-
+        if search is not None: #preguntamos si la variable search no está vacía
+            queryset = queryset.filter(tipo_embalaje__icontains=search)
         return queryset
+
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        tipo_embalaje = serializer.save() 
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar tipo de embalaje: {tipo_embalaje.nombre_tipo_embalaje}",
-            direccion_ip=direccion_ip,
-            navegador=navegador, 
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        tipo_embalaje = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar tipo de embalaje: {tipo_embalaje.nombre_tipo_embalaje}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        nombre_tipo_embalaje= instance.nombre_tipo_embalaje
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar tipo de embalaje: {nombre_tipo_embalaje}",
-            direccion_ip=direccion_ip,
-            navegador=navegador, 
-        )
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de tipos de embalaje",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_incidencia_view_set(viewsets.ModelViewSet):
     queryset = nom_incidencia.objects.all().order_by('-id')
     serializer_class = nom_incidencia_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
 
         # Filtrado por tipo de estructura de ubicacion
-        search = self.request.query_params.get('nombre_codigo', None)
+        search = self.request.query_params.get('nombre_tipo_incidencia', None)
 
         if search is not None:
 
-            queryset = queryset.filter( Q(codigo_incidencia__icontains=search) | Q(nombre_incidencia__icontains=search)
+            queryset = queryset.filter( Q(nombre_incidencia__icontains=search) | Q(tipo_incidencia__icontains=search)
             )
 
         return queryset
-    
+
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        incidencia = serializer.save() 
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar incidencia: {incidencia.nombre_incidencia}",
-            direccion_ip=direccion_ip,
-            navegador=navegador, 
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        incidencia = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar incidencia: {incidencia.nombre_incidencia}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        nombre_incidencia= instance.nombre_incidencia
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar incidencia: {nombre_incidencia}",
-            direccion_ip=direccion_ip,
-            navegador=navegador, 
-        )
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de incidencias",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_tipo_estructura_ubicacion_view_set(viewsets.ModelViewSet):
     queryset = nom_tipo_estructura_ubicacion.objects.all().order_by('-id')
     serializer_class = nom_tipo_estructura_ubicacion_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
 
         # Filtrado por tipo de estructura de ubicacion
-        search = self.request.query_params.get('nombre_tipo_estructura_ubicacion', None)
+        search = self.request.query_params.get('tipo_estructura', None)
 
-        if search is not None:
-
-            queryset = queryset.filter(nombre_tipo_estructura_ubicacion__icontains = search)
-
+        if search is not None: #preguntamos si la variable search no está vacía
+            queryset = queryset.filter(tipo_estructura__icontains=search)
         return queryset
 
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        tipo_estructura = serializer.save()
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar tipo de estructura de ubicación: {tipo_estructura.nombre_tipo_estructura_ubicacion}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        tipo_estructura = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar tipo de estructura de ubicación: {tipo_estructura.nombre_tipo_estructura_ubicacion}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        nombre_tipo_estructura = instance.nombre_tipo_estructura_ubicacion
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar tipo de estructura de ubicación: {nombre_tipo_estructura}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de tipos de estructura de ubicación",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
 #/*********************************************************************************************************************************************
 class nom_estructura_ubicacion_view_set(viewsets.ModelViewSet):
     queryset = nom_estructura_ubicacion.objects.all().order_by('-id')
     serializer_class = nom_estructura_ubicacion_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        # Filtrado por nombre de estructura de ubicación
-        search = self.request.query_params.get('nombre_estructura', None)
+        # Filtrado por tipo de estructura de ubicacion
+        search = self.request.query_params.get('nombre_tipo_estructura', None)
 
         if search is not None:
-            queryset = queryset.filter(nombre_estructura_ubicacion__icontains=search)
+
+            queryset = queryset.filter( Q(nombre__icontains=search) | Q(tipo_estructura__icontains=search)
+            )
 
         return queryset
 
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
-        #permisos de acceso a la operacion
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        estructura = serializer.save() 
+        return super().create(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Insertar estructura de ubicación: {estructura.nombre_estructura_ubicacion}",
-            direccion_ip=direccion_ip,
-            navegador=navegador, 
-        )
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
-        
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        estructura = serializer.save()
+        return super().update(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Modificar estructura de ubicación: {estructura.nombre_estructura_ubicacion}",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
-        return Response(serializer.data)
-
+    @audit_log("Eliminar")
     def destroy(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        instance = self.get_object()
-        nombre_estructura_ubicacion= instance.nombre_estructura_ubicacion
+        return super().destroy(request, *args, **kwargs)
 
-        # Registrar la acción en el modelo de Auditoria antes de eliminar
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=f"Eliminar estructura de ubicación: {nombre_estructura_ubicacion}",
-            direccion_ip=direccion_ip,
-            navegador=navegador, 
-        )
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorNomencladores').exists() and not request.user.groups.filter(name='AdminNomencladores').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion="Visualizar lista de estructuras de ubicación",
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-
         return super().list(request, *args, **kwargs)
+
+
+          
+    #*****************************************************************************************************************************
+#4.2 declaramos la vista para serializar el modelo nom_pais
+
+#/*********************************************************************************************************************************************
 

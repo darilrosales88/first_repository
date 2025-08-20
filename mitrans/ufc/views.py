@@ -12,6 +12,7 @@ from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descarg
                         vagones_productos_filter, producto_vagon_filter,
                         vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer,ufc_informe_operativo_serializer,vagones_dias_serializer, rotacion_filter,PendienteArrastreFilter
                         )
+from Administracion.decorators import audit_log
 from Administracion.models import Auditoria
 
 from rest_framework.response import Response
@@ -43,24 +44,7 @@ from django.http import JsonResponse
 
 import json
 
-# Función auxiliar para crear registros de auditoría
-def registrar_auditoria(request, accion):
-    """
-    Método centralizado para registrar acciones en el modelo Auditoria
-    
-    """
-    try:
-        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
-        direccion_ip = request.META.get('REMOTE_ADDR')
-        Auditoria.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            accion=accion,
-            direccion_ip=direccion_ip,
-            navegador=navegador,
-        )
-    except Exception as e:
-        # No romper el flujo principal si hay error al registrar auditoría
-        print(f"Error al registrar auditoría: {str(e)}")
+
 
 
 #Funcion para actualizar el estado de los vagones deberia estar global
@@ -128,6 +112,7 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
+    @audit_log("Crear")
     def create(self, request, *args, **kwargs):
         if request.user.groups.filter(name='RevisorUFC').exists() and not (request.user.groups.filter(name='OperadorUFC').exists() or request.user.groups.filter(name='AdminUFC').exists() ):
             return Response(
@@ -173,9 +158,6 @@ class ufc_informe_operativo_view_set(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         informe = serializer.save()
         
-        # Auditoría centralizada
-        registrar_auditoria(request, f"Insertar Informe operativo: {informe.fecha_operacion}")
-
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     #funcion añadida para la actualizacion del campo estado_parte***
@@ -370,9 +352,8 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
         
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        # Registrar la acción en el modelo de Auditoria
-        registrar_auditoria(request, "Visualizar lista de vagones y productos")
 
         return super().list(request, *args, **kwargs)   
 
@@ -591,11 +572,9 @@ class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
             )
 
     
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
         
-        # Registrar la acción en el modelo de Auditoria
-        registrar_auditoria(request, "Visualizar lista de vagones cargados/descargados")
-
         return super().list(request, *args, **kwargs)
     #calculando el campo real_carga_descarga
     @action(detail=False, methods=['post'])
@@ -731,11 +710,10 @@ class registro_vagones_cargados_view_set(viewsets.ModelViewSet):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
         
-        registrar_auditoria(request, "Visualizar lista de vagones del estado cargado/descargado")
         
-
         return super().list(request, *args, **kwargs)
     
 #/********************************************************EN_TRENES*********************************************************************
@@ -818,9 +796,8 @@ class en_trenes_view_set(viewsets.ModelViewSet):
         # 4. Finalmente eliminar la instancia
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-
-        registrar_auditoria(request, "Visualizar lista de formularios en trenes")
 
         return super().list(request, *args, **kwargs)
     
@@ -851,6 +828,7 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+    @audit_log("Modificar")
     def update(self, request, *args, **kwargs):
         
         partial = kwargs.pop('partial', False)
@@ -858,8 +836,6 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         objeto_producto_en_vagon = serializer.save()
-
-        registrar_auditoria(request, f"Modificar formulario producto en vagon: {objeto_producto_en_vagon.id}")
 
         return Response(serializer.data)
 
@@ -875,10 +851,10 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
         
         # Registrar la acción en el modelo de Auditoria
-        registrar_auditoria(request, "Visualizar lista de formularios productos en vagon")
 
         return super().list(request, *args, **kwargs)
 #*******************************************************************************************************
@@ -950,10 +926,9 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
         
-        registrar_auditoria(request, "Visualizar lista de formularios Por Situar")
-
         return super().list(request, *args, **kwargs)
     
 
@@ -1017,9 +992,9 @@ class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
         # Registrar la acción en el modelo de Auditoria
-        registrar_auditoria(request,"Visualizar lista de formularios Situados")
 
         return super().list(request, *args, **kwargs)
  
@@ -1076,11 +1051,10 @@ class PendienteArrastreViewset(viewsets.ModelViewSet):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
         
  
-        registrar_auditoria(request,"Visualizar lista de Rotacion de Vagones")
-
         return super().list(request, *args, **kwargs)
     
 
@@ -1153,11 +1127,10 @@ class RotacionVagonesViewSet(viewsets.ModelViewSet):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
         
         # Registrar la acción en el modelo de Auditoria
-
-        registrar_auditoria(request,"Visualizar lista de Rotacion de Vagones")
 
         return super().list(request, *args, **kwargs)
     

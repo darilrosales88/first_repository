@@ -75,7 +75,7 @@ class gemar_parte_hecho_extraordinario_view_set(viewsets.ModelViewSet):
 
         return queryset
     
-   
+    audit_log("Crear")
     def create(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='AdminGEMAR').exists():            
             return Response(
@@ -168,7 +168,7 @@ class gemar_parte_hecho_extraordinario_view_set(viewsets.ModelViewSet):
         parte_hecho_extraordinario = serializer.save()
 
         return Response(serializer.data)
-
+    @audit_log("Eliminado")
     def destroy(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='AdminGEMAR').exists():
             return Response(
@@ -183,15 +183,6 @@ class gemar_parte_hecho_extraordinario_view_set(viewsets.ModelViewSet):
 
     @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorGEMAR').exists() and not request.user.groups.filter(name='AdminGEMAR').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-
-      
-
         return super().list(request, *args, **kwargs)
     
 #/*****************************************************************************************************************************/

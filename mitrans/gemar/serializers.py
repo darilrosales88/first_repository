@@ -12,7 +12,7 @@ from nomencladores.serializers import (
 from django.db.models import Q
 
 from .models import (gemar_hecho_extraordinario,gemar_parte_hecho_extraordinario,gemar_programacion_maniobras,
-                     gemar_parte_programacion_maniobras)
+                     gemar_parte_programacion_maniobras,gemar_parte_carga_descarga)
 from nomencladores.models import nom_embarcacion as Buque  # Add this import
 from nomencladores.models import nom_puerto as Puerto  # Also need this for puerto_id
 from nomencladores.models import nom_terminal as Terminal  # For terminal_id
@@ -123,6 +123,43 @@ class gemar_parte_programacion_maniobras_serializer(serializers.ModelSerializer)
     
     class Meta:
         model = gemar_parte_programacion_maniobras
+        fields = '__all__'
+        extra_kwargs = {
+            'creado_por': {'required': False},
+            'entidad': {'required': False},
+            'provincia': {'required': False},
+        }
+#***************************************************************************************************************************
+class gemar_parte_carga_descarga_filter(filters.FilterSet):
+    fecha_entidad = filters.CharFilter(method='filtrado_por_fecha_entidad')
+    
+    def filtrado_por_fecha_entidad(self, queryset, name, value):        
+        return queryset.filter(
+            Q(fecha_operacion__icontains=value) | 
+            Q(entidad__nombre__icontains=value)
+        )
+    
+    class Meta:  
+        model = gemar_parte_carga_descarga    
+        fields = {
+            'fecha_operacion': ['exact', 'contains'],
+            'entidad__nombre': ['exact', 'contains'],
+        }
+
+class gemar_parte_carga_descarga_serializer(serializers.ModelSerializer):
+    creado_por = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(),
+        required=False,
+        allow_null=True
+    )
+    creado_por_name = serializers.ReadOnlyField(source='creado_por.username')
+    aprobado_por_name = serializers.ReadOnlyField(source='aprobado_por.username')
+    entidad_name = serializers.ReadOnlyField(source='entidad.nombre')
+    provincia_name = serializers.ReadOnlyField(source='provincia.nombre_provincia')    
+    organismo_name = serializers.ReadOnlyField(source = 'organismo.nombre')
+    
+    class Meta:
+        model = gemar_parte_carga_descarga
         fields = '__all__'
         extra_kwargs = {
             'creado_por': {'required': False},

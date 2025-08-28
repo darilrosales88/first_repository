@@ -15,11 +15,13 @@ from gemar.Administracion.permissions import IsGEMARUser, IsAdminUser
 
 #importacion de modelos
 from .models import (gemar_hecho_extraordinario,gemar_parte_hecho_extraordinario,
-                     gemar_programacion_maniobras,gemar_parte_programacion_maniobras) 
+                     gemar_programacion_maniobras,gemar_parte_programacion_maniobras,
+                     gemar_parte_carga_descarga) 
 
 #importacion de serializadores asociados a los modelos
 from .serializers import (gemar_hecho_extraordinario_serializer,gemar_parte_hecho_extraordinario_serializer,
                           gemar_programacion_maniobras,gemar_programacion_maniobras_serializer,
+                          gemar_parte_carga_descarga_serializer,
                           gemar_parte_programacion_maniobras_serializer, PartePBIPSerializer, CargaViejaSerializer, 
                           ExistenciaMercanciaSerializer)
 
@@ -716,6 +718,139 @@ def verificar_parte_programacion_maniobra_existente(request):
         return Response({"error": "Formato de fecha inválido. Use YYYY-MM-DD"}, status=400)
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+#**********************************************************************************************************************
+class gemar_parte_carga_descarga_view_set(viewsets.ModelViewSet):
+    queryset = gemar_parte_carga_descarga.objects.all().order_by('-id')
+    serializer_class = gemar_parte_carga_descarga_serializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # Filtrado por fecha actual y entidad, se le pasa como parametro el campo por el que se va a filtrar
+        search = self.request.query_params.get('fecha_entidad', None)
+
+        if search is not None: #preguntamos si la variable search no está vacía
+            queryset = queryset.filter(fecha_actual__icontains=search) | queryset.filter(entidad_icontains=search)
+
+        return queryset
+    
+   
+    def create(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminGEMAR').exists():            
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Llama al método create del padre (que a su vez llama a perform_create)
+        response = super().create(request, *args, **kwargs)
+        
+        # Obtiene la instancia creada (puedes acceder a ella a través del serializer)
+        parte_carga_descarga = gemar_parte_carga_descarga.objects.get(id=response.data['id'])
+        
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion=f"Insertar parte de carga-descarga: {parte_carga_descarga.id}",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return response
+    
+    def perform_create(self, serializer):
+        user = self.request.user
+        
+        # Obtener la entidad del usuario si existe
+        entidad = user.entidad if hasattr(user, 'entidad') else None
+        
+        # Obtener la provincia de la entidad si existe
+        provincia = entidad.provincia if entidad and hasattr(entidad, 'provincia') else None
+        
+        # Obtener el organismo de la entidad si existe
+        organismo = entidad.osde_oace_organismo if entidad and hasattr(entidad, 'osde_oace_organismo') else None
+        
+        # Asignar valores al serializer
+        instance = serializer.save(
+            creado_por=user,
+            entidad=entidad,
+            provincia=provincia,
+            organismo=organismo,  # Añadir esta línea
+            estado_parte='Creado'
+        )
+    #Funcion para la actualizacion del estado del parte de carga-descarga
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        
+        # Solo permitir actualizar el estado_parte
+        if 'estado_parte' not in request.data:
+            return Response(
+                {"detail": "Se requiere el campo 'estado_parte'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Preparar datos para la actualización
+        update_data = {'estado_parte': request.data['estado_parte']}
+        
+        # Si el nuevo estado es "Aprobado", asignar el usuario actual a aprobado_por
+        if request.data['estado_parte'] == 'Aprobado':
+            update_data['aprobado_por'] = request.user.id
+        
+        serializer = self.get_serializer(
+            instance, 
+            data=update_data, 
+            partial=True
+        )
+        
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        # Auditoría centralizada
+        registrar_auditoria(request, f"Actualizar estado del parte de carga-descarga {serializer.data['estado_parte']}")
+
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminGEMAR').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        parte_carga_descarga = serializer.save()
+
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminGEMAR').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        instance = self.get_object()
+        id_hecho = instance.id
+
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorGEMAR').exists() and not request.user.groups.filter(name='AdminGEMAR').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        # Registrar la acción en el modelo de Auditoria
+        registrar_auditoria(request, "Visualizar lista de partes de carga-descarga.")
+
+      
+
+        return super().list(request, *args, **kwargs)
 #**********************************************************************************************************************
 
 

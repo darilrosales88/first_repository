@@ -353,7 +353,73 @@ class gemar_programacion_maniobras(models.Model):
     
     def __str__(self):
         return f"Buque {self.buque} - puerto {self.puerto} ({self.fecha_eta})"
+#***************************************************************************************************************************
+class gemar_parte_carga_descarga(models.Model):
+    tipo_parte = models.CharField(
+        default="Parte de carga-descarga", 
+        max_length=100
+    )    
+    fecha_operacion = models.DateTimeField( 
+        verbose_name="Fecha de operación",
+        auto_now_add=False
+    )
+    fecha_actual = models.DateTimeField(
+        auto_now=True, 
+        verbose_name="Fecha actual"
+    )
     
+    estado_parte = models.CharField(
+        default="Creado", 
+        max_length=14
+    )
+    provincia = models.ForeignKey(
+        nom_provincia, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        verbose_name="Provincia"
+    )
+    creado_por = models.ForeignKey(CustomUser,on_delete=models.CASCADE, blank=True, null=True, 
+                                   verbose_name="Creado por: ", related_name="gemar_informe_carga_descarga_creador" )
+    
+    aprobado_por = models.ForeignKey(CustomUser,on_delete=models.CASCADE, blank=True, null=True, 
+                                     verbose_name="Aprobado por: ", related_name="gemar_informe_carga_descarga_aprobador" )
+    
+    entidad = models.ForeignKey(
+        nom_entidades,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Entidad"
+    )   
+    
+    organismo = models.ForeignKey(
+        nom_osde_oace_organismo,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Organismo",
+        editable=False  # No se edita manualmente
+    )
+
+    def save(self, *args, **kwargs):
+        # Solo para asegurar que los campos no sean nulos si vienen de la vista
+        super().save(*args, **kwargs)
+
+    class Meta: 
+        permissions = [
+            ("gemar_carga_descarga_puede_rechazar_informe", "Puede rechazar partes de carga-descarga"),
+            ("gemar_carga_descarga_puede_aprobar_informe", "Puede aprobar partes de carga-descarga"),
+            ("gemar_carga_descarga_puede_cambiar_informe_a_listo", "Puede cambiar el estado del parte de carga-descarga a listo"),
+        ]
+               
+        verbose_name = "Parte de carga-descarga"
+        verbose_name_plural = "Partes de carga-descarga"
+        ordering = ["-fecha_operacion"]
+    
+    def __str__(self):
+        return f"Fecha actual: {self.fecha_actual} - fecha de operación {self.fecha_operacion}"
+# **************************************************************************************************************************    
 class PartePBIP(models.Model):
     
     # Opciones para campos de selección

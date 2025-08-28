@@ -16,7 +16,7 @@ from django.utils import timezone
 class gemar_parte_hecho_extraordinario(models.Model):
     tipo_parte = models.CharField(
         default="Parte de hecho extraordinario", 
-        max_length=14
+        max_length=100
     )    
     fecha_operacion = models.DateTimeField( 
         verbose_name="Fecha de operación",

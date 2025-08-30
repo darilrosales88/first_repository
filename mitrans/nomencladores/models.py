@@ -317,7 +317,6 @@ class nom_entidades(models.Model):
         ('acceso_comercial', 'Acceso comercial'),
         ('compania_naviera', 'Compañía naviera'),
         ('mitrans', 'Mitrans'),
-        ('ccd', 'Centro Carga/Descarga'),   
         ('otros', 'Otros')
     )
     tipo_entidad = models.CharField(choices=t_entidad, default="DC", help_text="Escoja una opción.",
@@ -332,7 +331,7 @@ class nom_entidades(models.Model):
     class Meta:
         verbose_name = "Entidad"
         verbose_name_plural = "Entidades"
-        #unique_together = [['nombre', 'abreviatura','osde_oace_organismo', 'provincia','tipo_entidad']]
+        #unique_together = [['nombre', 'abreviatura', 'provincia','tipo_entidad']]
 
 # -----------------------------Aqui termina Modelo nom_entidades-----------------------------------------
 
@@ -507,7 +506,7 @@ class nom_equipo_ferroviario(models.Model):
 
     peso_maximo = models.DecimalField(max_digits=10,decimal_places=2, verbose_name="Peso máximo (t)",)
 
-    estado_actual = models.CharField(max_length=10,choices=territ, default="Disponible", verbose_name="Estado", editable=False)
+    estado_actual = models.CharField(max_length=10, default="Disponible", verbose_name="Estado", editable=True)
 
 
     def __str__(self):

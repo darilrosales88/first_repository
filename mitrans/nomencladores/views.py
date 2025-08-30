@@ -939,20 +939,15 @@ class nom_terminal_view_set(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        
-        # Filtrado por puerto (ID del puerto)
-        puerto_id = self.request.query_params.get('puerto', None)
-        if puerto_id is not None:
-            queryset = queryset.filter(puerto__id=puerto_id)
-        
-        # Filtrado opcional por nombre de terminal (si se necesita)
-        search_term = self.request.query_params.get('search', None)
-        if search_term is not None:
-            queryset = queryset.filter(
-                Q(nombre_terminal__icontains=search_term) |
-                Q(puerto__nombre_puerto__icontains=search_term)
-            )
-        
+
+        # Filtrado por tipo de estructura de ubicacion
+        search = self.request.query_params.get('puerto_nombre_terminal', None)
+
+        if search is not None:
+
+            queryset = queryset.filter( Q(nombre_terminal__icontains=search) | Q(puerto_name__icontains=search) 
+            | Q(codigo_producto__exact=search) )      
+
         return queryset
 
     def create(self, request, *args, **kwargs):
@@ -1058,11 +1053,6 @@ class nom_atraque_view_set(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-
-        # Filtrado por terminal (ID de terminal)
-        terminal_id = self.request.query_params.get('terminal', None)
-        if terminal_id is not None:
-            queryset = queryset.filter(terminal__id=terminal_id)
 
         # Filtrado por nombre_atraque
         search = self.request.query_params.get('nombre_atraque', None)
@@ -1753,15 +1743,10 @@ class tipo_equipo_ferroviario_no_locomotora(APIView):
 class nom_embarcacion_view_set(viewsets.ModelViewSet):
     queryset = nom_embarcacion.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = nom_embarcacion_serializer
-    
-    def get_queryset(self):
-        queryset = super().get_queryset()        
 
-        # Filtro por tipo de embarcación si se especifica
-        tipo_embarcacion = self.request.query_params.get('tipo_embarcacion', None)
-        if tipo_embarcacion:
-            queryset = queryset.filter(tipo_embarcacion=tipo_embarcacion)
-        
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
         search = self.request.query_params.get('nombre_tipo_nacionalidad', None)
 
         if search is not None:
@@ -1861,8 +1846,6 @@ class nom_embarcacion_view_set(viewsets.ModelViewSet):
         )
 
         return super().list(request, *args, **kwargs)
-    
-
 #/*********************************************************************************************************************************************
 
 #retorna todos los equipos ferroviarios excepto los de tipo "Locomotora", y que no se encuentren presentes
@@ -1877,13 +1860,11 @@ class equipo_ferroviario_no_locomotora(APIView):
             tipos_no_locomotoras = tipos_no_locomotoras.filter(id=tipo_equipo)
 
         # Usamos subquery para mejor rendimiento
-        vagones_registrados = registro_vagones_cargados.objects.exclude(
-            Q(no_id__isnull=True) | Q(no_id__exact='')
-        ).values('no_id')
-        
+    
         equipos_no_locomotoras = nom_equipo_ferroviario.objects.filter(
-            tipo_equipo__in=tipos_no_locomotoras
-        ).exclude(   numero_identificacion__in=vagones_registrados) #Esto lo tuve que comentar para poder hacer que me salieran los equipos *******
+            tipo_equipo__in=tipos_no_locomotoras,
+            estado_actual="Disponible" 
+        )#Esto lo tuve que comentar para poder hacer que me salieran los equipos *******
         
         serializer = nom_equipo_ferroviario_serializer(equipos_no_locomotoras, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

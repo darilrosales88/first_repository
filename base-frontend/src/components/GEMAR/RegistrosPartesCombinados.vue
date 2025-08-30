@@ -1,5 +1,5 @@
 <template>
-  <div style="margin-left: 16em; width: 80%">
+  <div style="margin-left: 16.5em; width: 79%">
     <div
       style="
         background-color: #002a68;
@@ -57,10 +57,10 @@
                   v-model="filters.estado"
                 >
                   <option value="">Todos</option>
-                  <option value="Creado">Creado</option>
-                  <option value="Aprobado">Aprobado</option>
-                  <option value="Rechazado">Rechazado</option>
-                  <option value="Listo">Listo</option>
+                  <option value="creado">Creado</option>
+                  <option value="aprobado">Aprobado</option>
+                  <option value="rechazado">Rechazado</option>
+                  <option value="listo">Listo</option>
                 </select>
               </div>
             </div>
@@ -90,39 +90,40 @@
       </div>
       <div class="card-body p-3">
         <div class="table-responsive">
-          <table class="table table-sm table-hover table-bordered">
+          <table class="table table-sm table-bordered table-hover">
             <thead class="table-light">
               <tr>
-                <th>Tipo</th>
-                <th>Fecha</th>
-                <th>Estado</th>
-                <th>Creado por</th>
-                <th>Aprobado por</th>
-                <th>Entidad</th>
-                <th>Organismo</th>
-                <th>Provincia</th>
-                <th>Acciones</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Fecha</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Creado por</th>
+                <th scope="col">Aprobado por</th>
+                <th scope="col">Entidad</th>
+                <th scope="col">Organismo</th>
+                <th scope="col">Provincia</th>
+                <th scope="col">Acciones</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="loadingData">
-                <td colspan="7" class="text-center">
+                <td colspan="9" class="text-center">
                   <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Cargando...</span>
                   </div>
                 </td>
               </tr>
               <tr v-else-if="partesCombinados.length === 0">
-                <td colspan="7" class="text-center text-muted">No hay registros para mostrar</td>
+                <td colspan="9" class="text-center text-muted py-4">
+                  <i class="bi bi-database-exclamation fs-4"></i>
+                  <p class="mt-2">No hay registros para mostrar</p>
+                </td>
               </tr>
               <tr v-for="parte in partesCombinados" :key="parte.id">
-                <td>
-                  {{ getTipoParte(parte.tipo_parte || 'N/A') }}
-                </td>
+                <td>{{ getTipoParte(parte.tipo_parte || 'N/A') }}</td>
                 <td>{{ formatDateTime(parte.fecha_actual) }}</td>
                 <td>
-                  <span class="badge" :class="getEstadoBadgeClass(parte.estado_parte)">
-                    {{ parte.estado_parte }}
+                  <span :class="'status-' + getStatusClass(parte.estado_parte || '')">
+                    {{ parte.estado_parte || '-' }}
                   </span>
                 </td>
                 <td>{{ parte.creado_por_name || 'N/A' }}</td>
@@ -131,33 +132,40 @@
                 <td>{{ parte.organismo_name || 'N/A' }}</td>
                 <td>{{ parte.provincia_name || 'N/A' }}</td>
                 <td>
-                  <button 
-                    class="btn btn-sm btn-outline-primary"
-                    @click="verDetalle(parte)"
-                    title="Ver detalle"
-                  >
-                    <i class="bi bi-eye"></i>
-                  </button>
+                  <div class="d-flex">
+                    <button 
+                      @click="verDetalle(parte)"
+                      class="btn btn-sm btn-outline-primary me-2"
+                      title="Ver detalles">
+                      <i class="bi bi-eye-fill"></i>
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center mt-3">
+        <div class="io-pagination d-flex justify-content-between align-items-center mt-3">
           <div class="text-muted small">
-            Mostrando {{ partesCombinados.length }} de {{ totalRegistros }} registros
+            Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }}-{{ Math.min(currentPage * itemsPerPage, partesCombinados.length) }} de {{ totalRegistros }} registros
           </div>
           <nav aria-label="Page navigation">
-            <ul class="pagination pagination-sm">
+            <ul class="pagination pagination-sm mb-0">
               <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                <button class="page-link" @click="prevPage">Anterior</button>
+                <button class="page-link" @click="prevPage">
+                  <i class="bi bi-chevron-left"></i>
+                </button>
               </li>
-              <li class="page-item" v-for="page in totalPages" :key="page" :class="{ active: currentPage === page }">
-                <button class="page-link" @click="goToPage(page)">{{ page }}</button>
+              <li class="page-item disabled">
+                <span class="page-link">
+                  Página {{ currentPage }} de {{ totalPages }}
+                </span>
               </li>
-              <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                <button class="page-link" @click="nextPage">Siguiente</button>
+              <li class="page-item" :class="{ disabled: currentPage >= totalPages }">
+                <button class="page-link" @click="nextPage">
+                  <i class="bi bi-chevron-right"></i>
+                </button>
               </li>
             </ul>
           </nav>
@@ -238,48 +246,71 @@ export default {
       }
     },
     
-    getTipoParte(parte) {
-      if (parte == "Parte de hecho extraordinario") {
-        return "hecho-extraordinario";
-      }
-      if (parte == "Parte de programación de maniobras") {
-        return "programación-maniobras";
-      }
-    },
-    getEstadoBadgeClass(estado) {
-      const classes = {
-        'Creado': 'io-status-warning',
-        'Aprobado': 'io-status-success',
-        'Rechazado': 'io-status-danger',
-        'Listo': 'io-status-info',
+    getTipoParte(tipo) {
+      const tipos = {
+        'HECHO_EXTRAORDINARIO': 'Hecho Extraordinario',
+        'PROGRAMACION_MANIOBRAS': 'Programación Maniobras',
+        'PBIP': 'PBIP',
+        'EXISTENCIA_MERCANCIA': 'Existencia Mercancía'
       };
-      return classes[estado] || 'io-status-default';
+      return tipos[tipo] || tipo;
     },
-    formatDateTime(dateTime) {
-      if (!dateTime) return 'N/A';
-      const date = new Date(dateTime);
-      return date.toLocaleString();
+    
+    getStatusClass(status) {
+      if (!status) return 'default';
+      
+      const statusStr = typeof status === 'string' ? status : String(status);
+      const statusLower = statusStr.toLowerCase();
+
+      if (statusLower.includes('aprobado')) return 'success';
+      if (statusLower.includes('pendiente') || statusLower.includes('creado'))
+        return 'warning';
+      if (statusLower.includes('rechazado') || statusLower.includes('cancelado')) 
+        return 'danger';
+      if (statusLower.includes('listo')) return 'info';
+
+      return 'default';
     },
-    verDetalle(parte) {
-      const tipo = this.getTipoParte(parte);
-      if (tipo === 'Hecho Extraordinario') {
-        this.$router.push(`/gemar/hechos-extraordinarios/detalle/${parte.id}`);
-      } else {
-        this.$router.push(`/gemar/programacion-maniobras/detalle/${parte.id}`);
-      }
-    },
+    
+  formatDateTime(dateTime) {
+  if (!dateTime) return '-';
+  
+  // Asumir que la fecha viene en UTC del backend
+  const date = new Date(dateTime + 'Z'); // Agregar 'Z' para indicar UTC
+  return date.toLocaleDateString('es-ES', { 
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone 
+    });
+  },
+    
+     verDetalle(parte) {
+    // Redirigir a la vista de detalle específica según el tipo de parte
+    if (parte.tipo_parte === 'HECHO_EXTRAORDINARIO') {
+        this.$router.push(`/gemar/hechos-extraordinarios/${parte.id}/detalle`);
+    } else if (parte.tipo_parte === 'PROGRAMACION_MANIOBRAS') {
+        this.$router.push(`/gemar/programacion-maniobras/${parte.id}/detalle`);
+    } else if (parte.tipo_parte === 'PBIP') {
+        this.$router.push(`/gemar/partes-pbip/${parte.id}/detalle`);
+    } else if (parte.tipo_parte === 'EXISTENCIA_MERCANCIA') {
+        this.$router.push(`/gemar/existencias-mercancia/${parte.id}/detalle`);
+    } else {
+        console.error('Tipo de parte no reconocido:', parte.tipo_parte);
+    }
+},
+    
     goToPage(page) {
       if (page !== this.currentPage) {
         this.currentPage = page;
         this.fetchPartesCombinados();
       }
     },
+    
     prevPage() {
       if (this.currentPage > 1) {
         this.currentPage--;
         this.fetchPartesCombinados();
       }
     },
+    
     nextPage() {
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
@@ -290,106 +321,256 @@ export default {
 };
 </script>
 
-<!-- En la sección de estilos de RegistrosPartesCombinados.vue -->
 <style scoped>
-/* Variables de color (copiadas de RegistrosPartesUFC.vue) */
-:root {
-  --io-primary: #4361ee;
-  --io-primary-hover: #3a56d4;
-  --io-secondary: #3f37c9;
-  --io-accent: #4895ef;
-  --io-danger: #f72585;
-  --io-success: #4cc9f0;
-  --io-warning: #f8961e;
-  --io-info: #4895ef;
-  --io-light: #f8f9fa;
-  --io-dark: #212529;
-  --io-gray: #6c757d;
-  --io-light-gray: #e9ecef;
-  --io-border-radius: 12px;
-  --io-box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-  --io-transition: all 0.3s ease;
+/* Estilos copiados exactamente del segundo código */
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #e0e0e0 !important;
+  padding: 0.75rem 1.25rem;
 }
 
-/* Tabla - Estilos adaptados de RegistrosPartesUFC */
-.io-table-container {
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+}
+
+.search-container input {
+  padding-left: 2.5rem !important;
+  border-radius: 20px !important;
+}
+
+.search-container .bi-search {
+  color: #6c757d;
+  z-index: 10;
+}
+
+.input-group {
+  width: 100%;
+}
+
+.table-responsive {
   overflow-x: auto;
-  padding: 0.5rem;
 }
 
 .table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
   font-size: 0.875rem;
 }
 
 .table thead th {
-  background-color: #f9fafb;
-  border-bottom: 2px solid var(--io-light-gray);
-  color: var(--io-dark);
-  font-weight: 600;
-  padding: 1rem 1.2rem;
-  text-align: left;
-  position: sticky;
-  top: 0;
-}
-
-.table tbody tr {
-  transition: var(--io-transition);
-}
-
-.table tbody tr:hover {
-  background-color: rgba(67, 97, 238, 0.03);
-}
-
-.table tbody td {
-  padding: 1rem 1.2rem;
-  border-bottom: 1px solid var(--io-light-gray);
-  color: var(--io-dark);
-}
-
-/* Badges de estado */
-.badge {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 50px;
-  font-size: 0.85rem;
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+  color: #495057;
   font-weight: 500;
 }
 
-/* Clases para los estados (adaptadas de RegistrosPartesUFC) */
-.io-status-success {
-  background: rgba(76, 201, 240, 0.1);
-  color: #06d6a0;
-  border: 1px solid rgba(6, 214, 160, 0.2);
+.table tbody tr:hover {
+  background-color: #f8f9fa;
 }
 
-.io-status-warning {
-  background: rgba(248, 150, 30, 0.1);
-  color: #f8961e;
-  border: 1px solid rgba(248, 150, 30, 0.2);
+/* Estilos para los estados */
+.status-success {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
-.io-status-danger {
-  background: rgba(247, 37, 133, 0.1);
-  color: #f72585;
-  border: 1px solid rgba(247, 37, 133, 0.2);
+.status-warning {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
-.io-status-info {
-  background: rgba(72, 149, 239, 0.1);
-  color: #4895ef;
-  border: 1px solid rgba(72, 149, 239, 0.2);
+.status-danger {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
-.io-status-default {
-  background: rgba(108, 117, 125, 0.1);
-  color: var(--io-gray);
-  border: 1px solid rgba(108, 117, 125, 0.2);
+.status-info {
+  background-color: rgba(23, 162, 184, 0.1);
+  color: #17a2b8;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
-/* Botones de acción */
+.status-default {
+  background-color: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.menu-options {
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+}
+
+.menu-options a {
+  display: block;
+  padding: 0.5rem 1rem;
+  color: #212529;
+  text-decoration: none;
+}
+
+.menu-options a:hover {
+  background-color: #f8f9fa;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.25rem 1rem;
+  clear: both;
+  font-weight: 400;
+  color: #212529;
+  text-align: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  background-color: transparent;
+  border: 0;
+}
+
+.dropdown-item:hover {
+  color: #16181b;
+  background-color: #f8f9fa;
+}
+
+.selected-part-container {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  background-color: #f8f9fa;
+}
+
+/* Estilos para la paginación */
+.io-pagination {
+  padding: 0.75rem 1.25rem;
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+  border-radius: 0 0 0.25rem 0.25rem;
+}
+
+.page-link {
+  min-width: 32px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-item.active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.page-link {
+  color: #0d6efd;
+  text-decoration: none;
+}
+
+.page-item.disabled .page-link {
+  color: #6c757d;
+  pointer-events: none;
+  height: 30px;
+}
+
+.page-item:not(.disabled):not(.active) .page-link:hover {
+  background-color: #e9ecef;
+  color: #0a58ca;
+}
+
+.page-item .page-link i {
+  font-size: 0.9rem;
+}
+
+/* Estilos para el mensaje de no resultados */
+.text-muted {
+  color: #6c757d !important;
+}
+
+.bi-database-exclamation {
+  color: #adb5bd;
+}
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Modal de confirmación */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+}
+
+.modal {
+  background: white;
+  border-radius: 0.5rem;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h5 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6c757d;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #dee2e6;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* Estilos adicionales para mantener consistencia */
 .btn-sm {
   padding: 0.25rem 0.5rem;
   font-size: 0.875rem;
@@ -412,49 +593,16 @@ export default {
   font-size: 1rem;
 }
 
-/* Paginación */
-.io-pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 1.5rem;
-  padding: 0 0.5rem;
+.form-control {
+  font-size: 0.875rem;
 }
 
-.page-link {
-  border-radius: var(--io-border-radius) !important;
-  margin: 0 2px;
-  transition: var(--io-transition);
+.form-label {
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
 }
 
-.page-link:hover {
-  background-color: var(--io-light-gray);
-}
-
-/* Estado de carga */
-.io-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 0.75rem;
-  color: var(--io-gray);
-  padding: 2rem;
-}
-
-.io-empty-state i {
-  font-size: 2.5rem;
-  color: var(--io-accent);
-}
-
-.io-empty-state h3 {
-  color: var(--io-dark);
-  margin: 0;
-  font-size: 1.2rem;
-}
-
-.io-empty-state p {
-  margin: 0;
-  max-width: 400px;
+.bi {
+  vertical-align: middle;
 }
 </style>

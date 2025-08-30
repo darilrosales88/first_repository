@@ -4,7 +4,6 @@ from .models import nom_cargo,nom_territorio,nom_puerto,nom_terminal,nom_atraque
 from .models import nom_destino,nom_tipo_equipo_ferroviario,nom_embarcacion,nom_equipo_ferroviario,nom_estado_tecnico,nom_producto
 from .models import nom_tipo_embalaje,nom_incidencia,nom_tipo_estructura_ubicacion,nom_estructura_ubicacion
 
-from django.contrib.auth.admin import UserAdmin
 
 # Register your models here.
 admin.site.register(nom_pais)

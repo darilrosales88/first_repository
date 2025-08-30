@@ -2,11 +2,7 @@ import random
 from django.core.management.base import BaseCommand
 from faker import Faker
 from nomencladores.models import (
-    nom_contenedor, nom_cargo, nom_territorio,
-    nom_unidad_medida, nom_osde_oace_organismo,
-    nom_tipo_equipo_ferroviario,
-    nom_estado_tecnico, nom_producto, nom_tipo_embalaje, nom_incidencia,
-    nom_tipo_estructura_ubicacion
+    nom_incidencia
 )
 
 fake = Faker()

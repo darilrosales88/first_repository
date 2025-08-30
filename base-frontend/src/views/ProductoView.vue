@@ -631,6 +631,7 @@ export default {
           },
         });
         this.productos = response.data.results; // Obtener los registros de la página actual
+        console.log(this.productos);
         this.totalPages = Math.ceil(response.data.count / 15); // Calcular el número total de páginas
         this.updatePages(); // Actualizar la lista de páginas visibles
         this.busqueda_existente = true; // Reinicia la variable al cargar todos los productos

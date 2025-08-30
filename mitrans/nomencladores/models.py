@@ -1,6 +1,5 @@
 from django.db import models
 from django.core.validators import RegexValidator
-from django.utils import timezone
 
 #------------aqui comienza el nomenclador nom_pais--------------------------
 class nom_pais(models.Model):

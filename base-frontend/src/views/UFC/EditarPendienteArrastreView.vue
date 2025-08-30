@@ -658,7 +658,6 @@ export default {
     }
     this.getEntidades();
     this.getPuertos();
-    this.getProductos();
     this.getEquipos();
   },
   methods: {
@@ -672,8 +671,6 @@ export default {
           `http://127.0.0.1:8000/ufc/pendiente-arrastre/${this.registroId}/`
         );
         const registro = response.data;
-
-        await this.getProductos();
 
         for(let i = 0; i < registro.equipo_vagon_detalle.length; i++) {
           let vagon = {
@@ -697,6 +694,8 @@ export default {
           observaciones: registro.observaciones,
 
         };
+        console.log("Pendiente:", this.formData);
+        this.getProductoXEquipo();
         this.buscarEquipos();
       } catch (error) {
         throw new Error(error);
@@ -765,9 +764,15 @@ export default {
     },
 
     async abrirModalVagon() {
+      if (this.vagonesAgregados.length==this.formData.cantidad_vagones) {
+        Swal.fire({
+          title: "Error",
+          text: "Ya añadió todos los vagones según la cantidad de vagones definida. Si lo desea aumente la cantidad de vagones",
+          icon: "error",
+        });
+        return;
+      }
       this.mostrarModalVagon = true;
-      console.log(this.vagonesAgregados);
-
       await this.buscarEquipos();
     },
     cerrarModalVagon() {
@@ -792,10 +797,19 @@ export default {
         Swal.fire("Error", "Complete todos los campos", "error");
         return;
       }
-
       const equipoSeleccionado = this.equipos_vagones.find(
         (e) => e.id === this.nuevoVagon.equipo_ferroviario
       );
+
+      const yaExistente = this.vagonesAgregados.some(
+        (vagon) =>
+          vagon.equipo_ferroviario.id === this.nuevoVagon.equipo_ferroviario
+      );
+
+      if (yaExistente) {
+        this.showErrorToast("Este vagón ya existe");
+        return;
+      }
 
       const vagonAgregado = {
         equipo_ferroviario: equipoSeleccionado,
@@ -826,7 +840,8 @@ export default {
         if (!this.formData.tipo_equipo) {
           return;
         }
-
+        this.formData.producto = [];
+        this.vagonesAgregados=[];
         // al tipo de equipo específico lo añadimos como parámetro
         url += `?tipo_equipo=${this.formData.tipo_equipo}`;
         const response = await axios.get(url);
@@ -857,24 +872,22 @@ export default {
         });
       }
     },
-
-    async getProductos() {
+   async getProductoXEquipo() {
       this.loading = true;
+      
       try {
-        const response = await axios.get("/ufc/producto-vagon/", {
-          params: {
-            include_details: true, // Asegúrate que tu backend incluya los datos relacionados
-          },
-        });
+        const response = await axios.get(`/ufc/producto-vagon/?tipo_equipo=${this.formData.tipo_equipo}`);
 
         this.productos = response.data.results.map((p) => {
           // Asegurar que tipo_embalaje esté definido
-          const tipoEmbalaje = p.tipo_embalaje_name || {};
+          const tipoEmbalaje = p.tipo_embalaje || {};
           return {
             ...p,
             tipo_embalaje: {
               nombre:
-                tipoEmbalaje || tipoEmbalaje.nombre_embalaje || "Sin embalaje",
+                tipoEmbalaje.nombre ||
+                tipoEmbalaje.nombre_embalaje ||
+                "Sin embalaje",
             },
           };
         });
@@ -885,7 +898,6 @@ export default {
         this.loading = false;
       }
     },
-
     async getPuertos() {
       try {
         let allPuertos = [];
@@ -910,7 +922,7 @@ export default {
 
     cerrarModal() {
       this.mostrarModal = false;
-      this.getProductos();
+      this.getProductoXEquipo();
     },
 
     handleEstadoChange() {

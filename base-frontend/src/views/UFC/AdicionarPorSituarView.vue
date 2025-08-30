@@ -114,7 +114,7 @@
                   for="tipo_equipo"
                   class="form-label small fw-semibold text-secondary"
                   >Tipo de Equipo Ferroviario</label>
-                <select
+                <select 
                   class="form-select form-select-sm border-secondary"
                   style="padding: 8px 12px"
                   v-model="formData.tipo_equipo"
@@ -204,7 +204,7 @@
                     class="form-label small fw-semibold text-secondary"
                     >Productos</label>
                   <div class="ufc-input-with-action">
-                    <select
+                    <select v-if="formData.tipo_equipo"
                       class="form-select form-select-sm border-secondary"
                       style="padding: 8px 12px"
                       v-model="formData.producto"
@@ -221,6 +221,13 @@
                           producto.producto_codigo
                         }}-{{ producto.tipo_embalaje_name }}
                       </option>
+                    </select>
+                    <select
+                      v-else
+                      class="form-select form-select-sm border-secondary"
+                      style="padding: 8px 12px"
+                      disabled>
+                      <option value="">Seleccione primero el tipo de equipo</option>
                     </select>
                     <button class="create-button ms-2" @click.stop.prevent="abrirModalAgregarProducto">
                       <i class="bi bi-plus-circle large-icon"></i>
@@ -262,6 +269,7 @@
       </div>
     </div>
   </div>
+
   <!-- Modal para agregar vagón -->
   <div v-if="mostrarModalVagon" class="ufc-modal-overlay">
     <div class="ufc-modal-container">
@@ -441,7 +449,6 @@ export default {
     };
   },
   mounted() {
-    this.getProductos();
     this.getEntidades();
     this.getPuertos();
     this.getEquipos();
@@ -517,20 +524,26 @@ export default {
       }
     },
 
-    async abrirModalVagon() {
+    abrirModalVagon() {
       if (this.equipos_vagones.length == 0) {
         Swal.fire({
           title: "Error",
           text: "Seleccione el tipo de equipo ferroviario",
           icon: "error",
+          showCancelButton: false,
+          confirmButtonText: "Aceptar",
+          confirmButtonColor: "#ff4444"
         });
         return;
       }
       if (this.vagonesAgregados.length == this.formData.por_situar) {
         Swal.fire({
           title: "Error",
-          text: "Todos los vagones han sido añadidos",
+          text: "Ya añadió todos los vagones según la cantidad de vagones  por situar definida",
           icon: "error",
+          showCancelButton: false,
+          confirmButtonText: "Aceptar",
+          confirmButtonColor: "#ff4444"
         });
         return;
       }
@@ -560,19 +573,13 @@ export default {
         this.showErrorToast("Complete todos los campos");
         return;
       }
-      const equipoSeleccionado = this.equipos_vagones.find(
-        (e) => e.id === this.nuevoVagon.equipo_ferroviario
-      );
-      const yaExistente = this.vagonesAgregados.some(
-        (vagon) =>
-          vagon.equipo_ferroviario.id === this.nuevoVagon.equipo_ferroviario
-      );
 
+      const equipoSeleccionado = this.equipos_vagones.find((e) => e.id === this.nuevoVagon.equipo_ferroviario);
+      const yaExistente = this.vagonesAgregados.some((vagon) => vagon.equipo_ferroviario.id === this.nuevoVagon.equipo_ferroviario);
       if (yaExistente) {
         this.showErrorToast("Este vagón ya existe");
         return;
       }
-
       const vagonAgregado = {
         equipo_ferroviario: equipoSeleccionado,
         cant_dias: this.nuevoVagon.cant_dias,
@@ -591,59 +598,18 @@ export default {
       try {
         const response = await axios.get("/api/tipo-e-f-no-locomotora/");
         this.equipos = response.data;
+        console.log("Equipos", this.equipos)
       } catch (error) {
         console.error("Error al obtener los equipos:", error);
         Swal.fire("Error", "Hubo un error al obtener los equipos.", "error");
       }
     },
-    async buscarTipoEquipo() {
-      return;
-    },
 
-    async buscarEquipos() {
-      try {
-        let url = "/api/e-f-no-locomotora/";
-        if (!this.formData.tipo_equipo) {
-          return;
-        }
-
-        url += `?tipo_equipo=${this.formData.tipo_equipo}`;
-        const response = await axios.get(url);
-
-        if (response.data.length === 0) {
-          Swal.fire({
-            title: "Error",
-            text: "No existen equipos ferroviarios para el tipo seleccionado",
-            icon: "error",
-            willClose: () => {
-              this.cerrarModal();
-            },
-          });
-          return;
-        }
-        this.isDisable = false;
-        this.equipos_vagones = response.data;
-      } catch (error) {
-        console.error("Error al obtener los equipos ferroviarios:", error);
-        Swal.fire({
-          title: "Error",
-          text: "Hubo un error al obtener los equipos ferroviarios.",
-          icon: "error",
-          willClose: () => {
-            this.cerrarModal();
-          },
-        });
-      }
-    },
-
-    async getProductos() {
+    async getProductoXEquipo() {
       this.loading = true;
+      
       try {
-        const response = await axios.get("/ufc/producto-vagon/", {
-          params: {
-            include_details: true, 
-          },
-        });
+        const response = await axios.get(`/ufc/producto-vagon/?tipo_equipo=${this.formData.tipo_equipo}`);
 
         this.productos = response.data.results.map((p) => {
           // Asegurar que tipo_embalaje esté definido
@@ -663,6 +629,44 @@ export default {
         Swal.fire("Error", "No se pudieron cargar los productos", "error");
       } finally {
         this.loading = false;
+      }
+    },
+
+    async buscarEquipos() {
+      try {
+        let url = "/api/e-f-no-locomotora/";
+        if (!this.formData.tipo_equipo) {
+          return;
+        }
+        this.formData.producto = [];
+        this.vagonesAgregados=[];
+        url += `?tipo_equipo=${this.formData.tipo_equipo}`;
+        const response = await axios.get(url);
+
+        if (response.data.length === 0) {
+          Swal.fire({
+            title: "Error",
+            text: "No existen equipos ferroviarios para el tipo seleccionado",
+            icon: "error",
+            willClose: () => {
+              this.cerrarModal();
+            },
+          });
+          return;
+        }
+        this.isDisable = false;
+        this.getProductoXEquipo();
+        this.equipos_vagones = response.data;
+      } catch (error) {
+        console.error("Error al obtener los equipos ferroviarios:", error);
+        Swal.fire({
+          title: "Error",
+          text: "Hubo un error al obtener los equipos ferroviarios.",
+          icon: "error",
+          willClose: () => {
+            this.cerrarModal();
+          },
+        });
       }
     },
 
@@ -711,7 +715,7 @@ export default {
 
     cerrarModal() {
       this.mostrarModal = false;
-      this.getProductos();
+      this.getProductoXEquipo();
     },
 
     async submitForm() {
@@ -726,6 +730,7 @@ export default {
           this.$router.push({ name: "InfoOperativo" });
           return;
         }
+        
         const informeNoAprobado = await this.verificarEstadoInforme();
         if (!informeNoAprobado) {
           Swal.fire(
@@ -753,7 +758,7 @@ export default {
         if (this.vagonesAgregados.length != this.formData.por_situar) {
           Swal.fire({
             title: "Advertencia",
-            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de "Por Situar" (${this.formData.por_situar}). ¿Desea actualizar el campo "Situados" para que coincida?`,
+            text: `El número de vagones asociados (${this.vagonesAgregados.length}) no coincide con la cantidad de "Por Situar" (${this.formData.por_situar}) definida.`,
             icon: "warning",
             showCancelButton: false,
             confirmButtonText: "Aceptar",
@@ -813,10 +818,6 @@ export default {
 
     eliminarVagon(index) {
       this.vagonesAgregados.splice(index, 1);
-      localStorage.setItem(
-        "vagonesAgregados",
-        JSON.stringify(this.vagonesAgregados)
-      );
       this.showSuccessToast("Vagón eliminado");
     },
 

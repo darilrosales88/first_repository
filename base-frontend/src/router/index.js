@@ -77,15 +77,7 @@ const routes = [
     name: "home",
     component: NavbarComponent,
   },
-  {
-    path: "/about",
-    name: "about",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () =>
-      import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
-  },
+  
   {
     path: "/contenedor",
     name: "contenedor",
@@ -643,6 +635,87 @@ const routes = [
       requireLogin: true,
     },
   },
+{
+    path: "/GEMAR",
+    name: "GEMAR",
+    component: () => import("../views/GEMAR/GemarView.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/CargasViejas",
+    name: "CargasViejas",
+    component: () => import("../views/GEMAR/CargasViejas.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/AgregarCarga",
+    name: "AgregarCarga",
+    component: () => import("../views/GEMAR/AgregarCarga.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  
+  {
+    path: "/EditarCarga/:id",
+    name: "EditarCarga",
+    component: () => import("../views/GEMAR/EditarCargaVieja.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/ExistenciasMercancia",
+    name: "ExistenciasMercancia",
+    component: () => import("../views/GEMAR/ExistenciasMercancia.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/AgregarExistenciaMercancia",
+    name: "AgregarExistenciaMercancia",
+    component: () => import("../views/GEMAR/AgregarExistenciaMercancia.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/EditarExistenciaMercancia/:id",
+    name: "EditarExistenciaMercancia",
+    component: () => import("../views/GEMAR/EditarExistenciaMercancia.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/PartesPBIP",
+    name: "PartesPBIP",
+    component: () => import("../views/GEMAR/PartesPBIP.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/AgregarBuque",
+    name: "AgregarBuque",
+    component: () => import("../views/GEMAR/AgregarBuque.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/EditarPartePBIP/:id",
+    name: "EditarPartePBIP",
+    component: () => import("../views/GEMAR/EditarPartePBIP.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
 
   {
     path: "/ufc",
@@ -722,7 +795,7 @@ const routes = [
       requireLogin: true,
     },
   },
-  /* Vagones y productos */
+  /* Vagones y productos UFC */
   {
     path: "/AdicionarVagonProducto",
     name: "AdicionarVagonProducto",
@@ -772,6 +845,119 @@ const routes = [
       requireLogin: true,
     },
   },
+
+  /* Vagones y productos CCD */
+
+  {
+    path: "/AnnadirPorSituarCCD/",
+    name: "AnnadirPorSituarCCD",
+    component: () => import("../views/CCDxProducto/Formularios/AnnadirPorSituar.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+
+  {
+    path: "/EditarPorSituarCCD/:id",
+    name: "EditarPorSituarCCD",
+    component: () => import("../views/CCDxProducto/Formularios/EditarPorSituar.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+
+  {
+    path: "/AnnadirSituadoCCD/",
+    name: "AnnadirPorSituadoCCD",
+    component: () => import("../views/CCDxProducto/Formularios/AnnadirSituados.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+
+  {
+    path: "/EditarSituadoCCD/:id",
+    name: "EditarSituadoCCD",
+    component: () => import("../views/CCDxProducto/Formularios/EditarSituados.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+
+  {
+    path: "/AnnadirPendienteArrastreCCD/",
+    name: "AnnadirPendienteArrastreCCD",
+    component: () => import("../views/CCDxProducto/Formularios/AnnadirPendienteArrastre.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+
+  {
+    path: "/EditarPendienteArrastreCCD/:id",
+    name: "EditarPendienteArrastreCCD",
+    component: () => import("../views/CCDxProducto/Formularios/EditarPendienteArrastre.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+
+  {
+    path: "/AnnadirEnTrenCCD/",
+    name: "AnnadirEnTrenCCD",
+    component: () => import("../views/CCDxProducto/Formularios/AnnadirEnTren.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+
+  {
+    path: "/EditarEnTrenCCD/:id",
+    name: "EditarEnTrenCCD",
+    component: () => import("../views/CCDxProducto/Formularios/EditarEnTren.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+
+  {
+    path: "/AnnadirCargadosDescargadosCCD/",
+    name: "AnnadirCargadosDescargadosCCD",
+    component: () => import("../views/CCDxProducto/Formularios/AnnadirCargadosDescargados.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+
+  
+  {
+    path: "/EditarCargadosDescargadosCCD/:id",
+    name: "EditarCargadosDescargadosCCD",
+    component: () => import("../views/CCDxProducto/Formularios/EditarCargadosDescargados.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+
+  {
+    path: "/AnnadirCasillaCCD/",
+    name: "AnnadirCasillaCCD",
+    component: () => import("../views/CCDxProducto/Formularios/AnnadirCasilla.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+
+  /*{
+    path: "/EditarCasillaCCD/:id",
+    name: "EditarCasillaCCD",
+    component: () => import("../views/CCDxProducto/Formularios/EditarCasilla.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },*/
+
+
   {
     path: "/recuperar-contrasena", // Cambié a formato kebab-case
     name: "RecuperarContrasena",

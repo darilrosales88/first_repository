@@ -26,7 +26,6 @@ from .views import (
 
     
 
-from django.urls import path
 
 urlpatterns = [
     path('gemar-partes-combinados/', listar_partes_combinados, name='listar-partes-combinados'),

@@ -8,7 +8,7 @@ from .views import verificar_informe_existente,verificar_informe_ccd_existente
 from .views import VagonesDiasViewSet
 
 ###Imports View from CCD
-from .views import (obtener_real_carga_ccd,ccd_productoViewSet,ccd_informeViewSet,ccd_arrastresViewSet,ccd_casillas_productosViewSet,ccd_en_trenesViewSet,ccd_por_situarViewSet,ccd_registro_vagones_cdViewSet,ccd_vagones_cdViewSet,ccd_situadosViewSet)
+from .views import (obtener_real_carga_ccd,ccd_productoViewSet,ccd_informeViewSet,ccd_arrastresViewSet,ccd_casillas_productosViewSet,ccd_en_trenesViewSet,ccd_por_situarViewSet,ccd_vagones_cdViewSet,ccd_situadosViewSet)
 
 from django.urls import path
 

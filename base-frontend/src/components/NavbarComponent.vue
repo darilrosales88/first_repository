@@ -30,7 +30,7 @@
             <span
               ><i
                 style="margin-right: 10px"
-                :class="`bi bi-${item.icon} me-3 fs-5`"
+                :class="`bi bi-${item.icon} me-1 fs-5`"
               ></i
               >{{ item.title }}
               <span
@@ -59,12 +59,12 @@
               role="menuitem"
             >
               <a
-                class="submenu-link px-3 py-3 d-flex align-items-center"
+                class="submenu-link px-2 py-2 d-flex align-items-center"
                 role="button"
                 @click="insertRoute(subitem.route)"
                 ><i
                   style="margin-right: 10px"
-                  :class="`bi bi-${subitem.icon} me-3 fs-5`"
+                  :class="`bi bi-${subitem.icon} me-2 fs-5`"
                 ></i>
                 {{ subitem.title }}
               </a>
@@ -118,7 +118,7 @@ export default {
             { title: "Cargos", route: "/Cargos", icon: "person-badge" },
             { title: "Contenedores", route: "/contenedor", icon: "box-seam" },
             { title: "Destinos", route: "/Destino", icon: "geo-alt" },
-            { title: "Embarcaciones", route: "/Embarcaciones", icon: "ship" },
+            { title: "Embarcaciones", route: "/Embarcaciones", icon: "water" },
             { title: "Entidades", route: "/Entidades", icon: "building" },
             {
               title: "Equipos ferroviarios",
@@ -131,7 +131,7 @@ export default {
               icon: "tools",
             },
             {
-              title: "Estructuras de ubicación",
+              title: "Estruct. de ubicación",
               route: "/EstructuraUbicacion",
               icon: "layers",
             },
@@ -148,7 +148,7 @@ export default {
             { title: "Países", route: "/Paises", icon: "globe-americas" },
             { title: "Productos", route: "/Producto", icon: "box-seam" },
             { title: "Provincias", route: "/Provincia", icon: "map" },
-            { title: "Puertos", route: "/Puertos", icon: "harbor" },
+            { title: "Puertos", route: "/Puertos", icon: "geo" },
             { title: "Terminales", route: "/Terminal", icon: "terminal" },
             { title: "Territorios", route: "/Territorio", icon: "pin-map" },
             {
@@ -157,7 +157,7 @@ export default {
               icon: "box-seam",
             },
             {
-              title: "Tipos de equipos ferroviarios",
+              title: "Tipos de equipos",
               route: "/TipoEquipoFerro",
               icon: "train-lightrail-front",
             },
@@ -188,6 +188,7 @@ export default {
             { title: "Informes HE", route: "/gemar_listado_partes" },
             { title: "Gemar-Programacion de Maniobras", route: "/gemar_parte_programacion_maniobras" },
             { title: "Listado de Partes - Gemar", route: "/listar_partes_combinados" },
+            { title: "GEMAR", route: "/GEMAR" },
           ],
         },
         {

@@ -1,241 +1,128 @@
 <template>
   <div>
-    <div style="background-color: #002a68; color: white; text-align: right">
-      <h6>Bienvenido:</h6>
-    </div>
-    <br />
+    
     <Navbar-Component />
-    <br />
-    <br />
-    <div class="search-container">
-      <form class="d-flex search-form" @submit.prevent="searchAtraque">
-        <div class="input-container">
-          <i class="bi bi-search"></i>
-          <input
-            class="form-control form-control-sm me-2"
-            type="search"
-            placeholder="Contenedor"
-            aria-label="Search"
-            v-model="searchQuery"
-            @input="handleSearchInput"
-            style="width: 200px; padding-left: 5px; margin-top: -70px"
-          />
+    <div class="container py-3" style="margin-left: 17.3em; width: 75%">
+      <div class="card border">
+        <div class="card-header bg-light border-bottom">
+          <h6 class="mb-0 text-dark fw-semibold">Listado de contenedores</h6>
         </div>
-      </form>
-    </div>
-    <div class="create-button-container">
-      <router-link
-        v-if="hasGroup('Admin')"
-        class="create-button"
-        to="/CrearContenedor"
-      >
-        <i class="bi bi-plus-circle large-icon"></i>
-      </router-link>
-    </div>
-    <h3
-      style="
-        margin-top: -33px;
-        font-size: 18px;
-        margin-right: 570px;
-        color: #002a68;
-      "
-    >
-      Listado de contenedores
-    </h3>
-    <br />
-    <div class="table-container">
-      <table class="table">
-        <thead>
-          <tr>
-            <th scope="col">ID Contenedor</th>
-            <th scope="col">Tipo</th>
-            <th scope="col">Longitud</th>
-            <th scope="col">ISO</th>
-            <th scope="col">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in contenedores" :key="item.id">
-            <td>{{ item.id_contenedor }}</td>
-            <td>{{ item.tipo_contenedor_description }}</td>
-            <td>{{ item.longitud }}</td>
-            <td>{{ item.codigo_iso }}</td>
-            <td>
-              <button
-                @click="openContenedorDetailsModal(item)"
-                class="btn btn-info btn-small btn-eye"
-                v-html="
-                  showNoId
-                    ? '<i class=\'bi bi-eye-slash-fill\'></i>'
-                    : '<i class=\'bi bi-eye-fill\'></i>'
-                "
-              ></button>
-              <span v-if="hasGroup('Admin')">
-                <button class="btn btn-warning btn-small">
-                  <router-link
-                    :to="{
-                      name: 'EditarContenedor',
-                      params: { id: item.id_contenedor },
-                    }"
-                  >
-                    <i style="color: black" class="bi bi-pencil-square"></i>
-                  </router-link>
-                </button>
-                <button
-                  @click.prevent="confirmDelete(item.id_contenedor)"
-                  class="btn btn-danger btn-small"
+        <div class="card-body p-3">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <router-link
+              v-if="hasGroup('Admin')"
+              class="create-button"
+              to="/CrearContenedor"
+            >
+              <button class="btn btn-sm btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Adicionar contenedor
+              </button>
+            </router-link>
+            <form class="search-container" @submit.prevent="searchContenedor">
+              <div class="input-group">
+                <input
+                  type="search"
+                  class="form-control"
+                  placeholder="Buscar contenedor"
+                  v-model="searchQuery"
+                  @input="handleSearchInput"
+                />
+                <span class="position-absolute top-50 start-0 translate-middle-y ps-2">
+                  <i class="bi bi-search"></i>
+                </span>
+              </div>
+            </form>
+          </div>
+          <div class="table table-responsive">
+            <table class="table table-sm table-bordered table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col">ID Contenedor</th>
+                  <th scope="col">Tipo</th>
+                  <th scope="col">Longitud</th>
+                  <th scope="col">ISO</th>
+                  <th scope="col">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in contenedores" :key="item.id">
+                  <td>{{ item.id_contenedor }}</td>
+                  <td>{{ item.tipo_contenedor_description }}</td>
+                  <td>{{ item.longitud }}</td>
+                  <td>{{ item.codigo_iso }}</td>
+                  <td>
+                    <div class="d-flex" style="margin-left: 30%;">
+                      <button
+                        @click="openContenedorDetailsModal(item)"
+                        class="btn btn-sm btn-outline-info me-2"
+                        title="Ver detalles"
+                      >
+                        <i class="bi bi-eye-fill"></i>
+                      </button>
+                      
+                        <button class="btn btn-sm btn-outline-warning me-2">
+                          <router-link v-if="hasGroup('Admin')"
+                            :to="{
+                              name: 'EditarContenedor',
+                              params: { id: item.id_contenedor },
+                            }"
+                            title="Editar"
+                          >
+                            <i class="bi bi-pencil-square"></i>
+                          </router-link>
+                        </button>
+                        <button v-if="hasGroup('Admin')"
+                          @click.prevent="confirmDelete(item.id_contenedor)"
+                          class="btn btn-sm btn-outline-danger"
+                          title="Eliminar"
+                        >
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <h1 v-if="!busqueda_existente">
+              No existe ningún registro asociado a ese parámetro de búsqueda.
+            </h1>
+          </div>
+          <nav aria-label="Page navigation example" style="margin-left: 30%;">
+            <ul class="pagination">
+              <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                <a
+                  class="page-link"
+                  href="#"
+                  @click.prevent="changePage(currentPage - 1)"
+                  >Anterior</a
                 >
-                  <i class="bi bi-trash"></i>
-                </button>
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <!-- Mensaje cuando no hay resultados -->
-      <h1 v-if="!busqueda_existente">
-        No existe ningún registro asociado a ese parámetro de búsqueda.
-      </h1>
+              </li>
+              <li
+                class="page-item"
+                v-for="page in pages"
+                :key="page"
+                :class="{ active: page === currentPage }"
+              >
+                <a class="page-link" href="#" @click.prevent="changePage(page)">{{
+                  page
+                }}</a>
+              </li>
+              <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                <a
+                  class="page-link"
+                  href="#"
+                  @click.prevent="changePage(currentPage + 1)"
+                  >Siguiente</a
+                >
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
     </div>
-    <nav aria-label="Page navigation example">
-      <ul class="pagination">
-        <li class="page-item" :class="{ disabled: currentPage === 1 }">
-          <a
-            class="page-link"
-            href="#"
-            @click.prevent="changePage(currentPage - 1)"
-            >Anterior</a
-          >
-        </li>
-        <li
-          class="page-item"
-          v-for="page in pages"
-          :key="page"
-          :class="{ active: page === currentPage }"
-        >
-          <a class="page-link" href="#" @click.prevent="changePage(page)">{{
-            page
-          }}</a>
-        </li>
-        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-          <a
-            class="page-link"
-            href="#"
-            @click.prevent="changePage(currentPage + 1)"
-            >Siguiente</a
-          >
-        </li>
-      </ul>
-    </nav>
   </div>
 </template>
-
-<style scoped>
-.search-container input::placeholder {
-  font-size: 14px;
-  color: #999;
-}
-
-body {
-  overflow: scroll;
-}
-
-.search-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 5px;
-}
-
-.table-container {
-  overflow-x: auto;
-  max-width: 100%;
-}
-.input-container {
-  position: relative;
-  display: inline-block;
-}
-
-.input-container .bi {
-  position: absolute;
-  left: 180px;
-  color: #999;
-  margin-top: -55px;
-  transform: translateY(-50%);
-  pointer-events: none; /* Para que el ícono no interfiera con el clic en el input */
-}
-.large-icon {
-  font-size: 1.7rem; /* Tamaño del ícono */
-}
-table {
-  width: 84%;
-  border-collapse: collapse;
-  margin-left: 190px;
-  margin-bottom: 10px;
-  font-size: 0.875rem;
-}
-
-th,
-td {
-  padding: 0.15rem; /* Reducir el padding */
-  white-space: nowrap;
-}
-
-th {
-  background-color: #f2f2f2;
-}
-
-.btn {
-  cursor: pointer;
-}
-
-.btn-small {
-  font-size: 22px; /* Aumenta el tamaño del ícono */
-  color: black;
-  margin-right: 5px;
-  outline: none; /* Elimina el borde de foco */
-  border: none;
-  background: none; /* Elimina el fondo */
-  padding: 0; /* Elimina el padding para que solo se vea el ícono */
-}
-.btn-eye {
-  font-size: 22px; /* Aumenta el tamaño del ícono */
-  margin-right: 5px;
-  outline: none; /* Elimina el borde de foco */
-  border: none;
-  background: none; /* Elimina el fondo */
-  padding: 0; /* Elimina el padding para que solo se vea el ícono */
-}
-.btn:hover {
-  background: none; /* Asegura que no haya fondo al hacer hover */
-}
-
-.btn:focus {
-  outline: none; /* Elimina el borde de foco al hacer clic */
-  box-shadow: none; /* Elimina cualquier sombra de foco en algunos navegadores */
-}
-
-.create-button-container {
-  margin-top: -80px;
-  text-align: left;
-}
-
-.create-button {
-  text-decoration: none;
-  color: green;
-  margin-left: 940px;
-}
-nav .pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-@media (max-width: 768px) {
-  .create-button-container {
-    text-align: left;
-    margin-right: 0;
-  }
-}
-</style>
 
 <script>
 import axios from "axios";
@@ -256,30 +143,27 @@ export default {
       userPermissions: [],
       userGroups: [],
       showNoId: false,
-      currentPage: 1, // Página actual
-      totalPages: 1, // Total de páginas
-      pages: [], // Lista de páginas visibles
+      currentPage: 1,
+      totalPages: 1,
+      pages: [],
     };
   },
   mounted() {
     this.getContenedores();
   },
   async created() {
-    // Obtener los permisos y grupos del usuario al cargar el componente
     await this.fetchUserPermissionsAndGroups();
   },
   methods: {
     toggleNoIdVisibility() {
-      this.showNoId = !this.showNoId; // Alternar la visibilidad de las columnas No e Id
+      this.showNoId = !this.showNoId;
     },
-    // Verifica si el usuario tiene un permiso específico
     hasPermission(permission) {
       return this.userPermissions.some((p) => p.name === permission);
     },
     hasGroup(group) {
       return this.userGroups.some((g) => g.name === group);
     },
-    // Obtiene los permisos y grupos del usuario desde el backend
     async fetchUserPermissionsAndGroups() {
       try {
         const userId = localStorage.getItem("userid");
@@ -302,10 +186,10 @@ export default {
             search: this.searchQuery,
           },
         });
-        this.contenedores = response.data.results; // Obtener los registros de la página actual
-        this.totalPages = Math.ceil(response.data.count / 15); // Calcular el número total de páginas
-        this.updatePages(); // Actualizar la lista de páginas visibles
-        this.busqueda_existente = true; // Reinicia la variable al cargar todos los contenedores
+        this.contenedores = response.data.results;
+        this.totalPages = Math.ceil(response.data.count / 15);
+        this.updatePages();
+        this.busqueda_existente = true;
       } catch (error) {
         console.error("Error al obtener los contenedores:", error);
       }
@@ -317,11 +201,10 @@ export default {
           `/api/contenedores/?id_tipo_longitud=${this.searchQuery}`
         );
         this.contenedores = response.data;
-        // Actualiza busqueda_existente basado en el resultado
         this.busqueda_existente = this.contenedores.length > 0;
       } catch (error) {
         console.error("Error al buscar contenedores:", error);
-        this.busqueda_existente = false; // Asegura que busqueda_existente sea false en caso de error
+        this.busqueda_existente = false;
       }
       this.$store.commit("setIsLoading", false);
     },
@@ -332,14 +215,13 @@ export default {
       }, 300);
     },
     updatePages() {
-      const startPage = Math.max(1, this.currentPage - 2); // Mostrar 2 páginas antes de la actual
-      const endPage = Math.min(this.totalPages, this.currentPage + 2); // Mostrar 2 páginas después de la actual
+      const startPage = Math.max(1, this.currentPage - 2);
+      const endPage = Math.min(this.totalPages, this.currentPage + 2);
       this.pages = [];
       for (let i = startPage; i <= endPage; i++) {
         this.pages.push(i);
       }
     },
-
     changePage(page) {
       if (page >= 1 && page <= this.totalPages) {
         this.currentPage = page;
@@ -364,7 +246,6 @@ export default {
     async deleteContenedor(id) {
       try {
         await axios.delete(`/api/contenedores/${id}/`);
-        // Actualizar la lista de contenedores eliminando el que se ha borrado
         this.contenedores = this.contenedores.filter(
           (contenedor) => contenedor.id_contenedor !== id
         );
@@ -379,7 +260,6 @@ export default {
       }
     },
     openContenedorDetailsModal(Contenedor) {
-      // Mapear IDs de grupos a nombres
       const gruposAsignados =
         Contenedor.groups && Contenedor.groups.length > 0
           ? Contenedor.groups
@@ -392,10 +272,9 @@ export default {
               .join(", ")
           : "Ninguno";
 
-      // Mapear IDs de permisos a nombres
       const permisosAsignados =
         Contenedor.Contenedor_permissions &&
-        ContenedorContenedor_permissions.length > 0
+        Contenedor.Contenedor_permissions.length > 0
           ? Contenedor.Contenedor_permissions.map((permisoId) => {
               const permiso = this.permisosDisponibles.find(
                 (p) => p.id === permisoId
@@ -425,3 +304,418 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #e0e0e0 !important;
+  padding: 0.75rem 1.25rem;
+}
+
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+}
+
+.search-container input {
+  padding-left: 2.5rem !important;
+  border-radius: 20px !important;
+}
+
+.search-container .bi-search {
+  color: #6c757d;
+  z-index: 10;
+}
+
+.input-group {
+  width: 100%;
+}
+
+.table {
+  font-size: 0.875rem;
+}
+
+.table thead th {
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+  color: #495057;
+  font-weight: 500;
+}
+
+.table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.ps-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.ps-modal {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination-container button {
+  margin: 0 5px;
+}
+
+.ps-loading-td,
+.ps-empty-td {
+  padding: 3rem !important;
+}
+
+.ps-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: var(--ps-gray);
+}
+
+.ps-spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 4px solid rgba(67, 97, 238, 0.1);
+  border-top-color: var(--ps-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ps-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  color: var(--ps-gray);
+}
+
+.ps-empty-state i {
+  font-size: 2.5rem;
+  color: var(--ps-accent);
+}
+
+.ps-empty-state h3 {
+  color: var(--ps-dark);
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.ps-empty-state p {
+  margin: 0;
+  max-width: 400px;
+}
+
+.ps-empty-action {
+  margin-top: 1rem;
+  color: var(--ps-primary);
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: var(--ps-transition);
+}
+
+.ps-empty-action:hover {
+  color: var(--ps-primary-hover);
+  transform: translateY(-2px);
+}
+
+.ps-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.ps-modal {
+  background: white;
+  border-radius: var(--ps-border-radius);
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+}
+
+.ps-modal-header {
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #0d6efd;
+  color: white;
+  position: relative;
+}
+
+.ps-modal-header::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  background: linear-gradient(to bottom, rgba(67, 97, 238, 0.2), transparent);
+}
+
+.ps-modal-header-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ps-modal-icon-container {
+  background: rgba(23, 25, 184, 0.2);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ps-modal-icon {
+  font-size: 1.5rem;
+}
+
+.ps-modal h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.ps-modal-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+.ps-modal-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: var(--ps-transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+.ps-modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.ps-modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  background: #f9fafb;
+}
+
+.ps-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.ps-detail-card {
+  background: white;
+  border-radius: var(--ps-border-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: var(--ps-transition);
+  border: 1px solid var(--ps-light-gray);
+}
+
+.ps-detail-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.ps-detail-card-header {
+  padding: 1rem;
+  background-color: #0d6efd;
+  color: white;
+  border-bottom: 1px solid var(--ps-light-gray);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ps-detail-card-header i {
+  font-size: 1.2rem;
+  color: var(--ps-primary);
+}
+
+.ps-detail-card-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--ps-dark);
+}
+
+.ps-detail-card-body {
+  padding: 1rem;
+}
+
+.ps-detail-card-highlight {
+  border: 1px solid rgba(67, 97, 238, 0.3);
+}
+
+.ps-detail-card-highlight .ps-detail-card-header {
+  background: linear-gradient(to right, rgba(67, 97, 238, 0.05), white);
+}
+
+.ps-detail-card-highlight .ps-detail-card-header i {
+  color: var(--ps-accent);
+}
+
+.ps-detail-card-full {
+  grid-column: 1 / -1;
+}
+
+.ps-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.ps-detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.ps-detail-label {
+  font-size: 0.85rem;
+  color: var(--ps-gray);
+  font-weight: 500;
+}
+
+.ps-detail-value {
+  font-size: 1rem;
+  color: var(--ps-dark);
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.ps-highlight-value {
+  color: var(--ps-primary);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.ps-modal-footer {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  background: white;
+  border-top: 1px solid var(--ps-light-gray);
+}
+
+.ps-modal-btn {
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--ps-border-radius);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--ps-transition);
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ps-modal-btn-secondary {
+  background: white;
+  color: var(--ps-gray);
+  border: 1px solid var(--ps-light-gray);
+}
+
+.ps-modal-btn-secondary:hover {
+  background: #f1f3f5;
+  color: var(--ps-dark);
+}
+
+.ps-modal-btn-primary {
+  background: var(--ps-primary);
+  color: white;
+  box-shadow: 0 2px 6px rgba(67, 97, 238, 0.2);
+}
+
+.ps-modal-btn-primary:hover {
+  background: var(--ps-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+}
+
+.ps-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.ps-status-success {
+  background: rgba(76, 201, 240, 0.1);
+  color: #06d6a0;
+  border: 1px solid rgba(6, 214, 160, 0.2);
+}
+
+.ps-status-danger {
+  background: rgba(247, 37, 133, 0.1);
+  color: #f72585;
+  border: 1px solid rgba(247, 37, 133, 0.2);
+}
+
+.ps-status-default {
+  background: rgba(108, 117, 125, 0.1);
+  color: var(--io-gray);
+  border: 1px solid rgba(108, 117, 125, 0.2);
+}
+</style>

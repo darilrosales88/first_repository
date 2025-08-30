@@ -368,14 +368,12 @@ export default {
   },
   created() {
     this.registroId = this.$route.params.id;
-    console.log("Hola",this.registroId)
     if (this.registroId) {
       this.cargarRegistro();
     }
     
     this.getEntidades();
     this.getPuertos();
-    this.getProductos();
     this.getEquipos();
   },
 
@@ -424,10 +422,8 @@ export default {
         this.buscarEquipos();
 
       } catch (error) {
-        // ... manejo de errores ...
-      } finally {
-        this.loading = false;
-      }
+        this.showErrorToast("Error al cargar el registro");
+      } 
     },
 
     async getEntidades() {
@@ -455,7 +451,9 @@ export default {
         if (!this.formData.tipo_equipo) {
           return;
         }
-
+        //Aqui se limpia producto y vagones agregados
+        this.formData.producto = [];
+        this.vagonesAgregados=[];
         // al tipo de equipo específico lo añadimos como parámetro
         url += `?tipo_equipo=${this.formData.tipo_equipo}`;
         const response = await axios.get(url);
@@ -472,7 +470,6 @@ export default {
           });
           return;
         }
-        this.isDisable=false;
         this.equipos_vagones = response.data;
       } catch (error) {
         console.error("Error al obtener los equipos ferroviarios:", error);
@@ -528,7 +525,6 @@ export default {
       const vagonAgregado = {
         equipo_ferroviario: equipoSeleccionado,
         cant_dias: this.nuevoVagon.cant_dias,
-        // Agrega otros datos necesarios para mantener consistencia
         datos: {
           equipo_vagon: equipoSeleccionado.numero_identificacion,
         },
@@ -539,14 +535,11 @@ export default {
       this.showSuccessToast("Vagón añadido");
     },
 
-    async getProductos() {
+    async getProductoXEquipo() {
       this.loading = true;
+      
       try {
-        const response = await axios.get("/ufc/producto-vagon/", {
-          params: {
-            include_details: true, 
-          },
-        });
+        const response = await axios.get(`/ufc/producto-vagon/?tipo_equipo=${this.formData.tipo_equipo}`);
 
         this.productos = response.data.results.map((p) => {
           // Asegurar que tipo_embalaje esté definido
@@ -568,6 +561,7 @@ export default {
         this.loading = false;
       }
     },
+
 
     async getPuertos() {
       try {
@@ -593,7 +587,7 @@ export default {
 
     cerrarModal() {
       this.mostrarModal = false;
-      this.getProductos();
+      this.getProductoXEquipo();
     },
 
     async submitForm() {
@@ -637,11 +631,9 @@ export default {
           observaciones: this.formData.observaciones,
           informe_operativo: this.informeOperativoId,
 
-          // Datos de los vagones (estructura corregida)
           equipo_vagon: this.vagonesAgregados.map((vagon) => ({
             equipo_ferroviario: vagon.equipo_ferroviario.id, // ID del equipo
             cant_dias: vagon.cant_dias,
-            // Otros campos necesarios para el vagon
           })),
         };
         console.log("Esto fue lo que se envio", payload);

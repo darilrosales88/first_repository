@@ -22,6 +22,7 @@
                 >
                 <input
                   type="text"
+                  style="padding: 8px 12px"
                   class="form-control form-control-sm border-secondary"
                   :value="formattedFechaRegistro"
                   id="fecha_registro"
@@ -38,6 +39,7 @@
                 >
                 <select
                   class="form-select form-select-sm border-secondary"
+                  style="padding: 8px 12px"
                   v-model="formData.tipo_origen"
                   id="tipo_origen"
                   name="tipo_origen"
@@ -60,6 +62,7 @@
                   v-if="
                     formData.tipo_origen && formData.tipo_origen !== 'puerto'
                   "
+                  style="padding: 8px 12px"
                   class="form-select form-select-sm border-secondary"
                   v-model="formData.origen"
                   id="origen"
@@ -72,11 +75,12 @@
                     :key="entidad.id"
                     :value="entidad.nombre"
                   >
-                    {{ entidad.id }}-{{ entidad.nombre }}
+                    {{ entidad.nombre }}
                   </option>
                 </select>
 
                 <select
+                  style="padding: 8px 12px"
                   v-else-if="formData.tipo_origen === 'puerto'"
                   class="form-select form-select-sm border-secondary"
                   v-model="formData.origen"
@@ -90,13 +94,14 @@
                     :key="puerto.id"
                     :value="puerto.nombre_puerto"
                   >
-                    {{ puerto.id }}- {{ puerto.nombre_puerto }}
+                    {{ puerto.nombre_puerto }}
                   </option>
                 </select>
 
                 <select
                   v-else
                   class="form-select form-select-sm border-secondary"
+                  style="padding: 8px 12px"
                   disabled
                 >
                   <option value="">Seleccione primero el tipo de origen</option>
@@ -107,10 +112,12 @@
               <div class="mb-3">
                 <label
                   for="tipo_producto"
+                  
                   class="form-label small fw-semibold text-secondary"
                   >Tipo de Producto</label
                 >
                 <select
+                  style="padding: 8px 12px"
                   class="form-select form-select-sm border-secondary"
                   v-model="formData.tipo_producto"
                   id="tipo_producto"
@@ -165,7 +172,8 @@
                   >Tipo de Combustible</label
                 >
                 <select
-                  class="form-select"
+                  style="padding: 8px 12px"
+                  class="form-select form-select-sm border-secondary"
                   v-model="formData.tipo_combustible"
                   id="tipo_combustible"
                   name="tipo_combustible"
@@ -177,14 +185,15 @@
               </div>
 
               <!-- Campo: TEF -->
-              <div class="mb-3" v-if="mostrarCampoCombustible">
+              <div class="mb-3" v-if="mostrarCampoCombustible && tipo_combustible">
                 <label
                   for="tipo_equipo_ferroviario"
                   class="form-label small fw-semibold text-secondary"
                   >Tipo de equipo ferroviario</label
                 >
                 <select
-                  class="form-select"
+                  style="padding: 8px 12px"
+                  class="form-select form-select-sm border-secondary"
                   v-model="formData.tipo_equipo_ferroviario"
                   id="tipo_equipo_ferroviario"
                   name="tipo_equipo_ferroviario"
@@ -214,6 +223,7 @@
                 >
                 <input
                   type="number"
+                  style="padding: 8px 12px"
                   class="form-control form-control-sm border-secondary"
                   v-model="formData.plan_mensual"
                   id="plan_mensual"
@@ -226,14 +236,13 @@
               <div class="mb-3">
                 <label
                   for="plan_anual"
-                  class="form-label small fw-semibold text-secondary"
-                  >Plan anual
-                  <span style="color: red" v-if="esPlanAnualEditable"
-                    >*</span
-                  ></label
+                  class="form-label small fw-semibold text-secondary" 
+                  >Plan anual></label
                 >
                 <input
                   type="number"
+                  disabled
+                  style="padding: 8px 12px"
                   class="form-control form-control-sm border-secondary"
                   v-model="formData.plan_anual"
                   id="plan_anual"
@@ -264,11 +273,13 @@
               <div class="mb-3" v-if="mostrarCamposAcumulados">
                 <label
                   for="plan_acumulado_dia_anterior"
-                  class="form-label small fw-semibold text-secondary"
+                  class="form-label small fw-semibold text-secondary" 
                   >Plan acumulado día anterior</label
                 >
                 <input
                   type="number"
+                  disabled
+                  style="padding: 8px 12px"
                   class="form-control form-control-sm border-secondary"
                   v-model="formData.plan_acumulado_dia_anterior"
                   id="plan_acumulado_dia_anterior"
@@ -281,12 +292,14 @@
               <div class="mb-3" v-if="mostrarCamposAcumulados">
                 <label
                   for="real_acumulado_dia_anterior"
-                  class="form-label small fw-semibold text-secondary"
+                  class="form-label small fw-semibold text-secondary" 
                   >Real acumulado día anterior</label
                 >
                 <input
                   type="number"
-                  class="form-control form-control-sm border-secondary"
+                  disabled
+                  style="padding: 8px 12px"
+                  class="form-control form-control-sm border-secondary" 
                   v-model="formData.real_acumulado_dia_anterior"
                   id="real_acumulado_dia_anterior"
                   name="real_acumulado_dia_anterior"
@@ -748,6 +761,313 @@ export default {
 </script>
 
 <style scoped>
+/* Estilos para el select personalizado de productos */
+.ufc-custom-select {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+}
+
+.ufc-select-display {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background-color: white;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  border-color: rgba(
+    var(--bs-secondary-rgb),
+    var(--bs-border-opacity)
+  ) !important;
+}
+
+.ufc-select-arrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: transform 0.2s;
+}
+
+.ufc-custom-select.open .ufc-select-arrow {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.ufc-productos-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  margin-top: 2px;
+}
+
+.ufc-productos-search-container {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  background: #f8f9fa;
+}
+
+.ufc-productos-search {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.ufc-productos-search:focus {
+  outline: none;
+  border-color: #002a68;
+}
+
+.ufc-productos-options {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.ufc-producto-option {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ufc-producto-option:hover {
+  background-color: #f5f5f5;
+}
+/* Estilos para el grid dentro del modal */
+
+/* Ajustes para los botones del modal */
+.ufc-modal-body .ufc-form-actions {
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+  margin-top: 0;
+}
+
+.ufc-producto-option.selected {
+  background-color: #002a68;
+  color: white;
+}
+
+/* Estilo para el botón de agregar */
+.ufc-add-button {
+  margin-left: 8px;
+}
+
+.ufc-select[multiple] {
+  height: auto;
+  min-height: 100px;
+  padding: 8px;
+}
+
+.ufc-select[multiple] option {
+  padding: 6px 8px;
+  margin: 2px 0;
+  border-radius: 4px;
+}
+
+.ufc-select[multiple] option:checked {
+  background-color: #002a68;
+  color: white;
+}
+
+.ufc-selected-products {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 5px;
+}
+
+.ufc-form-container {
+  font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+  color: #333;
+  padding-bottom: 20px;
+}
+
+.ufc-header {
+  background-color: #002a68;
+  color: white;
+  text-align: right;
+  padding: 10px 15px;
+  margin-bottom: 20px;
+}
+
+.ufc-header h6 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.ufc-form-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+.ufc-form-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.ufc-form-title {
+  color: #002a68;
+  font-size: 1.3rem;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.ufc-form-title i {
+  font-size: 1.4rem;
+}
+
+.ufc-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+@media (max-width: 768px) {
+  .ufc-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ufc-input-group {
+  margin-bottom: 15px;
+}
+
+.ufc-input-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #444;
+}
+
+.ufc-input-group .required {
+  color: #e74c3c;
+}
+
+.ufc-select,
+.ufc-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  background-color: white;
+}
+
+.ufc-select:focus,
+.ufc-input:focus {
+  border-color: #002a68;
+  box-shadow: 0 0 0 3px rgba(0, 42, 104, 0.1);
+  outline: none;
+}
+
+.ufc-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  resize: vertical;
+  min-height: 70px;
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.ufc-textarea:focus {
+  border-color: #002a68;
+  box-shadow: 0 0 0 3px rgba(0, 42, 104, 0.1);
+  outline: none;
+}
+
+.ufc-input-with-action {
+  display: flex;
+  gap: 8px;
+}
+
+.ufc-add-button {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  width: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #002a68;
+  transition: all 0.2s;
+}
+
+.ufc-add-button:hover {
+  background: #e9ecef;
+  color: #001a3d;
+}
+
+.ufc-add-button i {
+  font-size: 1.1rem;
+}
+
+.ufc-disabled {
+  font-size: 0.8rem;
+  color: #777;
+  padding: 8px 0;
+}
+
+/* Estilo especial para el campo por situar */
+.ufc-por-situar-container {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  border-color: rgba(
+    var(--bs-secondary-rgb),
+    var(--bs-border-opacity)
+  ) !important;
+}
+
+.ufc-por-situar-input {
+  flex: 1;
+  border: none;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  min-width: 0;
+}
+
+.ufc-por-situar-suffix {
+  background: #f8f9fa;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: #666;
+  border-left: 1px solid #ddd;
+}
+
+/* Botones de acción */
+.ufc-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
 .ufc-button {
   padding: 8px 16px;
   border-radius: 6px;
@@ -766,7 +1086,7 @@ export default {
 }
 
 .ufc-button.secondary {
-  background: rgb(241, 81, 63);
+  background: #f1513f;
   color: white;
 }
 
@@ -776,65 +1096,26 @@ export default {
 
 .create-button {
   text-decoration: none;
+  border: none;
   color: green;
   margin-left: 940px;
-}
-
-.form-container {
-  max-width: 300px;
-  margin: 50px;
-  padding: 20px;
-  background-color: f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-h2 {
-  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
-  text-align: left;
-  margin-bottom: 20px;
-  font-size: 20px;
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.form-group {
-  text-align: left;
-  display: flex;
-  width: 260px;
-  flex-direction: column;
-  gap: 5px;
-  font-size: 14px;
-}
-
-label {
-  font-weight: bold;
-}
-
-input,
-select {
-  padding: 5px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.form-buttons {
-  display: flex;
-  justify-content: end;
-  font-size: 15px;
 }
 
 button {
   margin-left: 10px;
   padding: 5px 15px;
-  border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
+}
+
+.btn-outline-danger {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+  color: #fff;
 }
 
 button[type="button"] {
@@ -847,4 +1128,122 @@ button[type="submit"] {
   background-color: #007bff;
   color: white;
 }
+
+/* Estilos para selects */
+.ufc-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
+}
+
+/* Estilos para el modal */
+.ufc-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.ufc-modal-container {
+  background: white;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+.ufc-modal-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #002a68;
+  color: white;
+  border-radius: 10px 10px 0 0;
+}
+
+.ufc-modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ufc-modal-close {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 5px;
+  transition: all 0.2s;
+}
+
+.ufc-modal-close:hover {
+  color: #ccc;
+}
+
+.ufc-modal-body {
+  padding: 20px;
+}
+
+.ufc-validation-message {
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  margin-top: 10px;
+}
+
+.ufc-validation-message.warning {
+  background-color: #fff3cd;
+  color: #856404;
+  border-left: 4px solid #ffeeba;
+}
+
+.ufc-validation-message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border-left: 4px solid #c3e6cb;
+}
+
+.ufc-validation-message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-left: 4px solid #f5c6cb;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.form-select:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+  outline: 0;
+}
+.form-control:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+  outline: 0;
+}
 </style>
+

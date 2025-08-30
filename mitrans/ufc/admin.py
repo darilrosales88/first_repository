@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from .models import vagon_cargado_descargado,en_trenes ,Situado_Carga_Descarga,arrastres,producto_UFC
-from .models import (registro_vagones_cargados,por_situar,registro_vagones_cargados,vagones_productos,rotacion_vagones,ccd_arrastres,ccd_en_trenes,ccd_vagones_cd,ccd_por_situar,ccd_registro_vagones_cd,ccd_situados,ccd_casillas_productos,ccd_producto,ufc_informe_ccd)
+from .models import (por_situar,registro_vagones_cargados,vagones_productos,rotacion_vagones,ccd_arrastres,ccd_en_trenes,ccd_vagones_cd,ccd_por_situar,ccd_registro_vagones_cd,ccd_situados,ccd_casillas_productos,ccd_producto,ufc_informe_ccd)
 from .models import ufc_informe_operativo,vagones_dias
 
 

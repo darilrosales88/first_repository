@@ -1,7 +1,6 @@
 #4.1 una variante para trabajar con los serializadores  es la propiedad viewsets
 # de rest_framework, facilita el CRUD
-from rest_framework import viewsets,generics,permissions
-from rest_framework.pagination import PageNumberPagination
+from rest_framework import viewsets
 #importacion de modelos
 from .models import vagon_cargado_descargado,producto_UFC,en_trenes
 from .models import registro_vagones_cargados,vagones_productos
@@ -10,12 +9,9 @@ from .models import por_situar,Situado_Carga_Descarga,arrastres,rotacion_vagones
 from .serializers import (vagon_cargado_descargado_filter, vagon_cargado_descargado_serializer, 
                         producto_vagon_serializer, en_trenes_serializer,PorSituarCargaDescargaSerializer, SituadoCargaDescargaSerializers, 
                         PendienteArrastreSerializer, registro_vagones_cargados_serializer,
-                        registro_vagones_cargados_filter, vagones_productos_filter, producto_vagon_filter,
-                        vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer,PorSituarCargaDescargaFilter,
-                        ufc_informe_operativo_serializer,ufc_informe_operativo_filter,
-                        vagones_dias_serializer, rotacion_filter,PendienteArrastreFilter
+                        vagones_productos_filter, producto_vagon_filter,
+                        vagones_productos_serializer, en_trenes_filter, RotacionVagonesSerializer,ufc_informe_operativo_serializer,vagones_dias_serializer, rotacion_filter,PendienteArrastreFilter
                         )
-from django.core.cache import cache
 from Administracion.models import Auditoria
 
 from rest_framework.response import Response
@@ -25,21 +21,19 @@ from rest_framework import status,filters
 from django_filters.rest_framework import DjangoFilterBackend
 
 #para usar el or
-from django.db.models import Q,Prefetch
+from django.db.models import Q
 
 from django.db.models import Sum
-from django.db import transaction
 
 from django.utils import timezone
 #para usar el or
 
 #Actualizando el ModelViewSet para usar diferentes permisos según la acción
-from .permissions import IsAdminUFCPermission,IsVisualizadorUFCPermission,IsRevisorUFCPermission,IsUFCPermission,OperadorUFCPermission,RevisorUFCPermission,ReadOnly
+from .permissions import IsAdminUFCPermission,IsVisualizadorUFCPermission,IsUFCPermission,OperadorUFCPermission,RevisorUFCPermission,ReadOnly
 
 from rest_framework.decorators import action,api_view  # Importa el decorador action
 
 #Para las validaciones de las fechas en el informe operativo
-from django.db.models.functions import TruncDate
 from django.db.models import DateField
 from datetime import datetime
 from django.db.models.functions import Cast
@@ -274,11 +268,8 @@ def verificar_informe_existente(request):
     
 #vista para cambiar estado_parte en ufc_informe_operativo
 # En tu archivo views.py de la app ufc
-from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from .models import ufc_informe_operativo
-from django.utils import timezone
-import json
 
 @require_http_methods(["PATCH"])
 def actualizar_estado_parte(request):
@@ -489,7 +480,7 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
                         informe_operativo=informe_anterior
                     ).first()
                     if vagon_producto_anterior:
-                        response_data['plan_anual'] = vagon_producto_anterior.plan_anual
+                        response_data['plan_anual'] = vagon_producto_anterior.plan_anual##@int-64 Revisar esta linea
                         
             elif not es_unico_informe_año and not es_primer_dia_mes:
                 # Caso 4: No es único informe en el año ni es primer día del mes
@@ -525,6 +516,11 @@ class vagones_productos_view_set(viewsets.ModelViewSet):
 class vagon_cargado_descargado_view_set(viewsets.ModelViewSet):
     queryset = vagon_cargado_descargado.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = vagon_cargado_descargado_serializer
+    filter_backends = [filters.SearchFilter,DjangoFilterBackend, # Para filtros exactos
+                       filters.OrderingFilter]  # Para ordenamiento
+    filterset_fields = ['tipo_equipo_ferroviario__id', 'producto__producto__codigo_producto','producto__tipo_embalaje__id','producto__unidad_medida__simbolo']
+    search_fields = ['producto__producto__nombre_producto','cantidad','=unidad_medida__unidad_medida', 'origen','tipo_origen']
+
     filter_class = vagon_cargado_descargado_filter
     permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     def get_queryset(self):
@@ -746,7 +742,11 @@ class registro_vagones_cargados_view_set(viewsets.ModelViewSet):
 class en_trenes_view_set(viewsets.ModelViewSet):
     queryset = en_trenes.objects.all().order_by('-id')
     serializer_class = en_trenes_serializer
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [ 
+        DjangoFilterBackend,  # Para filtros exactos
+        filters.SearchFilter,  # Para búsqueda de texto
+        filters.OrderingFilter  # Para ordenamiento
+        ]
     filter_class = en_trenes_filter
     permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     ordering_fields = ['id'] 
@@ -888,7 +888,11 @@ class producto_vagon_view_set(viewsets.ModelViewSet):
 class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
     queryset = por_situar.objects.all().order_by("-id")
     serializer_class = PorSituarCargaDescargaSerializer
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [filters.SearchFilter,DjangoFilterBackend, # Para filtros exactos
+                       filters.OrderingFilter]  # Para ordenamiento
+    filterset_fields = ['tipo_equipo__id', 'producto__producto__codigo_producto','producto__tipo_embalaje__id','producto__unidad_medida__simbolo']
+    search_fields = ['producto__producto__nombre_producto','cantidad','=unidad_medida__unidad_medida', 'origen','tipo_origen']
+
     permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -956,7 +960,11 @@ class PorSituarCargaDescargaViewSet(viewsets.ModelViewSet):
 class SituadoCargaDescargaViewset(viewsets.ModelViewSet):
     queryset = Situado_Carga_Descarga.objects.all().order_by("-id")
     serializer_class = SituadoCargaDescargaSerializers
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [filters.SearchFilter,DjangoFilterBackend, # Para filtros exactos
+                       filters.OrderingFilter]  # Para ordenamiento
+    filterset_fields = ['tipo_equipo__id', 'producto__producto__codigo_producto','producto__tipo_embalaje__id','producto__unidad_medida__simbolo']
+    search_fields = ['producto__producto__nombre_producto','cantidad','=unidad_medida__unidad_medida', 'origen','tipo_origen']
+
     permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
     
     def get_queryset(self):
@@ -1019,7 +1027,12 @@ class PendienteArrastreViewset(viewsets.ModelViewSet):
     queryset = arrastres.objects.all()
     serializer_class = PendienteArrastreSerializer
     permission_classes = [IsUFCPermission|ReadOnly|OperadorUFCPermission|RevisorUFCPermission] 
+    filter_backends = [filters.SearchFilter,DjangoFilterBackend, # Para filtros exactos
+                       filters.OrderingFilter]  # Para ordenamiento
+    filterset_fields = ['tipo_equipo__id', 'producto__producto__codigo_producto','producto__tipo_embalaje__id','producto__unidad_medida__simbolo']
+    search_fields = ['producto__producto__nombre_producto','cantidad','=unidad_medida__unidad_medida', 'origen','tipo_origen']
     filter_class = PendienteArrastreFilter
+
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -1265,7 +1278,7 @@ def verificar_informe_ccd_existente(request):
             ).first()
             return Response({
                 "existe": True,
-                "id": informe.id,
+                "id": informe.pk,
                 "fecha_operacion": informe.fecha_operacion,
                 "estado":informe.estado_parte,
             })
@@ -1284,6 +1297,8 @@ class ccd_arrastresViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter  # Para ordenamiento
         ]
     #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+    filterset_fields = ['informe_ccd__id']
+    search_fields = ['acceso__nombre','operacion','producto__producto__nombre_producto','producto__producto__codigo_producto','tipo_equipo__tipo_equipo']
 
 #### View CCD En Trenes OK
 class ccd_en_trenesViewSet(viewsets.ModelViewSet):
@@ -1296,7 +1311,9 @@ class ccd_en_trenesViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter  # Para ordenamiento
         ]
     #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
-    
+    filterset_fields = ['informe_ccd__id']
+    search_fields = ['acceso__nombre','operacion','producto__producto__nombre_producto','producto__producto__codigo_producto','tipo_equipo__tipo_equipo']
+
 #### View CCD Vagones Carga/Descarga OK
 class ccd_vagones_cdViewSet(viewsets.ModelViewSet):
     serializer_class=ccd_vagones_cdSerializer
@@ -1308,7 +1325,9 @@ class ccd_vagones_cdViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter  # Para ordenamiento
         ]
     #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
-    
+    filterset_fields = ['informe_ccd__id']
+    search_fields = ['acceso__nombre','operacion','producto__producto__nombre_producto','producto__producto__codigo_producto','tipo_equipo__tipo_equipo']
+  
 #### View CCD por Situar OK
 class ccd_por_situarViewSet(viewsets.ModelViewSet):
     serializer_class=ccd_por_situarSerializer
@@ -1319,7 +1338,9 @@ class ccd_por_situarViewSet(viewsets.ModelViewSet):
         filters.SearchFilter,  # Para búsqueda de texto
         filters.OrderingFilter  # Para ordenamiento
         ]
-    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+    filterset_fields = ['informe_ccd__id']
+    search_fields = ['acceso__nombre','operacion','producto__producto__nombre_producto','producto__producto__codigo_producto','tipo_equipo__tipo_equipo']
+
 
 #### View CCD Situados OK
 class ccd_situadosViewSet(viewsets.ModelViewSet):
@@ -1331,7 +1352,8 @@ class ccd_situadosViewSet(viewsets.ModelViewSet):
         filters.SearchFilter,  # Para búsqueda de texto
         filters.OrderingFilter  # Para ordenamiento
         ]
-    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+    filterset_fields = ['informe_ccd__id']
+    search_fields = ['acceso__nombre','operacion','producto__producto__nombre_producto','producto__producto__codigo_producto','tipo_equipo__tipo_equipo']
     
 #### View CCD Casillas Productos
 class ccd_casillas_productosViewSet(viewsets.ModelViewSet):
@@ -1343,7 +1365,8 @@ class ccd_casillas_productosViewSet(viewsets.ModelViewSet):
         filters.SearchFilter,  # Para búsqueda de texto
         filters.OrderingFilter  # Para ordenamiento
         ]
-    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+    filterset_fields = ['informe_ccd__id']
+    search_fields = ['acceso__nombre']
     
 #### View CCD Registro Vagones Carga/Descarga
 class ccd_registro_vagones_cdViewSet(viewsets.ModelViewSet):
@@ -1355,4 +1378,4 @@ class ccd_registro_vagones_cdViewSet(viewsets.ModelViewSet):
         filters.SearchFilter,  # Para búsqueda de texto
         filters.OrderingFilter  # Para ordenamiento
         ]
-    #search_fields = ['contiene','producto__nombre_producto','cantidad','=unidad_medida__unidad_medida']
+    #search_fields = ['origen','tipo_origen','no_id','equipo_ferroviario__numero_identificacion']

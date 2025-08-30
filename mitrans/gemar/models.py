@@ -1,13 +1,10 @@
 from django.db import models
 from django.conf import settings
 from Administracion.models import CustomUser
-from nomencladores.models import( nom_producto,nom_tipo_embalaje,nom_unidad_medida,
-                                 nom_entidades,nom_incidencia,nom_provincia,nom_terminal,nom_atraque,
-                                 nom_tipo_maniobra_portuaria,nom_puerto,nom_osde_oace_organismo
+from nomencladores.models import( nom_atraque, nom_estado_tecnico, nom_pais, nom_producto,nom_tipo_embalaje,nom_unidad_medida,
+                                 nom_entidades,nom_incidencia,nom_provincia,nom_terminal,nom_puerto,nom_osde_oace_organismo,nom_embarcacion
                                  )
 
-from django.dispatch import receiver
-from django.db.models.signals import pre_save, post_save, post_delete,pre_delete
 
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
@@ -36,7 +33,7 @@ TIPO_PARTE_CHOICES = [
 class gemar_parte_hecho_extraordinario(models.Model):
     tipo_parte = models.CharField(
         default="Parte de hecho extraordinario", 
-        max_length=14
+        max_length=100
     )    
     fecha_operacion = models.DateTimeField( 
         verbose_name="Fecha de operación",
@@ -238,14 +235,14 @@ class gemar_parte_programacion_maniobras(models.Model):
 class gemar_programacion_maniobras(models.Model):
     # Opciones para campos de selección
     FORMATO_HORA_CHOICES = [
-        (1, '24 horas'),
-        (2, 'AM/PM'),
-        (3, 'SIN DETERMINAR'),
+        ("1", '24 horas'),
+        ("2", 'AM/PM'),
+        ("3", 'SIN DETERMINAR'),
     ]
     
     AM_PM_CHOICES = [
-        (1, 'AM'),
-        (2, 'PM'),
+        ("1", 'AM'),
+        ("2", 'PM'),
     ]
     
     # Campos principales

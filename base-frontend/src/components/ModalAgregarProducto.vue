@@ -31,10 +31,8 @@
                       <option
                         v-for="producto in productos"
                         :key="producto.id"
-                        :value="producto.id"
-                      >
-                        {{ producto.id }}-{{ producto.nombre_producto }} -
-                        {{ producto.codigo_producto }}
+                        :value="producto.id">
+                        {{producto.nombre_producto}}-{{producto.codigo_producto}}
                       </option>
                     </select>
                     <button class="create-button ms-2" @click.stop.prevent="agregarProducto">
@@ -45,9 +43,7 @@
                 
                 <!-- Campo: Embalaje -->
                 <div class="ufc-input-group">
-                  <label for="embalaje" class="form-label small fw-semibold text-secondary">
-                    Embalaje<span class="required-asterisk">*</span>
-                  </label>
+                  <label for="embalaje" class="form-label small fw-semibold text-secondary">Embalaje</label>
                   <select
                     class="form-select form-select-sm border-secondary"
                     style="padding: 8px 12px"
@@ -66,9 +62,7 @@
                 
                 <!-- Campo: estado -->
                 <div class="ufc-input-group">
-                  <label for="estado" class="form-label small fw-semibold text-secondary">
-                    Estado <span class="required-asterisk">*</span>
-                  </label>
+                  <label for="estado" class="form-label small fw-semibold text-secondary">Estado</label>
                   <select
                     class="form-select form-select-sm border-secondary"
                     style="padding: 8px 12px"
@@ -86,9 +80,7 @@
               <div class="col-md-6">
                 <!-- Campo: unidad_medida -->
                 <div class="ufc-input-group">
-                  <label for="unidad_medida" class="form-label small fw-semibold text-secondary">
-                    Unidad de medida<span class="required-asterisk">*</span>
-                  </label>
+                  <label for="unidad_medida" class="form-label small fw-semibold text-secondary">Unidad de medida</label>
                   <select
                     class="form-select form-select-sm border-secondary"
                     style="padding: 8px 12px"
@@ -100,7 +92,7 @@
                       v-for="unidad in unidades"
                       :key="unidad.id"
                       :value="unidad.id">
-                      {{ unidad.id }}-{{ unidad.unidad_medida }}
+                      {{ unidad.unidad_medida }}
                     </option>
                   </select>
                 </div>
@@ -115,16 +107,13 @@
                       v-model="formData.cantidad"
                       id="cantidad"
                       name="cantidad"
-                      min="0"
-                    />
+                      min="0"/>
                   </div>
                 </div>
 
                 <!-- Campo: contiene -->
                 <div class="ufc-input-group">
-                  <label for="contiene" class="form-label small fw-semibold text-secondary">
-                    Contiene <span class="required-asterisk">*</span>
-                  </label>
+                  <label for="contiene" class="form-label small fw-semibold text-secondary">Contiene</label>
                   <select
                     class="form-select form-select-sm border-secondary"
                     style="padding: 8px 12px"
@@ -134,6 +123,27 @@
                     required>
                     <option value="alimentos">Alimentos</option>
                     <option value="prod_varios">Productos varios</option>
+                  </select>
+                </div>
+
+                  <!-- Campo: Tipo Equipo -->
+                <div class="ufc-input-group">
+                  <label for="contiene" class="form-label small fw-semibold text-secondary">
+                    Tipo Equipo <span class="required-asterisk">*</span>
+                  </label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="formData.tipo_equipo"
+                    id="tipo_equipo"
+                    name="tipo_equipo"
+                    required>
+                    <option
+                      v-for="tipo_equipo in tipo_equipos"
+                      :key="tipo_equipo.id"
+                      :value="tipo_equipo.id">
+                      {{ tipo_equipo.tipo_equipo_name }}
+                    </option>
                   </select>
                 </div>
               </div>
@@ -181,46 +191,55 @@ export default {
         cantidad: 0,
         estado: "vacio",
         contiene: "",
+        tipo_equipo:""
       },
       productos: [],
       embalajes: [],
       unidades: [],
+      tipo_equipos: [],
     };
   },
   mounted() {
     this.getProductos();
     this.getEmbalaje();
     this.getUnidades();
+    this.getTipoEquipo();
   },
   methods: {
     async submitForm() {
       try {
         await axios.post("/ufc/producto-vagon/", this.formData);
-        Swal.fire(
-          "Agregado!",
-          "El formulario ha sido añadido exitosamente.",
-          "success"
-        );
+        this.showSuccessToast("El formulario ha sido añadido");
         this.$emit("cerrar-modal");
       } catch (error) {
-        console.error("Error al agregar el formulario:", error);
-        Swal.fire("Error", "Hubo un error al agregar el formulario.", "error");
+        this.showErrorToast("Error al añadir el formulario");
+        console.log(error);
       }
     },
     cerrarModal() {
       this.$emit("cerrar-modal");
     },
+
     agregarProducto() {
-      // Redirige a la vista "CrearProducto"
       this.$router.push({ name: "CrearProducto" });
     },
+
     async getProductos() {
       try {
         const response = await axios.get("/api/productos/");
         this.productos = response.data.results;
       } catch (error) {
-        console.error("Error al obtener los productos:", error);
-        Swal.fire("Error", "Hubo un error al obtener los productos.", "error");
+        this.showErrorToast("Error al obtener los productos");
+        console.log(error);
+      }
+    },
+    async getTipoEquipo() {
+      try {
+        const response = await axios.get("/api/tipo-e-f-no-locomotora/");
+        this.tipo_equipos = response.data;
+      } catch (error) {
+        console.error("Error al obtener los tipos de equipo:", error);
+        Swal.fire("Error", "Hubo un error al obtener los tipos de equipo.", "error");
       }
     },
     async getEmbalaje() {
@@ -228,23 +247,64 @@ export default {
         const response = await axios.get("/api/embalajes/");
         this.embalajes = response.data.results;
       } catch (error) {
-        console.error("Error al obtener los embalajes:", error);
-        Swal.fire("Error", "Hubo un error al obtener los embalajes.", "error");
+        this.showErrorToast("Error al obtener los embalajes");
+        console.log(error);
       }
     },
+
     async getUnidades() {
       try {
         const response = await axios.get("/api/unidades_medida/");
         this.unidades = response.data.results;
       } catch (error) {
-        console.error("Error al obtener las unidades de medida:", error);
-        Swal.fire(
-          "Error",
-          "Hubo un error al obtener las unidades de medida.",
-          "error"
-        );
+        this.showErrorToast("Error al obtener las unidades de medida");
+        console.log(error);
       }
     },
+  },
+  
+  showSuccessToast(message) {
+    const Toast = Swal.mixin({
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      background: "#4BB543",
+      color: "#fff",
+      iconColor: "#fff",
+      didOpen: (toast) => {
+        toast.addEventListener("mouseenter", Swal.stopTimer);
+        toast.addEventListener("mouseleave", Swal.resumeTimer);
+      },
+    });
+
+    Toast.fire({
+      icon: "success",
+      title: message,
+    });
+  },
+
+  showErrorToast(message) {
+    const Toast = Swal.mixin({
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 4000,
+      timerProgressBar: true,
+      background: "#ff4444",
+      color: "#fff",
+      iconColor: "#fff",
+      didOpen: (toast) => {
+        toast.addEventListener("mouseenter", Swal.stopTimer);
+        toast.addEventListener("mouseleave", Swal.resumeTimer);
+      },
+    });
+
+    Toast.fire({
+      icon: "error",
+      title: message,
+    });
   },
 };
 </script>

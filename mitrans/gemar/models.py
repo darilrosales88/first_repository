@@ -419,7 +419,198 @@ class gemar_parte_carga_descarga(models.Model):
     
     def __str__(self):
         return f"Fecha actual: {self.fecha_actual} - fecha de operación {self.fecha_operacion}"
-# **************************************************************************************************************************    
+    
+# ************************************************************************************************************************** 
+class gemar_carga_descarga(models.Model):
+    OPERACION_CHOICES = [
+        ("descarga", 'Descarga'),
+        ("carga", 'Carga'),
+    ]
+
+    CATEGORIA_CHOICES = [
+        ("I", 'Importación'),
+        ("E", 'Exportación'),
+        ("CR", 'Cabotaje recibido'),
+        ("CE", 'Cabotaje expedido'),
+        ("T", 'Trasbordo'),
+        ("A", 'Alijo'),
+    ]
+
+    operacion = models.CharField(max_length=10,
+        choices=OPERACION_CHOICES,
+        verbose_name='Operación'
+    )
+
+    puerto = models.ForeignKey(
+        nom_puerto, 
+        on_delete=models.CASCADE,
+        verbose_name="Puerto"
+    )
+
+    terminal = models.ForeignKey(
+        nom_terminal, 
+        on_delete=models.CASCADE,
+        verbose_name="Terminal"
+    )
+
+    atraque = models.ForeignKey(
+        nom_atraque, 
+        on_delete=models.CASCADE,
+        verbose_name="Atraque"
+    )
+
+    buque = models.ForeignKey(
+        nom_embarcacion, 
+        on_delete=models.CASCADE,
+        verbose_name="Buque"
+    )  
+
+    categoria = models.CharField(max_length=10,
+        choices=CATEGORIA_CHOICES,
+        verbose_name='Categoría'
+    ) 
+
+    manifiesto = models.CharField(max_length=100, verbose_name="Manifiesto") 
+
+    segundo_puerto = models.ForeignKey(
+        nom_puerto, 
+        on_delete=models.CASCADE,
+        related_name="segundo_puerto",
+        verbose_name="Segundo puerto"
+    )
+
+    toneladas_manifestadas = models.DecimalField(max_digits=10,decimal_places=2,verbose_name="Toneladas manifestadas")
+
+    fecha_arribo = models.DateTimeField(verbose_name="Fecha actual" )
+    fecha_comienzo = models.DateTimeField(verbose_name="Fecha de comienzo" )
+    fecha_terminacion = models.DateTimeField(verbose_name="Fecha de terminación")
+    etf = models.DateTimeField(verbose_name="ETF")
+    tiempo_vencimiento = models.DateTimeField(verbose_name="Tiempo de vencimiento")
+
+    rate = models.DecimalField(max_digits=10,decimal_places=2,verbose_name="Rate")
+    plan = models.DecimalField(max_digits=10,decimal_places=2,verbose_name="Plan")
+    acumulado_ayer = models.DecimalField(max_digits=10,decimal_places=2,verbose_name="Acumulado de ayer")
+    real_toneladas = models.DecimalField(max_digits=10,decimal_places=2, editable=False,default=0, verbose_name="Real toneladas")
+    observaciones = models.TextField(
+        verbose_name='Observaciones',
+        blank=True,
+        null=True
+    )
+
+    parte_carga_descarga = models.ForeignKey(
+        gemar_parte_carga_descarga,
+        on_delete=models.CASCADE,
+        related_name='carga_descarga',
+        null=True, blank=True
+    )
+
+# **************************************************************************************************************************
+class gemar_producto_carga_descarga(models.Model):
+
+    TIPO_PRODUCTO_CHOICES = [
+        ("producto", "Producto"),
+        ("contenedor", "Contenedor"),
+    ]
+
+    ESTADO_CHOICES = [
+        ("vacio", "Vacío"),
+        ("cargado", "Cargado"),
+    ]
+
+    tipo_producto = models.CharField(
+        choices=TIPO_PRODUCTO_CHOICES, max_length=20)    
+
+    producto = models.ForeignKey(nom_producto, on_delete=models.CASCADE)
+    tipo_embalaje = models.ForeignKey(nom_tipo_embalaje, on_delete=models.CASCADE)
+    unidad_medida = models.ForeignKey(nom_unidad_medida, on_delete=models.CASCADE)
+
+    estado = models.CharField(
+        choices=ESTADO_CHOICES, max_length=20,blank=True,null=True) 
+    
+    cantidad = models.IntegerField(blank=True,null=True)
+
+    parte_carga_descarga = models.ForeignKey(
+        gemar_parte_carga_descarga,
+        on_delete=models.CASCADE,
+        related_name='producto_carga_descarga')
+
+    
+    
+
+    class Meta:
+        verbose_name = "Producto de carga-descarga"
+        verbose_name_plural = "Productos de carga-descarga"
+
+    def __str__(self):
+        return f"producto {self.get_tipo_producto_display()} - {self.producto.nombre_producto}"
+
+    @property
+    def embalaje_display(self):
+        return self.tipo_embalaje if self.tipo_embalaje else "Sin especificar"
+
+    @property
+    def unidad_medida_display(self):
+        return self.unidad_medida if self.unidad_medida else "Sin especificar"
+
+    @property
+    def producto_display(self):
+        return f"{self.producto.nombre_producto} - {self.embalaje_display}"
+# **************************************************************************************************************************   
+class gemar_turno_carga_descarga(models.Model):   
+    TURNO_CHOICES = [
+        ("turno_madrugada", "Turno madrugada"),
+        ("turno_manana", "Turno mañana"),
+        ("turno_tarde", "Turno tarde"),  ]        
+        
+
+    turno = models.CharField(
+        choices=TURNO_CHOICES, max_length = 40) 
+    
+    cantidad_toneladas = models.DecimalField(unique=True,max_digits=10,decimal_places=2)
+    cantidad_brigadas = models.IntegerField()
+
+    parte_carga_descarga = models.ForeignKey(
+        gemar_parte_carga_descarga,
+        on_delete=models.CASCADE,
+        related_name='turno_carga_descarga')   
+    
+
+    class Meta:
+        verbose_name = "Turno de la carga-descarga"
+        verbose_name_plural = "Turnos de la carga-descarga"
+
+    def __str__(self):
+        return f"turno {self.get_turno_display()} - cantidad {self.cantidad_toneladas}"   
+# **************************************************************************************************************************  
+class gemar_incidencia_por_turno_carga_descarga(models.Model):   
+    TURNO_CHOICES = [
+        ("turno_uno", "Turno 1"),
+        ("turno_dos", "Turno 2"),
+        ("turno_tres", "Turno 3"),  ]        
+        
+
+    turno = models.CharField(
+        choices=TURNO_CHOICES, max_length = 40)
+     
+    incidencia = models.ForeignKey(
+        nom_incidencia,
+        on_delete=models.CASCADE)
+    
+    tiempo_ocurrencia = models.TimeField()
+
+    parte_carga_descarga = models.ForeignKey(
+        gemar_parte_carga_descarga,
+        on_delete=models.CASCADE,
+        related_name='incidencia_por_turno_carga_descarga')   
+    
+
+    class Meta:
+        verbose_name = "Incidencia por turno de la carga-descarga"
+        verbose_name_plural = "Incidencias por turno de la carga-descarga"
+
+    def __str__(self):
+        return f"turno {self.get_turno_display()} - tiempo ocurrencia {self.tiempo_ocurrencia}"   
+# **************************************************************************************************************************  
 class PartePBIP(models.Model):
     
     # Opciones para campos de selección

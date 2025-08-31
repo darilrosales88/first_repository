@@ -8,7 +8,9 @@ from gemar import views
 from .views import (gemar_parte_hecho_extraordinario_view_set, 
                     gemar_hecho_extraordinario_view_set,verificar_informe_he_existente,
                     gemar_programacion_maniobras_view_set,verificar_parte_programacion_maniobra_existente,
-                    gemar_parte_programacion_maniobras_view_set,listar_partes_combinados)
+                    gemar_parte_programacion_maniobras_view_set,listar_partes_combinados,
+                    gemar_parte_carga_descarga_view_set,gemar_carga_descarga_view_set,gemar_producto_carga_descarga_view_set,
+                    gemar_turno_carga_descarga_view_set,gemar_incidencia_por_turno_carga_descarga_view_set)
     
 
 
@@ -28,6 +30,12 @@ router.register('gemar-hechos-extraordinarios',gemar_hecho_extraordinario_view_s
 
 router.register('gemar-partes-programacion-maniobras', gemar_parte_programacion_maniobras_view_set, basename='gemar-partes-programacion-maniobras')  # Nueva ruta
 router.register('gemar-programacion-maniobras', gemar_programacion_maniobras_view_set, basename='gemar-programacion-maniobras')  # Nueva ruta
+router.register('gemar-parte-carga-descarga', gemar_parte_carga_descarga_view_set, basename='gemar-parte-carga-descarga')  # Nueva ruta
+router.register('gemar-carga-descarga', gemar_carga_descarga_view_set, basename='gemar-carga-descarga')
+router.register('gemar-producto-carga-descarga',gemar_producto_carga_descarga_view_set, basename='gemar-producto-carga-descarga')
+router.register('gemar-turno-carga-descarga',gemar_turno_carga_descarga_view_set, basename='gemar-turno-carga-descarga')
+router.register('gemar-incidencia-por-turno-carga-descarga',gemar_incidencia_por_turno_carga_descarga_view_set, 
+                basename='gemar-incidencia-por-turno-carga-descarga')
 router.register(r'partes-pbip', views.PartePBIPViewSet, basename='partepbip')
 router.register(r'cargas-viejas', views.CargaViejaViewSet, basename='cargavieja')
 router.register(r'existencias-mercancia', views.ExistenciaMercanciaViewSet, basename='existenciamercancia')

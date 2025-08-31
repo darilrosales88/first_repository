@@ -12,7 +12,8 @@ from nomencladores.serializers import (
 from django.db.models import Q
 
 from .models import (gemar_hecho_extraordinario,gemar_parte_hecho_extraordinario,gemar_programacion_maniobras,
-                     gemar_parte_programacion_maniobras,gemar_parte_carga_descarga)
+                     gemar_parte_programacion_maniobras,gemar_parte_carga_descarga,gemar_carga_descarga,
+                     gemar_producto_carga_descarga,gemar_turno_carga_descarga,gemar_incidencia_por_turno_carga_descarga)
 from nomencladores.models import nom_embarcacion as Buque  # Add this import
 from nomencladores.models import nom_puerto as Puerto  # Also need this for puerto_id
 from nomencladores.models import nom_terminal as Terminal  # For terminal_id
@@ -167,6 +168,118 @@ class gemar_parte_carga_descarga_serializer(serializers.ModelSerializer):
             'provincia': {'required': False},
         }
 #***************************************************************************************************************************
+class gemar_carga_descarga_filter(filters.FilterSet):
+    operacion_buque_terminal = filters.CharFilter(method='filtrado_por_operacion_buque_terminal')
+    
+    def filtrado_por_operacion_buque_terminal(self, queryset, name, value):        
+        return queryset.filter(
+            Q(operacion__icontains=value) | 
+            Q(buque__nombre_embarcacion__icontains=value) |
+            Q(terminal__nombre_terminal__icontains=value)
+        )
+    
+    class Meta:  
+        model = gemar_carga_descarga    
+        fields = {
+            'operacion': ['exact', 'contains'],
+            'buque__nombre_embarcacion': ['exact', 'contains'],
+            'terminal__nombre_terminal': ['exact', 'contains'],
+        }
+
+class gemar_carga_descarga_serializer(serializers.ModelSerializer):    
+    operacion_name = serializers.ReadOnlyField(source = 'get_operacion_display')
+    categoria_name = serializers.ReadOnlyField(source = 'get_categoria_display')
+    puerto_name = serializers.ReadOnlyField(source='puerto.nombre_puerto')
+    segundo_puerto_name = serializers.ReadOnlyField(source='segundo_puerto.nombre_puerto')
+    terminal_name = serializers.ReadOnlyField(source='terminal.nombre_terminal')
+    atraque_name = serializers.ReadOnlyField(source='atraque.nombre_atraque')
+    buque_name = serializers.ReadOnlyField(source='buque.nombre_embarcacion')
+    
+    
+    class Meta:
+        model = gemar_carga_descarga
+        fields = '__all__'
+        
+#***************************************************************************************************************************
+class gemar_producto_carga_descarga_filter(filters.FilterSet):
+    producto_estado = filters.CharFilter(method='filtrado_por_producto_estado')
+    
+    def filtrado_por_producto_estado(self, queryset, name, value):        
+        return queryset.filter(
+            Q(estado__icontains=value) | 
+            Q(producto__nombre_producto__icontains=value) 
+        )
+    
+    class Meta:  
+        model = gemar_producto_carga_descarga
+        fields = {
+            'estado': ['exact', 'contains'],
+            'producto__nombre_producto': ['exact', 'contains'],
+        }
+
+class gemar_producto_carga_descarga_serializer(serializers.ModelSerializer):    
+    tipo_producto_name = serializers.ReadOnlyField(source = 'get_tipo_producto_display')
+    estado_name = serializers.ReadOnlyField(source = 'get_estado_display')
+    producto_name = serializers.ReadOnlyField(source='producto.nombre_producto')
+    tipo_embalaje_name = serializers.ReadOnlyField(source='tipo_embalaje.nombre_tipo_embalaje')
+    unidad_medida_name = serializers.ReadOnlyField(source='unidad_medida.simbolo')
+    
+    
+    class Meta:
+        model = gemar_producto_carga_descarga
+        fields = '__all__'
+        
+#***************************************************************************************************************************
+class gemar_turno_carga_descarga_filter(filters.FilterSet):
+    turno_cantidad_toneladas = filters.CharFilter(method='filtrado_por_turno_cantidad_toneladas')
+    
+    def filtrado_por_turno_cantidad_toneladas(self, queryset, name, value):        
+        return queryset.filter(
+            Q(turno__icontains=value) | 
+            Q(cantidad_toneladas__icontains=value) 
+        )
+    
+    class Meta:  
+        model = gemar_turno_carga_descarga
+        fields = {
+            'turno': ['exact', 'contains'],
+            'cantidad_toneladas': ['exact', 'contains'],
+        }
+
+class gemar_turno_carga_descarga_serializer(serializers.ModelSerializer):    
+    turno_name = serializers.ReadOnlyField(source = 'get_turno_display')
+    
+    class Meta:
+        model = gemar_turno_carga_descarga
+        fields = '__all__'
+        
+#***************************************************************************************************************************
+class gemar_incidencia_por_turno_carga_descarga_filter(filters.FilterSet):
+    turno_incidencia = filters.CharFilter(method='filtrado_por_turno_incidencia')
+    
+    def filtrado_por_turno_incidencia(self, queryset, name, value):        
+        return queryset.filter(
+            Q(turno__icontains=value) | 
+            Q(incidencia__nombre_incidencia__icontains=value) 
+        )
+    
+    class Meta:  
+        model = gemar_incidencia_por_turno_carga_descarga
+        fields = {
+            'turno': ['exact', 'contains'],
+            'incidencia__nombre_incidencia': ['exact', 'contains'],
+        }
+
+class gemar_incidencia_por_turno_carga_descarga_serializer(serializers.ModelSerializer):    
+    turno_name = serializers.ReadOnlyField(source = 'get_turno_display')
+    incidencia_name = serializers.ReadOnlyField(source = 'incidencia.nombre_incidencia')
+    class Meta:        
+        model = gemar_incidencia_por_turno_carga_descarga
+        fields = '__all__'
+        
+#***************************************************************************************************************************
+
+
 class gemar_programacion_maniobras_filter(filters.FilterSet):
     buque_puerto = filters.CharFilter(method='filtrado_por_buque_puerto', lookup_expr='icontains')
 
@@ -189,6 +302,7 @@ class gemar_programacion_maniobras_serializer(serializers.ModelSerializer):
         model = gemar_programacion_maniobras
         fields = '__all__'
         filterset_class = gemar_programacion_maniobras_filter
+#**********************************************************************************************************************
 
 class PartePBIPSerializer(serializers.ModelSerializer):
     buque = nom_embarcacion_serializer(read_only=True)

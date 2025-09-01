@@ -10,7 +10,9 @@ from .views import (gemar_parte_hecho_extraordinario_view_set,
                     gemar_programacion_maniobras_view_set,verificar_parte_programacion_maniobra_existente,
                     gemar_parte_programacion_maniobras_view_set,listar_partes_combinados,
                     gemar_parte_carga_descarga_view_set,gemar_carga_descarga_view_set,gemar_producto_carga_descarga_view_set,
-                    gemar_turno_carga_descarga_view_set,gemar_incidencia_por_turno_carga_descarga_view_set)
+                    gemar_turno_carga_descarga_view_set,gemar_incidencia_por_turno_carga_descarga_view_set,
+                    gemar_informe_diario_enc_view_set,gemar_maniobras_portuarias_enc_view_set,
+                    gemar_afectaciones_maniobras_portuarias_enc_view_set,gemar_carga_seca_enc_view_set)
     
 
 
@@ -36,6 +38,13 @@ router.register('gemar-producto-carga-descarga',gemar_producto_carga_descarga_vi
 router.register('gemar-turno-carga-descarga',gemar_turno_carga_descarga_view_set, basename='gemar-turno-carga-descarga')
 router.register('gemar-incidencia-por-turno-carga-descarga',gemar_incidencia_por_turno_carga_descarga_view_set, 
                 basename='gemar-incidencia-por-turno-carga-descarga')
+
+router.register('gemar-informe-diario-enc',gemar_informe_diario_enc_view_set, basename='gemar-informe-diario-enc')
+router.register('gemar-maniobra-portuaria-enc',gemar_maniobras_portuarias_enc_view_set, basename='gemar-maniobra-portuaria-enc')
+router.register('gemar-afectacion-maniobra-portuaria-enc',gemar_afectaciones_maniobras_portuarias_enc_view_set, 
+                basename='gemar-afectacion-maniobra-portuaria-enc')
+router.register('gemar-carga-seca-enc',gemar_carga_seca_enc_view_set, basename='gemar-carga-seca-enc')
+
 router.register(r'partes-pbip', views.PartePBIPViewSet, basename='partepbip')
 router.register(r'cargas-viejas', views.CargaViejaViewSet, basename='cargavieja')
 router.register(r'existencias-mercancia', views.ExistenciaMercanciaViewSet, basename='existenciamercancia')

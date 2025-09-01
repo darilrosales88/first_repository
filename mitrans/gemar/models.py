@@ -1,7 +1,8 @@
 from django.db import models
 from Administracion.models import CustomUser
 from nomencladores.models import( nom_atraque, nom_estado_tecnico, nom_pais, nom_producto,nom_tipo_embalaje,nom_unidad_medida,
-                                 nom_entidades,nom_incidencia,nom_provincia,nom_terminal,nom_puerto,nom_osde_oace_organismo,nom_embarcacion
+                                 nom_entidades,nom_incidencia,nom_provincia,nom_terminal,nom_puerto,nom_osde_oace_organismo,
+                                 nom_embarcacion,nom_tipo_maniobra_portuaria
                                  )
 
 
@@ -354,6 +355,7 @@ class gemar_programacion_maniobras(models.Model):
     def __str__(self):
         return f"Buque {self.buque} - puerto {self.puerto} ({self.fecha_eta})"
 #***************************************************************************************************************************
+"""GEMAR PARTE DIARIO CARGA-DESCARGA"""
 class gemar_parte_carga_descarga(models.Model):
     tipo_parte = models.CharField(
         default="Parte de carga-descarga", 
@@ -611,6 +613,220 @@ class gemar_incidencia_por_turno_carga_descarga(models.Model):
     def __str__(self):
         return f"turno {self.get_turno_display()} - tiempo ocurrencia {self.tiempo_ocurrencia}"   
 # **************************************************************************************************************************  
+
+"""GEMAR INFORME DIARIO ENC"""
+class gemar_informe_diario_enc(models.Model):
+    tipo_parte = models.CharField(
+        default="Informe diario ENC", 
+        max_length=100
+    )    
+    fecha_operacion = models.DateTimeField( 
+        verbose_name="Fecha de operación",
+        auto_now_add=False
+    )
+    fecha_actual = models.DateTimeField(
+        auto_now=True, 
+        verbose_name="Fecha actual"
+    )
+    
+    estado_parte = models.CharField(
+        default="Creado", 
+        max_length=14
+    )
+    provincia = models.ForeignKey(
+        nom_provincia, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        verbose_name="Provincia"
+    )
+    creado_por = models.ForeignKey(CustomUser,on_delete=models.CASCADE, blank=True, null=True, 
+                                   verbose_name="Creado por: ", related_name="gemar_informe_diario_enc_creador" )
+    
+    aprobado_por = models.ForeignKey(CustomUser,on_delete=models.CASCADE, blank=True, null=True, 
+                                     verbose_name="Aprobado por: ", related_name="gemar_informe_diario_enc_aprobador" )
+    
+    entidad = models.ForeignKey(
+        nom_entidades,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Entidad"
+    )   
+    
+    organismo = models.ForeignKey(
+        nom_osde_oace_organismo,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Organismo",
+        editable=False  # No se edita manualmente
+    )
+    total_remolcadores_maniobras = models.IntegerField(default=0,editable=False)
+    total_embarcaciones_carga_seca = models.IntegerField(default=0,editable=False)
+    total_embarcaciones_suministro_agua = models.IntegerField(default=0,editable=False)
+    total_remolcadores_suministro_combustible = models.IntegerField(default=0,editable=False)
+    total_remolcadores_cabotaje = models.IntegerField(default=0,editable=False)
+    total_remolcadores_flota_auxiliar = models.IntegerField(default=0,editable=False)
+
+    remolcadores_maniobra_operando = models.IntegerField(default=0,editable=False)
+    remolcadores_maniobra_sin_operar = models.IntegerField(default=0,editable=False)
+    remolcadores_maniobra_reparando = models.IntegerField(default=0,editable=False)
+    remolcadores_maniobra_fuera_servicio = models.IntegerField(default=0,editable=False)
+    remolcadores_maniobra_pendiente_reparacion = models.IntegerField(default=0,editable=False)
+    cdt_remolcadores_maniobra = models.IntegerField(default=0,editable=False)
+
+    remolcadores_carga_seca_operando = models.IntegerField(default=0,editable=False)
+    remolcadores_carga_seca_sin_operar = models.IntegerField(default=0,editable=False)
+    remolcadores_carga_seca_reparando = models.IntegerField(default=0,editable=False)
+    remolcadores_carga_seca_fuera_servicio = models.IntegerField(default=0,editable=False)
+    remolcadores_carga_seca_pendiente_reparacion = models.IntegerField(default=0,editable=False)
+    cdt_remolcadores_carga_seca = models.IntegerField(default=0,editable=False)
+
+    remolcadores_suministro_agua_operando = models.IntegerField(default=0,editable=False)
+    remolcadores_suministro_agua_sin_operar = models.IntegerField(default=0,editable=False)
+    remolcadores_suministro_agua_reparando = models.IntegerField(default=0,editable=False)
+    remolcadores_suministro_agua_fuera_servicio = models.IntegerField(default=0,editable=False)
+    remolcadores_suministro_agua_pendiente_reparacion = models.IntegerField(default=0,editable=False)
+    cdt_remolcadores_suministro_agua = models.IntegerField(default=0,editable=False)
+
+    remolcadores_suministro_combustible_operando = models.IntegerField(default=0,editable=False)
+    remolcadores_suministro_combustible_sin_operar = models.IntegerField(default=0,editable=False)
+    remolcadores_suministro_combustible_reparando = models.IntegerField(default=0,editable=False)
+    remolcadores_suministro_combustible_fuera_servicio = models.IntegerField(default=0,editable=False)
+    remolcadores_suministro_combustible_pendiente_reparacion = models.IntegerField(default=0,editable=False)
+    cdt_remolcadores_suministro_combustible = models.IntegerField(default=0,editable=False)
+
+    remolcadores_cabotaje_operando = models.IntegerField(default=0,editable=False)
+    remolcadores_cabotaje_sin_operar = models.IntegerField(default=0,editable=False)
+    remolcadores_cabotaje_reparando = models.IntegerField(default=0,editable=False)
+    remolcadores_cabotaje_fuera_servicio = models.IntegerField(default=0,editable=False)
+    remolcadores_cabotaje_pendiente_reparacion = models.IntegerField(default=0,editable=False)
+    cdt_remolcadores_cabotaje = models.IntegerField(default=0,editable=False)
+
+    remolcadores_flota_auxiliar_operando = models.IntegerField(default=0,editable=False)
+    remolcadores_flota_auxiliar_sin_operar = models.IntegerField(default=0,editable=False)
+    remolcadores_flota_auxiliar_reparando = models.IntegerField(default=0,editable=False)
+    remolcadores_flota_auxiliar_fuera_servicio = models.IntegerField(default=0,editable=False)
+    remolcadores_flota_auxiliar_pendiente_reparacion = models.IntegerField(default=0,editable=False)
+    cdt_remolcadores_flota_auxiliar = models.IntegerField(default=0,editable=False)
+
+    def save(self, *args, **kwargs):
+        # Solo para asegurar que los campos no sean nulos si vienen de la vista
+        super().save(*args, **kwargs)
+
+    class Meta: 
+        permissions = [
+            ("gemar_informe_diario_enc_puede_rechazar_informe", "Puede rechazar informe diario ENC"),
+            ("gemar_informe_diario_enc_puede_aprobar_informe", "Puede aprobar informe diario ENC"),
+            ("gemar_informe_diario_enc_puede_cambiar_informe_a_listo", "Puede cambiar el estado del informe diario ENC a listo"),
+        ]
+               
+        verbose_name = "Informe diario ENC"
+        verbose_name_plural = "Informes diarios ENC"
+        ordering = ["-fecha_operacion"]
+    
+    def __str__(self):
+        return f"Fecha actual: {self.fecha_actual} - fecha de operación {self.fecha_operacion}"
+    
+# **************************************************************************************************************************
+class gemar_maniobras_portuarias_enc(models.Model):
+    puerto = models.ForeignKey(nom_puerto, on_delete=models.CASCADE, verbose_name="Puerto")
+    buque = models.ForeignKey(nom_embarcacion, on_delete=models.CASCADE, verbose_name="Buque",
+                             related_name='buque',limit_choices_to={'tipo_embarcacion': 'buque'})
+    tipo_maniobra = models.ForeignKey(nom_tipo_maniobra_portuaria, on_delete=models.CASCADE, verbose_name="Tipo de maniobra portuaria")
+    hora_inicio = models.TimeField(verbose_name = "Hora de inicio")
+    hora_fin = models.TimeField(verbose_name = "Hora de fin")
+    observaciones = models.TextField(max_length=250,blank=True,null=True)
+    # Campo de selección múltiple para remolcadores
+    remolcadores = models.ManyToManyField(
+        nom_embarcacion,
+        related_name='remolcadores',
+        verbose_name="Remolcadores",
+        limit_choices_to={'tipo_embarcacion': 'remolcador'},
+        blank=True,  # Opcional: permite que el campo esté vacío
+        help_text="Seleccione los remolcadores participantes"
+    )
+    parte_diario_enc = models.ForeignKey(
+        gemar_informe_diario_enc,
+        on_delete=models.CASCADE,
+        related_name='maniobras_portuarias')
+    
+    class Meta:
+        verbose_name = "Maniobra portuaria ENC"
+        verbose_name_plural = "Maniobras portuarias ENC"
+
+    def __str__(self):
+        return f"tipo de maniobra {self.tipo_maniobra} - hora inicio {self.hora_inicio} - hora fin {self.hora_fin}" 
+    
+    # **************************************************************************************************************************
+class gemar_afectaciones_maniobras_portuarias_enc(models.Model):
+    puerto = models.ForeignKey(nom_puerto, on_delete=models.CASCADE, verbose_name="Puerto")
+    buque = models.ForeignKey(nom_embarcacion, on_delete=models.CASCADE, verbose_name="Buque",
+                             related_name='afectacion_buque',limit_choices_to={'tipo_embarcacion': 'buque'})
+    hora_inicio_afectacion = models.TimeField(verbose_name = "Hora de inicio")
+    hora_fin_afectacion = models.TimeField(verbose_name = "Hora de fin")
+    observaciones = models.TextField(max_length=250,blank=True,null=True)
+    # Campo de selección múltiple para remolcadores
+    
+    parte_diario_enc = models.ForeignKey(
+        gemar_informe_diario_enc,
+        on_delete=models.CASCADE,
+        related_name='afectaciones_maniobras_portuarias')
+    
+    class Meta:
+        verbose_name = "Afectación maniobra portuaria ENC"
+        verbose_name = "Afectaciones maniobras portuarias ENC"
+        unique_together = ('puerto', 'buque')
+
+    def __str__(self):
+        return f"puerto {self.puerto} - hora inicio {self.hora_inicio_afectacion} - hora fin {self.hora_fin_afectacion}" 
+#******************************************************************************************************************************
+
+class gemar_carga_seca_enc(models.Model):
+    UBICACION_CHOICES = (
+        ('-', '-'),
+        ('navegando', 'Navegando'),
+        ('con_ubicacion', 'Con ubicación'),
+    )
+
+    E_OPERATIVO_CHOICES = (
+        ('operando', 'Operando'),
+        ('fuera_servicio', 'Fuera de servicio'),
+        ('reparando', 'Reparando'),
+        ('pendiente_reparacion', 'Pendiente de reparación'),
+    )
+
+    C_VENCIDO_CHOICES = (
+        ('si', 'Sí'),
+        ('no', 'No'),
+    )
+    
+    unidad_basica = models.ForeignKey(nom_entidades, on_delete=models.CASCADE, verbose_name="Unidad básica")
+    embarcacion = models.ForeignKey(nom_embarcacion, on_delete=models.CASCADE, verbose_name="Embarcación",
+                                    related_name="carga_seca")
+    ubicacion = models.CharField(max_length=15, choices=UBICACION_CHOICES,verbose_name="Ubicación")
+    puerto_ubicado = models.ForeignKey(nom_puerto, on_delete=models.CASCADE, verbose_name="Puerto ubicado",blank=True,null=True)
+    estado_operativo = models.CharField(max_length=25, choices=E_OPERATIVO_CHOICES,verbose_name="Estado operativo")
+    fecha_vencimiento_certificado = models.DateField()
+    certificado_vencido = models.CharField(max_length=2, choices=C_VENCIDO_CHOICES,verbose_name="Certificado vencido",
+                                           blank=True,null=True)
+    eta = models.DateTimeField()
+    ets = models.DateField()
+    observaciones = models.TextField(max_length=250,blank=True,null=True)
+    
+    parte_diario_enc = models.ForeignKey(
+        gemar_informe_diario_enc,
+        on_delete=models.CASCADE,
+        related_name='carga_seca_enc')
+    
+    class Meta:
+        verbose_name = "Carga seca ENC"
+        verbose_name = "Cargas secas ENC"
+
+    def __str__(self):
+        return f"unidad básica {self.unidad_basica} - embarcacion {self.embarcacion}" 
+#******************************************************************************************************************************
 class PartePBIP(models.Model):
     
     # Opciones para campos de selección

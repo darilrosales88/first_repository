@@ -15,7 +15,8 @@ from .models import (gemar_hecho_extraordinario,gemar_parte_hecho_extraordinario
                      gemar_parte_programacion_maniobras,gemar_parte_carga_descarga,gemar_carga_descarga,
                      gemar_producto_carga_descarga,gemar_turno_carga_descarga,gemar_incidencia_por_turno_carga_descarga,
                      gemar_informe_diario_enc,gemar_maniobras_portuarias_enc,gemar_afectaciones_maniobras_portuarias_enc,
-                     gemar_carga_seca_enc)
+                     gemar_carga_seca_enc,gemar_remolcadores_maniobras_enc,gemar_remolcador_carga_liquida_enc,
+                     gemar_remolcador_cabotaje_auxiliar_enc)
 from nomencladores.models import nom_embarcacion as Buque  # Add this import
 from nomencladores.models import nom_puerto as Puerto  # Also need this for puerto_id
 from nomencladores.models import nom_terminal as Terminal  # For terminal_id
@@ -399,6 +400,74 @@ class gemar_carga_seca_enc_serializer(serializers.ModelSerializer):
         model = gemar_carga_seca_enc
         fields = '__all__'
         filterset_class = gemar_carga_seca_enc_filter
+#**********************************************************************************************************************
+class gemar_remolcadores_maniobras_enc_filter(filters.FilterSet):
+    unidad_basica_puerto = filters.CharFilter(method='filtrado_por_u_b_puerto', lookup_expr='icontains')
+
+    def filtrado_por_u_b_puerto(self, queryset, value):        
+        return queryset.filter(unidad_basica__nombre__icontains=value) | queryset.filter(puerto_ubicado__nombre_puerto__icontains=value)
+    
+    class Meta:  
+        model = gemar_remolcadores_maniobras_enc    
+        fields = []
+
+class gemar_remolcadores_maniobras_enc_serializer(serializers.ModelSerializer):
+    unidad_basica_name = serializers.ReadOnlyField(source='unidad_basica.nombre')
+    puerto_ubicado_name = serializers.ReadOnlyField(source='puerto_ubicado.nombre_puerto')
+    ubicacion_name = serializers.ReadOnlyField(source='get_ubicacion_display')
+    estado_operativo_name = serializers.ReadOnlyField(source='get_estado_operativo_display')
+    certificado_vencido_name = serializers.ReadOnlyField(source='get_certificado_vencido_display')
+    
+    class Meta:
+        model = gemar_remolcadores_maniobras_enc
+        fields = '__all__'
+        filterset_class = gemar_remolcadores_maniobras_enc_filter
+#**********************************************************************************************************************
+class gemar_remolcador_carga_liquida_enc_filter(filters.FilterSet):
+    unidad_basica_puerto = filters.CharFilter(method='filtrado_por_u_b_puerto', lookup_expr='icontains')
+
+    def filtrado_por_u_b_puerto(self, queryset, value):        
+        return queryset.filter(unidad_basica__nombre__icontains=value) | queryset.filter(puerto_ubicado__nombre_puerto__icontains=value)
+    
+    class Meta:  
+        model = gemar_remolcador_carga_liquida_enc    
+        fields = []
+
+class gemar_remolcador_carga_liquida_enc_serializer(serializers.ModelSerializer):
+    unidad_basica_name = serializers.ReadOnlyField(source='unidad_basica.nombre')
+    puerto_ubicado_name = serializers.ReadOnlyField(source='puerto_ubicado.nombre_puerto')
+    ubicacion_name = serializers.ReadOnlyField(source='get_ubicacion_display')
+    estado_operativo_name = serializers.ReadOnlyField(source='get_estado_operativo_display')
+    certificado_vencido_name = serializers.ReadOnlyField(source='get_certificado_vencido_display')
+    tipo_carga_name = serializers.ReadOnlyField(source='get_tipo_carga_display')
+    
+    class Meta:
+        model = gemar_remolcador_carga_liquida_enc
+        fields = '__all__'
+        filterset_class = gemar_remolcador_carga_liquida_enc_filter
+#**********************************************************************************************************************
+class gemar_remolcador_cabotaje_auxiliar_enc_filter(filters.FilterSet):
+    unidad_basica_puerto = filters.CharFilter(method='filtrado_por_u_b_puerto', lookup_expr='icontains')
+
+    def filtrado_por_u_b_puerto(self, queryset, value):        
+        return queryset.filter(unidad_basica__nombre__icontains=value) | queryset.filter(puerto_ubicado__nombre_puerto__icontains=value)
+    
+    class Meta:  
+        model = gemar_remolcador_cabotaje_auxiliar_enc    
+        fields = []
+
+class gemar_remolcador_cabotaje_auxiliar_enc_serializer(serializers.ModelSerializer):
+    unidad_basica_name = serializers.ReadOnlyField(source='unidad_basica.nombre')
+    puerto_ubicado_name = serializers.ReadOnlyField(source='puerto_ubicado.nombre_puerto')
+    ubicacion_name = serializers.ReadOnlyField(source='get_ubicacion_display')
+    estado_operativo_name = serializers.ReadOnlyField(source='get_estado_operativo_display')
+    certificado_vencido_name = serializers.ReadOnlyField(source='get_certificado_vencido_display')
+    tipo_remolcador_name = serializers.ReadOnlyField(source='get_tipo_remolcador_display')
+    
+    class Meta:
+        model = gemar_remolcador_cabotaje_auxiliar_enc
+        fields = '__all__'
+        filterset_class = gemar_remolcador_cabotaje_auxiliar_enc_filter
 #**********************************************************************************************************************
 
 class PartePBIPSerializer(serializers.ModelSerializer):

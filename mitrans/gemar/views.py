@@ -19,7 +19,8 @@ from .models import (gemar_hecho_extraordinario,gemar_parte_hecho_extraordinario
                      gemar_parte_carga_descarga,gemar_carga_descarga,gemar_producto_carga_descarga,
                      gemar_turno_carga_descarga,gemar_incidencia_por_turno_carga_descarga,
                      gemar_informe_diario_enc,gemar_maniobras_portuarias_enc,gemar_afectaciones_maniobras_portuarias_enc,
-                     gemar_carga_seca_enc) 
+                     gemar_carga_seca_enc,gemar_remolcadores_maniobras_enc,gemar_remolcador_carga_liquida_enc,
+                     gemar_remolcador_cabotaje_auxiliar_enc) 
 
 #importacion de serializadores asociados a los modelos
 from .serializers import (gemar_hecho_extraordinario_serializer,gemar_parte_hecho_extraordinario_serializer,
@@ -29,6 +30,8 @@ from .serializers import (gemar_hecho_extraordinario_serializer,gemar_parte_hech
                           gemar_incidencia_por_turno_carga_descarga_serializer,gemar_informe_diario_enc_serializer,
                           gemar_parte_programacion_maniobras_serializer,gemar_maniobras_portuarias_enc_serializer,
                           gemar_afectaciones_maniobras_portuarias_enc_serializer,gemar_carga_seca_enc_serializer,
+                          gemar_remolcadores_maniobras_enc_serializer,gemar_remolcador_carga_liquida_enc_serializer,
+                          gemar_remolcador_cabotaje_auxiliar_enc_serializer,
                           PartePBIPSerializer, CargaViejaSerializer, 
                           ExistenciaMercanciaSerializer)
 
@@ -1395,7 +1398,6 @@ class gemar_maniobras_portuarias_enc_view_set(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
 #**********************************************************************************************************************
-
 class gemar_afectaciones_maniobras_portuarias_enc_view_set(viewsets.ModelViewSet):
     queryset = gemar_afectaciones_maniobras_portuarias_enc.objects.all().order_by('-id')
     serializer_class = gemar_afectaciones_maniobras_portuarias_enc_serializer
@@ -1503,7 +1505,7 @@ class gemar_carga_seca_enc_view_set(viewsets.ModelViewSet):
         response = super().create(request, *args, **kwargs)
         
         # Obtiene la instancia creada (puedes acceder a ella a través del serializer)
-        obj_carga_seca_enc = gemar_afectaciones_maniobras_portuarias_enc_serializer.objects.get(id=response.data['id'])
+        obj_carga_seca_enc = gemar_carga_seca_enc_serializer.objects.get(id=response.data['id'])
         
         # Registrar la acción en el modelo de Auditoria
         navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
@@ -1552,6 +1554,246 @@ class gemar_carga_seca_enc_view_set(viewsets.ModelViewSet):
             )
         # Registrar la acción en el modelo de Auditoria
         registrar_auditoria(request, "Visualizar lista de cargas secas ENC.")      
+
+        return super().list(request, *args, **kwargs)
+
+#**********************************************************************************************************************
+class gemar_remolcadores_maniobras_enc_view_set(viewsets.ModelViewSet):
+    queryset = gemar_remolcadores_maniobras_enc.objects.all().order_by('-id')
+    serializer_class = gemar_remolcadores_maniobras_enc_serializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # Filtrado por unidad basica o puerto
+        search = self.request.query_params.get('unidad_basica_puerto', None)
+
+        if search is not None:
+            queryset = queryset.filter(unidad_basica__nombre__icontains=search) | queryset.filter(puerto_ubicado__nombre_puerto__icontains=search)
+
+        return queryset
+    
+   
+    def create(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminGEMAR').exists():            
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Llama al método create del padre
+        response = super().create(request, *args, **kwargs)
+        
+        # Obtiene la instancia creada (puedes acceder a ella a través del serializer)
+        obj_remolcador_maniobra_enc = gemar_remolcadores_maniobras_enc_serializer.objects.get(id=response.data['id'])
+        
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion=f"Insertar remolcador de maniobra ENC: {obj_remolcador_maniobra_enc.id}",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return response   
+
+    def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminGEMAR').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        obj_carga_seca_enc = serializer.save()
+
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminGEMAR').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        instance = self.get_object()
+        id_hecho = instance.id
+
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorGEMAR').exists() and not request.user.groups.filter(name='AdminGEMAR').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        # Registrar la acción en el modelo de Auditoria
+        registrar_auditoria(request, "Visualizar lista de remolcadores de maniobras ENC.")      
+
+        return super().list(request, *args, **kwargs)
+
+#**********************************************************************************************************************
+class gemar_remolcador_carga_liquida_enc_view_set(viewsets.ModelViewSet):
+    queryset = gemar_remolcador_carga_liquida_enc.objects.all().order_by('-id')
+    serializer_class = gemar_remolcador_carga_liquida_enc_serializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # Filtrado por unidad basica o puerto
+        search = self.request.query_params.get('unidad_basica_puerto', None)
+
+        if search is not None:
+            queryset = queryset.filter(unidad_basica__nombre__icontains=search) | queryset.filter(puerto_ubicado__nombre_puerto__icontains=search)
+
+        return queryset
+    
+   
+    def create(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminGEMAR').exists():            
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Llama al método create del padre
+        response = super().create(request, *args, **kwargs)
+        
+        # Obtiene la instancia creada (puedes acceder a ella a través del serializer)
+        obj_remolcador_carga_liquida_enc = gemar_remolcador_carga_liquida_enc_serializer.objects.get(id=response.data['id'])
+        
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion=f"Insertar remolcador de caga líquida ENC: {obj_remolcador_carga_liquida_enc.id}",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return response   
+
+    def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminGEMAR').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        obj_remolcador_carga_liquida_enc = serializer.save()
+
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminGEMAR').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        instance = self.get_object()
+        id_hecho = instance.id
+
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorGEMAR').exists() and not request.user.groups.filter(name='AdminGEMAR').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        # Registrar la acción en el modelo de Auditoria
+        registrar_auditoria(request, "Visualizar lista de remolcadores de carga líquida ENC.")      
+
+        return super().list(request, *args, **kwargs)
+
+#**********************************************************************************************************************
+class gemar_remolcador_cabotaje_auxiliar_enc_view_set(viewsets.ModelViewSet):
+    queryset = gemar_remolcador_cabotaje_auxiliar_enc.objects.all().order_by('-id')
+    serializer_class = gemar_remolcador_cabotaje_auxiliar_enc_serializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # Filtrado por unidad basica o puerto
+        search = self.request.query_params.get('unidad_basica_puerto', None)
+
+        if search is not None:
+            queryset = queryset.filter(unidad_basica__nombre__icontains=search) | queryset.filter(puerto_ubicado__nombre_puerto__icontains=search)
+
+        return queryset
+    
+   
+    def create(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminGEMAR').exists():            
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Llama al método create del padre
+        response = super().create(request, *args, **kwargs)
+        
+        # Obtiene la instancia creada (puedes acceder a ella a través del serializer)
+        obj_remolcador_cabotaje_aux_enc = gemar_remolcador_cabotaje_auxiliar_enc_serializer.objects.get(id=response.data['id'])
+        
+        # Registrar la acción en el modelo de Auditoria
+        navegador = request.META.get('HTTP_USER_AGENT', 'Desconocido')
+        direccion_ip = request.META.get('REMOTE_ADDR')
+        Auditoria.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            accion=f"Insertar remolcador de cabotaje y auxiliar ENC: {obj_remolcador_cabotaje_aux_enc.id}",
+            direccion_ip=direccion_ip,
+            navegador=navegador,
+        )
+
+        return response   
+
+    def update(self, request, *args, **kwargs):
+        
+        if not request.user.groups.filter(name='AdminGEMAR').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        obj_remolcador_cabotaje_aux_enc = serializer.save()
+
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='AdminGEMAR').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        instance = self.get_object()
+        id_hecho = instance.id
+
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='VisualizadorGEMAR').exists() and not request.user.groups.filter(name='AdminGEMAR').exists():
+            return Response(
+                {"detail": "No tiene permiso para realizar esta acción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        # Registrar la acción en el modelo de Auditoria
+        registrar_auditoria(request, "Visualizar lista de remolcadores de cabotaje y auxiliar ENC.")      
 
         return super().list(request, *args, **kwargs)
 

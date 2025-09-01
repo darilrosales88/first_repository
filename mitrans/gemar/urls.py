@@ -12,7 +12,10 @@ from .views import (gemar_parte_hecho_extraordinario_view_set,
                     gemar_parte_carga_descarga_view_set,gemar_carga_descarga_view_set,gemar_producto_carga_descarga_view_set,
                     gemar_turno_carga_descarga_view_set,gemar_incidencia_por_turno_carga_descarga_view_set,
                     gemar_informe_diario_enc_view_set,gemar_maniobras_portuarias_enc_view_set,
-                    gemar_afectaciones_maniobras_portuarias_enc_view_set,gemar_carga_seca_enc_view_set)
+                    gemar_afectaciones_maniobras_portuarias_enc_view_set,gemar_carga_seca_enc_view_set,
+                    gemar_remolcadores_maniobras_enc_view_set,gemar_remolcador_carga_liquida_enc_view_set,
+                    gemar_remolcador_cabotaje_auxiliar_enc_view_set
+                    )
     
 
 
@@ -44,6 +47,9 @@ router.register('gemar-maniobra-portuaria-enc',gemar_maniobras_portuarias_enc_vi
 router.register('gemar-afectacion-maniobra-portuaria-enc',gemar_afectaciones_maniobras_portuarias_enc_view_set, 
                 basename='gemar-afectacion-maniobra-portuaria-enc')
 router.register('gemar-carga-seca-enc',gemar_carga_seca_enc_view_set, basename='gemar-carga-seca-enc')
+router.register('gemar-remolcador-maniobra-enc',gemar_remolcadores_maniobras_enc_view_set, basename='gemar-remolcador-maniobra-enc')
+router.register('gemar-remolcador-carga-liquida-enc',gemar_remolcador_carga_liquida_enc_view_set, basename='gemar-remolcador-carga-liquida-enc')
+router.register('gemar-remolcador-cabotaje-auxiliar-enc',gemar_remolcador_cabotaje_auxiliar_enc_view_set, basename='gemar-remolcador-cabotaje-auxiliar-enc')
 
 router.register(r'partes-pbip', views.PartePBIPViewSet, basename='partepbip')
 router.register(r'cargas-viejas', views.CargaViejaViewSet, basename='cargavieja')

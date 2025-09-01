@@ -827,6 +827,145 @@ class gemar_carga_seca_enc(models.Model):
     def __str__(self):
         return f"unidad básica {self.unidad_basica} - embarcacion {self.embarcacion}" 
 #******************************************************************************************************************************
+class gemar_remolcadores_maniobras_enc(models.Model):
+    UBICACION_CHOICES = (
+        ('-', '-'),
+        ('navegando', 'Navegando'),
+        ('con_ubicacion', 'Con ubicación'),
+    )
+
+    E_OPERATIVO_CHOICES = (
+        ('operando', 'Operando'),
+        ('fuera_servicio', 'Fuera de servicio'),
+        ('reparando', 'Reparando'),
+        ('pendiente_reparacion', 'Pendiente de reparación'),
+    )
+
+    C_VENCIDO_CHOICES = (
+        ('si', 'Sí'),
+        ('no', 'No'),
+    )
+    
+    unidad_basica = models.ForeignKey(nom_entidades, on_delete=models.CASCADE, verbose_name="Unidad básica")    
+    remolcador = models.ForeignKey(nom_embarcacion, on_delete=models.CASCADE, verbose_name="Remolcador",
+                             related_name='remolcador_maniobra_enc',limit_choices_to={'tipo_embarcacion': 'remolcador'})
+    ubicacion = models.CharField(max_length=15, choices=UBICACION_CHOICES,verbose_name="Ubicación")
+    puerto_ubicado = models.ForeignKey(nom_puerto, on_delete=models.CASCADE, verbose_name="Puerto ubicado",blank=True,null=True)    
+    estado_operativo = models.CharField(max_length=25, choices=E_OPERATIVO_CHOICES,verbose_name="Estado operativo")
+    fecha_vencimiento_certificado = models.DateField()    
+    certificado_vencido = models.CharField(max_length=2, choices=C_VENCIDO_CHOICES,verbose_name="Certificado vencido",
+                                           blank=True,null=True)    
+    observaciones = models.TextField(max_length=250,blank=True,null=True)
+    
+    parte_diario_enc = models.ForeignKey(
+        gemar_informe_diario_enc,
+        on_delete=models.CASCADE,
+        related_name='remolcador_maniobra_enc')
+    
+    class Meta:
+        verbose_name = "Remolcador de maniobra ENC"
+        verbose_name = "Remolcadores de maniobra ENC"
+
+    def __str__(self):
+        return f"unidad básica {self.unidad_basica} - remolcador {self.remolcador}" 
+#******************************************************************************************************************************
+class gemar_remolcador_carga_liquida_enc(models.Model):
+    TIPO_CARGA_CHOICES = (
+        ('-', '-'),
+        ('agua', 'Agua'),
+        ('combustible', 'Combustible'),
+    )
+    UBICACION_CHOICES = (
+        ('-', '-'),
+        ('navegando', 'Navegando'),
+        ('con_ubicacion', 'Con ubicación'),
+    )
+
+    E_OPERATIVO_CHOICES = (
+        ('operando', 'Operando'),
+        ('fuera_servicio', 'Fuera de servicio'),
+        ('reparando', 'Reparando'),
+        ('pendiente_reparacion', 'Pendiente de reparación'),
+    )
+
+    C_VENCIDO_CHOICES = (
+        ('si', 'Sí'),
+        ('no', 'No'),
+    )
+
+    tipo_carga = models.CharField(max_length=15, choices=UBICACION_CHOICES,verbose_name="Tipo de carga")    
+    unidad_basica = models.ForeignKey(nom_entidades, on_delete=models.CASCADE, verbose_name="Unidad básica")    
+    ubicacion = models.CharField(max_length=15, choices=UBICACION_CHOICES,verbose_name="Ubicación")
+    puerto_ubicado = models.ForeignKey(nom_puerto, on_delete=models.CASCADE, verbose_name="Puerto ubicado",blank=True,null=True)
+    estado_operativo = models.CharField(max_length=25, choices=E_OPERATIVO_CHOICES,verbose_name="Estado operativo")
+    fecha_vencimiento_certificado = models.DateField()    
+    certificado_vencido = models.CharField(max_length=2, choices=C_VENCIDO_CHOICES,verbose_name="Certificado vencido",
+                                           blank=True,null=True)
+    otros_servicios = models.IntegerField(default=0,blank=True,null=True)
+    servicios_a_buques = models.IntegerField(default=0,blank=True,null=True)       
+    observaciones = models.TextField(max_length=250,blank=True,null=True)
+    
+    parte_diario_enc = models.ForeignKey(
+        gemar_informe_diario_enc,
+        on_delete=models.CASCADE,
+        related_name='remolcador_carga_liquida_enc')
+    
+    class Meta:
+        verbose_name = "Remolcador de carga líquida ENC"
+        verbose_name = "Remolcadores de carga líquida ENC"
+
+    def __str__(self):
+        return f"unidad básica {self.unidad_basica} - remolcador {self.ubicacion}" 
+#******************************************************************************************************************************
+class gemar_remolcador_cabotaje_auxiliar_enc(models.Model):
+    TIPO_REMOLCADOR_CHOICES = (
+        ('-', '-'),
+        ('cabotaje', 'Cabotaje'),
+        ('flota_auxiliar', 'Flota auxiliar'),
+    )
+    UBICACION_CHOICES = (
+        ('-', '-'),
+        ('navegando', 'Navegando'),
+        ('con_ubicacion', 'Con ubicación'),
+    )
+
+    E_OPERATIVO_CHOICES = (
+        ('operando', 'Operando'),
+        ('fuera_servicio', 'Fuera de servicio'),
+        ('reparando', 'Reparando'),
+        ('pendiente_reparacion', 'Pendiente de reparación'),
+    )
+
+    C_VENCIDO_CHOICES = (
+        ('si', 'Sí'),
+        ('no', 'No'),
+    )
+
+    tipo_remolcador = models.CharField(max_length=25, choices=TIPO_REMOLCADOR_CHOICES,verbose_name="Tipo de remolcador") 
+    unidad_basica = models.ForeignKey(nom_entidades, on_delete=models.CASCADE, verbose_name="Unidad básica")
+    remolcador = models.ForeignKey(nom_embarcacion, on_delete=models.CASCADE, verbose_name="Remolcador",
+                             related_name='remolcador_cabotaje_auxiliar_enc',limit_choices_to={'tipo_embarcacion': 'remolcador'})
+    ubicacion = models.CharField(max_length=15, choices=UBICACION_CHOICES,verbose_name="Ubicación")
+    puerto_ubicado = models.ForeignKey(nom_puerto, on_delete=models.CASCADE, verbose_name="Puerto ubicado",blank=True,null=True)
+    estado_operativo = models.CharField(max_length=25, choices=E_OPERATIVO_CHOICES,verbose_name="Estado operativo")
+    fecha_vencimiento_certificado = models.DateField()    
+    certificado_vencido = models.CharField(max_length=2, choices=C_VENCIDO_CHOICES,verbose_name="Certificado vencido",
+                                           blank=True,null=True)
+    observaciones = models.TextField(max_length=250,blank=True,null=True)
+    
+    parte_diario_enc = models.ForeignKey(
+        gemar_informe_diario_enc,
+        on_delete=models.CASCADE,
+        related_name='remolcador_cabotaje_aux_enc')     
+    
+    
+    class Meta:
+        verbose_name = "Remolcador de cabotaje y auxiliar ENC"
+        verbose_name = "Remolcadores de cabotaje y auxiliar ENC"
+
+    def __str__(self):
+        return f"unidad básica {self.unidad_basica} - remolcador {self.ubicacion}" 
+#******************************************************************************************************************************
 class PartePBIP(models.Model):
     
     # Opciones para campos de selección

@@ -464,6 +464,22 @@ class PartePBIP(models.Model):
         self.full_clean()
         super().save(*args, **kwargs)
 
+# Nuevo modelo para registros de PBIP
+class RegistroPBIP(models.Model):
+    parte = models.ForeignKey(PartePBIP, on_delete=models.CASCADE, related_name='registros')
+    buque = models.ForeignKey(Buque, on_delete=models.PROTECT, verbose_name=_('Buque'))
+    puerto = models.ForeignKey(nom_puerto, on_delete=models.PROTECT, verbose_name=_('Puerto'))
+    nivel = models.IntegerField(choices=PartePBIP.NIVEL_CHOICES, verbose_name=_('Nivel de seguridad'))
+    fecha_operacion = models.DateField(verbose_name=_('Fecha de operación'))
+    observaciones = models.TextField(verbose_name=_('Observaciones'), blank=True, null=True)
+    
+    class Meta:
+        verbose_name = _('Registro PBIP')
+        verbose_name_plural = _('Registros PBIP')
+        
+    def __str__(self):
+        return f"Registro PBIP - {self.buque.nombre} - {self.puerto.nombre}"
+
 # gemar/models.py (actualización de CargaVieja)
 class CargaVieja(models.Model):
     parte = models.ForeignKey(PartePBIP, on_delete=models.CASCADE, related_name='cargas_viejas')
@@ -483,6 +499,7 @@ class CargaVieja(models.Model):
         ('APROBADO', 'Aprobado'),
         ('CANCELADO', 'Cancelado'),
     ])
+    fecha_operacion = models.DateField(_('Fecha de operación'), null=True, blank=True)
     aprobado_por = models.ForeignKey(
         CustomUser, 
         on_delete=models.PROTECT, 
@@ -505,6 +522,57 @@ class CargaVieja(models.Model):
             raise ValidationError(_('Las toneladas no pueden ser negativas.'))
         if self.dias_almacen < 0:
             raise ValidationError(_('Los días en almacén no pueden ser negativos.'))
+
+# Nuevo modelo para registros de Carga Vieja
+class RegistroCargaVieja(models.Model):
+    parte = models.ForeignKey('ParteCargaVieja', on_delete=models.CASCADE, related_name='registros')
+    puerto = models.ForeignKey(nom_puerto, on_delete=models.PROTECT, verbose_name=_('Puerto'))
+    terminal = models.ForeignKey(nom_terminal, on_delete=models.PROTECT, verbose_name=_('Terminal'))
+    producto = models.ForeignKey(nom_producto, on_delete=models.PROTECT, verbose_name=_('Producto'))
+    manifiesto = models.CharField(_('Manifiesto'), max_length=100)
+    toneladas_ayer = models.DecimalField(_('Toneladas ayer'), max_digits=10, decimal_places=2)
+    toneladas_hoy = models.DecimalField(_('Toneladas hoy'), max_digits=10, decimal_places=2)
+    organismo = models.ForeignKey(nom_osde_oace_organismo, on_delete=models.PROTECT, verbose_name=_('Organismo'))
+    dias_almacen = models.IntegerField(_('Días en almacén'))
+    plan = models.DecimalField(_('Plan'), max_digits=10, decimal_places=2)
+    real = models.DecimalField(_('Real'), max_digits=10, decimal_places=2, null=True, blank=True)
+    observaciones = models.TextField(_('Observaciones'), null=True, blank=True)
+    
+    class Meta:
+        verbose_name = _('Registro Carga Vieja')
+        verbose_name_plural = _('Registros Cargas Viejas')
+        
+    def __str__(self):
+        return f"Registro Carga Vieja - {self.producto.nombre} - {self.manifiesto}"
+
+# Nuevo modelo para el parte de Carga Vieja
+class ParteCargaVieja(models.Model):
+    ESTADO_CHOICES = [
+        ('CREADO', 'Creado'),
+        ('APROBADO', 'Aprobado'),
+        ('CANCELADO', 'Cancelado'),
+    ]
+    
+    fecha_operacion = models.DateField(_('Fecha de operación'))
+    fecha_creacion = models.DateTimeField(_('Fecha de creación'), auto_now_add=True)
+    creado_por = models.ForeignKey(CustomUser, on_delete=models.PROTECT, verbose_name=_('Creado por'), related_name='partes_carga_vieja_creados')
+    aprobado_por = models.ForeignKey(
+        CustomUser, 
+        on_delete=models.PROTECT, 
+        verbose_name=_('Aprobado por'),
+        null=True,
+        blank=True,
+        related_name='partes_carga_vieja_aprobados'
+    )
+    estado = models.CharField(_('Estado'), max_length=20, default='CREADO', choices=ESTADO_CHOICES)
+    
+    class Meta:
+        verbose_name = _('Parte Carga Vieja')
+        verbose_name_plural = _('Partes Cargas Viejas')
+        ordering = ['-fecha_creacion']
+        
+    def __str__(self):
+        return f"Parte Carga Vieja - {self.fecha_operacion} - {self.creado_por.username}"
 
 class ExistenciaMercancia(models.Model):
     TIPO_CHOICES = [
@@ -573,6 +641,56 @@ class ExistenciaMercancia(models.Model):
             
         if self.existencia < 0:
             raise ValidationError(_('La existencia no puede ser negativa.'))
+
+# Nuevo modelo para registros de Existencia Mercancía
+class RegistroExistenciaMercancia(models.Model):
+    parte = models.ForeignKey('ParteExistenciaMercancia', on_delete=models.CASCADE, related_name='registros')
+    terminal = models.ForeignKey(nom_terminal, on_delete=models.PROTECT, verbose_name=_('Terminal'))
+    tipo = models.IntegerField(_('Tipo'), choices=ExistenciaMercancia.TIPO_CHOICES)
+    tipo_producto = models.IntegerField(_('Tipo de producto'), choices=ExistenciaMercancia.TIPO_PRODUCTO_CHOICES)
+    producto = models.ForeignKey(nom_producto, on_delete=models.PROTECT, verbose_name=_('Producto'))
+    tipo_embalaje = models.ForeignKey(nom_tipo_embalaje, on_delete=models.PROTECT, verbose_name=_('Tipo de embalaje'), null=True, blank=True)
+    unidad_medida = models.ForeignKey(nom_unidad_medida, on_delete=models.PROTECT, verbose_name=_('Unidad de medida'))
+    estado = models.IntegerField(_('Estado'), choices=ExistenciaMercancia.ESTADO_CONTENEDOR_CHOICES, null=True, blank=True)
+    contiene = models.IntegerField(_('Contiene'), choices=ExistenciaMercancia.CONTENIDO_CHOICES, null=True, blank=True)
+    existencia = models.DecimalField(_('Existencia'), max_digits=10, decimal_places=2)
+    observaciones = models.TextField(_('Observaciones'), null=True, blank=True)
+    
+    class Meta:
+        verbose_name = _('Registro Existencia Mercancía')
+        verbose_name_plural = _('Registros Existencias Mercancías')
+        
+    def __str__(self):
+        return f"Registro Existencia - {self.producto.nombre} - {self.terminal.nombre}"
+
+# Nuevo modelo para el parte de Existencia Mercancía
+class ParteExistenciaMercancia(models.Model):
+    ESTADO_CHOICES = [
+        ('CREADO', 'Creado'),
+        ('APROBADO', 'Aprobado'),
+        ('CANCELADO', 'Cancelado'),
+    ]
+    
+    fecha_operacion = models.DateField(_('Fecha de operación'))
+    fecha_creacion = models.DateTimeField(_('Fecha de creación'), auto_now_add=True)
+    creado_por = models.ForeignKey(CustomUser, on_delete=models.PROTECT, verbose_name=_('Creado por'),related_name='partes_existencia_mercancia_creados')
+    aprobado_por = models.ForeignKey(
+        CustomUser, 
+        on_delete=models.PROTECT, 
+        verbose_name=_('Aprobado por'),
+        null=True,
+        blank=True,
+        related_name='partes_existencia_mercancia_aprobados'
+    )
+    estado = models.CharField(_('Estado'), max_length=20, default='CREADO', choices=ESTADO_CHOICES)
+    
+    class Meta:
+        verbose_name = _('Parte Existencia Mercancía')
+        verbose_name_plural = _('Partes Existencias Mercancías')
+        ordering = ['-fecha_creacion']
+        
+    def __str__(self):
+        return f"Parte Existencia Mercancía - {self.fecha_operacion} - {self.creado_por.username}"
         
 ####Partes Carlos  de Gemar  ####
 class diario_embarcacion(models.Model):

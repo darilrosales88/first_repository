@@ -103,14 +103,22 @@ def get_user_permissions_and_groups(request, user_id):
         first_name = user.first_name
         last_name = user.last_name
         username = user.username
-        entidad = {
-            'id': user.entidad.id,
-            'nombre': user.entidad.nombre,
-        }
-        cargo = {
-            'id': user.cargo.id,
-            'nombre_cargo': user.cargo.nombre_cargo,
-        }
+        
+        # Manejar entidad (puede ser None)
+        entidad_data = None
+        if user.entidad:
+            entidad_data = {
+                'id': user.entidad.id,
+                'nombre': user.entidad.nombre,
+            }
+        
+        # Manejar cargo (puede ser None)
+        cargo_data = None
+        if user.cargo:
+            cargo_data = {
+                'id': user.cargo.id,
+                'nombre_cargo': user.cargo.nombre_cargo,
+            }
         
 
         # Obtener todos los grupos del usuario
@@ -137,45 +145,13 @@ def get_user_permissions_and_groups(request, user_id):
             'first_name': first_name,
             'last_name': last_name,
             'username': username,
-            'entidad': entidad,
-            'cargo': cargo,
+            'entidad': entidad_data,
+            'cargo': cargo_data,
             'groups': grupos_formateados,
             'permissions': permisos_formateados,  # Cambiado de user_permissions a permissions
         })
     except User.DoesNotExist:
         return Response({'error': 'Usuario no encontrado'}, status=404)
-""" def get_user_permissions_and_groups(request, user_id):
-    try:
-        user = User.objects.get(id=user_id)
-        first_name = user.first_name
-        last_name = user.last_name
-        entidad = {
-            'id': user.entidad.id,
-            'nombre': user.entidad.nombre,
-        }
-        cargo = {
-            'id': user.cargo.id,
-            'nombre_cargo': user.cargo.nombre_cargo,
-        }
-
-        # Obtener permisos y grupos
-        groups = user.groups.all().order_by("-id")
-        permissions = user.user_permissions.all().order_by("-id")
-
-        # Formatear grupos y permisos
-        grupos_formateados = [{'id': g.id, 'name': g.name} for g in groups]
-        permisos_formateados = [{'id': p.id, 'name': p.name} for p in permissions]
-
-        return Response({
-            'first_name': first_name,
-            'last_name': last_name,
-            'entidad': entidad,
-            'cargo': cargo,
-            'groups': grupos_formateados,
-            'user_permissions': permisos_formateados,
-        })
-    except User.DoesNotExist:
-        return Response({'error': 'Usuario no encontrado'}, status=404) """
 
 # Usa get_user_model() para obtener el modelo de usuario activo
 User = get_user_model()
@@ -244,20 +220,31 @@ def obtener_usuario(request, user_id):
         user = CustomUser.objects.get(id=user_id)
         grupos = user.groups.all().order_by("-id")
         permisos = user.user_permissions.all().order_by("-id")
+        
+        # Manejar entidad (puede ser None)
+        entidad_data = None
+        if user.entidad:
+            entidad_data = {
+                'id': user.entidad.id,
+                'nombre': user.entidad.nombre
+            }
+        
+        # Manejar cargo (puede ser None)
+        cargo_data = None
+        if user.cargo:
+            cargo_data = {
+                'id': user.cargo.id,
+                'nombre_cargo': user.cargo.nombre_cargo
+            }
+        
         data = {
             'id': user.id,
             'username': user.username,
             'first_name': user.first_name,            
             'last_name': user.last_name,
             'role': user.role,
-            'entidad': {
-                'id': user.entidad.id,
-                'nombre': user.entidad.nombre  # Asegúrate de que 'nombre' es el campo correcto
-            },
-            'cargo': {
-                'id': user.cargo.id,
-                'nombre_cargo': user.cargo.nombre_cargo  # Asegúrate de que 'nombre_cargo' es el campo correcto
-            },
+            'entidad': entidad_data,
+            'cargo': cargo_data,
             'email': user.email,
             'groups': [{'id': g.id, 'name': g.name} for g in grupos],
             'user_permissions': [{'id': p.id, 'name': p.name} for p in permisos],

@@ -12,6 +12,10 @@ import CreateGroup from "@/views/CreateGroup.vue";
 import TrazasAuditoria from "@/views/TrazasAuditoria.vue";
 import NavbarComponent from "@/components/NavbarComponent.vue";
 import AdicionarVagonesProductos from "@/views/UFC/AdicionarVagonesProductos.vue";
+import CargasViejas from "@/views/GEMAR/CargasViejas.vue";
+import AgregarCarga from "@/views/GEMAR/AgregarCarga.vue";
+import VerParteCargaVieja from "@/views/GEMAR/VerParteCargaVieja.vue";
+
 
 const routes = [
   //para la gestion de los usuarios
@@ -636,7 +640,7 @@ const routes = [
     },
   },
 {
-    path: "/GEMAR",
+    path: "/gemar",
     name: "GEMAR",
     component: () => import("../views/GEMAR/GemarView.vue"),
     meta: {
@@ -644,29 +648,30 @@ const routes = [
     },
   },
   {
-    path: "/CargasViejas",
-    name: "CargasViejas",
-    component: () => import("../views/GEMAR/CargasViejas.vue"),
-    meta: {
-      requireLogin: true,
-    },
+    path: '/cargas-viejas',
+    name: 'CargasViejas',
+    component: CargasViejas, // ← Aquí se usa CargasViejas directamente
+    meta: { requiresAuth: true }
   },
   {
-    path: "/AgregarCarga",
-    name: "AgregarCarga",
-    component: () => import("../views/GEMAR/AgregarCarga.vue"),
-    meta: {
-      requireLogin: true,
-    },
+    path: '/cargas-viejas/:id',
+    name: 'CargasViejasEditar',
+    component: CargasViejas, // ← Aquí también
+    meta: { requiresAuth: true },
+    props: true
   },
-  
   {
-    path: "/EditarCarga/:id",
-    name: "EditarCarga",
-    component: () => import("../views/GEMAR/EditarCargaVieja.vue"),
-    meta: {
-      requireLogin: true,
-    },
+    path: '/agregar-carga',
+    name: 'AgregarCarga',
+    component: AgregarCarga,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/parte-carga-vieja/:id',
+    name: 'VerParteCargaVieja',
+    component: VerParteCargaVieja,
+    meta: { requiresAuth: true },
+    props: true
   },
   {
     path: "/ExistenciasMercancia",

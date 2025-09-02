@@ -11,8 +11,18 @@ from nomencladores.serializers import (
 )
 from django.db.models import Q
 
-from .models import (gemar_hecho_extraordinario,gemar_parte_hecho_extraordinario,gemar_programacion_maniobras,
-                     gemar_parte_programacion_maniobras)
+from .models import (
+    gemar_hecho_extraordinario,
+    gemar_parte_hecho_extraordinario,
+    gemar_programacion_maniobras,
+    gemar_parte_programacion_maniobras,
+    RegistroPBIP,
+    RegistroCargaVieja,
+    ParteCargaVieja,
+    RegistroExistenciaMercancia,
+    ParteExistenciaMercancia,
+
+    )
 from nomencladores.models import nom_embarcacion as Buque  # Add this import
 from nomencladores.models import nom_puerto as Puerto  # Also need this for puerto_id
 from nomencladores.models import nom_terminal as Terminal  # For terminal_id
@@ -153,16 +163,35 @@ class gemar_programacion_maniobras_serializer(serializers.ModelSerializer):
         fields = '__all__'
         filterset_class = gemar_programacion_maniobras_filter
 
-class PartePBIPSerializer(serializers.ModelSerializer):
+class RegistroPBIPSerializer(serializers.ModelSerializer):
     buque = nom_embarcacion_serializer(read_only=True)
     buque_id = serializers.PrimaryKeyRelatedField(
-        queryset=Buque.objects.all(),  # O Buque.objects.filter(tipo_embarcacion='buque') si aplica
+        queryset=Buque.objects.all(),
         write_only=True,
         source='buque'
     )
     puerto = nom_puerto_serializer(read_only=True)
     puerto_id = serializers.PrimaryKeyRelatedField(
-        queryset=nom_puerto.objects.all(),
+        queryset=Puerto.objects.all(),
+        write_only=True,
+        source='puerto'
+    )
+    
+    class Meta:
+        model = RegistroPBIP
+        fields = '__all__'
+
+class PartePBIPSerializer(serializers.ModelSerializer):
+    registros = RegistroPBIPSerializer(many=True, read_only=True)
+    buque = nom_embarcacion_serializer(read_only=True)
+    buque_id = serializers.PrimaryKeyRelatedField(
+        queryset=Buque.objects.all(),
+        write_only=True,
+        source='buque'
+    )
+    puerto = nom_puerto_serializer(read_only=True)
+    puerto_id = serializers.PrimaryKeyRelatedField(
+        queryset=Puerto.objects.all(),
         write_only=True,
         source='puerto'
     )
@@ -191,8 +220,7 @@ class PartePBIPSerializer(serializers.ModelSerializer):
         return data
 
 # gemar/serializers.py (actualización de CargaViejaSerializer)
-class CargaViejaSerializer(serializers.ModelSerializer):
-    parte = serializers.PrimaryKeyRelatedField(queryset=PartePBIP.objects.all())
+class RegistroCargaViejaSerializer(serializers.ModelSerializer):
     puerto = nom_puerto_serializer(read_only=True)
     puerto_id = serializers.PrimaryKeyRelatedField(
         queryset=Puerto.objects.all(),
@@ -223,46 +251,20 @@ class CargaViejaSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = CargaVieja
+        model = RegistroCargaVieja
         fields = '__all__'
-        extra_kwargs = {
-            'manifiesto': {'required': True},
-            'toneladas_ayer': {'required': True},
-            'toneladas_hoy': {'required': True},
-            'dias_almacen': {'required': True},
-            'plan': {'required': True},
-            'real': {'required': True}
-        }
+        read_only_fields = ('id',)
 
-    def validate(self, data):
-        parte = data.get('parte')
-        puerto = data.get('puerto')
-        terminal = data.get('terminal')
-        producto = data.get('producto')
-        manifiesto = data.get('manifiesto')
-        organismo = data.get('organismo')
+class ParteCargaViejaSerializer(serializers.ModelSerializer):
+    registros = RegistroCargaViejaSerializer(many=True, read_only=True)
+    creado_por = CustomUserSerializer(read_only=True)
 
-        if CargaVieja.objects.filter(
-            parte=parte,
-            puerto=puerto,
-            terminal=terminal,
-            producto=producto,
-            manifiesto=manifiesto,
-            organismo=organismo
-        ).exclude(pk=self.instance.pk if self.instance else None).exists():
-            raise serializers.ValidationError(
-                "Ya existe un registro con esta combinación de Puerto, Terminal, Producto, Manifiesto y Organismo."
-            )
-        
-        # Validar que terminal pertenezca al puerto
-        if terminal.puerto != puerto:
-            raise serializers.ValidationError(
-                "La terminal seleccionada no pertenece al puerto especificado."
-            )
-        
-        return data
+    class Meta:
+        model = ParteCargaVieja
+        fields = '__all__'
+        read_only_fields = ('fecha_creacion', 'creado_por', 'aprobado_por')
 
-class ExistenciaMercanciaSerializer(serializers.ModelSerializer):
+class RegistroExistenciaMercanciaSerializer(serializers.ModelSerializer):
     terminal = nom_terminal_serializer(read_only=True)
     terminal_id = serializers.PrimaryKeyRelatedField(
         queryset=Terminal.objects.filter(),
@@ -289,54 +291,20 @@ class ExistenciaMercanciaSerializer(serializers.ModelSerializer):
         write_only=True,
         source='unidad_medida'
     )
-    creado_por = CustomUserSerializer(read_only=True)
     tipo_display = serializers.CharField(source='get_tipo_display', read_only=True)
     tipo_producto_display = serializers.CharField(source='get_tipo_producto_display', read_only=True)
     estado_display = serializers.CharField(source='get_estado_display', read_only=True)
     contiene_display = serializers.CharField(source='get_contiene_display', read_only=True)
-    estado_registro_display = serializers.CharField(source='get_estado_registro_display', read_only=True)
 
     class Meta:
-        model = ExistenciaMercancia
+        model = RegistroExistenciaMercancia
         fields = '__all__'
-        read_only_fields = ('fecha_creacion', 'creado_por')
 
-    def validate(self, data):
-        fecha_operacion = data.get('fecha_operacion')
-        terminal = data.get('terminal')
-        tipo = data.get('tipo')
-        producto = data.get('producto')
-        tipo_embalaje = data.get('tipo_embalaje')
-        unidad_medida = data.get('unidad_medida')
+class ParteExistenciaMercanciaSerializer(serializers.ModelSerializer):
+    registros = RegistroExistenciaMercanciaSerializer(many=True, read_only=True)
+    creado_por = CustomUserSerializer(read_only=True)
 
-        if ExistenciaMercancia.objects.filter(
-            fecha_operacion=fecha_operacion,
-            terminal=terminal,
-            tipo=tipo,
-            producto=producto,
-            tipo_embalaje=tipo_embalaje,
-            unidad_medida=unidad_medida
-        ).exclude(pk=self.instance.pk if self.instance else None).exists():
-            raise serializers.ValidationError(
-                "Ya existe un registro con esta combinación de Terminal, Tipo, Producto, Tipo de Embalaje y Unidad de Medida para esta fecha."
-            )
-        
-        # Validaciones específicas para contenedores
-        tipo_producto = data.get('tipo_producto')
-        estado = data.get('estado')
-        contiene = data.get('contiene')
-        
-        if tipo_producto == 2:  # Contenedor
-            if not estado:
-                raise serializers.ValidationError(
-                    "Para contenedores debe especificar el estado."
-                )
-            if estado == 2 and not contiene:  # Lleno
-                raise serializers.ValidationError(
-                    "Para contenedores llenos debe especificar qué contienen."
-                )
-        else:
-            data['estado'] = None
-            data['contiene'] = None
-            
-        return data
+    class Meta:
+        model = ParteExistenciaMercancia
+        fields = '__all__'
+        read_only_fields = ('fecha_creacion', 'creado_por', 'aprobado_por')

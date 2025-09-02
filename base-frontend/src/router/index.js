@@ -997,6 +997,98 @@ const routes = [
       requireLogin: true,
     },
   },
+  // Cargas-Viejas -GEMAR
+  {
+    path: "/Gemar-Cargas-Viejas",
+    name: "Gemar-Cargas-Viejas",
+    component: () => import("../views/GEMAR/CargasViejas.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/AgregarCargaVieja",
+    name: "AgregarCargaVieja",
+    component: () => import("../views/GEMAR/AgregarCarga.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/AgregarCargaVieja",
+    name: "AgregarCargaVieja",
+    component: () => import("../views/GEMAR/AgregarCarga.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+// Existencia Mercancia - GEMAR
+{
+    path: "/Gemar-Existencias-Mercancia",
+    name: "Gemar-Existencias-Mercancia",
+    component: () => import("../views/GEMAR/ExistenciasMercancia.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/Agregar-Existencias-Mercancia",
+    name: "Agregar-Existencias-Mercancia",
+    component: () => import("../views/GEMAR/AgregarExistenciaMercancia.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/Editar-Existencias-Mercancia/:id",
+    name: "Editar-Existencias-Mercancia",
+    component: () => import("../views/GEMAR/EditarExistenciaMercancia.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/gemar/existencias-mercancia/:id/detalle",
+    name: "existencias-mercancia-detalle",
+    component: () => import("../components/GEMAR/DetalleExistenciaMercancia.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  // Partes PBIP
+  {
+    path: "/Gemar-Partes-PBIP",
+    name: "Gemar-Partes-PBIP",
+    component: () => import("../views/GEMAR/PartesPBIP.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/Agregar-Partes-PBIP",
+    name: "Agregar-Partes-PBIP",
+    component: () => import("../views/GEMAR/AgregarPartePBIP.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/Editar-Partes-PBIP/:id",
+    name: "Editar-Partes-PBIP",
+    component: () => import("../views/GEMAR/EditarPartePBIP.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/gemar/partes-pbip/:id/detalle",
+    name: "pbip-detalle",
+    component: () => import("../components/GEMAR/DetallePBIP.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  //Hecho Extraordinario - GEMAR 
   {
     path: "/gemar_hecho_extraordinario",
     name: "gemar_hecho_extraordinario",
@@ -1022,6 +1114,14 @@ const routes = [
       requireLogin: true,
     },
   },
+  {
+  path: '/gemar/hechos-extraordinarios/:id/detalle',
+  name: 'Detalle-Hechos-Extraordinarios',
+  component: () => import('../components/GEMAR/DetalleHechoExtraordinario.vue'),
+  meta: {
+      requireLogin: true,
+    },
+},
   //Programacion de maniobras - GEMAR 
   {
     path: "/gemar_parte_programacion_maniobras",
@@ -1048,9 +1148,25 @@ const routes = [
     },
   },
   {
+  path: '/gemar/programacion-maniobras/:id/detalle',
+  name: 'Detalle-Progamacion-Maniobra',
+  component: () => import('../components/GEMAR/DetalleProgramacionManiobras.vue'),
+  meta: {
+      requireLogin: true,
+    },
+},
+  {
     path: "/listar_partes_combinados",
     name: "listar_partes_combinados",
     component: () => import("../components/GEMAR/RegistrosPartesCombinados.vue"),
+    meta: {
+      requireLogin: true,
+    },
+  },
+  {
+    path: "/DetalleParteCombinado/:id",
+    name: "DetalleParteCombinado",
+    component: () => import("../components/GEMAR/DetalleParteCombinado.vue"),
     meta: {
       requireLogin: true,
     },

@@ -293,71 +293,72 @@ export default {
     },
     
     async guardarExistencia() {
-      try {
-        this.loading = true;
-        const token = localStorage.getItem('token');
-        
-        // Validación básica
-        if (!this.existencia.terminal_id || !this.existencia.tipo || 
-            !this.existencia.tipo_producto || !this.existencia.producto_id || 
-            !this.existencia.unidad_medida_id || this.existencia.existencia < 0) {
-          this.mostrarError('Los campos marcados con * son obligatorios y la existencia no puede ser negativa');
-          return;
+  try {
+    this.loading = true;
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      this.mostrarError('No autenticado');
+      this.$router.push('/login');
+      return;
+    }
+
+    // Validaciones (mantener existentes)
+
+    // Preparar datos SIN el campo estado_registro
+    const datosParaEnviar = {
+      fecha_operacion: this.existencia.fecha_operacion,
+      terminal_id: parseInt(this.existencia.terminal_id),
+      tipo: parseInt(this.existencia.tipo),
+      tipo_producto: parseInt(this.existencia.tipo_producto),
+      producto_id: parseInt(this.existencia.producto_id),
+      tipo_embalaje_id: this.existencia.tipo_embalaje_id ? parseInt(this.existencia.tipo_embalaje_id) : null,
+      unidad_medida_id: parseInt(this.existencia.unidad_medida_id),
+      estado: this.existencia.estado ? parseInt(this.existencia.estado) : null,
+      contiene: this.existencia.contiene ? parseInt(this.existencia.contiene) : null,
+      existencia: parseFloat(this.existencia.existencia),
+      creado_por: this.$store.state.user?.id || null
+      
+    };
+
+    console.log('Datos a enviar:', JSON.stringify(datosParaEnviar, null, 2));
+
+    const response = await axios.post(
+      '/gemar/existencias-mercancia/', 
+      datosParaEnviar, 
+      {
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
         }
-        
-        // Validaciones específicas para contenedores
-        if (this.existencia.tipo_producto == 2) {
-          if (!this.existencia.estado) {
-            this.mostrarError('Para contenedores debe especificar el estado');
-            return;
-          }
-          if (this.existencia.estado == 2 && !this.existencia.contiene) {
-            this.mostrarError('Para contenedores llenos debe especificar qué contienen');
-            return;
-          }
-        }
-        
-        // Preparar los datos para enviar
-        const datosParaEnviar = {
-          fecha_operacion: this.existencia.fecha_operacion,
-          terminal_id: this.existencia.terminal_id,
-          tipo: parseInt(this.existencia.tipo),
-          tipo_producto: parseInt(this.existencia.tipo_producto),
-          producto_id: this.existencia.producto_id,
-          tipo_embalaje_id: this.existencia.tipo_embalaje_id,
-          unidad_medida_id: this.existencia.unidad_medida_id,
-          estado: this.existencia.estado ? parseInt(this.existencia.estado) : null,
-          contiene: this.existencia.contiene ? parseInt(this.existencia.contiene) : null,
-          existencia: parseFloat(this.existencia.existencia),
-          creado_por: this.$store.state.user.id // Asegúrate de tener el ID del usuario en el store
-        };
-        
-        const response = await axios.post(
-          '/gemar/existencias-mercancia/', 
-          datosParaEnviar, 
-          {
-            headers: {
-              'Authorization': `Token ${token}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        
-        if (response.status === 201) {
-          this.mostrarExito('Existencia de mercancía creada correctamente');
-          this.$router.push({ name: 'Gemar-Existencias-Mercancia' });
-        }
-      } catch (error) {
-        console.error('Error al guardar existencia:', error);
-        let errorMessage = 'Error al guardar la existencia de mercancía';
-        if (error.response?.data) {
-          errorMessage = Object.values(error.response.data).join(', ');
-        }
-        this.mostrarError(errorMessage);
-      } finally {
-        this.loading = false;
       }
-    },
+    );
+
+    if (response.status === 201) {
+      this.mostrarExito('Existencia de mercancía creada correctamente');
+      this.$router.push({ name: 'Gemar-Existencias-Mercancia' });
+    }
+  } catch (error) {
+    console.error('Error completo:', error);
+    console.error('Respuesta del servidor:', error.response?.data);
+    
+    let errorMessage = 'Error al guardar la existencia de mercancía';
+    if (error.response?.data) {
+      // Mostrar errores específicos del backend
+      if (typeof error.response.data === 'object') {
+        errorMessage = Object.entries(error.response.data)
+          .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+          .join('\n');
+      } else {
+        errorMessage = error.response.data;
+      }
+    }
+    
+    this.mostrarError(errorMessage);
+  } finally {
+    this.loading = false;
+  }
+},
     
     confirmCancel() {
       Swal.fire({

@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from Administracion.models import CustomUser
 from nomencladores.models import( nom_atraque, nom_estado_tecnico, nom_pais, nom_producto,nom_tipo_embalaje,nom_unidad_medida,
                                  nom_entidades,nom_incidencia,nom_provincia,nom_terminal,nom_puerto,nom_osde_oace_organismo,
@@ -7,13 +8,29 @@ from nomencladores.models import( nom_atraque, nom_estado_tecnico, nom_pais, nom
 
 
 from django.core.validators import MinValueValidator, MaxValueValidator
-
+from django.contrib.auth.models import User
+from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from nomencladores.models import (
-    nom_embarcacion as Buque
+    nom_embarcacion as Buque, nom_puerto, nom_terminal, nom_producto, 
+    nom_osde_oace_organismo, nom_tipo_embalaje, nom_unidad_medida
 )
+from Administracion.models import CustomUser
 from django.utils import timezone
+from django.db import models
+from Administracion.models import CustomUser
+from nomencladores.models import nom_producto, nom_tipo_embalaje, nom_unidad_medida, nom_entidades, nom_incidencia, nom_provincia
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import serializers
+# CHOICES GLOBALES (reutilizables)
+TIPO_PARTE_CHOICES = [
+    ('HECHO_EXTRAORDINARIO', 'Hecho Extraordinario'),
+    ('PROGRAMACION_MANIOBRAS', 'Programación Maniobras'),
+    ('PBIP', 'PBIP'),
+    ('EXISTENCIA_MERCANCIA', 'Existencia Mercancía'),
+]
 class gemar_parte_hecho_extraordinario(models.Model):
     tipo_parte = models.CharField(
         default="Parte de hecho extraordinario", 
@@ -976,10 +993,18 @@ class PartePBIP(models.Model):
     ]
     
     ESTADO_CHOICES = [
-        ('CREADO', 'Creado'),
-        ('APROBADO', 'Aprobado'),
-        ('CANCELADO', 'Cancelado'),
+        ('Creado', 'Creado'),      # ← Formato título
+        ('Listo', 'Listo'),        # ← Formato título  
+        ('Aprobado', 'Aprobado'),  # ← Formato título (debe coincidir)
+        ('Rechazado', 'Rechazado'), # ← Formato título
+        
     ]
+    
+    estado = models.CharField(
+        max_length=20, 
+        choices=ESTADO_CHOICES, 
+        default='Creado'
+    )
 
     # Campos de fecha y hora
     fecha_operacion = models.DateField(
@@ -993,10 +1018,7 @@ class PartePBIP(models.Model):
         help_text=_('Fecha y hora en que se creó el registro')
     )
     
-    fecha_hora = models.DateTimeField(
-        verbose_name=_('Fecha y hora'),
-        help_text=_('Fecha y hora específica del evento')
-    )
+    
 
     # Relaciones con otros modelos
     buque = models.ForeignKey(
@@ -1119,6 +1141,7 @@ class CargaVieja(models.Model):
             raise ValidationError(_('Los días en almacén no pueden ser negativos.'))
 
 class ExistenciaMercancia(models.Model):
+    # Opciones para campos de selección
     TIPO_CHOICES = [
         (1, 'Importación'),
         (2, 'Exportación'),
@@ -1138,166 +1161,245 @@ class ExistenciaMercancia(models.Model):
         (1, 'Alimentos'),
         (2, 'Productos varios'),
     ]
-
-    fecha_operacion = models.DateField(_('Fecha de operación'))
-    fecha_creacion = models.DateTimeField(_('Fecha de creación'), auto_now_add=True)
-    terminal = models.ForeignKey(nom_terminal, on_delete=models.PROTECT, verbose_name=_('Terminal'))
-    tipo = models.IntegerField(_('Tipo'), choices=TIPO_CHOICES)
-    tipo_producto = models.IntegerField(_('Tipo de producto'), choices=TIPO_PRODUCTO_CHOICES)
-    producto = models.ForeignKey(nom_producto, on_delete=models.PROTECT, verbose_name=_('Producto'))
-    tipo_embalaje = models.ForeignKey(nom_tipo_embalaje, on_delete=models.PROTECT, verbose_name=_('Tipo de embalaje'), null=True, blank=True)
-    unidad_medida = models.ForeignKey(nom_unidad_medida, on_delete=models.PROTECT, verbose_name=_('Unidad de medida'))
-    estado = models.IntegerField(_('Estado'), choices=ESTADO_CONTENEDOR_CHOICES, null=True, blank=True)
-    contiene = models.IntegerField(_('Contiene'), choices=CONTENIDO_CHOICES, null=True, blank=True)
-    existencia = models.DecimalField(_('Existencia'), max_digits=10, decimal_places=2)
-    creado_por = models.ForeignKey(CustomUser, on_delete=models.PROTECT, verbose_name=_('Creado por'))
-    estado_registro = models.CharField(_('Estado'), max_length=20, default='CREADO', choices=[
+    
+    ESTADO_REGISTRO_CHOICES = [  # ← Este para estado_registro (string)
         ('CREADO', 'Creado'),
+        ('LISTO', 'Listo'),
         ('APROBADO', 'Aprobado'),
-        ('CANCELADO', 'Cancelado'),
-    ])
+        ('RECHAZADO', 'Rechazado'),
+    ]
+    estado_registro = models.CharField(
+        max_length=20,
+        choices=ESTADO_REGISTRO_CHOICES,
+        default='Creado'
+    )
+    # Campos de fecha
+    fecha_operacion = models.DateField(
+        verbose_name=_('Fecha de operación'),
+        help_text=_('Fecha en que se registra la existencia de mercancía')
+    )
+    
+    fecha_creacion = models.DateTimeField(
+        verbose_name=_('Fecha de creación'),
+        auto_now_add=True,
+        help_text=_('Fecha y hora en que se creó el registro')
+    )
+
+    # Relaciones con otros modelos
+    terminal = models.ForeignKey(
+        nom_terminal,
+        on_delete=models.PROTECT,
+        verbose_name=_('Terminal'),
+        related_name='existencias_terminal'
+    )
+    
+    producto = models.ForeignKey(
+        nom_producto,
+        on_delete=models.PROTECT,
+        verbose_name=_('Producto'),
+        related_name='existencias_producto'
+    )
+    
+    tipo_embalaje = models.ForeignKey(
+        nom_tipo_embalaje,
+        on_delete=models.PROTECT,
+        verbose_name=_('Tipo de embalaje'),
+        null=True,
+        blank=True,
+        related_name='existencias_tipo_embalaje'
+    )
+    
+    unidad_medida = models.ForeignKey(
+        nom_unidad_medida,
+        on_delete=models.PROTECT,
+        verbose_name=_('Unidad de medida'),
+        related_name='existencias_unidad_medida'
+    )
+    
+    creado_por = models.ForeignKey(
+        CustomUser,
+        on_delete=models.PROTECT,
+        verbose_name=_('Creado por'),
+        related_name='existencias_creadas'
+    )
+    
     aprobado_por = models.ForeignKey(
-        CustomUser, 
-        on_delete=models.PROTECT, 
+        CustomUser,
+        on_delete=models.PROTECT,
         verbose_name=_('Aprobado por'),
         null=True,
         blank=True,
         related_name='existencias_aprobadas'
     )
 
+    # Campos de tipo y estado
+    tipo = models.IntegerField(
+        verbose_name=_('Tipo'),
+        choices=TIPO_CHOICES,
+        help_text=_('Tipo de operación (Importación/Exportación)')
+    )
+    
+    tipo_producto = models.IntegerField(
+        verbose_name=_('Tipo de producto'),
+        choices=TIPO_PRODUCTO_CHOICES,
+        help_text=_('Tipo de producto (Producto/Contenedor)')
+    )
+    
+    estado = models.IntegerField(
+        verbose_name=_('Estado del contenedor'),
+        choices=ESTADO_CONTENEDOR_CHOICES,
+        null=True,
+        blank=True,
+        help_text=_('Estado del contenedor (Vacío/Lleno)')
+    )
+    
+    contiene = models.IntegerField(
+        verbose_name=_('Contenido del contenedor'),
+        choices=CONTENIDO_CHOICES,
+        null=True,
+        blank=True,
+        help_text=_('Contenido del contenedor (si está lleno)')
+    )
+    
+    estado_registro = models.CharField(
+        verbose_name=_('Estado del registro'),
+        max_length=20,
+        choices=ESTADO_REGISTRO_CHOICES,
+        default='CREADO',  # ← Formato título (igual que PartePBIP)
+        help_text=_('Estado actual del registro de existencia')
+    )
+
+    # Campos numéricos
+    existencia = models.DecimalField(
+        verbose_name=_('Existencia'),
+        max_digits=10,
+        decimal_places=2,
+        help_text=_('Cantidad de mercancía existente')
+    )
+
+    # Metadata
     class Meta:
         verbose_name = _('Existencia de Mercancía')
         verbose_name_plural = _('Existencias de Mercancías')
         unique_together = ('fecha_operacion', 'terminal', 'tipo', 'producto', 'tipo_embalaje', 'unidad_medida')
+        ordering = ['-fecha_creacion']
+        indexes = [
+            models.Index(fields=['fecha_operacion']),
+            models.Index(fields=['tipo']),
+            models.Index(fields=['tipo_producto']),
+            models.Index(fields=['estado_registro']),
+        ]
 
+    # Métodos
     def __str__(self):
         return f"Existencia - {self.get_tipo_display()} - {self.producto.nombre}"
 
     def clean(self):
+        """
+        Validaciones complejas del modelo
+        """
+        # Validación de fecha de operación
+        if self.fecha_operacion and self.fecha_operacion > timezone.now().date():
+            raise ValidationError({
+                'fecha_operacion': _('La fecha de operación no puede ser futura.')
+            })
+            
+        # Validación para contenedores
         if self.tipo_producto == 2:  # Contenedor
             if not self.estado:
-                raise ValidationError(_('Para contenedores debe especificar el estado.'))
+                raise ValidationError({
+                    'estado': _('Para contenedores debe especificar el estado.')
+                })
             if self.estado == 2 and not self.contiene:  # Lleno
-                raise ValidationError(_('Para contenedores llenos debe especificar qué contienen.'))
+                raise ValidationError({
+                    'contiene': _('Para contenedores llenos debe especificar qué contienen.')
+                })
         else:
+            # Limpiar campos de contenedor si no es contenedor
             self.estado = None
             self.contiene = None
             
+        # Validación de cantidad no negativa
         if self.existencia < 0:
-            raise ValidationError(_('La existencia no puede ser negativa.'))
+            raise ValidationError({
+                'existencia': _('La cantidad no puede ser negativa.')
+            })
+            
+    def save(self, *args, **kwargs):
+        """
+        Sobreescritura del método save para incluir validaciones adicionales
+        """
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    # Métodos de display para choices
+    def get_tipo_display(self):
+        return dict(self.TIPO_CHOICES).get(self.tipo, '')
         
-####Partes Carlos  de Gemar  ####
-class diario_embarcacion(models.Model):
-    fecha_operacion = models.DateField(_('Fecha de operación'))
-    fecha_creacion = models.DateTimeField(_('Fecha de creación'), auto_now_add=True)
-    puerto= models.ForeignKey(nom_puerto, on_delete=models.SET_NULL, verbose_name=_('Puerto'),blank=True,null=True)
-    embarcacion=models.ForeignKey(nom_embarcacion,  on_delete=models.SET_NULL, verbose_name=_('Embarcacion'),blank=True,null=True)
-    fuera_servicio= models.BooleanField(verbose_name="Campo asociado a Fuera de servicio: F/S")
-    estado_tec=models.ForeignKey(nom_estado_tecnico,  on_delete=models.SET_NULL, verbose_name=_('Estado Tecnico'),blank=True,null=True)
-    observaciones_tec=models.CharField(verbose_name="Campo Enriquecido con las observaciones tecnicas")
-    fecha_vencimiento = models.DateField(_('Fecha de Vencimiento'))
-    cert_vencido= models.BooleanField(verbose_name="Certificado Vencido")
-    observaciones_cert_vencido=models.CharField(verbose_name="Campo descriptivo sobre el certificado Vencido")
-    t_estimado_afect= models.TimeField(verbose_name="Tiempo estimado de afectacion")
-    medida_x_afect=models.CharField(verbose_name="Campo descriptivo sobre la medida por la afectacion")
-    
-    class Meta:
-        verbose_name = _('Registro Diario de Embarcacion')
-        verbose_name_plural = _('Registros Diario de Embarcacion')
-        constraints=[models.UniqueConstraint(
-            fields = [
-                "fecha_operacion",
-                "puerto",
-                "embarcacion",
-            ],
-            name="unique_diario_embarcacion",
-        )]
-
-
-# class diario_practico(models.Model):
-#     fecha_operacion = models.DateField(_('Fecha de operación'))
-#     fecha_creacion = models.DateTimeField(_('Fecha de creación'), auto_now_add=True)
-#     puerto= models.ForeignKey(nom_puerto, on_delete=models.SET_NULL, verbose_name=_('Puerto'),blank=True,null=True)
-#     embarcacion=models.ForeignKey(nom_embarcacion,  on_delete=models.SET_NULL, verbose_name=_('Embarcacion'),blank=True,null=True)
-#     fuera_servicio= models.BooleanField(verbose_name="Campo asociado a Fuera de servicio: F/S")
-#     estado_tec=models.ForeignKey(nom_estado_tecnico,  on_delete=models.SET_NULL, verbose_name=_('Estado Tecnico'),blank=True,null=True)
-#     observaciones_tec=models.CharField(verbose_name="Campo Enriquecido con las observaciones tecnicas")
-#     fecha_vencimiento = models.DateField(_('Fecha de Vencimiento'))
-#     cert_vencido= models.BooleanField(verbose_name="Certificado Vencido")
-#     observaciones_cert_vencido=models.CharField(verbose_name="Campo descriptivo sobre el certificado Vencido")
-#     t_estimado_afect= models.TimeField(verbose_name="Tiempo estimado de afectacion")
-#     medida_x_afect=models.CharField(verbose_name="Campo descriptivo sobre la medida por la afectacion")
-    
-#     class Meta:
-#         verbose_name = _('Registro Diario de Practico')
-#         verbose_name_plural = _('Registros Diario de Practico')
-#         constraints=[models.UniqueConstraint(
-#             fields = [
-#                 "fecha_operacion",
-#                 "puerto",
-#                 "embarcacion",
-#             ],
-#             name="unique_diario_embarcacion",
-#         )]
-
-
-class buques_puerto(models.Model):
-    TIPO_BUQUES=[
-        ("buque_carga","Buque de Carga"),
-        ("buque_tanque","Buque Tanque"),
-        ("buque_reparando","Buque Reparando"),
-    
-    ]
-    UBICACIONES=[
-        ("navegando","Navegando"),
-        ("ubicado","Con Ubicacion"),
-    ]
-    OPERACIONES=[
-        ("I","IMPORTACION"),
-        ("E","EXPORTACION"),
-        ("CR","CABOTAJE RECIBIDO"),
-        ("CE","CABOTAJE EXPEDIDO"),
-        ("T","TRASBORDO"),
-        ("A","ALIJO"),
-    ]
-    
-    fecha_operacion = models.DateField(_('Fecha de operación'))
-    fecha_creacion = models.DateTimeField(_('Fecha de creación'), auto_now_add=True)
-    puerto= models.ForeignKey(nom_puerto, on_delete=models.SET_NULL, verbose_name=_('Puerto'),blank=True,null=True)
-    tipo_buque= models.CharField( default="N/A",verbose_name="Tipo de Buques",choices=TIPO_BUQUES,blank=True,null=True)
-    registro=models.IntegerField(verbose_name="Campo Enriquecido con el registro de la embarcacion")
-    buque=models.ForeignKey(nom_embarcacion,  on_delete=models.SET_NULL, verbose_name=_('Buque'),blank=True,null=True)
-    puerto_procedencia= models.ForeignKey(nom_puerto, on_delete=models.SET_NULL, verbose_name=_('Puerto Procedencia'),blank=True,null=True, related_name='puerto_procedencia_buque')
-    atraque=models.ForeignKey(nom_atraque, on_delete=models.SET_NULL, verbose_name=_('Atraque'),blank=True,null=True)
-    nor=models.DateTimeField(verbose_name="Fecha y hora de entrada al atraque",blank=True,null=True)
-    fecha_arribo = models.DateField(_('Fecha de arribo'))
-    fecha_entrada = models.DateField(_('Fecha de entrafa'))
-    operacion=models.CharField(verbose_name="Campo Enriquecido con las Operaciones",choices=OPERACIONES,blank=True,null=True)
-    ets=models.DateTimeField(verbose_name="Fecha y hora ETS",blank=True,null=True)
-    eta=models.DateTimeField(verbose_name="Fecha y hora ETA",blank=True,null=True)
-    puerto_destino= models.ForeignKey(nom_puerto, on_delete=models.SET_NULL, verbose_name=_('Puerto Destino'),blank=True,null=True, related_name='puerto_destino_buque')
-    nacionalidad=models.ForeignKey(nom_pais, on_delete=models.SET_NULL, verbose_name=_('Nacionalidad'),blank=True,null=True)
-    observaciones=models.CharField(verbose_name="Campo Enriquecido con las observaciones",null=True,blank=True)
-    
-    class Meta:
-        verbose_name = _('Registro Buque de Puerto')
-        verbose_name_plural = _('Registros Buques de Puerto')
+    def get_tipo_producto_display(self):
+        return dict(self.TIPO_PRODUCTO_CHOICES).get(self.tipo_producto, '')
         
-class producto_buque(models.Model):
-    TIPO_PRODUCTO=[
-        ("producto","Producto"),
-        ("contenedor","Contenedor"),
+    def get_estado_display(self):
+        return dict(self.ESTADO_CONTENEDOR_CHOICES).get(self.estado, '') if self.estado else ''
+        
+    def get_contiene_display(self):
+        return dict(self.CONTENIDO_CHOICES).get(self.contiene, '') if self.contiene else ''
+        
+    def get_estado_registro_display(self):
+        return dict(self.ESTADO_REGISTRO_CHOICES).get(self.estado_registro, '')
+    
+class ParteCombinado(models.Model):
+    TIPO_PARTE_CHOICES = [
+        ('HECHO_EXTRAORDINARIO', 'Hecho Extraordinario'),
+        ('PROGRAMACION_MANIOBRAS', 'Programación Maniobras'),
+        ('PBIP', 'PBIP'),
+        ('EXISTENCIA_MERCANCIA', 'Existencia Mercancía'),
     ]
-    ESTADOS_CONTENEDOR=[
-        ("vacio","Vacio"),
-        ("lleno","Lleno"),
-    ]
-    producto=models.ForeignKey(nom_producto, on_delete=models.SET_NULL, verbose_name=_('Producto'),blank=True,null=True)
-    tipo_producto=models.CharField(verbose_name="Tipo de Producto",choices=TIPO_PRODUCTO,blank=True,null=True,max_length=20)
-    tipo_embalaje = models.ForeignKey(nom_tipo_embalaje, on_delete=models.CASCADE)
-    unidad_medida = models.ForeignKey(nom_unidad_medida, on_delete=models.CASCADE)  
-    estado=models.CharField(choices=ESTADOS_CONTENEDOR,verbose_name="Estado del Producto",max_length=20,blank=True,null=True)  
-    class Meta:
-        verbose_name = _('Producto de Buque')
-        verbose_name_plural = _('Productos de Buque')
 
+    ESTADO_PARTE_CHOICES = [
+        ('creado', 'Creado'),
+        ('aprobado', 'Aprobado'),
+        ('rechazado', 'Rechazado'),
+        ('listo', 'Listo'),
+    ]
+    
+    tipo_parte = models.CharField(max_length=50, choices=TIPO_PARTE_CHOICES)
+    fecha_actual = models.DateTimeField(auto_now_add=True)
+    estado_parte = models.CharField(max_length=20, choices=ESTADO_PARTE_CHOICES, default='creado')
+    
+    creado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='partes_creados')
+    aprobado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='partes_aprobados')
+    
+    # RELACIONES OPCIONALES CON LOS MODELOS EXISTENTES
+    entidad = models.ForeignKey(nom_entidades, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Entidad")
+    organismo = models.ForeignKey(nom_osde_oace_organismo, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Organismo")
+    provincia = models.ForeignKey(nom_provincia, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Provincia")
+    
+    # CAMPOS DE TEXTO COMO BACKUP (opcional)
+    entidad_nombre = models.CharField(max_length=100, blank=True)
+    organismo_nombre = models.CharField(max_length=100, blank=True)
+    provincia_nombre = models.CharField(max_length=100, blank=True)
+    
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.get_tipo_parte_display()} - {self.fecha_actual.strftime('%Y-%m-%d %H:%M')}"
+
+    def save(self, *args, **kwargs):
+    # Sincronizar nombres desde las relaciones
+        if self.entidad:
+            self.entidad_nombre = self.entidad.nombre
+        if self.organismo:
+            self.organismo_nombre = self.organismo.nombre
+        if self.provincia:
+        # Verifica el nombre correcto del campo en nom_provincia
+            self.provincia_nombre = getattr(self.provincia, 'nombre_provincia', 
+                                       getattr(self.provincia, 'nombre', ''))
+    
+        super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = "Parte Combinado"
+        verbose_name_plural = "Partes Combinados"
+        ordering = ['-fecha_creacion']

@@ -68,9 +68,8 @@
                   <th scope="col">No.</th>
                   <th scope="col">Buque</th>
                   <th scope="col">Puerto de Arribo</th>
-                  <th scope="col">Fecha y Hora</th>
+                  <th scope="col">Fecha de Creación</th>
                   <th scope="col">Nivel</th>
-                  <th scope="col">Estado</th>
                   <th scope="col">Acciones</th>
                 </tr>
               </thead>
@@ -81,22 +80,19 @@
                     {{ item.buque.nombre_embarcacion || item.buque.nombre }}
                   </td>
                   <td>{{ item.puerto.nombre_puerto || item.puerto.nombre }}</td>
-                  <td>{{ formatDateTime(item.fecha_hora) }}</td>
+                  <td>{{ formatDate(item.fecha_creacion) }}</td>
                   <td>Nivel {{ item.nivel }}</td>
-                  <td>{{ item.estado }}</td>
                   <td>
                     <div class="d-flex gap-1">
                       <button
                         @click="editarPartePBIP(item)"
                         class="btn btn-sm btn-outline-primary"
-                        :disabled="item.estado !== 'CREADO'"
                       >
                         <i class="bi bi-pencil"></i>
                       </button>
                       <button
                         @click="eliminarPartePBIP(item.id)"
                         class="btn btn-sm btn-outline-danger"
-                        :disabled="item.estado !== 'CREADO'"
                       >
                         <i class="bi bi-trash"></i>
                       </button>
@@ -133,25 +129,6 @@
             </nav>
           </div>
         </div>
-
-        <!-- Botones de acción -->
-        <div class="d-flex justify-content-center gap-3 mt-4">
-          <button @click="rechazar" class="btn btn-sm btn-outline-danger">
-            <i class="bi bi-x-circle me-1"></i> Rechazar
-          </button>
-          <button @click="aprobar" class="btn btn-sm btn-outline-success">
-            <i class="bi bi-check-circle me-1"></i> Aprobar
-          </button>
-          <button @click="listo" class="btn btn-sm btn-outline-primary">
-            <i class="bi bi-check-all me-1"></i> Listo
-          </button>
-          <button @click="cancelar" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-x me-1"></i> Cancelar
-          </button>
-          <button @click="aceptar" class="btn btn-sm btn-primary">
-            <i class="bi bi-save me-1"></i> Aceptar
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -173,11 +150,6 @@ export default {
     const localISOTime = new Date(now - offset).toISOString().split("T")[0];
     
     return {
-      componentKey: 0, // Para forzar recarga de componentes
-      userPermissions: [],
-      userGroups: [],
-      loadingPermissions: false,
-      
       // Datos para gestión de partes
       informeParteId: null,
       isExistingRecord: false,
@@ -203,45 +175,14 @@ export default {
   },
 
   async created() {
-    await this.fetchUserPermissionsAndGroups();
-    await this.verificarPartesExistentes();
     await this.cargarDatosIniciales();
   },
 
   methods: {
-    // Métodos de verificación y carga inicial
-    async verificarPartesExistentes() {
-      this.checkingExisting = true;
-      try {
-        const today = new Date();
-        const fechaFormateada = `${today.getFullYear()}-${String(
-          today.getMonth() + 1
-        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-
-        const response = await axios.get("/gemar/partes-pbip/", {
-          params: { fecha_actual: fechaFormateada },
-        });
-
-        if (response.data.existe) {
-          this.informeParteId = response.data.id;
-          this.isExistingRecord = true;
-          this.existingRecordData = response.data;
-          return true;
-        } else {
-          this.informeParteId = null;
-          this.isExistingRecord = false;
-          this.existingRecordData = null;
-        }
-        return false;
-      } catch (error) {
-        console.error("Error al verificar partes:", error);
-        this.showErrorToast("Error al verificar partes existentes");
-        return false;
-      } finally {
-        this.checkingExisting = false;
-      }
+    addBuque() {
+      this.$router.push({ name: "Agregar-Partes-PBIP" });
     },
-
+    
     async cargarDatosIniciales() {
       try {
         this.loading = true;
@@ -263,77 +204,6 @@ export default {
       } catch (error) {
         console.error("Error al cargar datos:", error);
         this.showErrorToast("Error al cargar datos iniciales");
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    // Métodos de gestión de partes
-    async crearPartePBIP() {
-      this.loading = true;
-      this.error = null;
-      this.success = false;
-
-      try {
-        // Verificar si ya existe un parte
-        const verificacion = await axios.get(
-          "/gemar/verificar-partes-pbip-existente/",
-          {
-            params: {
-              fecha_actual: this.formData.fecha_actual
-            }
-          }
-        );
-
-        if (verificacion.data.existe) {
-          this.isExistingRecord = true;
-          await Swal.fire({
-            icon: "info",
-            title: "Parte existente",
-            text: `Ya existe un parte para la fecha ${this.formData.fecha_actual}`,
-            confirmButtonColor: "#002a68",
-          });
-          return;
-        }
-
-        // Crear el nuevo parte
-        const response = await axios.post(
-          "/gemar/partes-pbip/",
-          {
-            fecha_operacion: this.formData.fecha_operacion,
-            buque_id: this.formData.buqueSeleccionado,
-            puerto_id: this.formData.puertoSeleccionado,
-            fecha_hora: this.formData.fechaHoraBuque,
-            nivel: this.formData.nivelSeleccionado,
-          }
-        );
-
-        // Manejar respuesta exitosa
-        this.success = true;
-        this.isExistingRecord = true;
-        this.informeParteId = response.data.id;
-        this.existingRecordData = response.data;
-
-        await Swal.fire({
-          icon: "success",
-          title: "Éxito",
-          text: "Parte PBIP creado correctamente",
-          confirmButtonColor: "#002a68",
-        });
-
-        this.$forceUpdate();
-        await this.cargarDatosIniciales();
-
-      } catch (error) {
-        console.error("Error al crear parte:", error);
-        this.error = error.response?.data || "Error al crear el parte";
-        
-        await Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: JSON.stringify(this.error),
-          confirmButtonColor: "#002a68",
-        });
       } finally {
         this.loading = false;
       }
@@ -379,183 +249,14 @@ export default {
       }
     },
 
-    // Métodos de estado
-    async CambiarEstado(NuevoEstado) {
-      try {
-        if (!this.informeParteId) {
-          await Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: "No se ha encontrado un parte para modificar.",
-            confirmButtonColor: "#002a68",
-          });
-          return;
-        }
-
-        const response = await axios.patch(
-          `/gemar/partes-pbip/${this.informeParteId}/`,
-          { estado_parte: NuevoEstado },
-          { headers: { "Content-Type": "application/json" } }
-        );
-
-        if (response.status === 200) {
-          await Swal.fire({
-            icon: "success",
-            title: "Éxito",
-            text: `Estado actualizado a "${NuevoEstado}" correctamente.`,
-            confirmButtonColor: "#002a68",
-          });
-
-          // Actualizar el estado y forzar recarga del componente
-          this.existingRecordData.estado = NuevoEstado;
-          this.componentKey += 1;
-          await this.cargarDatosIniciales();
-        }
-      } catch (error) {
-        console.error("Error al cambiar estado:", {
-          url: error.config?.url,
-          status: error.response?.status,
-          data: error.response?.data,
-        });
-        await Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: error.response?.data?.detail || "Error al actualizar el estado.",
-          confirmButtonColor: "#002a68",
-        });
-      }
-    },
-
-    async rechazar() {
-      if (!this.hasGroup("RevisorGEMAR")) {
-        await Swal.fire({
-          icon: "error",
-          title: "Acceso denegado",
-          text: "No tienes permiso para rechazar el parte PBIP.",
-          confirmButtonColor: "#002a68",
-        });
-        return;
-      }
-      const result = await Swal.fire({
-        title: "¿Estás seguro?",
-        text: "¿Está seguro que desea rechazar este parte PBIP?",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonColor: "#002a68",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Sí, rechazar",
-        cancelButtonText: "Cancelar",
+    formatDate(dateString) {
+      if (!dateString) return "";
+      const date = new Date(dateString);
+      return date.toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
       });
-
-      if (result.isConfirmed) {
-        await this.CambiarEstado("Rechazado");
-      }
-    },
-
-    async aprobar() {
-      if (!this.hasGroup("RevisorGEMAR")) {
-        await Swal.fire({
-          icon: "error",
-          title: "Acceso denegado",
-          text: "No tienes permiso para aprobar el parte PBIP.",
-          confirmButtonColor: "#002a68",
-        });
-        return;
-      }
-
-      const result = await Swal.fire({
-        title: "¿Estás seguro?",
-        text: "¿Está seguro que desea aprobar este parte PBIP?",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonColor: "#002a68",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Sí, aprobar",
-        cancelButtonText: "Cancelar",
-      });
-
-      if (result.isConfirmed) {
-        await this.CambiarEstado("Aprobado");
-      }
-    },
-
-    async listo() {
-      if (!this.hasGroup("AdminGEMAR")) {
-        await Swal.fire({
-          icon: "error",
-          title: "Acceso denegado",
-          text: "No tienes permiso para cambiar el estado del parte PBIP a 'Listo'.",
-          confirmButtonColor: "#002a68",
-        });
-        return;
-      }
-      const result = await Swal.fire({
-        title: "¿Estás seguro?",
-        text: "¿Está seguro que desea poner a 'Listo' este parte PBIP?",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonColor: "#002a68",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Sí, poner a listo",
-        cancelButtonText: "Cancelar",
-      });
-
-      if (result.isConfirmed) {
-        await this.CambiarEstado("Listo");
-      }
-    },
-
-    // Métodos de utilidad
-    hasPermission(permission) {
-      if (!this.userPermissions || !Array.isArray(this.userPermissions)) {
-        console.warn("userPermissions no está disponible o no es un array");
-        return false;
-      }
-      return this.userPermissions.some((p) => p.codename === permission);
-    },
-
-    hasGroup(group) {
-      if (!this.userGroups || !Array.isArray(this.userGroups)) {
-        return false;
-      }
-      return this.userGroups.some((g) => g.name === group);
-    },
-
-    async fetchUserPermissionsAndGroups() {
-      this.loadingPermissions = true;
-      try {
-        const userId = localStorage.getItem("userid");
-        if (userId) {
-          const response = await axios.get(
-            `/apiAdmin/user/${userId}/permissions-and-groups/`
-          );
-          
-          this.userPermissions = response.data?.permissions || [];
-          this.userGroups = response.data?.groups || [];
-          
-          // Verificar si el usuario tiene permisos para GEMAR
-          const hasGemarAccess = this.userGroups.some(g => 
-            ['AdminGEMAR', 'VisualizadorGEMAR', 'AdminGemar', 'VisualizadorGemar'].includes(g.name)
-          );
-          
-          if (!hasGemarAccess) {
-            this.$router.push('/unauthorized');
-          }
-        }
-      } catch (error) {
-        console.error("Error al obtener permisos:", error);
-        this.userPermissions = [];
-        this.userGroups = [];
-      } finally {
-        this.loadingPermissions = false;
-      }
-    },
-
-    formatDateTime(dateTime) {
-      if (!dateTime) return "";
-      const [date, time] = dateTime.split("T");
-      const [h, m] = time.split(":");
-      return `${date} ${h}:${m}`;
     },
 
     showErrorToast(message) {

@@ -1,124 +1,129 @@
 <template>
-  <div class="ufc-header">
-    <h6>Agregar Buque</h6>
-  </div>
-  <Navbar-Component />
-  <div class="container py-3" style="margin-left: 20em; width: 70%">
-    <div class="card border">
-      <div class="card-header bg-light border-bottom">
-        <h5 class="mb-0 text-dark fw-semibold">
-          <i class="bi bi-ship me-2"></i> Nuevo Buque
-        </h5>
-      </div>
-      <div class="card-body p-3">
-        <form @submit.prevent="guardarBuque">
-          <div class="row">
-            <!-- Columna Izquierda -->
-            <div class="col-md-6">
-              <!-- Campo: Nombre del Buque -->
-              <div class="mb-3">
-                <label for="buque_id" class="form-label small fw-semibold text-secondary"
-                  >Buque*</label>
-                <select
-                  class="form-select form-select-sm border-secondary"
-                  style="padding: 8px 12px"
-                  v-model="nuevoBuque.buque_id"
-                  id="buque_id"
-                  name="buque_id"
-                  required
-                  @change="console.log('Buque seleccionado:', nuevoBuque.buque_id)"
-                >
-                  <option value="" disabled>Seleccione un buque</option>
-                  <option
-                    v-for="buque in listaBuques"
-                    :key="buque.id"
-                    :value="buque.id"
+  <div>
+    <div class="ufc-header">
+      <h6>Agregar Buque</h6>
+    </div>
+    <Navbar-Component />
+    <div class="container py-3" style="margin-left: 20em; width: 70%">
+      <div class="card border">
+        <div class="card-header bg-light border-bottom">
+          <h5 class="mb-0 text-dark fw-semibold">
+            <i class="bi bi-ship me-2"></i> Nuevo Buque
+          </h5>
+        </div>
+        <div class="card-body p-3">
+          <form @submit.prevent="guardarBuque">
+            <div class="row">
+              <!-- Columna Izquierda -->
+              <div class="col-md-6">
+                <!-- Campo: Nombre del Buque -->
+                <div class="mb-3">
+                  <label for="buque_id" class="form-label small fw-semibold text-secondary">Buque*</label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="nuevoBuque.buque_id"
+                    id="buque_id"
+                    name="buque_id"
+                    required
+                    @change="console.log('Buque seleccionado:', nuevoBuque.buque_id)"
                   >
-                    {{ buque.nombre_embarcacion || buque.nombre }}
-                  </option>
-                </select>
-              </div>
+                    <option value="" disabled>Seleccione un buque</option>
+                    <option
+                      v-for="buque in listaBuques"
+                      :key="buque.id"
+                      :value="buque.id"
+                    >
+                      {{ buque.nombre_embarcacion || buque.nombre }}
+                    </option>
+                  </select>
+                </div>
 
-              <!-- Campo: Puerto de Arribo -->
-              <div class="mb-3">
-                <label
-                  for="puerto_id"
-                  class="form-label small fw-semibold text-secondary"
-                  >Puerto de Arribo*</label>
-                <select
-                  class="form-select form-select-sm border-secondary"
-                  style="padding: 8px 12px"
-                  v-model="nuevoBuque.puerto_id"
-                  id="puerto_id"
-                  name="puerto_id"
-                  required
-                >
-                  <option value="" disabled>Seleccione un puerto</option>
-                  <option
-                    v-for="puerto in listaPuertos"
-                    :key="puerto.id"
-                    :value="puerto.id"
+                <!-- Campo: Puerto de Arribo -->
+                <div class="mb-3">
+                  <label for="puerto_id" class="form-label small fw-semibold text-secondary">Puerto de Arribo*</label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="nuevoBuque.puerto_id"
+                    id="puerto_id"
+                    name="puerto_id"
+                    required
                   >
-                    {{ puerto.nombre_puerto || puerto.nombre }}
-                  </option>
-                </select>
+                    <option value="" disabled>Seleccione un puerto</option>
+                    <option
+                      v-for="puerto in listaPuertos"
+                      :key="puerto.id"
+                      :value="puerto.id"
+                    >
+                      {{ puerto.nombre_puerto || puerto.nombre }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Columna Derecha -->
+              <div class="col-md-6">
+                <!-- Campo: Fecha de Operación -->
+                <div class="mb-3">
+                  <label class="form-label small fw-semibold text-secondary">Fecha de Operación*</label>
+                  <input
+                    type="date"
+                    class="form-control form-control-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="nuevoBuque.fecha_operacion"
+                    required
+                  />
+                  <small class="text-muted">Fecha en la que se realiza la operación</small>
+                </div>
+
+                <!-- Información sobre fecha de creación -->
+                <div class="mb-3">
+                  <label class="form-label small fw-semibold text-secondary">Fecha de Creación</label>
+                  <input
+                    type="text"
+                    class="form-control form-control-sm border-secondary bg-light"
+                    style="padding: 8px 12px"
+                    :value="new Date().toLocaleDateString()"
+                    readonly
+                    disabled
+                  />
+                  <small class="text-muted">Esta fecha se asignará automáticamente al crear el registro</small>
+                </div>
+
+                <!-- Campo: Nivel -->
+                <div class="mb-3">
+                  <label for="nivel" class="form-label small fw-semibold text-secondary">Nivel*</label>
+                  <select
+                    class="form-select form-select-sm border-secondary"
+                    style="padding: 8px 12px"
+                    v-model="nuevoBuque.nivel"
+                    id="nivel"
+                    name="nivel"
+                    required
+                  >
+                    <option value="" disabled>Seleccione un nivel</option>
+                    <option value="1">1 - Nivel Básico</option>
+                    <option value="2">2 - Nivel Intermedio</option>
+                    <option value="3">3 - Nivel Alto</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            <!-- Columna Derecha -->
-            <div class="col-md-6">
-              <!-- Campo: Fecha y Hora -->
-              <div class="mb-3">
-                <label
-                  for="fecha_hora"
-                  class="form-label small fw-semibold text-secondary"
-                  >Fecha y Hora*</label>
-                <input
-                  type="datetime-local"
-                  class="form-control form-control-sm border-secondary"
-                  style="padding: 8px 12px"
-                  v-model="nuevoBuque.fecha_hora"
-                  id="fecha_hora"
-                  name="fecha_hora"
-                  required
-                />
-              </div>
-
-              <!-- Campo: Nivel -->
-              <div class="mb-3">
-                <label
-                  for="nivel"
-                  class="form-label small fw-semibold text-secondary"
-                  >Nivel*</label>
-                <select
-                  class="form-select form-select-sm border-secondary"
-                  style="padding: 8px 12px"
-                  v-model="nuevoBuque.nivel"
-                  id="nivel"
-                  name="nivel"
-                  required
-                >
-                  <option value="" disabled>Seleccione un nivel</option>
-                  <option value="1">1 - Nivel Básico</option>
-                  <option value="2">2 - Nivel Intermedio</option>
-                  <option value="3">3 - Nivel Alto</option>
-                </select>
+            <!-- Botones de acción -->
+            <div class="modal-footer">
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <button type="button" class="ufc-button secondary" @click="cancelar">
+                  <i class="bi bi-x-circle me-1"></i>Cancelar
+                </button>
+                <button type="submit" class="ufc-button primary">
+                  <i class="bi bi-check-circle me-1"></i>Guardar
+                </button>
               </div>
             </div>
-          </div>
-
-          <!-- Botones de acción -->
-          <div class="modal-footer">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-              <button type="button" class="ufc-button secondary" @click="cancelar">
-                <i class="bi bi-x-circle me-1"></i>Cancelar
-              </button>
-              <button type="submit" class="ufc-button primary">
-                <i class="bi bi-check-circle me-1"></i>Guardar
-              </button>
-            </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   </div>
@@ -130,22 +135,22 @@ import Swal from "sweetalert2";
 import axios from "axios";
 
 export default {
-  name: 'AgregarPartePBIP',
+  name: "AgregarPartePBIP",
   components: {
-    NavbarComponent
+    NavbarComponent,
   },
   data() {
     return {
       nuevoBuque: {
         buque_id: null,
         puerto_id: null,
-        fecha_hora: new Date().toISOString().slice(0, 16),
-        nivel: '1'
+        fecha_operacion: new Date().toISOString().split('T')[0], // Fecha actual en formato YYYY-MM-DD
+        nivel: "1",
       },
       listaBuques: [],
       listaPuertos: [],
-      loading: false
-    }
+      loading: false,
+    };
   },
   async created() {
     await this.cargarBuques();
@@ -155,134 +160,159 @@ export default {
     async cargarBuques() {
       try {
         this.loading = true;
-        const token = localStorage.getItem('token');
-        
+        const token = localStorage.getItem("token");
+
         if (!token) {
-          this.mostrarError('No se encontró el token de autenticación');
+          this.mostrarError("No se encontró el token de autenticación");
           return;
         }
-        
-        const headers = { 
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json'
+
+        const headers = {
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
         };
 
-        const response = await axios.get('/api/embarcaciones/', { 
+        const response = await axios.get("/api/embarcaciones/", {
           headers,
-          params: { limit: 1000 }
+          params: { limit: 1000 },
         });
 
         this.listaBuques = response.data.results || response.data || [];
-        
-        this.listaBuques = this.listaBuques.map(buque => ({
-          id: buque.id,
-          nombre: buque.nombre_embarcacion || buque.nombre || 'Buque sin nombre'
-        }));
 
+        this.listaBuques = this.listaBuques.map((buque) => ({
+          id: buque.id,
+          nombre:
+            buque.nombre_embarcacion || buque.nombre || "Buque sin nombre",
+        }));
       } catch (error) {
-        console.error('Error al cargar buques:', error);
-        this.mostrarError('Error al cargar la lista de buques: ' + (error.response?.data?.detail || error.message));
+        console.error("Error al cargar buques:", error);
+        this.mostrarError(
+          "Error al cargar la lista de buques: " +
+            (error.response?.data?.detail || error.message)
+        );
       } finally {
         this.loading = false;
       }
     },
-    
+
     async cargarPuertos() {
       try {
         this.loading = true;
-        const token = localStorage.getItem('token');
-        
+        const token = localStorage.getItem("token");
+
         if (!token) {
-          this.mostrarError('No se encontró el token de autenticación');
+          this.mostrarError("No se encontró el token de autenticación");
           return;
         }
-        
-        const headers = { 
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json'
+
+        const headers = {
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
         };
 
-        const response = await axios.get('/api/puertos/', { 
+        const response = await axios.get("/api/puertos/", {
           headers,
-          params: { limit: 1000 }
+          params: { limit: 1000 },
         });
 
         this.listaPuertos = response.data.results || response.data || [];
-        
-        this.listaPuertos = this.listaPuertos.map(puerto => ({
-          id: puerto.id,
-          nombre: puerto.nombre_puerto || puerto.nombre || 'Puerto sin nombre'
-        }));
 
+        this.listaPuertos = this.listaPuertos.map((puerto) => ({
+          id: puerto.id,
+          nombre: puerto.nombre_puerto || puerto.nombre || "Puerto sin nombre",
+        }));
       } catch (error) {
-        console.error('Error al cargar puertos:', error);
-        this.mostrarError('Error al cargar la lista de puertos: ' + (error.response?.data?.detail || error.message));
+        console.error("Error al cargar puertos:", error);
+        this.mostrarError(
+          "Error al cargar la lista de puertos: " +
+            (error.response?.data?.detail || error.message)
+        );
       } finally {
         this.loading = false;
       }
     },
-    
+
     async guardarBuque() {
-      // Validar datos
-      if (!this.nuevoBuque.buque_id || !this.nuevoBuque.puerto_id || !this.nuevoBuque.fecha_hora) {
-        this.mostrarError('Todos los campos marcados con * son obligatorios');
+      // Validar campos obligatorios
+      if (
+        !this.nuevoBuque.buque_id ||
+        !this.nuevoBuque.puerto_id ||
+        !this.nuevoBuque.fecha_operacion
+      ) {
+        this.mostrarError("Todos los campos marcados con * son obligatorios");
         return;
       }
-      
-      try {
-        const token = localStorage.getItem('token');
-        const headers = {
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json'
-        };
 
-        // Crear payload con la estructura exacta que espera el backend
+      try {
+        // Convertir y validar fecha de operación
+        const fechaOperacion = new Date(this.nuevoBuque.fecha_operacion);
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0); // Establecer a inicio del día para comparación
+        
+        // Validar que fecha de operación no sea futura
+        if (fechaOperacion > hoy) {
+          this.mostrarError("La fecha de operación no puede ser futura");
+          return;
+        }
+
+        // Preparar payload con formato correcto
+        // Incluir fecha_hora con la fecha y hora actual para cumplir con la constraint de la BD
+        const ahora = new Date();
         const payload = {
           buque_id: this.nuevoBuque.buque_id,
           puerto_id: this.nuevoBuque.puerto_id,
-          fecha_operacion: new Date().toISOString().split('T')[0], // Fecha actual
-          fecha_hora: this.nuevoBuque.fecha_hora,
-          nivel: parseInt(this.nuevoBuque.nivel)
+          fecha_operacion: this.nuevoBuque.fecha_operacion,
+          fecha_hora: ahora.toISOString(), // Usar fecha y hora actual
+          nivel: parseInt(this.nuevoBuque.nivel),
+          estado: 'Creado'
         };
 
-        console.log("Enviando payload:", payload);
+        console.log("Payload a enviar:", payload);
 
-        const response = await axios.post('/gemar/partes-pbip/', payload, { headers });
-        
-        this.mostrarExito('Buque agregado correctamente al parte PBIP');
-        this.$router.push({ name: 'Gemar-Partes-PBIP' });
+        const token = localStorage.getItem("token");
+        const response = await axios.post("/gemar/partes-pbip/", payload, {
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        this.mostrarExito("Buque agregado correctamente al parte PBIP");
+        this.$router.push({ name: "Gemar-Partes-PBIP" });
       } catch (error) {
-        console.error('Error completo:', error);
-        console.error('Respuesta del error:', error.response?.data);
-        
-        let errorMessage = 'Error al guardar el buque';
+        console.error("Error detallado:", {
+          message: error.message,
+          response: error.response?.data,
+          config: error.config,
+        });
+
+        let errorMessage = "Error al guardar el buque";
         if (error.response?.data) {
-          // Mostrar todos los errores del backend
-          errorMessage += ':\n';
-          for (const [key, value] of Object.entries(error.response.data)) {
-            errorMessage += `${key}: ${Array.isArray(value) ? value.join(', ') : value}\n`;
-          }
-        } else {
-          errorMessage += ': ' + error.message;
+          errorMessage = Object.entries(error.response.data)
+            .map(
+              ([key, value]) =>
+                `${key}: ${Array.isArray(value) ? value.join(", ") : value}`
+            )
+            .join("\n");
         }
-        
+
         this.mostrarError(errorMessage);
       }
     },
-    
+
     cancelar() {
       this.$router.go(-1);
     },
-    
+
     mostrarError(mensaje) {
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
+        icon: "error",
+        title: "Error",
         text: mensaje,
-        confirmButtonText: 'Aceptar'
+        confirmButtonText: "Aceptar",
       });
     },
-    
+
     mostrarExito(mensaje) {
       const Toast = Swal.mixin({
         toast: true,
@@ -303,9 +333,9 @@ export default {
         icon: "success",
         title: mensaje,
       });
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style scoped>

@@ -6,8 +6,11 @@
         <h6 class="mb-0 text-dark fw-semibold">
           Sistema de Partes Controlados
         </h6>
-        <button class="btn btn-sm btn-outline-secondary" style="margin-top: 10px;" 
-          @click="$router.push({ name: 'GEMAR' })" >
+        <button
+          class="btn btn-sm btn-outline-secondary"
+          style="margin-top: 10px"
+          @click="$router.push({ name: 'GEMAR' })"
+        >
           <i class="bi bi-arrow-left me-1"></i> Volver a GEMAR
         </button>
       </div>
@@ -17,23 +20,33 @@
           <h6 class="text-dark fw-semibold mb-3">Existencia de mercancías importación-exportación</h6>
           
           <div class="row mb-3">
-            <label class="col-sm-2 col-form-label">Fecha operación:</label>
-            <div class="col-sm-4">
-              <input 
-                type="date" 
-                v-model="fechaOperacion" 
-                class="form-control form-control-sm"
-                @change="cargarExistencias"
-              >
+            <div class="col-md-6">
+              <div class="row align-items-center">
+                <label class="col-sm-4 col-form-label">Fecha operación:</label>
+                <div class="col-sm-8">
+                  <input 
+                    type="date" 
+                    v-model="fechaOperacion" 
+                    class="form-control form-control-sm"
+                    @change="cargarExistencias"
+                    required
+                  >
+                </div>
+              </div>
             </div>
-            <label class="col-sm-2 col-form-label">Fecha actual:</label>
-            <div class="col-sm-4">
-              <input 
-                type="datetime-local" 
-                v-model="fechaActual" 
-                class="form-control form-control-sm"
-                readonly
-              >
+            
+            <div class="col-md-6">
+              <div class="row align-items-center">
+                <label class="col-sm-4 col-form-label">Fecha actual:</label>
+                <div class="col-sm-8">
+                  <input 
+                    type="datetime-local" 
+                    v-model="fechaActual" 
+                    class="form-control form-control-sm"
+                    readonly
+                  >
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -76,7 +89,6 @@
                   <th scope="col">Producto</th>
                   <th scope="col">Unidad Medida</th>
                   <th scope="col">Existencia</th>
-                  <th scope="col">Estado</th>
                   <th scope="col">Acciones</th>
                 </tr>
               </thead>
@@ -88,7 +100,6 @@
                   <td>{{ existencia.producto.nombre_producto }}</td>
                   <td>{{ existencia.unidad_medida.unidad_medida }} ({{ existencia.unidad_medida.simbolo }})</td>
                   <td>{{ existencia.existencia }}</td>
-                  <td>{{ existencia.estado_display || '-' }}</td>
                   <td>
                     <div class="d-flex gap-1">
                       <button 
@@ -107,7 +118,7 @@
                   </td>
                 </tr>
                 <tr v-if="existenciasFiltradas.length === 0">
-                  <td colspan="8" class="text-center">No hay registros para mostrar</td>
+                  <td colspan="7" class="text-center">No hay registros para mostrar</td>
                 </tr>
               </tbody>
             </table>
@@ -139,16 +150,6 @@
             </nav>
           </div>
         </div>
-
-        <!-- Botones de acción -->
-        <div class="d-flex justify-content-center gap-3 mt-4">
-          <button @click="guardar" class="btn btn-sm btn-primary">
-            <i class="bi bi-save me-1"></i> Guardar Todo
-          </button>
-          <button @click="cancelar" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-x me-1"></i> Cancelar
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -165,23 +166,21 @@ export default {
     NavbarComponent
   },
   data() {
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000;
+    const localISOTime = new Date(now - offset).toISOString().split("T")[0];
+    
     return {
-      fechaOperacion: new Date().toISOString().split('T')[0],
+      fechaOperacion: localISOTime,
       fechaActual: new Date().toISOString().slice(0, 16),
       existencias: [],
       tipoProducto: 'importacion', // 'importacion' o 'exportacion'
-      loading: false
+      loading: false,
+      error: null,
+      success: false,
     }
   },
   computed: {
-    isAdmin() {
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-      return userData.is_superuser;
-    },
-    isGemarUser() {
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-      return userData.rol === 'GEMAR' || userData.is_superuser;
-    },
     existenciasFiltradas() {
       const tipo = this.tipoProducto === 'importacion' ? 1 : 2;
       return this.existencias.filter(e => e.tipo === tipo);
@@ -197,7 +196,7 @@ export default {
         const token = localStorage.getItem('token');
         
         if (!token) {
-          this.mostrarError('No se encontró el token de autenticación');
+          this.showErrorToast('No se encontró el token de autenticación');
           return;
         }
         
@@ -214,7 +213,7 @@ export default {
         this.existencias = response.data.results || [];
       } catch (error) {
         console.error('Error al cargar existencias:', error);
-        this.mostrarError('Error al cargar las existencias de mercancía');
+        this.showErrorToast('Error al cargar las existencias de mercancía');
       } finally {
         this.loading = false;
       }
@@ -254,55 +253,56 @@ export default {
             headers: { 'Authorization': `Token ${token}` }
           });
           
-          this.mostrarExito('Existencia eliminada correctamente');
+          this.showSuccessToast('Existencia eliminada correctamente');
           await this.cargarExistencias();
         }
       } catch (error) {
         console.error('Error al eliminar existencia:', error);
-        this.mostrarError('Error al eliminar la existencia');
+        this.showErrorToast('Error al eliminar la existencia');
       }
     },
-    
-    async guardar() {
-      if (!this.isGemarUser) {
-        this.mostrarError('No tiene permisos para realizar esta acción');
-        return;
-      }
-      
-      try {
-        if (!this.fechaOperacion) {
-          this.mostrarError('La fecha de operación es requerida');
-          return;
-        }
-        
-        this.mostrarExito('Datos guardados correctamente');
-        await this.cargarExistencias();
-      } catch (error) {
-        console.error('Error al guardar:', error);
-        this.mostrarError('Error al guardar los datos');
-      }
-    },
-    
-    cancelar() {
-      this.fechaOperacion = new Date().toISOString().split('T')[0];
-      this.cargarExistencias();
-    },
-    
-    mostrarError(mensaje) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: mensaje,
-        confirmButtonText: 'Aceptar'
+
+    showErrorToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#ff4444",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "error",
+        title: message,
       });
     },
-    
-    mostrarExito(mensaje) {
-      Swal.fire({
-        icon: 'success',
-        title: 'Éxito',
-        text: mensaje,
-        confirmButtonText: 'Aceptar'
+
+    showSuccessToast(message) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#00C851",
+        color: "#fff",
+        iconColor: "#fff",
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: message,
       });
     }
   }
@@ -347,7 +347,6 @@ export default {
   background-color: #f8f9fa;
 }
 
-/* Estilos para la paginación */
 .io-pagination {
   padding: 0.75rem 1.25rem;
   background-color: #f8f9fa;
@@ -388,7 +387,6 @@ export default {
   font-size: 0.9rem;
 }
 
-/* Estilos para los botones */
 .btn-outline-danger {
   color: #dc3545;
   border-color: #dc3545;
@@ -399,14 +397,13 @@ export default {
   color: white;
 }
 
-.btn-outline-success {
-  margin-left: 10px ;
-  color: #28a745;
-  border-color: #28a745;
+.btn-outline-primary {
+  color: #0d6efd;
+  border-color: #0d6efd;
 }
 
-.btn-outline-success:hover {
-  background-color: #28a745;
+.btn-outline-primary:hover {
+  background-color: #0d6efd;
   color: white;
 }
 
@@ -430,33 +427,25 @@ export default {
   border-color: #0a58ca;
 }
 
-/* Estilos para los selects e inputs */
-.form-control, .form-select {
+.form-control,
+.form-select {
   font-size: 0.875rem;
   padding: 0.25rem 0.5rem;
 }
 
-.form-control:focus, .form-select:focus {
+.form-control:focus,
+.form-select:focus {
   border-color: #86b7fe;
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
-/* Ajustes para la tabla con muchas columnas */
 .table-sm th, .table-sm td {
   padding: 0.3rem 0.5rem;
   white-space: nowrap;
 }
 
-/* Hacer que las columnas numéricas sean más estrechas */
 .table-sm td:nth-child(6) {
   width: 1%;
   white-space: nowrap;
-}
-
-/* Estilos para los badges de terminales */
-.badge {
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 0.35em 0.65em;
 }
 </style>

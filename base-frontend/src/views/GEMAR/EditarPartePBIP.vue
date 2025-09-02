@@ -20,8 +20,7 @@
                 v-model="parte.fecha_operacion" 
                 class="form-control form-control-sm border-secondary"
                 style="padding: 8px 12px"
-                required
-                :disabled="parte.estado !== 'CREADO'"
+                :disabled="cargando"
               >
             </div>
             <div class="col-md-6">
@@ -43,10 +42,9 @@
                 v-model="parte.buque_id" 
                 class="form-select form-select-sm border-secondary"
                 style="padding: 8px 12px"
-                required
-                :disabled="parte.estado !== 'CREADO'"
+                :disabled="cargando"
               >
-                <option value="">Seleccione un buque...</option>
+                <option value="" disabled>Seleccione un buque...</option>
                 <option 
                   v-for="buque in listaBuques" 
                   :value="buque.id"
@@ -62,10 +60,9 @@
                 v-model="parte.puerto_id" 
                 class="form-select form-select-sm border-secondary"
                 style="padding: 8px 12px"
-                required
-                :disabled="parte.estado !== 'CREADO'"
+                :disabled="cargando"
               >
-                <option value="">Seleccione un puerto...</option>
+                <option value="" disabled>Seleccione un puerto...</option>
                 <option 
                   v-for="puerto in listaPuertos" 
                   :value="puerto.id"
@@ -79,24 +76,12 @@
 
           <div class="row mb-3">
             <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Fecha y Hora*</label>
-              <input 
-                type="datetime-local" 
-                v-model="parte.fecha_hora" 
-                class="form-control form-control-sm border-secondary"
-                style="padding: 8px 12px"
-                required
-                :disabled="parte.estado !== 'CREADO'"
-              >
-            </div>
-            <div class="col-md-6">
               <label class="form-label small fw-semibold text-secondary">Nivel de Protección*</label>
               <select 
                 v-model="parte.nivel" 
                 class="form-select form-select-sm border-secondary"
                 style="padding: 8px 12px"
-                required
-                :disabled="parte.estado !== 'CREADO'"
+                :disabled="cargando"
               >
                 <option value="1">Nivel 1</option>
                 <option value="2">Nivel 2</option>
@@ -105,47 +90,11 @@
             </div>
           </div>
 
-          <div class="row mb-3" v-if="parte.creado_por">
-            <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Creado por</label>
-              <input 
-                type="text" 
-                :value="parte.creado_por.username" 
-                class="form-control form-control-sm border-secondary"
-                style="padding: 8px 12px"
-                readonly
-              >
-            </div>
-            <div class="col-md-6" v-if="parte.aprobado_por">
-              <label class="form-label small fw-semibold text-secondary">Aprobado por</label>
-              <input 
-                type="text" 
-                :value="parte.aprobado_por.username" 
-                class="form-control form-control-sm border-secondary"
-                style="padding: 8px 12px"
-                readonly
-              >
-            </div>
-          </div>
-
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Estado</label>
-              <input 
-                type="text" 
-                :value="parte.estado" 
-                class="form-control form-control-sm border-secondary"
-                style="padding: 8px 12px"
-                readonly
-              >
-            </div>
-          </div>
-
           <div class="modal-footer">
             <div class="d-flex justify-content-between align-items-center mb-4">
               <button 
                 type="button" 
-                @click="cancelar" 
+                @click="confirmCancel" 
                 class="ufc-button secondary"
                 :disabled="cargando"
               >
@@ -154,20 +103,11 @@
               <button 
                 type="submit" 
                 class="ufc-button primary"
-                :disabled="cargando || parte.estado !== 'CREADO'"
+                :disabled="cargando"
               >
                 <span v-if="cargando" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 <i v-else class="bi bi-save me-1"></i> 
                 {{ cargando ? 'Guardando...' : 'Guardar Cambios' }}
-              </button>
-              <button 
-                v-if="parte.estado === 'CREADO' && tienePermisoAprobar"
-                type="button" 
-                @click="aprobarParte" 
-                class="ufc-button success"
-                :disabled="cargando"
-              >
-                <i class="bi bi-check-circle me-1"></i> Aprobar
               </button>
             </div>
           </div>
@@ -195,16 +135,13 @@ export default {
         fecha_creacion: '',
         buque_id: null,
         puerto_id: null,
-        fecha_hora: '',
         nivel: '1',
         estado: 'CREADO',
-        creado_por: null,
-        aprobado_por: null
+        creado_por: null
       },
       listaBuques: [],
       listaPuertos: [],
-      cargando: false,
-      tienePermisoAprobar: false
+      cargando: false
     }
   },
   computed: {
@@ -213,24 +150,10 @@ export default {
     }
   },
   async created() {
-    await this.verificarPermisos();
     await this.cargarDatosIniciales();
     await this.cargarPartePBIP();
   },
   methods: {
-    async verificarPermisos() {
-      try {
-        const token = localStorage.getItem('token');
-        const user = JSON.parse(localStorage.getItem('user'));
-        
-        if (user && (user.is_staff || user.groups.some(group => group.name === 'GEMAR'))) {
-          this.tienePermisoAprobar = true;
-        }
-      } catch (error) {
-        console.error('Error al verificar permisos:', error);
-      }
-    },
-    
     async cargarDatosIniciales() {
       try {
         this.cargando = true;
@@ -283,27 +206,15 @@ export default {
 
         const response = await axios.get(`/gemar/partes-pbip/${parteId}/`, { headers });
         
-        // Formatear la fecha_hora para el input datetime-local
-        let fechaHora = response.data.fecha_hora;
-        if (fechaHora) {
-          if (fechaHora.includes('T')) {
-            fechaHora = fechaHora.slice(0, 16);
-          } else {
-            fechaHora = `${fechaHora}T00:00`;
-          }
-        }
-
         this.parte = {
           id: response.data.id,
           fecha_operacion: response.data.fecha_operacion,
           fecha_creacion: response.data.fecha_creacion,
           buque_id: response.data.buque.id,
           puerto_id: response.data.puerto.id,
-          fecha_hora: fechaHora,
           nivel: response.data.nivel.toString(),
-          estado: response.data.estado,
-          creado_por: response.data.creado_por,
-          aprobado_por: response.data.aprobado_por
+          estado: 'CREADO',
+          creado_por: response.data.creado_por
         };
 
       } catch (error) {
@@ -316,11 +227,6 @@ export default {
     },
     
     async guardarCambios() {
-      if (!this.parte.buque_id || !this.parte.puerto_id || !this.parte.fecha_hora || !this.parte.fecha_operacion) {
-        this.mostrarError('Todos los campos marcados con * son requeridos');
-        return;
-      }
-
       try {
         this.cargando = true;
         const token = localStorage.getItem('token');
@@ -334,16 +240,21 @@ export default {
           fecha_operacion: this.parte.fecha_operacion,
           buque_id: this.parte.buque_id,
           puerto_id: this.parte.puerto_id,
-          fecha_hora: this.parte.fecha_hora,
-          nivel: parseInt(this.parte.nivel)
+          nivel: parseInt(this.parte.nivel),
+          estado: 'CREADO'
         };
 
-        // Usamos PATCH para actualización parcial según convenciones REST
-        const response = await axios.patch(
-          `/gemar/partes-pbip/${this.parte.id}/`,
-          payload,
-          { headers }
-        );
+        const response = await axios.put(
+  `/gemar/partes-pbip/${this.parte.id}/`,
+  {
+    fecha_operacion: this.parte.fecha_operacion,
+    buque_id: this.parte.buque_id,
+    puerto_id: this.parte.puerto_id,
+    nivel: parseInt(this.parte.nivel),
+    estado: 'CREADO'
+  },
+  { headers }
+);
 
         this.mostrarExito('Cambios guardados correctamente');
         this.$router.push({ name: 'Gemar-Partes-PBIP' });
@@ -370,8 +281,6 @@ export default {
             errorMessage = 'No tiene permiso para editar este parte';
           } else if (error.response.status === 404) {
             errorMessage = 'El parte no fue encontrado';
-          } else if (error.response.status === 409) {
-            errorMessage = 'No se puede editar un parte que no está en estado CREADO';
           }
         } else {
           errorMessage = 'Error de conexión con el servidor';
@@ -383,46 +292,22 @@ export default {
       }
     },
     
-    async aprobarParte() {
-      try {
-        this.cargando = true;
-        const token = localStorage.getItem('token');
-        const headers = {
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json'
-        };
-
-        const response = await axios.post(
-          `/gemar/partes-pbip/${this.parte.id}/aprobar/`,
-          {},
-          { headers }
-        );
-
-        this.mostrarExito('Parte aprobado correctamente');
-        await this.cargarPartePBIP(); // Recargar los datos después de aprobar
-        
-      } catch (error) {
-        console.error('Error al aprobar el parte:', error);
-        let errorMessage = 'Error al aprobar el parte';
-        
-        if (error.response) {
-          if (error.response.status === 403) {
-            errorMessage = 'No tiene permiso para aprobar este parte';
-          } else if (error.response.status === 404) {
-            errorMessage = 'El parte no fue encontrado';
-          } else if (error.response.data && error.response.data.detail) {
-            errorMessage = error.response.data.detail;
-          }
+    confirmCancel() {
+      Swal.fire({
+        title: "¿Volver a la página principal?",
+        text: "Los cambios no guardados se perderán",
+        icon: "warning",
+        showCancelButton: true,
+        cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Continuar',
+        cancelButtonColor: "#f1513f",
+        confirmButtonText: '<i class="bi bi-box-arrow-right me-1"></i>Volver',
+        confirmButtonColor: "#007bff",
+        reverseButtons: true,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.$router.push({ name: 'Gemar-Partes-PBIP' });
         }
-        
-        this.mostrarError(errorMessage);
-      } finally {
-        this.cargando = false;
-      }
-    },
-    
-    cancelar() {
-      this.$router.push({ name: 'Gemar-Partes-PBIP' });
+      });
     },
     
     formatearFecha(fecha) {

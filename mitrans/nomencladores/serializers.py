@@ -494,7 +494,7 @@ class nom_producto_filter(filters.FilterSet):
         }
 
 class nom_producto_serializer(serializers.ModelSerializer):
-    tipo_producto_name = serializers.ReadOnlyField(source = 'get_tipo_producto_display')     
+    tipo_producto_name = serializers.ReadOnlyField(source = 'get_tipo_producto_display') 
   
     class Meta:
         model = nom_producto       

@@ -566,7 +566,7 @@ class gemar_turno_carga_descarga(models.Model):
         
 
     turno = models.CharField(
-        choices=TURNO_CHOICES, max_length = 40) 
+        choices=TURNO_CHOICES, max_length = 40, verbose_name="Turno") 
     
     cantidad_toneladas = models.DecimalField(unique=True,max_digits=10,decimal_places=2)
     cantidad_brigadas = models.IntegerField()

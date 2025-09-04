@@ -244,7 +244,7 @@ export default {
         
         if (result.isConfirmed) {
           const token = localStorage.getItem('token');
-          await axios.delete(`/gemar/registros-carga-vieja/${id}/`, {
+          await axios.delete(`/api/gemar/registros-carga-vieja/${id}/`, {
             headers: { 'Authorization': `Token ${token}` }
           });
           
@@ -289,7 +289,7 @@ export default {
         };
         
         // CORRECCIÓN: Usar la URL correcta según urls.py
-        const apiUrl = url || "/gemar/registros-carga-vieja/";
+        const apiUrl = url || "/api/gemar/registros-carga-vieja/";
         
         const response = await axios.get(apiUrl, {
           params: url ? null : params, // No enviar params si usamos URL completa

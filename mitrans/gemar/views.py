@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
+from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
 from rest_framework.pagination import PageNumberPagination
@@ -751,10 +752,10 @@ class SinRestriccionPermission(permissions.BasePermission):
 class PartePBIPViewSet(viewsets.ModelViewSet):
     queryset = PartePBIP.objects.all()
     serializer_class = PartePBIPSerializer
-    permission_classes = [SinRestriccionPermission]
+    permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['buque', 'puerto', 'nivel', 'estado', 'fecha_operacion']
-    search_fields = ['buque__nombre', 'puerto__nombre']
+    search_fields = ['buque__nombre_embarcacion', 'puerto__nombre_puerto'] 
     ordering_fields = ['fecha_creacion', 'fecha_operacion']
     ordering = ['-fecha_creacion']
 
@@ -791,7 +792,7 @@ class PartePBIPViewSet(viewsets.ModelViewSet):
 class RegistroPBIPViewSet(viewsets.ModelViewSet):
     queryset = RegistroPBIP.objects.all()
     serializer_class = RegistroPBIPSerializer
-    permission_classes = [SinRestriccionPermission]
+    permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['buque', 'puerto', 'nivel', 'fecha_operacion']
     search_fields = ['buque__nombre', 'puerto__nombre']
@@ -838,15 +839,64 @@ class ParteCargaViejaViewSet(viewsets.ModelViewSet):
         serializer = RegistroCargaViejaSerializer(registros, many=True)
         return Response(serializer.data)
 
+class RegistroCargaViejaFilter(filters.FilterSet):
+    fecha_operacion = filters.DateFilter(field_name='parte__fecha_operacion', lookup_expr='exact')
+    puerto = filters.CharFilter(field_name='puerto__nombre_puerto', lookup_expr='icontains')  # Corregido
+    terminal = filters.CharFilter(field_name='terminal__nombre_terminal', lookup_expr='icontains')  # Corregido
+    producto = filters.CharFilter(field_name='producto__nombre_producto', lookup_expr='icontains')  # Corregido
+    manifiesto = filters.CharFilter(lookup_expr='icontains')
+    organismo = filters.CharFilter(field_name='organismo__nombre', lookup_expr='icontains')
+
+    class Meta:
+        model = RegistroCargaVieja
+        fields = ['fecha_operacion', 'puerto', 'terminal', 'producto', 'manifiesto', 'organismo']
+
 class RegistroCargaViejaViewSet(viewsets.ModelViewSet):
     queryset = RegistroCargaVieja.objects.all()
     serializer_class = RegistroCargaViejaSerializer
-    permission_classes = [AllowAny]  # Cambiado a AllowAny
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['puerto', 'terminal', 'producto', 'organismo', 'fecha_operacion']  # Campo añadido
-    search_fields = ['producto__nombre', 'manifiesto']
-    ordering_fields = ['manifiesto', 'producto__nombre', 'fecha_operacion']  # Campo añadido
-    ordering = ['manifiesto']
+    filter_backends = [filters.DjangoFilterBackend]
+    filterset_class = RegistroCargaViejaFilter
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Filtro por fecha de operación
+        fecha_operacion = self.request.query_params.get('fecha_operacion')
+        if fecha_operacion:
+            try:
+                fecha = datetime.strptime(fecha_operacion, '%Y-%m-%d').date()
+                queryset = queryset.filter(parte__fecha_operacion=fecha)
+            except ValueError:
+                pass
+        
+        # Filtro por puerto
+        puerto_id = self.request.query_params.get('puerto_id')
+        if puerto_id:
+            queryset = queryset.filter(puerto_id=puerto_id)
+        
+        # Filtro por terminal
+        terminal_id = self.request.query_params.get('terminal_id')
+        if terminal_id:
+            queryset = queryset.filter(terminal_id=terminal_id)
+        
+        # Filtro por producto
+        producto_id = self.request.query_params.get('producto_id')
+        if producto_id:
+            queryset = queryset.filter(producto_id=producto_id)
+        
+        # Filtro por organismo
+        organismo_id = self.request.query_params.get('organismo_id')
+        if organismo_id:
+            queryset = queryset.filter(organismo_id=organismo_id)
+        
+        # Filtro por manifiesto
+        manifiesto = self.request.query_params.get('manifiesto')
+        if manifiesto:
+            queryset = queryset.filter(manifiesto__icontains=manifiesto)
+        
+        return queryset.select_related(
+            'parte', 'puerto', 'terminal', 'producto', 'organismo'
+        )
 
 class ParteExistenciaMercanciaViewSet(viewsets.ModelViewSet):
     queryset = ParteExistenciaMercancia.objects.all()
@@ -894,9 +944,26 @@ class RegistroExistenciaMercanciaViewSet(viewsets.ModelViewSet):
     permission_classes = [SinRestriccionPermission]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['terminal', 'producto', 'tipo', 'tipo_producto']
-    search_fields = ['producto__nombre', 'terminal__nombre']
-    ordering_fields = ['producto__nombre', 'terminal__nombre']
-    ordering = ['producto__nombre']
+    
+    # Corregir los campos de búsqueda para usar los campos de relación correctos
+    search_fields = ['producto__nombre_producto', 'terminal__nombre_terminal']
+    
+    ordering_fields = ['producto__nombre_producto', 'terminal__nombre_terminal']
+    ordering = ['producto__nombre_producto']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Filtro por fecha de operación
+        fecha_operacion = self.request.query_params.get('fecha_operacion')
+        if fecha_operacion:
+            try:
+                fecha = datetime.strptime(fecha_operacion, '%Y-%m-%d').date()
+                queryset = queryset.filter(parte__fecha_operacion=fecha)
+            except ValueError:
+                pass
+        
+        return queryset.select_related('producto', 'terminal', 'parte')
 
 
 class ResumenDiarioView(APIView):

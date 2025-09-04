@@ -249,6 +249,8 @@ class RegistroCargaViejaSerializer(serializers.ModelSerializer):
         source='organismo',
         required=True
     )
+    fecha_operacion = serializers.DateField(source='parte.fecha_operacion', read_only=True)
+    estado = serializers.CharField(source='parte.estado', read_only=True)
 
     class Meta:
         model = RegistroCargaVieja
@@ -295,10 +297,15 @@ class RegistroExistenciaMercanciaSerializer(serializers.ModelSerializer):
     tipo_producto_display = serializers.CharField(source='get_tipo_producto_display', read_only=True)
     estado_display = serializers.CharField(source='get_estado_display', read_only=True)
     contiene_display = serializers.CharField(source='get_contiene_display', read_only=True)
+    
+    # Añadir campos de búsqueda para los nombres
+    producto_nombre = serializers.CharField(source='producto.nombre_producto', read_only=True)
+    terminal_nombre = serializers.CharField(source='terminal.nombre_terminal', read_only=True)
 
     class Meta:
         model = RegistroExistenciaMercancia
         fields = '__all__'
+        extra_fields = ['producto_nombre', 'terminal_nombre']
 
 class ParteExistenciaMercanciaSerializer(serializers.ModelSerializer):
     registros = RegistroExistenciaMercanciaSerializer(many=True, read_only=True)

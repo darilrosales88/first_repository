@@ -311,13 +311,13 @@ export default {
         };
 
         // Cargar partes de cargas viejas - URL corregida
-        const partesRes = await axios.get("/api/partes-carga-vieja/", { headers });
+        const partesRes = await axios.get("/api/gemar/partes-carga-vieja/", { headers });
         
         // Cargar datos adicionales solo si es necesario y las rutas existen
         try {
           const [puertosRes, organismosRes] = await Promise.all([
-            axios.get("/api/nomencladores/puertos/", { headers }).catch(() => ({ data: [] })),
-            axios.get("/api/nomencladores/osde/", { headers }).catch(() => ({ data: [] })),
+            axios.get("/api/puertos/", { headers }).catch(() => ({ data: [] })),
+            axios.get("/api/osde/", { headers }).catch(() => ({ data: [] })),
           ]);
 
           this.puertos = puertosRes.data.results || puertosRes.data || [];

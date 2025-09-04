@@ -447,7 +447,7 @@ class nom_atraque_view_set(viewsets.ModelViewSet):
 class nom_unidad_medida_view_set(viewsets.ModelViewSet):
     queryset = nom_unidad_medida.objects.all().order_by('-id')
     serializer_class = nom_unidad_medida_serializer
-    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -675,7 +675,7 @@ class tipo_equipo_ferroviario_no_locomotora(APIView):
 class nom_embarcacion_view_set(viewsets.ModelViewSet):
     queryset = nom_embarcacion.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = nom_embarcacion_serializer
-    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
+    permission_classes = [AllowAny]
     
     def get_queryset(self):
         queryset = super().get_queryset()        
@@ -850,7 +850,7 @@ class nom_producto_view_set(viewsets.ModelViewSet):
 class nom_tipo_embalaje_view_set(viewsets.ModelViewSet):
     queryset = nom_tipo_embalaje.objects.all().order_by('-id')
     serializer_class = nom_tipo_embalaje_serializer
-    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         queryset = super().get_queryset()

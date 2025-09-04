@@ -199,6 +199,8 @@ export default {
       loading: false,
       error: null,
       success: false,
+      fechaOperacion: localISOTime,
+      fechaActual: new Date().toISOString().slice(0, 16),
     };
   },
 
@@ -209,6 +211,11 @@ export default {
   },
 
   methods: {
+    // Método para agregar buque - NUEVO MÉTODO
+    addBuque() {
+      this.$router.push({ name: 'AgregarBuque' });
+    },
+    
     // Métodos de verificación y carga inicial
     async verificarPartesExistentes() {
       this.checkingExisting = true;
@@ -218,7 +225,7 @@ export default {
           today.getMonth() + 1
         ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-        const response = await axios.get("/gemar/partes-pbip/", {
+        const response = await axios.get("/api/gemar/registros-pbip/", {
           params: { fecha_actual: fechaFormateada },
         });
 
@@ -254,7 +261,7 @@ export default {
         const [buquesRes, puertosRes, partesRes] = await Promise.all([
           axios.get("/api/embarcaciones/", { headers }),
           axios.get("/api/puertos/", { headers }),
-          axios.get("/gemar/partes-pbip/", { headers })
+          axios.get("/api/gemar/registros-pbip/", { headers })
         ]);
 
         this.listaBuques = buquesRes.data.results || buquesRes.data || [];
@@ -277,7 +284,7 @@ export default {
       try {
         // Verificar si ya existe un parte
         const verificacion = await axios.get(
-          "/gemar/verificar-partes-pbip-existente/",
+          "/api/gemar/verificar-partes-pbip-existente/",
           {
             params: {
               fecha_actual: this.formData.fecha_actual
@@ -298,7 +305,7 @@ export default {
 
         // Crear el nuevo parte
         const response = await axios.post(
-          "/gemar/partes-pbip/",
+          "/api/gemar/partes-pbip/",
           {
             fecha_operacion: this.formData.fecha_operacion,
             buque_id: this.formData.buqueSeleccionado,
@@ -367,7 +374,7 @@ export default {
             "Content-Type": "application/json",
           };
 
-          await axios.delete(`/gemar/partes-pbip/${id}/`, { headers });
+          await axios.delete(`/api/gemar/registros-pbip/${id}/`, { headers });
           this.showSuccessToast("Parte eliminado correctamente");
           await this.cargarDatosIniciales();
         }
@@ -533,12 +540,9 @@ export default {
           this.userPermissions = response.data?.permissions || [];
           this.userGroups = response.data?.groups || [];
           
-          // Verificar si el usuario tiene permisos para GEMAR
-          const hasGemarAccess = this.userGroups.some(g => 
-            ['AdminGEMAR', 'VisualizadorGEMAR', 'AdminGemar', 'VisualizadorGemar'].includes(g.name)
-          );
-          
-          if (!hasGemarAccess) {
+          // Eliminar la verificación de grupos GEMAR para permitir acceso a cualquier usuario autenticado
+          // Solo verificar que el usuario esté autenticado
+          if (!userId) {
             this.$router.push('/unauthorized');
           }
         }
@@ -601,6 +605,16 @@ export default {
         title: message,
       });
     },
+    
+    // Métodos para los botones de acción
+    cancelar() {
+      this.$router.go(-1);
+    },
+    
+    aceptar() {
+      // Lógica para aceptar el parte
+      console.log("Aceptar parte PBIP");
+    }
   },
 };
 </script>

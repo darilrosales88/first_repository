@@ -40,6 +40,7 @@ from .serializers import (
 )
 
 
+from Administracion.decorators import audit_log
 from Administracion.models import Auditoria
 
 #importacion de verificacion de autenticacion, trabajo con grupos y asignacion de
@@ -55,7 +56,6 @@ from datetime import datetime
 #Para la paginacion
 
 #Para el tratado de los permisos en el backend
-
 def registrar_auditoria(request, accion):
     """
     Método centralizado para registrar acciones en el modelo Auditoria
@@ -74,6 +74,8 @@ def registrar_auditoria(request, accion):
         # No romper el flujo principal si hay error al registrar auditoría
         print(f"Error al registrar auditoría: {str(e)}")
 
+
+
 class gemar_parte_hecho_extraordinario_view_set(viewsets.ModelViewSet):
     queryset = gemar_parte_hecho_extraordinario.objects.all().order_by('-id')
     serializer_class = gemar_parte_hecho_extraordinario_serializer
@@ -89,7 +91,7 @@ class gemar_parte_hecho_extraordinario_view_set(viewsets.ModelViewSet):
 
         return queryset
     
-   
+    audit_log("Crear")
     def create(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='AdminGEMAR').exists():            
             return Response(
@@ -182,7 +184,7 @@ class gemar_parte_hecho_extraordinario_view_set(viewsets.ModelViewSet):
         parte_hecho_extraordinario = serializer.save()
 
         return Response(serializer.data)
-
+    @audit_log("Eliminado")
     def destroy(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='AdminGEMAR').exists():
             return Response(
@@ -195,17 +197,8 @@ class gemar_parte_hecho_extraordinario_view_set(viewsets.ModelViewSet):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @audit_log("Visualizar")
     def list(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name='VisualizadorGEMAR').exists() and not request.user.groups.filter(name='AdminGEMAR').exists():
-            return Response(
-                {"detail": "No tiene permiso para realizar esta acción."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        # Registrar la acción en el modelo de Auditoria
-        registrar_auditoria(request, "Visualizar lista de partes de hechos extraordinarios.")
-
-      
-
         return super().list(request, *args, **kwargs)
     
 #/*****************************************************************************************************************************/

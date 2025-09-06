@@ -59,8 +59,8 @@ router.register('gemar-remolcador-maniobra-enc',gemar_remolcadores_maniobras_enc
 router.register('gemar-remolcador-carga-liquida-enc',gemar_remolcador_carga_liquida_enc_view_set, basename='gemar-remolcador-carga-liquida-enc')
 router.register('gemar-remolcador-cabotaje-auxiliar-enc',gemar_remolcador_cabotaje_auxiliar_enc_view_set, basename='gemar-remolcador-cabotaje-auxiliar-enc')
 router.register(r'partes-pbip', views.PartePBIPViewSet, basename='partepbip')
-router.register(r'cargas-viejas', views.CargaViejaViewSet, basename='cargavieja')
-router.register(r'existencias-mercancia', views.ExistenciaMercanciaViewSet, basename='existenciamercancia')
+# router.register(r'cargas-viejas', views.CargaViejaViewSet, basename='cargavieja')
+# router.register(r'existencias-mercancia', views.ExistenciaMercanciaViewSet, basename='existenciamercancia')
 
 #ahora declaramos el urlpatterns y lo igualamos a la propiedad urls de la variable creada de tipo routers
 # Ahora combinamos las rutas manuales con las del router

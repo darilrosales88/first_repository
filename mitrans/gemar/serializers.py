@@ -16,7 +16,7 @@ from .models import (gemar_hecho_extraordinario,gemar_parte_hecho_extraordinario
                      gemar_producto_carga_descarga,gemar_turno_carga_descarga,gemar_incidencia_por_turno_carga_descarga,
                      gemar_informe_diario_enc,gemar_maniobras_portuarias_enc,gemar_afectaciones_maniobras_portuarias_enc,
                      gemar_carga_seca_enc,gemar_remolcadores_maniobras_enc,gemar_remolcador_carga_liquida_enc,
-                     gemar_remolcador_cabotaje_auxiliar_enc)
+                     gemar_remolcador_cabotaje_auxiliar_enc,RegistroPBIP,RegistroCargaVieja,ParteCargaVieja,RegistroExistenciaMercancia,ParteExistenciaMercancia)
 from nomencladores.models import nom_embarcacion as Buque  # Add this import
 from nomencladores.models import nom_puerto as Puerto  # Also need this for puerto_id
 from nomencladores.models import nom_terminal as Terminal  # For terminal_id
@@ -572,6 +572,10 @@ class ParteCargaViejaSerializer(serializers.ModelSerializer):
         model = ParteCargaVieja
         fields = '__all__'
         read_only_fields = ('fecha_creacion', 'creado_por', 'aprobado_por')
+
+
+
+
 
 class RegistroExistenciaMercanciaSerializer(serializers.ModelSerializer):
     terminal = nom_terminal_serializer(read_only=True)

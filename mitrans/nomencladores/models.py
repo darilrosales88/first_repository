@@ -319,7 +319,7 @@ class nom_entidades(models.Model):
         ('otros', 'Otros')
     )
     tipo_entidad = models.CharField(choices=t_entidad, default="DC", help_text="Escoja una opción.",
-                                     verbose_name="Tipo de entidad",max_length=30)
+                                     verbose_name="Tipo de entidad",max_length=100)
 
     territorio = models.ForeignKey(nom_territorio, on_delete=models.CASCADE,null=True,blank=True)   
 

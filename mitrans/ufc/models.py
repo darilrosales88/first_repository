@@ -493,7 +493,7 @@ class en_trenes(models.Model):
         auto_now_add=True, verbose_name="Fecha de registro", editable=False
     )
     numero_identificacion_locomotora = models.CharField(
-        max_length=10,
+        max_length=100,
         verbose_name="Número de identificación de la locomotora",
         blank=True,
         null=True,

@@ -455,7 +455,7 @@ class gemar_carga_descarga(models.Model):
         ("A", 'Alijo'),
     ]
 
-    operacion = models.CharField(max_length=10,
+    operacion = models.CharField(max_length=100,
         choices=OPERACION_CHOICES,
         verbose_name='Operación'
     )
@@ -484,7 +484,7 @@ class gemar_carga_descarga(models.Model):
         verbose_name="Buque"
     )  
 
-    categoria = models.CharField(max_length=10,
+    categoria = models.CharField(max_length=100,
         choices=CATEGORIA_CHOICES,
         verbose_name='Categoría'
     ) 
@@ -1519,11 +1519,11 @@ class buques_puerto(models.Model):
         ("aprobado","Aprobado"),
     ]
     
-    tipo_parte = models.CharField(max_length=50, choices=TIPO_PARTE_CHOICES)
-    fecha_actual = models.DateTimeField(auto_now_add=True)
+    tipo_parte = models.CharField(max_length=50, choices=TIPO_PARTE_CHOICES, null=True, blank=True)
+    fecha_actual = models.DateTimeField(auto_now_add=True, null=True,blank=True)
     estado_parte = models.CharField(max_length=20, choices=ESTADO_PARTE_CHOICES, default='Creado')
     
-    creado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='partes_creados')
+    creado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='partes_creados',null=True, blank=True)
     aprobado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='partes_aprobados')
     
     # RELACIONES OPCIONALES CON LOS MODELOS EXISTENTES
@@ -1536,8 +1536,8 @@ class buques_puerto(models.Model):
     organismo_nombre = models.CharField(max_length=100, blank=True)
     provincia_nombre = models.CharField(max_length=100, blank=True)
     
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    fecha_actualizacion = models.DateTimeField(auto_now=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True, null=True,blank=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True, null=True,blank=True)
 
     def __str__(self):
         return f"{self.get_tipo_parte_display()} - {self.fecha_actual.strftime('%Y-%m-%d %H:%M')}"

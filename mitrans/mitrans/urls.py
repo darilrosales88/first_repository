@@ -12,7 +12,7 @@ urlpatterns = [
     path('api/', include('nomencladores.urls')),
     path('apiAdmin/', include('Administracion.urls')),    
     path('ufc/', include('ufc.urls')),  
-    path('gemar/', include('gemar.urls')), 
+    path('api/gemar/', include('gemar.urls')), 
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     # Optional UI:
     path('api/doc/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),

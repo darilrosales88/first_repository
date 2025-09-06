@@ -188,7 +188,7 @@ export default {
             { title: "Informes HE", route: "/gemar_listado_partes" },
             { title: "Gemar-Programacion de Maniobras", route: "/gemar_parte_programacion_maniobras" },
             { title: "Listado de Partes - Gemar", route: "/listar_partes_combinados" },
-            { title: "GEMAR", route: "/GEMAR" },
+            { title: "GEMAR", route: "/gemar" },
           ],
         },
         {

@@ -200,7 +200,7 @@ export default {
           return;
         }
         
-        const response = await axios.get('/gemar/existencias-mercancia/', {
+        const response = await axios.get('/api/gemar/registros-existencia-mercancia/', {
           params: {
             fecha_operacion: this.fechaOperacion
           },
@@ -224,7 +224,7 @@ export default {
     },
     
     navigateToAddMercancia() {
-      this.$router.push({ name: 'Agregar-Existencias-Mercancia' });
+      this.$router.push({ name: 'AgregarExistenciaMercancia' });
     },
     
     editarMercancia(id) {

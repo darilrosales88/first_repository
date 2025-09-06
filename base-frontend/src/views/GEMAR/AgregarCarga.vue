@@ -14,31 +14,6 @@
         <div class="card-body p-3">
           <form @submit.prevent="guardarCarga">
             <div class="row">
-              <!-- Campo: Parte PBIP -->
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label for="parte" class="form-label small fw-semibold text-secondary">Parte PBIP*</label>
-                  <select
-                    class="form-select form-select-sm border-secondary"
-                    style="padding: 8px 12px"
-                    v-model="carga.parte_id"
-                    required
-                    @change="cargarDatosParte"
-                    oninvalid="this.setCustomValidity('Por favor, seleccione un Parte PBIP')"
-                    oninput="this.setCustomValidity('')"
-                  >
-                    <option value="" disabled>Seleccione un Parte PBIP</option>
-                    <option
-                      v-for="parte in partesPBIP"
-                      :key="parte.id"
-                      :value="parte.id"
-                    >
-                      PBIP - {{ parte.buque?.nombre || 'Sin buque' }} - {{ parte.puerto?.nombre || 'Sin puerto' }} - Nivel {{ parte.nivel }}
-                    </option>
-                  </select>
-                </div>
-              </div>
-
               <!-- Campo: Puerto -->
               <div class="col-md-6">
                 <div class="mb-3">
@@ -254,25 +229,6 @@
                 </div>
               </div>
 
-              <!-- Campo: Estado -->
-              <div class="col-md-4">
-                <div class="mb-3">
-                  <label for="estado" class="form-label small fw-semibold text-secondary">Estado*</label>
-                  <select
-                    class="form-select form-select-sm border-secondary"
-                    style="padding: 8px 12px"
-                    v-model="carga.estado"
-                    required
-                    oninvalid="this.setCustomValidity('Por favor, seleccione un estado')"
-                    oninput="this.setCustomValidity('')"
-                  >
-                    <option value="CREADO">Creado</option>
-                    <option value="APROBADO">Aprobado</option>
-                    <option value="CANCELADO">Cancelado</option>
-                  </select>
-                </div>
-              </div>
-
               <!-- Campo: Observaciones -->
               <div class="col-md-12">
                 <div class="mb-3">
@@ -295,8 +251,10 @@
                 <button type="button" class="ufc-button secondary" @click="confirmCancel">
                   <i class="bi bi-x-circle me-1"></i>Cancelar
                 </button>
-                <button type="submit" class="ufc-button primary">
-                  <i class="bi bi-check-circle me-1"></i>Guardar Carga
+                <button type="submit" class="ufc-button primary" :disabled="loading">
+                  <span v-if="loading" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                  <i v-else class="bi bi-check-circle me-1"></i>
+                  {{ loading ? 'Guardando...' : 'Guardar Carga' }}
                 </button>
               </div>
             </div>
@@ -320,7 +278,6 @@ export default {
   data() {
     return {
       carga: {
-        parte_id: null,
         puerto_id: '',
         terminal_id: '',
         producto_id: '',
@@ -331,11 +288,8 @@ export default {
         dias_almacen: 0,
         plan: 0,
         real: 0,
-        estado: 'CREADO',
         observaciones: '',
-        aprobado_por: null
       },
-      partesPBIP: [],
       puertos: [],
       terminales: [],
       productos: [],
@@ -369,7 +323,7 @@ export default {
         };
 
         // Cargar todos los datos necesarios
-        const [puertosRes, productosRes, organismosRes, terminalesRes, partesRes] = await Promise.all([
+        const [puertosRes, productosRes, organismosRes, terminalesRes] = await Promise.all([
           axios.get('/api/puertos/', { headers }),
           axios.get('/api/productos/', { headers }),
           axios.get('/api/osde/', { headers }),
@@ -377,14 +331,6 @@ export default {
             headers,
             params: { 
               limit: 1000
-            }
-          }),
-          axios.get('/api/gemar/partes-pbip/', { 
-            headers,
-            params: { 
-              estado: 'CREADO', 
-              limit: 1000,
-              expand: 'buque,puerto'
             }
           })
         ]);
@@ -415,165 +361,92 @@ export default {
           puerto_name: t.puerto?.nombre_puerto || t.puerto?.nombre || 'Sin puerto'
         }));
 
-        // Procesar partes PBIP
-        this.partesPBIP = (partesRes.data.results || partesRes.data || []).map(p => {
-          const buque = p.buque || {};
-          const puerto = p.puerto || {};
-          return {
-            id: p.id,
-            buque: {
-              id: buque.id || p.buque_id,
-              nombre: buque.nombre_embarcacion || buque.nombre || 'Sin nombre'
-            },
-            puerto: {
-              id: puerto.id || p.puerto_id,
-              nombre: puerto.nombre_puerto || puerto.nombre || 'Sin nombre'
-            },
-            nivel: p.nivel,
-            estado: p.estado
-          };
-        });
-
       } catch (error) {
         console.error('Error al cargar datos:', error);
-        this.mostrarError('Error al cargar datos iniciales: ' + (error.response?.data?.detail || error.message));
+        let errorMessage = 'Error al cargar datos iniciales';
+        if (error.response) {
+          if (error.response.status === 403) {
+            errorMessage = 'No tiene permisos para acceder a estos datos';
+          } else if (error.response.data?.detail) {
+            errorMessage = error.response.data.detail;
+          }
+        }
+        this.mostrarError(errorMessage);
       } finally {
         this.loading = false;
       }
     },
-        
-    async cargarDatosParte() {
-      if (!this.carga.parte_id) return;
-      
-      try {
-        this.loading = true;
-        const token = localStorage.getItem('token');
-        const headers = { 
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json'
-        };
 
-        const response = await axios.get(`/api/gemar/partes-pbip/${this.carga.parte_id}/`, { 
-          headers,
-          params: { expand: 'puerto' }
-        });
-        const parte = response.data;
-        
-        // Actualizar solo el estado del parte
-        this.carga.estado = 'CREADO';
-
-      } catch (error) {
-        console.error('Error al cargar datos del parte:', error);
-        this.mostrarError('Error al cargar datos del parte PBIP seleccionado');
-      } finally {
-        this.loading = false;
-      }
-    },
-    
     async guardarCarga() {
       try {
         this.loading = true;
         const token = localStorage.getItem('token');
-        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-        const headers = { 
+        const headers = {
           'Authorization': `Token ${token}`,
           'Content-Type': 'application/json'
         };
-        
-        // Validar campos requeridos
-        const requiredFields = [
-          'parte_id', 'puerto_id', 'terminal_id', 'producto_id', 
-          'manifiesto', 'organismo_id', 'toneladas_ayer', 
-          'toneladas_hoy', 'dias_almacen', 'plan', 'real', 'estado'
-        ];
-        
-        const missingFields = requiredFields.filter(field => !this.carga[field]);
-        if (missingFields.length > 0) {
-          throw new Error(`Los siguientes campos son requeridos: ${missingFields.join(', ')}`);
-        }
 
-        // Construir payload con los nombres que espera el backend
+        // Preparar datos para enviar
         const payload = {
-          parte: this.carga.parte_id,
-          puerto: this.carga.puerto_id,
-          terminal: this.carga.terminal_id,
-          producto: this.carga.producto_id,
+          puerto_id: this.carga.puerto_id,
+          terminal_id: this.carga.terminal_id,
+          producto_id: this.carga.producto_id,
           manifiesto: this.carga.manifiesto,
           toneladas_ayer: parseFloat(this.carga.toneladas_ayer),
           toneladas_hoy: parseFloat(this.carga.toneladas_hoy),
-          organismo: this.carga.organismo_id,
+          organismo_id: this.carga.organismo_id,
           dias_almacen: parseInt(this.carga.dias_almacen),
           plan: parseFloat(this.carga.plan),
-          real: parseFloat(this.carga.real),
-          estado: this.carga.estado,
-          observaciones: this.carga.observaciones,
-          creado_por: userData.id
+          real: parseFloat(this.carga.real || 0),
+          observaciones: this.carga.observaciones
         };
 
-        // Si está aprobado, agregar quien aprueba
-        if (this.carga.estado === 'APROBADO') {
-          payload.aprobado_por = userData.id;
-        }
-
+        // Enviar al backend
         const response = await axios.post('/api/gemar/cargas-viejas/', payload, { headers });
-        
+
         if (response.status === 201) {
           this.mostrarExito('Carga guardada correctamente');
           this.$router.push({ name: 'CargasViejas' });
         }
       } catch (error) {
         console.error('Error al guardar:', error);
-        let errorDetails = '';
-        
-        if (error.response?.data) {
-          if (typeof error.response.data === 'object') {
-            errorDetails = Object.entries(error.response.data)
-              .map(([field, errors]) => {
-                const errorList = Array.isArray(errors) ? errors.join(', ') : errors;
-                return `<strong>${field}:</strong> ${errorList}`;
-              })
-              .join('<br>');
-          } else {
-            errorDetails = error.response.data;
+        let errorMessage = 'Error al guardar la carga';
+        if (error.response) {
+          if (error.response.status === 400) {
+            if (error.response.data.non_field_errors) {
+              errorMessage = error.response.data.non_field_errors.join(', ');
+            } else {
+              errorMessage = 'Datos inválidos: ' + JSON.stringify(error.response.data);
+            }
+          } else if (error.response.status === 403) {
+            errorMessage = 'No tiene permisos para realizar esta acción';
+          } else if (error.response.status === 500) {
+            errorMessage = 'Error interno del servidor';
           }
         }
-        
-        const errorMessage = `
-          <div>
-            <p>Error al guardar la carga:</p>
-            <div class="text-start">${errorDetails || error.message}</div>
-          </div>
-        `;
-        
-        Swal.fire({
-          title: 'Error',
-          html: errorMessage,
-          icon: 'error',
-          confirmButtonText: 'Entendido'
-        });
+        this.mostrarError(errorMessage);
       } finally {
         this.loading = false;
       }
     },
-    
+
     confirmCancel() {
       Swal.fire({
-        title: "¿Volver a la página principal?",
-        text: "Los datos no guardados se perderán",
-        icon: "warning",
+        title: '¿Cancelar?',
+        text: 'Los cambios no guardados se perderán',
+        icon: 'warning',
         showCancelButton: true,
-        cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Continuar',
-        cancelButtonColor: "#f1513f",
-        confirmButtonText: '<i class="bi bi-box-arrow-right me-1"></i>Volver',
-        confirmButtonColor: "#007bff",
-        reverseButtons: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'No, continuar'
       }).then((result) => {
         if (result.isConfirmed) {
-          this.$router.go(-1);
+          this.$router.push({ name: 'CargasViejas' });
         }
       });
     },
-    
+
     mostrarError(mensaje) {
       Swal.fire({
         icon: 'error',
@@ -582,26 +455,13 @@ export default {
         confirmButtonText: 'Aceptar'
       });
     },
-    
-    mostrarExito(mensaje) {
-      const Toast = Swal.mixin({
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        background: "#4BB543",
-        color: "#fff",
-        iconColor: "#fff",
-        didOpen: (toast) => {
-          toast.addEventListener("mouseenter", Swal.stopTimer);
-          toast.addEventListener("mouseleave", Swal.resumeTimer);
-        },
-      });
 
-      Toast.fire({
-        icon: "success",
-        title: mensaje,
+    mostrarExito(mensaje) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Éxito',
+        text: mensaje,
+        confirmButtonText: 'Aceptar'
       });
     }
   }
@@ -609,493 +469,76 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos para el select personalizado de productos */
-.ufc-custom-select {
-  position: relative;
-  width: 100%;
-  cursor: pointer;
-}
-
-.ufc-select-display {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  background-color: white;
-  min-height: 36px;
-  display: flex;
-  align-items: center;
-  border-color: rgba(
-    var(--bs-secondary-rgb),
-    var(--bs-border-opacity)
-  ) !important;
-}
-
-.ufc-select-arrow {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  transition: transform 0.2s;
-}
-
-.ufc-custom-select.open .ufc-select-arrow {
-  transform: translateY(-50%) rotate(180deg);
-}
-
-.ufc-productos-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  max-height: 300px;
-  overflow-y: auto;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 0 0 6px 6px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-  margin-top: 2px;
-}
-
-.ufc-productos-search-container {
-  padding: 8px;
-  border-bottom: 1px solid #eee;
-  background: #f8f9fa;
-}
-
-.ufc-productos-search {
-  width: 100%;
-  padding: 6px 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.85rem;
-}
-
-.ufc-productos-search:focus {
-  outline: none;
-  border-color: #002a68;
-}
-
-.ufc-productos-options {
-  max-height: 250px;
-  overflow-y: auto;
-}
-
-.ufc-producto-option {
-  padding: 8px 12px;
-  font-size: 0.85rem;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.ufc-producto-option:hover {
-  background-color: #f5f5f5;
-}
-/* Estilos para el grid dentro del modal */
-
-/* Ajustes para los botones del modal */
-.ufc-modal-body .ufc-form-actions {
-  border-top: 1px solid #eee;
-  padding-top: 15px;
-  margin-top: 0;
-}
-
-.ufc-producto-option.selected {
-  background-color: #002a68;
-  color: white;
-}
-
-/* Estilo para el botón de agregar */
-.ufc-add-button {
-  margin-left: 8px;
-}
-
-.ufc-select[multiple] {
-  height: auto;
-  min-height: 100px;
-  padding: 8px;
-}
-
-.ufc-select[multiple] option {
-  padding: 6px 8px;
-  margin: 2px 0;
-  border-radius: 4px;
-}
-
-.ufc-select[multiple] option:checked {
-  background-color: #002a68;
-  color: white;
-}
-
-.ufc-selected-products {
-  font-size: 0.8rem;
-  color: #666;
-  margin-top: 5px;
-}
-
-.ufc-form-container {
-  font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
-  color: #333;
-  padding-bottom: 20px;
-}
-
 .ufc-header {
-  background-color: #002a68;
-  color: white;
-  text-align: right;
-  padding: 10px 15px;
-  margin-bottom: 20px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  padding: 1rem;
+  margin-bottom: 1rem;
 }
 
 .ufc-header h6 {
   margin: 0;
-  font-size: 1rem;
-  font-weight: 500;
-}
-
-.ufc-form-wrapper {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 0 15px;
-}
-
-.ufc-form-card {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.ufc-form-title {
-  color: #002a68;
-  font-size: 1.3rem;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  color: #495057;
   font-weight: 600;
 }
 
-.ufc-form-title i {
-  font-size: 1.4rem;
-}
-
-.ufc-form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-}
-
-@media (max-width: 768px) {
-  .ufc-form-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.ufc-input-group {
-  margin-bottom: 15px;
-}
-
-.ufc-input-group label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #444;
-}
-
-.ufc-input-group .required {
-  color: #e74c3c;
-}
-
-.ufc-select,
-.ufc-input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  transition: all 0.2s;
-  background-color: white;
-}
-
-.ufc-select:focus,
-.ufc-input:focus {
-  border-color: #002a68;
-  box-shadow: 0 0 0 3px rgba(0, 42, 104, 0.1);
-  outline: none;
-}
-
-.ufc-textarea {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  resize: vertical;
-  min-height: 70px;
-  font-family: inherit;
-  font-size: 0.85rem;
-}
-
-.ufc-textarea:focus {
-  border-color: #002a68;
-  box-shadow: 0 0 0 3px rgba(0, 42, 104, 0.1);
-  outline: none;
-}
-
-.ufc-input-with-action {
-  display: flex;
-  gap: 8px;
-}
-
-.ufc-add-button {
-  background: #f8f9fa;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  width: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #002a68;
-  transition: all 0.2s;
-}
-
-.ufc-add-button:hover {
-  background: #e9ecef;
-  color: #001a3d;
-}
-
-.ufc-add-button i {
-  font-size: 1.1rem;
-}
-
-.ufc-disabled {
-  font-size: 0.8rem;
-  color: #777;
-  padding: 8px 0;
-}
-
-/* Estilo especial para el campo por situar */
-.ufc-por-situar-container {
-  display: flex;
-  align-items: center;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  overflow: hidden;
-  border-color: rgba(
-    var(--bs-secondary-rgb),
-    var(--bs-border-opacity)
-  ) !important;
-}
-
-.ufc-por-situar-input {
-  flex: 1;
-  border: none;
-  padding: 8px 12px;
-  font-size: 0.85rem;
-  min-width: 0;
-}
-
-.ufc-por-situar-suffix {
-  background: #f8f9fa;
-  padding: 8px 12px;
-  font-size: 0.8rem;
-  color: #666;
-  border-left: 1px solid #ddd;
-}
-
-/* Botones de acción */
-.ufc-form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 20px;
-  padding-top: 15px;
-  border-top: 1px solid #eee;
-}
-
 .ufc-button {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 1 rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
   font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
   border: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .ufc-button.primary {
-  background: #002a68;
+  background-color: #0d6efd;
   color: white;
 }
 
-.ufc-button.primary:hover {
-  background: #003d8f;
+.ufc-button.primary:hover:not(:disabled) {
+  background-color: #0b5ed7;
 }
 
 .ufc-button.secondary {
-  background: #f1513f;
+  background-color: #6c757d;
   color: white;
 }
 
 .ufc-button.secondary:hover {
-  background: rgb(228, 56, 37);
+  background-color: #5c636a;
 }
 
-.create-button {
-  text-decoration: none;
-  border: none;
-  color: green;
-  margin-left: 940px;
+.ufc-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
-button {
-  margin-left: 10px;
-  padding: 5px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: bold;
+.form-label {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
 }
 
-.btn-outline-danger {
-  color: #dc3545;
-  border-color: #dc3545;
-}
-
-.btn-outline-danger:hover {
-  color: #fff;
-}
-
-button[type="button"] {
-  background-color: #007bff;
-  color: white;
-}
-
-button[type="submit"] {
-  margin-left: 15px;
-  background-color: #007bff;
-  color: white;
-}
-
-/* Estilos para selects */
-.ufc-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 12px;
-}
-
-/* Estilos para el modal */
-.ufc-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.ufc-modal-container {
-  background: white;
-  border-radius: 10px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow: auto;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-  animation: modalFadeIn 0.3s ease-out;
-}
-
-.ufc-modal-header {
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #002a68;
-  color: white;
-  border-radius: 10px 10px 0 0;
-}
-
-.ufc-modal-header h3 {
-  margin: 0;
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.ufc-modal-close {
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 1.3rem;
-  cursor: pointer;
-  padding: 5px;
-  transition: all 0.2s;
-}
-
-.ufc-modal-close:hover {
-  color: #ccc;
-}
-
-.ufc-modal-body {
-  padding: 20px;
-}
-
-.ufc-validation-message {
-  padding: 10px;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  margin-top: 10px;
-}
-
-.ufc-validation-message.warning {
-  background-color: #fff3cd;
-  color: #856404;
-  border-left: 4px solid #ffeeba;
-}
-
-.ufc-validation-message.success {
-  background-color: #d4edda;
-  color: #155724;
-  border-left: 4px solid #c3e6cb;
-}
-
-.ufc-validation-message.error {
-  background-color: #f8d7da;
-  color: #721c24;
-  border-left: 4px solid #f5c6cb;
-}
-
-@keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+.form-control:focus,
 .form-select:focus {
-  border-color: #dc3545;
-  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
-  outline: 0;
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
-.form-control:focus {
-  border-color: #dc3545;
-  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
-  outline: 0;
+
+.card {
+  border-radius: 0.5rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  padding: 1rem 1.25rem;
+}
+
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
 }
 </style>

@@ -470,16 +470,35 @@ class gemar_remolcador_cabotaje_auxiliar_enc_serializer(serializers.ModelSeriali
         filterset_class = gemar_remolcador_cabotaje_auxiliar_enc_filter
 #**********************************************************************************************************************
 
-class PartePBIPSerializer(serializers.ModelSerializer):
+class RegistroPBIPSerializer(serializers.ModelSerializer):
     buque = nom_embarcacion_serializer(read_only=True)
     buque_id = serializers.PrimaryKeyRelatedField(
-        queryset=Buque.objects.all(),  # O Buque.objects.filter(tipo_embarcacion='buque') si aplica
+        queryset=Buque.objects.all(),
         write_only=True,
         source='buque'
     )
     puerto = nom_puerto_serializer(read_only=True)
     puerto_id = serializers.PrimaryKeyRelatedField(
-        queryset=nom_puerto.objects.all(),
+        queryset=Puerto.objects.all(),
+        write_only=True,
+        source='puerto'
+    )
+    
+    class Meta:
+        model = RegistroPBIP
+        fields = '__all__'
+
+class PartePBIPSerializer(serializers.ModelSerializer):
+    registros = RegistroPBIPSerializer(many=True, read_only=True)
+    buque = nom_embarcacion_serializer(read_only=True)
+    buque_id = serializers.PrimaryKeyRelatedField(
+        queryset=Buque.objects.all(),
+        write_only=True,
+        source='buque'
+    )
+    puerto = nom_puerto_serializer(read_only=True)
+    puerto_id = serializers.PrimaryKeyRelatedField(
+        queryset=Puerto.objects.all(),
         write_only=True,
         source='puerto'
     )
@@ -508,8 +527,7 @@ class PartePBIPSerializer(serializers.ModelSerializer):
         return data
 
 # gemar/serializers.py (actualización de CargaViejaSerializer)
-class CargaViejaSerializer(serializers.ModelSerializer):
-    parte = serializers.PrimaryKeyRelatedField(queryset=PartePBIP.objects.all())
+class RegistroCargaViejaSerializer(serializers.ModelSerializer):
     puerto = nom_puerto_serializer(read_only=True)
     puerto_id = serializers.PrimaryKeyRelatedField(
         queryset=Puerto.objects.all(),
@@ -538,48 +556,24 @@ class CargaViejaSerializer(serializers.ModelSerializer):
         source='organismo',
         required=True
     )
+    fecha_operacion = serializers.DateField(source='parte.fecha_operacion', read_only=True)
+    estado = serializers.CharField(source='parte.estado', read_only=True)
 
     class Meta:
-        model = CargaVieja
+        model = RegistroCargaVieja
         fields = '__all__'
-        extra_kwargs = {
-            'manifiesto': {'required': True},
-            'toneladas_ayer': {'required': True},
-            'toneladas_hoy': {'required': True},
-            'dias_almacen': {'required': True},
-            'plan': {'required': True},
-            'real': {'required': True}
-        }
+        read_only_fields = ('id',)
 
-    def validate(self, data):
-        parte = data.get('parte')
-        puerto = data.get('puerto')
-        terminal = data.get('terminal')
-        producto = data.get('producto')
-        manifiesto = data.get('manifiesto')
-        organismo = data.get('organismo')
+class ParteCargaViejaSerializer(serializers.ModelSerializer):
+    registros = RegistroCargaViejaSerializer(many=True, read_only=True)
+    creado_por = CustomUserSerializer(read_only=True)
 
-        if CargaVieja.objects.filter(
-            parte=parte,
-            puerto=puerto,
-            terminal=terminal,
-            producto=producto,
-            manifiesto=manifiesto,
-            organismo=organismo
-        ).exclude(pk=self.instance.pk if self.instance else None).exists():
-            raise serializers.ValidationError(
-                "Ya existe un registro con esta combinación de Puerto, Terminal, Producto, Manifiesto y Organismo."
-            )
-        
-        # Validar que terminal pertenezca al puerto
-        if terminal.puerto != puerto:
-            raise serializers.ValidationError(
-                "La terminal seleccionada no pertenece al puerto especificado."
-            )
-        
-        return data
+    class Meta:
+        model = ParteCargaVieja
+        fields = '__all__'
+        read_only_fields = ('fecha_creacion', 'creado_por', 'aprobado_por')
 
-class ExistenciaMercanciaSerializer(serializers.ModelSerializer):
+class RegistroExistenciaMercanciaSerializer(serializers.ModelSerializer):
     terminal = nom_terminal_serializer(read_only=True)
     terminal_id = serializers.PrimaryKeyRelatedField(
         queryset=Terminal.objects.filter(),
@@ -606,15 +600,17 @@ class ExistenciaMercanciaSerializer(serializers.ModelSerializer):
         write_only=True,
         source='unidad_medida'
     )
-    creado_por = CustomUserSerializer(read_only=True)
     tipo_display = serializers.CharField(source='get_tipo_display', read_only=True)
     tipo_producto_display = serializers.CharField(source='get_tipo_producto_display', read_only=True)
     estado_display = serializers.CharField(source='get_estado_display', read_only=True)
     contiene_display = serializers.CharField(source='get_contiene_display', read_only=True)
-    estado_registro_display = serializers.CharField(source='get_estado_registro_display', read_only=True)
+    
+    # Añadir campos de búsqueda para los nombres
+    producto_nombre = serializers.CharField(source='producto.nombre_producto', read_only=True)
+    terminal_nombre = serializers.CharField(source='terminal.nombre_terminal', read_only=True)
 
     class Meta:
-        model = ExistenciaMercancia
+        model = RegistroExistenciaMercancia
         fields = '__all__'
         read_only_fields = ('fecha_creacion', 'creado_por')
 
@@ -657,3 +653,13 @@ class ExistenciaMercanciaSerializer(serializers.ModelSerializer):
             data['contiene'] = None
             
         return data
+        extra_fields = ['producto_nombre', 'terminal_nombre']
+
+class ParteExistenciaMercanciaSerializer(serializers.ModelSerializer):
+    registros = RegistroExistenciaMercanciaSerializer(many=True, read_only=True)
+    creado_por = CustomUserSerializer(read_only=True)
+
+    class Meta:
+        model = ParteExistenciaMercancia
+        fields = '__all__'
+        read_only_fields = ('fecha_creacion', 'creado_por', 'aprobado_por')

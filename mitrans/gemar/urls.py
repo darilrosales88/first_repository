@@ -15,6 +15,14 @@ from .views import (gemar_parte_hecho_extraordinario_view_set,
                     gemar_afectaciones_maniobras_portuarias_enc_view_set,gemar_carga_seca_enc_view_set,
                     gemar_remolcadores_maniobras_enc_view_set,gemar_remolcador_carga_liquida_enc_view_set,
                     gemar_remolcador_cabotaje_auxiliar_enc_view_set)
+from .views import (
+    PartePBIPViewSet,
+    RegistroPBIPViewSet,
+    ParteCargaViejaViewSet,
+    RegistroCargaViejaViewSet,
+    ParteExistenciaMercanciaViewSet,
+    RegistroExistenciaMercanciaViewSet
+)
     
 
 

@@ -34,6 +34,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 
 from Administracion.serializers import GroupSerializer
 
@@ -830,6 +831,8 @@ class nom_territorio_view_set(viewsets.ModelViewSet):
 class nom_puerto_view_set(viewsets.ModelViewSet):
     queryset = nom_puerto.objects.all().order_by('id')  # Ordenar por defecto por el campo 'id'
     serializer_class = nom_puerto_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
+    
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -936,6 +939,8 @@ class nom_puerto_view_set(viewsets.ModelViewSet):
 class nom_terminal_view_set(viewsets.ModelViewSet):
     queryset = nom_terminal.objects.all().order_by('id')  # Ordenar por defecto por el campo 'id'
     serializer_class = nom_terminal_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
+    
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -1154,6 +1159,8 @@ class nom_atraque_view_set(viewsets.ModelViewSet):
 class nom_unidad_medida_view_set(viewsets.ModelViewSet):
     queryset = nom_unidad_medida.objects.all().order_by('-id')
     serializer_class = nom_unidad_medida_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
+    
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -1260,6 +1267,8 @@ class nom_unidad_medida_view_set(viewsets.ModelViewSet):
 class nom_osde_oace_organismo_view_set(viewsets.ModelViewSet):
     queryset = nom_osde_oace_organismo.objects.all().order_by('-id')
     serializer_class = nom_osde_oace_organismo_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
+    
     filter_backends = [DjangoFilterBackend]
     filterset_class = nom_osde_oace_organismo_filter
     def get_queryset(self):
@@ -1743,7 +1752,9 @@ class tipo_equipo_ferroviario_no_locomotora(APIView):
 class nom_embarcacion_view_set(viewsets.ModelViewSet):
     queryset = nom_embarcacion.objects.all().order_by('-id')  # Definir el queryset
     serializer_class = nom_embarcacion_serializer
-
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
+    
+    
     def get_queryset(self):
         queryset = super().get_queryset()
 
@@ -2100,6 +2111,8 @@ class nom_estado_tecnico_view_set(viewsets.ModelViewSet):
 class nom_producto_view_set(viewsets.ModelViewSet):
     queryset = nom_producto.objects.all().order_by('nombre_producto')  # Orden obligatorio
     serializer_class = nom_producto_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
+    
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -2217,6 +2230,8 @@ class nom_producto_view_set(viewsets.ModelViewSet):
 class nom_tipo_embalaje_view_set(viewsets.ModelViewSet):
     queryset = nom_tipo_embalaje.objects.all().order_by('-id')
     serializer_class = nom_tipo_embalaje_serializer
+    permission_classes = [IsAdminNomenladoresPermission | IsVisualizadorNomencladoresPermission]
+    
 
     def get_queryset(self):
         queryset = super().get_queryset()

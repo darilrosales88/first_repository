@@ -18,7 +18,7 @@ from rest_framework.decorators import api_view
 #4.1 una variante para trabajar con los serializadores  es la propiedad viewsets
 # de rest_framework, facilita el CRUD
 
-#importacion de modelos
+#importacion de modelos, aqui es todo
 from .models import (gemar_hecho_extraordinario,gemar_parte_hecho_extraordinario,
                      gemar_programacion_maniobras,gemar_parte_programacion_maniobras,
                      gemar_parte_carga_descarga,gemar_carga_descarga,gemar_producto_carga_descarga,

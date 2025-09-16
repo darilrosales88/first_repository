@@ -530,6 +530,8 @@ export default {
       const [date, time] = dateTime.split("T");
       const [h, m] = time.split(":");
       return `${date} ${h}:${m}`;
+    },
+
     formatDate(dateString) {
       if (!dateString) return "";
       const date = new Date(dateString);

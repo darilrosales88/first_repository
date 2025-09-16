@@ -455,7 +455,7 @@ class gemar_carga_descarga(models.Model):
         ("A", 'Alijo'),
     ]
 
-    operacion = models.CharField(max_length=10,
+    operacion = models.CharField(max_length=100,
         choices=OPERACION_CHOICES,
         verbose_name='Operación'
     )
@@ -484,7 +484,7 @@ class gemar_carga_descarga(models.Model):
         verbose_name="Buque"
     )  
 
-    categoria = models.CharField(max_length=10,
+    categoria = models.CharField(max_length=100,
         choices=CATEGORIA_CHOICES,
         verbose_name='Categoría'
     ) 
@@ -1391,6 +1391,61 @@ class ExistenciaMercancia(models.Model):
         if self.existencia < 0:
             raise ValidationError(_('La existencia no puede ser negativa.'))
         
+        
+        
+
+
+
+
+class RegistroExistenciaMercancia(models.Model):
+    parte = models.ForeignKey('ParteExistenciaMercancia', on_delete=models.CASCADE, related_name='registros')
+    terminal = models.ForeignKey(nom_terminal, on_delete=models.PROTECT, verbose_name=_('Terminal'))
+    tipo = models.IntegerField(_('Tipo'), choices=ExistenciaMercancia.TIPO_CHOICES)
+    tipo_producto = models.IntegerField(_('Tipo de producto'), choices=ExistenciaMercancia.TIPO_PRODUCTO_CHOICES)
+    producto = models.ForeignKey(nom_producto, on_delete=models.PROTECT, verbose_name=_('Producto'))
+    tipo_embalaje = models.ForeignKey(nom_tipo_embalaje, on_delete=models.PROTECT, verbose_name=_('Tipo de embalaje'), null=True, blank=True)
+    unidad_medida = models.ForeignKey(nom_unidad_medida, on_delete=models.PROTECT, verbose_name=_('Unidad de medida'))
+    estado = models.IntegerField(_('Estado'), choices=ExistenciaMercancia.ESTADO_CONTENEDOR_CHOICES, null=True, blank=True)
+    contiene = models.IntegerField(_('Contiene'), choices=ExistenciaMercancia.CONTENIDO_CHOICES, null=True, blank=True)
+    existencia = models.DecimalField(_('Existencia'), max_digits=10, decimal_places=2)
+    observaciones = models.TextField(_('Observaciones'), null=True, blank=True)
+    
+    class Meta:
+        verbose_name = _('Registro Existencia Mercancía')
+        verbose_name_plural = _('Registros Existencias Mercancías')
+        
+    def __str__(self):
+        return f"Registro Existencia - {self.producto.nombre} - {self.terminal.nombre}"
+
+        
+class ParteExistenciaMercancia(models.Model):
+    ESTADO_CHOICES = [
+        ('CREADO', 'Creado'),
+        ('APROBADO', 'Aprobado'),
+        ('CANCELADO', 'Cancelado'),
+    ]
+    
+    fecha_operacion = models.DateField(_('Fecha de operación'))
+    fecha_creacion = models.DateTimeField(_('Fecha de creación'), auto_now_add=True)
+    creado_por = models.ForeignKey(CustomUser, on_delete=models.PROTECT, verbose_name=_('Creado por'),related_name='partes_existencia_mercancia_creados')
+    aprobado_por = models.ForeignKey(
+        CustomUser, 
+        on_delete=models.PROTECT, 
+        verbose_name=_('Aprobado por'),
+        null=True,
+        blank=True,
+        related_name='partes_existencia_mercancia_aprobados'
+    )
+    estado = models.CharField(_('Estado'), max_length=20, default='CREADO', choices=ESTADO_CHOICES)
+    
+    class Meta:
+        verbose_name = _('Parte Existencia Mercancía')
+        verbose_name_plural = _('Partes Existencias Mercancías')
+        ordering = ['-fecha_creacion']
+        
+    def __str__(self):
+        return f"Parte Existencia Mercancía - {self.fecha_operacion} - {self.creado_por.username}"
+         
 ####Partes Carlos  de Gemar  ####
 class diario_embarcacion(models.Model):
     fecha_operacion = models.DateField(_('Fecha de operación'))
@@ -1457,12 +1512,18 @@ class buques_puerto(models.Model):
         ("navegando","Navegando"),
         ("ubicado","Con Ubicacion"),
     ]
+    ESTADO_PARTE_CHOICES=[
+        ("creado","Creado"),
+        ("listo","Listo"),
+        ("rechazado","Rechazado"),
+        ("aprobado","Aprobado"),
+    ]
     
-    tipo_parte = models.CharField(max_length=50, choices=TIPO_PARTE_CHOICES)
-    fecha_actual = models.DateTimeField(auto_now_add=True)
-    estado_parte = models.CharField(max_length=20, choices=ESTADO_PARTE_CHOICES, default='creado')
+    tipo_parte = models.CharField(max_length=50, choices=TIPO_PARTE_CHOICES, null=True, blank=True)
+    fecha_actual = models.DateTimeField(auto_now_add=True, null=True,blank=True)
+    estado_parte = models.CharField(max_length=20, choices=ESTADO_PARTE_CHOICES, default='Creado')
     
-    creado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='partes_creados')
+    creado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='partes_creados',null=True, blank=True)
     aprobado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='partes_aprobados')
     
     # RELACIONES OPCIONALES CON LOS MODELOS EXISTENTES
@@ -1475,8 +1536,8 @@ class buques_puerto(models.Model):
     organismo_nombre = models.CharField(max_length=100, blank=True)
     provincia_nombre = models.CharField(max_length=100, blank=True)
     
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    fecha_actualizacion = models.DateTimeField(auto_now=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True, null=True,blank=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True, null=True,blank=True)
 
     def __str__(self):
         return f"{self.get_tipo_parte_display()} - {self.fecha_actual.strftime('%Y-%m-%d %H:%M')}"

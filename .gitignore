@@ -77,3 +77,4 @@ copias_no_subir
 *.sql
 .sqlquery
 GEMINI.md
+*.sh
